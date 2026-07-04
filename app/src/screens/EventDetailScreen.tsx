@@ -6,6 +6,9 @@ import { eventDetail, eventThread } from '../data/sampleData';
 import { palette, spacing } from '../theme/tokens';
 
 export function EventDetailScreen() {
+  const eventDetail = selectEventDetailViewModel();
+  const eventThread = eventDetail.thread;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.heroCard}>
@@ -17,10 +20,11 @@ export function EventDetailScreen() {
           </View>
           <Chip label={eventDetail.rsvpSummary} tone="sage" />
         </View>
+        <Text style={styles.heroMeta}>Hosted by {eventDetail.host} · {eventDetail.location}</Text>
+        <Text style={styles.heroCopy}>{eventDetail.notes}</Text>
         <View style={styles.actionRow}>
           <Button label="Going" />
           <Button label="Chat" tone="secondary" />
-          <Button label="Add photo" tone="ghost" />
         </View>
       </View>
 
@@ -37,6 +41,27 @@ export function EventDetailScreen() {
             </View>
           ))}
         </View>
+      </SurfaceCard>
+
+      <SurfaceCard>
+        <Text style={styles.cardTitle}>Invitees</Text>
+        <Text style={styles.cardCopy}>Who is in the loop for this plan.</Text>
+        <View style={styles.inviteeList}>
+          {eventDetail.invitees.map((invitee) => (
+            <View key={invitee.name} style={styles.inviteeRow}>
+              <View>
+                <Text style={styles.listTitle}>{invitee.name}</Text>
+                <Text style={styles.cardCopy}>{invitee.role}</Text>
+              </View>
+              <Chip label={invitee.status} tone={invitee.status === 'Maybe' ? 'sky' : invitee.status === 'Hosting' ? 'coral' : 'sage'} />
+            </View>
+          ))}
+        </View>
+      </SurfaceCard>
+
+      <SurfaceCard>
+        <Text style={styles.cardTitle}>Cover treatment</Text>
+        <Text style={styles.cardCopy}>{eventDetail.coverTreatment}</Text>
       </SurfaceCard>
 
       <SurfaceCard>
@@ -89,6 +114,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: 8,
   },
+  heroMeta: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
+    marginTop: 2,
+  },
   actionRow: {
     flexDirection: 'row',
     gap: 10,
@@ -132,6 +164,16 @@ const styles = StyleSheet.create({
     color: palette.text,
     fontSize: 15,
     fontWeight: '700',
+  },
+  inviteeList: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  inviteeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
   },
   thread: {
     marginTop: spacing.md,

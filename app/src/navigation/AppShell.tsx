@@ -1,15 +1,12 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CalendarScreen } from '../screens/CalendarScreen';
+import { CreateEventScreen } from '../screens/CreateEventScreen';
 import { EventDetailScreen } from '../screens/EventDetailScreen';
 import { GroupsScreen } from '../screens/GroupsScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MemoriesScreen } from '../screens/MemoriesScreen';
 import { palette, radii, spacing } from '../theme/tokens';
 import { useAppShellState } from './useAppShellState';
-
-function CreateScreen() {
-  return <EventDetailScreen />;
-}
 
 export function AppShell() {
   const { tabItems, activeTab, setActiveTab } = useAppShellState();
@@ -19,7 +16,7 @@ export function AppShell() {
       <View style={styles.content}>
         {activeTab === 'Home' ? <HomeScreen /> : null}
         {activeTab === 'Calendar' ? <CalendarScreen /> : null}
-        {activeTab === 'Create' ? <CreateScreen /> : null}
+        {activeTab === 'Create' ? <CreateEventScreen /> : null}
         {activeTab === 'Memories' ? <MemoriesScreen /> : null}
         {activeTab === 'Groups' ? <GroupsScreen /> : null}
       </View>
