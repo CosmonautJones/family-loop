@@ -3,9 +3,10 @@ import { palette, radii } from '../theme/tokens';
 
 import type { ButtonTone } from '../types/ui';
 
-export function Button({ label, tone = 'primary' }: { label: string; tone?: ButtonTone }) {
+export function Button({ label, tone = 'primary', onPress }: { label: string; tone?: ButtonTone; onPress?: () => void }) {
   return (
     <Pressable
+      onPress={onPress}
       style={[
         styles.base,
         tone === 'primary' ? styles.primary : tone === 'ghost' ? styles.ghost : styles.secondary,

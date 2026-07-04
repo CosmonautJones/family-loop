@@ -27,7 +27,14 @@ test('mobile scaffold files exist', () => {
     'src/types/domain.ts',
     'src/types/ui.ts',
     'src/lib/date.ts',
+    'src/lib/storage.ts',
     'src/app/selectors.ts',
+    'src/app/AppProviders.tsx',
+    'src/app/queries.ts',
+    'src/store/useLoopedInStore.ts',
+    'src/services/api.ts',
+    'src/services/mockAdapter.ts',
+    'src/services/mockData.ts',
     'src/features/home/fixtures.ts',
     'src/features/calendar/fixtures.ts',
     'src/features/groups/fixtures.ts',
@@ -62,7 +69,14 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   const domain = read('src/types/domain.ts');
   const ui = read('src/types/ui.ts');
   const dateLib = read('src/lib/date.ts');
+  const storageLib = read('src/lib/storage.ts');
   const appSelectors = read('src/app/selectors.ts');
+  const appProviders = read('src/app/AppProviders.tsx');
+  const appQueries = read('src/app/queries.ts');
+  const appStore = read('src/store/useLoopedInStore.ts');
+  const serviceApi = read('src/services/api.ts');
+  const mockAdapter = read('src/services/mockAdapter.ts');
+  const mockData = read('src/services/mockData.ts');
   const homeFixtures = read('src/features/home/fixtures.ts');
   const calendarFixtures = read('src/features/calendar/fixtures.ts');
   const groupFixtures = read('src/features/groups/fixtures.ts');
@@ -93,11 +107,19 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(domain, /export type MediaItem/);
   assert.match(ui, /export type AccentTone/);
   assert.match(dateLib, /formatEventDateRange/);
+  assert.match(storageLib, /saveDraftEvent/);
   assert.match(appSelectors, /selectHomeViewModel/);
   assert.match(appSelectors, /selectCalendarViewModel/);
   assert.match(appSelectors, /selectGroupsViewModel/);
   assert.match(appSelectors, /selectMemoriesViewModel/);
   assert.match(appSelectors, /selectEventDetailViewModel/);
+  assert.match(appProviders, /QueryClientProvider/);
+  assert.match(appQueries, /useActiveEventsQuery/);
+  assert.match(appStore, /useLoopedInStore/);
+  assert.match(appStore, /setRsvpStatus/);
+  assert.match(serviceApi, /export interface LoopedInService/);
+  assert.match(mockAdapter, /createMockLoopedInService/);
+  assert.match(mockData, /createMockDatabase/);
   assert.match(homeFixtures, /heroEvent/);
   assert.match(calendarFixtures, /calendarEvents/);
   assert.match(groupFixtures, /groupsOverview/);
@@ -121,7 +143,9 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.doesNotMatch(eventScreen, /\.\.\/data\/sampleData/);
   assert.match(eventScreen, /selectEventDetailViewModel/);
   assert.match(createEventScreen, /Create event draft/);
-  assert.match(createEventScreen, /buildCreateEventFields/);
+  assert.match(createEventScreen, /useLoopedInStore/);
+  assert.match(createEventScreen, /updateDraftEvent/);
+  assert.match(eventScreen, /setRsvpStatus/);
   assert.doesNotMatch(memoriesScreen, /\.\.\/data\/sampleData/);
   assert.match(memoriesScreen, /selectMemoriesViewModel/);
   assert.doesNotMatch(groupsScreen, /\.\.\/data\/sampleData/);

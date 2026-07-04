@@ -5,9 +5,8 @@ import type {
   EventActivity,
   EventMessage,
   MemoryItem,
+  MediaItem,
 } from '../types/domain';
-
-// ── Auth ────────────────────────────────────────────────────────────────
 
 export interface AuthSession {
   userId: string;
@@ -21,8 +20,6 @@ export interface AuthApi {
   logout(): Promise<void>;
   refreshSession(): Promise<AuthSession>;
 }
-
-// ── Groups ──────────────────────────────────────────────────────────────
 
 export interface CreateGroupPayload {
   name: string;
@@ -38,8 +35,6 @@ export interface GroupsApi {
   deleteGroup(groupId: string): Promise<void>;
 }
 
-// ── Events ──────────────────────────────────────────────────────────────
-
 export interface CreateEventPayload {
   groupId: string;
   title: string;
@@ -47,6 +42,7 @@ export interface CreateEventPayload {
   endsAt: string;
   location: string;
   description: string;
+  coverUri?: string;
 }
 
 export interface UpdateEventPayload {
@@ -55,6 +51,7 @@ export interface UpdateEventPayload {
   endsAt?: string;
   location?: string;
   description?: string;
+  coverUri?: string;
 }
 
 export interface EventsApi {
@@ -65,22 +62,20 @@ export interface EventsApi {
   deleteEvent(eventId: string): Promise<void>;
 }
 
-// ── RSVPs ───────────────────────────────────────────────────────────────
-
 export interface CreateRsvpPayload {
   eventId: string;
+  personId: string;
+  personName: string;
   status: RSVP['status'];
   note?: string;
 }
 
 export interface RsvpsApi {
   listRsvps(eventId: string): Promise<RSVP[]>;
-  createRsvp(payload: CreateRsvpPayload): Promise<RSVP>;
-  updateRsvp(eventId: string, patch: { status: RSVP['status']; note?: string }): Promise<RSVP>;
-  deleteRsvp(eventId: string): Promise<void>;
+  upsertRsvp(payload: CreateRsvpPayload): Promise<RSVP>;
+  updateRsvp(eventId: string, personId: string, patch: { status: RSVP['status']; note?: string }): Promise<RSVP>;
+  deleteRsvp(eventId: string, personId: string): Promise<void>;
 }
-
-// ── Activity / Thread ───────────────────────────────────────────────────
 
 export interface ActivityApi {
   listRecentActivity(): Promise<EventActivity[]>;
@@ -91,21 +86,10 @@ export interface ThreadApi {
   sendMessage(eventId: string, body: string): Promise<EventMessage>;
 }
 
-// ── Media ───────────────────────────────────────────────────────────────
-
 export interface MediaUploadPayload {
   eventId: string;
   fileUri: string;
   caption?: string;
-}
-
-export interface MediaItem {
-  id: string;
-  eventId: string;
-  uri: string;
-  caption: string;
-  uploadedBy: string;
-  uploadedAt: string;
 }
 
 export interface MediaApi {
@@ -113,8 +97,6 @@ export interface MediaApi {
   listMedia(eventId: string): Promise<MediaItem[]>;
   deleteMedia(mediaId: string): Promise<void>;
 }
-
-// ── Notifications ───────────────────────────────────────────────────────
 
 export interface NotificationItem {
   id: string;
@@ -133,9 +115,7 @@ export interface NotificationsApi {
   clearAll(): Promise<void>;
 }
 
-// ── Aggregate service contract ──────────────────────────────────────────
-
-export interface LoopService {
+export interface LoopedInService {
   auth: AuthApi;
   groups: GroupsApi;
   events: EventsApi;
