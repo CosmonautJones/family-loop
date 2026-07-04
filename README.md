@@ -12,6 +12,30 @@ This repository captures the initial product research, proposal, roadmap, techni
 - `docs/04-spec-roadmap.md`
 - `docs/05-visual-direction.md`
 - `docs/06-wireframe.html`
+- `docs/07-product-prototype.html`
+- `docs/08-brand-package.md`
+- `docs/09-landing-page.html`
+- `docs/10-loop-architecture-and-workflow.md`
+
+## Developer quick start
+### Repo docs and checks
+```bash
+npm test
+```
+
+### Preview concept docs locally
+```bash
+npm run preview:prototype
+```
+
+### Run the mobile scaffold
+```bash
+cd app
+npm install
+npm start
+```
+
+See `docs/10-loop-architecture-and-workflow.md` for the recommended app structure, screen model, sample data strategy, and agent/subagent contribution workflow.
 
 ## Concept summary
 Family Loop blends:

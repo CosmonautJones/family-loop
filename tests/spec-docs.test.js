@@ -14,7 +14,8 @@ const requiredDocs = [
   'docs/06-wireframe.html',
   'docs/07-product-prototype.html',
   'docs/08-brand-package.md',
-  'docs/09-landing-page.html'
+  'docs/09-landing-page.html',
+  'docs/10-loop-architecture-and-workflow.md'
 ];
 
 test('concept documentation artifacts exist', () => {
@@ -46,4 +47,13 @@ test('brand package and landing page contain brand and product positioning', () 
   assert.match(brand, /Voice and messaging/);
   assert.match(landing, /Loop — The private social calendar for real life/);
   assert.match(landing, /Plan it\. Chat in context\. Keep the memory\./);
+});
+
+test('architecture workflow doc covers app structure, sample data, and contributor flow', () => {
+  const architecture = fs.readFileSync(path.join(root, 'docs/10-loop-architecture-and-workflow.md'), 'utf8');
+  assert.match(architecture, /## Mobile app structure/);
+  assert.match(architecture, /## Screen model for the MVP foundation/);
+  assert.match(architecture, /## Sample data strategy/);
+  assert.match(architecture, /## Recommended implementation workflow for agent\/subagent teams/);
+  assert.match(architecture, /## Local run and test commands/);
 });

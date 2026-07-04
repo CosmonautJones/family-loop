@@ -1,20 +1,12 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import type { ReactNode } from 'react';
+import { palette, radii } from '../theme/tokens';
 
-import { palette, radii, spacing } from '../theme/tokens';
+type ButtonTone = 'primary' | 'secondary';
 
-export type ButtonProps = {
-  label: string;
-  variant?: 'primary' | 'secondary';
-  onPress?: () => void;
-  icon?: ReactNode;
-};
-
-export function Button({ label, variant = 'primary', onPress, icon }: ButtonProps) {
+export function Button({ label, tone = 'primary' }: { label: string; tone?: ButtonTone }) {
   return (
-    <Pressable style={[styles.base, variant === 'primary' ? styles.primary : styles.secondary]} onPress={onPress}>
-      {icon}
-      <Text style={variant === 'primary' ? styles.primaryText : styles.secondaryText}>{label}</Text>
+    <Pressable style={[styles.base, tone === 'primary' ? styles.primary : styles.secondary]}>
+      <Text style={[styles.text, tone === 'primary' ? styles.primaryText : styles.secondaryText]}>{label}</Text>
     </Pressable>
   );
 }
@@ -23,24 +15,22 @@ const styles = StyleSheet.create({
   base: {
     borderRadius: radii.pill,
     paddingVertical: 11,
-    paddingHorizontal: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
+    paddingHorizontal: 16,
   },
   primary: {
-    backgroundColor: palette.white,
+    backgroundColor: '#fff',
   },
   secondary: {
     borderColor: 'rgba(255,255,255,0.24)',
     borderWidth: 1,
   },
-  primaryText: {
-    color: palette.plum,
+  text: {
     fontWeight: '800',
   },
+  primaryText: {
+    color: palette.plum,
+  },
   secondaryText: {
-    color: palette.white,
-    fontWeight: '700',
+    color: '#fff',
   },
 });

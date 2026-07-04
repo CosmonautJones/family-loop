@@ -1,29 +1,18 @@
-import { StatusBar } from 'expo-status-bar';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
+import { StyleSheet, Text, View } from 'react-native';
 import { HomeScreen } from '../screens/HomeScreen';
-import { palette, radii, spacing } from '../theme/tokens';
 import { useAppShellState } from './useAppShellState';
+import { palette } from '../theme/tokens';
 
 export function AppShell() {
-  const { activeSection, sections, setActiveSection } = useAppShellState();
+  const { tabs, activeTab } = useAppShellState();
 
   return (
     <View style={styles.root}>
-      <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.container}>
-        <HomeScreen activeSection={activeSection} />
-      </ScrollView>
-      <View accessibilityLabel="Bottom navigation" style={styles.nav}>
-        {sections.map((section) => (
-          <Pressable
-            key={section.key}
-            onPress={() => setActiveSection(section.key)}
-            style={[styles.navItem, section.isActive && styles.navItemActive]}
-          >
-            <Text style={[styles.navLabel, section.isActive && styles.navLabelActive]}>{section.label}</Text>
-          </Pressable>
-        ))}
+      <HomeScreen />
+      <View style={styles.nav}>
+        <Text style={styles.label}>Bottom navigation</Text>
+        <Text style={styles.tabs}>{tabs.join(' · ')}</Text>
+        <Text style={styles.active}>Active: {activeTab}</Text>
       </View>
     </View>
   );
@@ -34,36 +23,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.bg,
   },
-  container: {
-    padding: spacing.xl,
-    gap: spacing.md,
-    paddingBottom: spacing.xxxl + 32,
-  },
   nav: {
-    position: 'absolute',
-    left: spacing.xl,
-    right: spacing.xl,
-    bottom: spacing.lg,
-    flexDirection: 'row',
-    backgroundColor: palette.surface,
-    borderRadius: radii.card,
-    padding: spacing.xs,
-    gap: spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(32,22,28,0.08)',
+    paddingHorizontal: 22,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255,255,255,0.96)',
   },
-  navItem: {
-    flex: 1,
-    borderRadius: radii.pill,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-  },
-  navItemActive: {
-    backgroundColor: palette.plum,
-  },
-  navLabel: {
+  label: {
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
     color: palette.muted,
     fontWeight: '700',
   },
-  navLabelActive: {
-    color: palette.white,
+  tabs: {
+    marginTop: 4,
+    color: palette.text,
+    fontWeight: '700',
+  },
+  active: {
+    marginTop: 4,
+    color: palette.plum,
+    fontWeight: '800',
   },
 });
