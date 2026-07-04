@@ -1,0 +1,24 @@
+# Family Loop
+
+A concept repo for a private, event-centered social app for families and friend groups.
+
+## Purpose
+This repository captures the initial product research, proposal, roadmap, technical spec, and visual concept artifacts for **Family Loop** — a calendar-style, photo-rich, modern social app centered on shared events, memories, and communication.
+
+## Artifacts
+- `docs/01-executive-summary.md`
+- `docs/02-market-research.md`
+- `docs/03-product-proposal.md`
+- `docs/04-spec-roadmap.md`
+- `docs/05-visual-direction.md`
+- `docs/06-wireframe.html`
+
+## Concept summary
+Family Loop blends:
+- a shared private calendar
+- group chat and event conversation
+- photo/memory sharing
+- reminders and tagging
+- premium motion, transitions, and modern mobile interactions
+
+The goal is to create a product people actually use every day because it is both emotionally resonant and deeply practical.
