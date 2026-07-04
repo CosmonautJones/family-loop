@@ -1,11 +1,13 @@
 # Loop Mobile Scaffold
 
-This is the first-pass Expo/React Native scaffold for the Loop MVP.
+This Expo/React Native scaffold now splits the MVP foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
 
 ## Included
 - Expo app shell
-- brand-aligned home dashboard screen
-- placeholder structure for the event-centered MVP direction
+- extracted theme tokens in `src/theme`
+- reusable primitives in `src/components`
+- sample Loop dashboard data in `src/data`
+- home screen and app shell modules in `src/screens` and `src/navigation`
 
 ## Intended next build-out
 - event detail screen
@@ -13,7 +15,7 @@ This is the first-pass Expo/React Native scaffold for the Loop MVP.
 - group switching and onboarding
 - RSVP interactions
 - memory recap screen
-- shared design tokens/components
+- production navigation wiring
 
 ## Run
 ```bash
