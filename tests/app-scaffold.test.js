@@ -31,9 +31,13 @@ test('mobile scaffold files exist', () => {
     'src/features/memories/fixtures.ts',
     'src/features/events/fixtures.ts',
     'src/features/events/selectors.ts',
+    'src/features/events/createEvent.ts',
+    'src/features/events/eventData.ts',
+    'src/features/events/index.ts',
     'src/screens/HomeScreen.tsx',
     'src/screens/CalendarScreen.tsx',
     'src/screens/EventDetailScreen.tsx',
+    'src/screens/CreateEventScreen.tsx',
     'src/screens/MemoriesScreen.tsx',
     'src/screens/GroupsScreen.tsx',
     'src/navigation/AppShell.tsx',
@@ -62,9 +66,13 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   const memoryFixtures = read('src/features/memories/fixtures.ts');
   const eventFixtures = read('src/features/events/fixtures.ts');
   const eventSelectors = read('src/features/events/selectors.ts');
+  const createEvent = read('src/features/events/createEvent.ts');
+  const eventData = read('src/features/events/eventData.ts');
+  const eventFeatureIndex = read('src/features/events/index.ts');
   const homeScreen = read('src/screens/HomeScreen.tsx');
   const calendarScreen = read('src/screens/CalendarScreen.tsx');
   const eventScreen = read('src/screens/EventDetailScreen.tsx');
+  const createEventScreen = read('src/screens/CreateEventScreen.tsx');
   const memoriesScreen = read('src/screens/MemoriesScreen.tsx');
   const groupsScreen = read('src/screens/GroupsScreen.tsx');
   const shell = read('src/navigation/AppShell.tsx');
@@ -90,12 +98,18 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(eventFixtures, /eventThread/);
   assert.match(eventSelectors, /selectEventRsvpSummary/);
   assert.match(eventSelectors, /selectEventTimeline/);
+  assert.match(createEvent, /buildCreateEventFields/);
+  assert.match(createEvent, /summarizeDraftEvent/);
+  assert.match(eventData, /draftEventTemplate/);
+  assert.match(eventFeatureIndex, /export \*/);
   assert.doesNotMatch(homeScreen, /\.\.\/data\/sampleData/);
   assert.match(homeScreen, /selectHomeViewModel/);
   assert.doesNotMatch(calendarScreen, /\.\.\/data\/sampleData/);
   assert.match(calendarScreen, /selectCalendarViewModel/);
   assert.doesNotMatch(eventScreen, /\.\.\/data\/sampleData/);
   assert.match(eventScreen, /selectEventDetailViewModel/);
+  assert.match(createEventScreen, /Create event draft/);
+  assert.match(createEventScreen, /buildCreateEventFields/);
   assert.doesNotMatch(memoriesScreen, /\.\.\/data\/sampleData/);
   assert.match(memoriesScreen, /selectMemoriesViewModel/);
   assert.doesNotMatch(groupsScreen, /\.\.\/data\/sampleData/);
@@ -108,6 +122,7 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(shell, /export function AppShell/);
   assert.match(shell, /Bottom navigation/);
   assert.match(shell, /CalendarScreen/);
+  assert.match(shell, /CreateEventScreen/);
   assert.match(shell, /MemoriesScreen/);
   assert.match(shell, /GroupsScreen/);
   assert.match(shellState, /useAppShellState/);

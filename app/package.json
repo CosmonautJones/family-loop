@@ -12,9 +12,14 @@
     "test": "node --test ../tests/app-scaffold.test.js"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~5.0.5",
+    "@types/react": "~19.0.10",
     "expo": "~53.0.17",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.5"
+    "react-dom": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-web": "^0.20.0",
+    "typescript": "~5.8.3"
   }
 }

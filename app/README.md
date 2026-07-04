@@ -4,18 +4,20 @@ This Expo/React Native scaffold now splits the MVP foundation into theme tokens,
 
 ## Included
 - Expo app shell
-- extracted theme tokens in `src/theme`
+- typed domain models in `src/types`
+- feature fixtures/selectors in `src/features`
+- app-level selectors in `src/app`
 - reusable primitives in `src/components`
-- sample Loop dashboard data in `src/data`
-- home screen and app shell modules in `src/screens` and `src/navigation`
+- screen modules in `src/screens`
+- lightweight navigation shell in `src/navigation`
+- create-event draft flow backed by shared event feature data
 
 ## Intended next build-out
-- event detail screen
-- calendar/agenda screen
-- group switching and onboarding
-- RSVP interactions
-- memory recap screen
-- production navigation wiring
+- RSVP interactions with editable state
+- group switching backed by real active-group context
+- event creation persistence and edit-after-save flow
+- media upload/recap generation integration
+- production navigation/state libraries
 
 ## Run
 ```bash
@@ -23,3 +25,12 @@ cd app
 npm install
 npm start
 ```
+
+## Verify
+```bash
+cd app
+npm test
+npx expo start --web
+```
+
+If Expo reports missing SDK peer dependencies, install them with `npx expo install ...` so versions stay aligned with SDK 53.
