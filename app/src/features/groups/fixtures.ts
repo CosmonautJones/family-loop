@@ -2,7 +2,7 @@ import type { Group } from '../../types/domain';
 
 export const groupsOverview = {
   description:
-    'Loop starts with one private group, one real event, and just enough setup to feel instantly useful.',
+    'LoopedIn starts with one private group, one real event, and just enough setup to feel instantly useful.',
   groups: [
     {
       id: 'group-jones-family',

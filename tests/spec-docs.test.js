@@ -31,12 +31,12 @@ test('spec roadmap includes MVP and roadmap phases', () => {
   assert.match(content, /Phase 2 — retention and polish/);
 });
 
-test('wireframe and prototype concept boards include Loop framing', () => {
+test('wireframe and prototype concept boards include LoopedIn framing', () => {
   const wireframe = fs.readFileSync(path.join(root, 'docs/06-wireframe.html'), 'utf8');
   const prototype = fs.readFileSync(path.join(root, 'docs/07-product-prototype.html'), 'utf8');
-  assert.match(wireframe, /Family Loop — Visual Concept Board/);
+  assert.match(wireframe, /LoopedIn — Visual Concept Board/);
   assert.match(wireframe, /Plan it\. Live it\. Remember it\./);
-  assert.match(prototype, /Loop — Interactive Product Prototype/);
+  assert.match(prototype, /LoopedIn — Interactive Product Prototype/);
   assert.match(prototype, /Event-centered habit loop/);
 });
 
@@ -45,7 +45,7 @@ test('brand package and landing page contain brand and product positioning', () 
   const landing = fs.readFileSync(path.join(root, 'docs/09-landing-page.html'), 'utf8');
   assert.match(brand, /Brand platform/);
   assert.match(brand, /Voice and messaging/);
-  assert.match(landing, /Loop — The private social calendar for real life/);
+  assert.match(landing, /LoopedIn — The private social calendar for real life/);
   assert.match(landing, /Plan it\. Chat in context\. Keep the memory\./);
 });
 

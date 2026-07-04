@@ -1,19 +1,19 @@
-# Loop — Brand Package
+# LoopedIn — Brand Package
 
 ## Brand platform
 
 ### Working brand name
-**Loop**
+**LoopedIn**
 
 The shorter name is stronger for product use, app icon recall, and conversational language:
-- “Check Loop”
-- “Drop it in Loop”
-- “I put the photos in Loop”
+- “Check LoopedIn”
+- “Drop it in LoopedInedIn”
+- “I put the photos in LoopedIn”
 
-**Family Loop** remains a useful descriptive concept name, but **Loop** is the better product brand.
+**LoopedIn** remains a useful descriptive concept name, but **LoopedIn** is the better product brand.
 
 ### Core idea
-Loop is the private social calendar for real life.
+LoopedIn is the private social calendar for real life.
 
 It helps families and friend groups:
 - know what is happening
@@ -21,12 +21,12 @@ It helps families and friend groups:
 - remember what mattered
 
 ### Brand promise
-Loop turns shared plans into shared memories.
+LoopedIn turns shared plans into shared memories.
 
 ### Positioning statement
-For families and close friend groups who coordinate life across too many disconnected tools, Loop is a private event-centered app that combines calendar, contextual chat, reminders, and photo memories in one polished daily-driver experience.
+For families and close friend groups who coordinate life across too many disconnected tools, LoopedIn is a private event-centered app that combines calendar, contextual chat, reminders, and photo memories in one polished daily-driver experience.
 
-Unlike generic shared calendars, messy group chats, or standalone photo albums, Loop keeps the plan and the memory in the same place.
+Unlike generic shared calendars, messy group chats, or standalone photo albums, LoopedIn keeps the plan and the memory in the same place.
 
 ---
 
@@ -47,7 +47,7 @@ Unlike generic shared calendars, messy group chats, or standalone photo albums, 
 - emotionally durable
 
 ### Anti-attributes
-Loop should **not** feel:
+LoopedIn should **not** feel:
 - loud
 - performative
 - childish
@@ -58,7 +58,7 @@ Loop should **not** feel:
 ---
 
 ## Category framing
-Loop lives at the intersection of:
+LoopedIn lives at the intersection of:
 - private social
 - event coordination
 - group communication
@@ -141,7 +141,7 @@ Users want one calm place for the people they actually do life with.
 - Plan together. Remember together.
 
 ### Level 2: support message
-Loop gives families and friend groups one place to manage events, talk in context, get reminders, and keep the photos that matter.
+LoopedIn gives families and friend groups one place to manage events, talk in context, get reminders, and keep the photos that matter.
 
 ### Level 3: feature framing
 - Shared calendar, built for actual groups
@@ -173,9 +173,9 @@ It should suggest:
 ## Color system
 
 ### Primary palette
-- **Loop Plum** — `#71365D`
-- **Loop Coral** — `#F06F67`
-- **Loop Sage** — `#AAC5B1`
+- **LoopedIn Plum** — `#71365D`
+- **LoopedIn Coral** — `#F06F67`
+- **LoopedIn Sage** — `#AAC5B1`
 
 ### Supporting neutrals
 - **Porcelain** — `#FBF9F8`
@@ -209,7 +209,7 @@ A restrained editorial serif can be used sparingly for invitations, hero moments
 ---
 
 ## Motion posture
-Loop should feel alive, not flashy.
+LoopedIn should feel alive, not flashy.
 
 ### Motion principles
 - spatial transitions between calendar and event detail
@@ -262,11 +262,11 @@ Motion should say:
 ---
 
 ## App Store / deck-ready one-liners
-- Loop is the private social calendar for the people you actually do life with.
-- Loop brings events, chat, reminders, and photos into one shared place.
+- LoopedIn is the private social calendar for the people you actually do life with.
+- LoopedIn brings events, chat, reminders, and photos into one shared place.
 - Plan together, stay in sync, and keep the memories.
 
 ---
 
 ## Brand summary
-Loop should feel like a product that belongs in the most personal part of someone’s digital life: not entertainment, not productivity theater, but the quiet center where plans happen and memories stay.
+LoopedIn should feel like a product that belongs in the most personal part of someone’s digital life: not entertainment, not productivity theater, but the quiet center where plans happen and memories stay.

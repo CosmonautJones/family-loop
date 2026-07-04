@@ -4,6 +4,14 @@ export type GroupId = string;
 export type EventId = string;
 export type PersonId = string;
 export type MemoryId = string;
+export type MediaId = string;
+
+export type Person = {
+  id: PersonId;
+  name: string;
+  avatarUri: string;
+  initials: string;
+};
 
 export type Group = {
   id: GroupId;
@@ -13,6 +21,7 @@ export type Group = {
   badge: string;
   tone: AccentTone;
   memberCount: number;
+  coverUri?: string;
 };
 
 export type RSVPStatus = 'going' | 'maybe' | 'declined';
@@ -28,6 +37,7 @@ export type RSVP = {
 export type EventActivity = {
   id: string;
   eventId: EventId;
+  actor?: Person;
   title: string;
   detail: string;
   badge: string;
@@ -45,8 +55,19 @@ export type EventMessage = {
   eventId: EventId;
   body: string;
   authorName: string;
+  author?: Person;
   self: boolean;
   createdAt: string;
+};
+
+export type MediaItem = {
+  id: MediaId;
+  eventId: EventId;
+  uri: string;
+  caption: string;
+  uploadedBy: PersonId;
+  uploadedAt: string;
+  blurhash?: string;
 };
 
 export type Event = {
@@ -60,6 +81,8 @@ export type Event = {
   statusLabel: string;
   visibility: 'group';
   timeline: EventTimelineItem[];
+  coverUri?: string;
+  media?: MediaItem[];
 };
 
 export type MemoryItem = {
@@ -73,4 +96,6 @@ export type MemoryItem = {
   commentCount: number;
   tags: string[];
   resurfacedLabel: string;
+  coverUri: string;
+  photoUris: string[];
 };

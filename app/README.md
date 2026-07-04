@@ -1,4 +1,4 @@
-# Loop Mobile Scaffold
+# LoopedIn Mobile Scaffold
 
 This Expo/React Native scaffold now splits the MVP foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
 

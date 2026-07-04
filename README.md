@@ -1,9 +1,9 @@
-# Family Loop
+# LoopedIn
 
 A concept repo for a private, event-centered social app for families and friend groups.
 
 ## Purpose
-This repository captures the initial product research, proposal, roadmap, technical spec, and visual concept artifacts for **Family Loop** — a calendar-style, photo-rich, modern social app centered on shared events, memories, and communication.
+This repository captures the initial product research, proposal, roadmap, technical spec, and visual concept artifacts for **LoopedIn** — a calendar-style, photo-rich, modern social app centered on shared events, memories, and communication.
 
 ## Artifacts
 - `docs/01-executive-summary.md`
@@ -38,7 +38,7 @@ npm start
 See `docs/10-loop-architecture-and-workflow.md` for the recommended app structure, screen model, sample data strategy, and agent/subagent contribution workflow.
 
 ## Concept summary
-Family Loop blends:
+LoopedIn blends:
 - a shared private calendar
 - group chat and event conversation
 - photo/memory sharing

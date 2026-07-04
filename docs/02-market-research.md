@@ -1,7 +1,7 @@
-# Family Loop — Market Research
+# LoopedIn — Market Research
 
 ## Framing
-Family Loop is a concept for a private mobile app for families and friend groups that blends:
+LoopedIn is a concept for a private mobile app for families and friend groups that blends:
 - shared calendar and event planning
 - contextual group communication
 - reminders and attendance coordination
@@ -158,7 +158,7 @@ These often function as the real family or friend operating system today.
 - photos become disposable and hard to retrieve later
 
 **Implication**
-Family Loop should feel like “the structured version of what people are already doing in chat.”
+LoopedIn should feel like “the structured version of what people are already doing in chat.”
 
 ### Google Calendar / Apple Calendar / shared calendars
 **Strengths**
@@ -244,7 +244,7 @@ Users should be able to revisit life through:
 Contextual threads attached to events beat chaotic group chat.
 
 ### 5. Social delight in a utility shell
-Legacy family organizers feel too cold. Family Loop should introduce:
+Legacy family organizers feel too cold. LoopedIn should introduce:
 - richer cards
 - satisfying RSVP microinteractions
 - modern transitions
@@ -255,7 +255,7 @@ Legacy family organizers feel too cold. Family Loop should introduce:
 ## Differentiation opportunities
 
 ### 1. Plan it, then remember it
-Most products do planning *or* memories. Family Loop should do both seamlessly.
+Most products do planning *or* memories. LoopedIn should do both seamlessly.
 
 ### 2. Serve both families and close friend groups
 Most family products skew toward parents-with-kids; most social apps skew public or lightweight. There is room for a private pod product that works across multiple close-relationship types.
@@ -297,7 +297,7 @@ Most relevant products monetize through:
 - prints/physical keepsakes
 - safety tiers in adjacent family utility products
 
-### Likely monetization fit for Family Loop
+### Likely monetization fit for LoopedIn
 - household/group premium subscription
 - premium reminder/automation features
 - memory recap and keepsake features
@@ -336,4 +336,4 @@ There is room for a **private-by-default, event-centered social product** that:
 - turns moments into shared memories afterward
 - looks and feels like a modern premium consumer app
 
-That is the clearest market opening for Family Loop.
+That is the clearest market opening for LoopedIn.

@@ -1,9 +1,9 @@
-# Family Loop — Visual Direction
+# LoopedIn — Visual Direction
 
 ## Design north star
 **Warm premium utility**
 
-Family Loop should feel like a blend of:
+LoopedIn should feel like a blend of:
 - Apple Photos / Calendar polish
 - Instagram’s confidence with media
 - Partiful’s event energy
@@ -237,4 +237,4 @@ Critical for emotional retention.
 ---
 
 ## Final style statement
-Family Loop should look and feel like a private, premium social calendar for real life: calm enough for daily planning, expressive enough for celebrations, and beautiful enough that people want to keep their memories there.
+LoopedIn should look and feel like a private, premium social calendar for real life: calm enough for daily planning, expressive enough for celebrations, and beautiful enough that people want to keep their memories there.

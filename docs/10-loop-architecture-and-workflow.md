@@ -1,7 +1,7 @@
-# Loop Mobile Architecture and Contributor Workflow
+# LoopedIn Mobile Architecture and Contributor Workflow
 
 ## Purpose
-This document translates the product proposal and roadmap into a build-ready foundation for the Loop mobile app. It describes:
+This document translates the product proposal and roadmap into a build-ready foundation for the LoopedIn mobile app. It describes:
 - the recommended mobile app structure
 - the screen model for the first shipping slices
 - a sample data strategy for scaffolding and demos
@@ -13,7 +13,7 @@ Use this doc as the implementation bridge between the concept artifacts in `docs
 ---
 
 ## System architecture at a glance
-Loop should be implemented as an **event-centered mobile client** backed by a service layer that treats the event as the primary object.
+LoopedIn should be implemented as an **event-centered mobile client** backed by a service layer that treats the event as the primary object.
 
 ### Product object hierarchy
 1. **Group** is the permission boundary.
@@ -181,7 +181,7 @@ Recommended bottom navigation for the first real build:
 ---
 
 ## Sample data strategy
-Loop already has a polished scaffold in `app/App.tsx`. To keep implementation velocity high without inventing backend behavior too early, contributors should use a deliberate fixture strategy.
+LoopedIn already has a polished scaffold in `app/App.tsx`. To keep implementation velocity high without inventing backend behavior too early, contributors should use a deliberate fixture strategy.
 
 ### Why fixture-first matters here
 - product value depends heavily on realistic event composition
@@ -342,7 +342,7 @@ This order preserves design momentum while reducing rework.
 ---
 
 ## Definition of a good foundation change
-A strong foundation contribution to Loop should do at least one of the following:
+A strong foundation contribution to LoopedIn should do at least one of the following:
 - clarify the event-centered architecture
 - reduce ambiguity about screen responsibilities
 - improve deterministic sample data usage

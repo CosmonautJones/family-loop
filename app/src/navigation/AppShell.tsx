@@ -1,88 +1,109 @@
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppBackground } from '../components/AppBackground';
 import { CalendarScreen } from '../screens/CalendarScreen';
 import { CreateEventScreen } from '../screens/CreateEventScreen';
-import { EventDetailScreen } from '../screens/EventDetailScreen';
 import { GroupsScreen } from '../screens/GroupsScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MemoriesScreen } from '../screens/MemoriesScreen';
-import { palette, radii, spacing } from '../theme/tokens';
+import { gradients, palette, radii, shadow, spacing } from '../theme/tokens';
 import { useAppShellState } from './useAppShellState';
+
+const tabIcons = {
+  Home: 'home',
+  Calendar: 'calendar',
+  Create: 'add-circle',
+  Memories: 'images',
+  Groups: 'people',
+} as const;
 
 export function AppShell() {
   const { tabItems, activeTab, setActiveTab } = useAppShellState();
 
   return (
-    <View style={styles.root}>
-      <View style={styles.content}>
-        {activeTab === 'Home' ? <HomeScreen /> : null}
-        {activeTab === 'Calendar' ? <CalendarScreen /> : null}
-        {activeTab === 'Create' ? <CreateEventScreen /> : null}
-        {activeTab === 'Memories' ? <MemoriesScreen /> : null}
-        {activeTab === 'Groups' ? <GroupsScreen /> : null}
-      </View>
-      <View style={styles.navWrap}>
-        <Text style={styles.label}>Bottom navigation</Text>
-        <View style={styles.navRow}>
-          {tabItems.map((tab) => (
-            <Pressable
-              key={tab.label}
-              accessibilityRole="button"
-              onPress={() => setActiveTab(tab.label)}
-              style={[styles.navItem, tab.active && styles.navItemActive]}
-            >
-              <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
-            </Pressable>
-          ))}
+    <AppBackground>
+      <View style={styles.root}>
+        <View style={styles.content}>
+          {activeTab === 'Home' ? <HomeScreen /> : null}
+          {activeTab === 'Calendar' ? <CalendarScreen /> : null}
+          {activeTab === 'Create' ? <CreateEventScreen /> : null}
+          {activeTab === 'Memories' ? <MemoriesScreen /> : null}
+          {activeTab === 'Groups' ? <GroupsScreen /> : null}
+        </View>
+        <View style={styles.navOuter}>
+          <BlurView intensity={42} tint="light" style={styles.navWrap}>
+            <View style={styles.navRow}>
+              {tabItems.map((tab) => (
+                <Pressable
+                  key={tab.label}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${tab.label} tab`}
+                  onPress={() => setActiveTab(tab.label)}
+                  style={styles.navItem}
+                >
+                  {tab.active ? <LinearGradient colors={gradients.sunset} style={styles.activePill} /> : null}
+                  <Ionicons
+                    name={tabIcons[tab.label]}
+                    size={tab.label === 'Create' ? 27 : 22}
+                    color={tab.active ? palette.white : palette.muted}
+                  />
+                  <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </BlurView>
         </View>
       </View>
-    </View>
+    </AppBackground>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: palette.bg,
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
   },
-  navWrap: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(32,22,28,0.08)',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+  navOuter: {
+    paddingHorizontal: spacing.md,
     paddingBottom: spacing.md,
-    backgroundColor: 'rgba(255,255,255,0.96)',
   },
-  label: {
-    fontSize: 11,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    color: palette.muted,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
+  navWrap: {
+    overflow: 'hidden',
+    borderRadius: radii.hero,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.66)',
+    backgroundColor: 'rgba(255,249,244,0.74)',
+    ...shadow.soft,
   },
   navRow: {
     flexDirection: 'row',
-    gap: 8,
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    padding: 8,
   },
   navItem: {
-    borderRadius: radii.pill,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(32,22,28,0.06)',
+    flex: 1,
+    minHeight: 58,
+    borderRadius: radii.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 3,
+    overflow: 'hidden',
   },
-  navItemActive: {
-    backgroundColor: palette.plum,
+  activePill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: radii.card,
   },
   navText: {
-    color: palette.text,
-    fontSize: 13,
-    fontWeight: '700',
+    color: palette.muted,
+    fontSize: 10,
+    fontWeight: '800',
   },
   navTextActive: {
-    color: '#fff',
+    color: palette.white,
   },
 });

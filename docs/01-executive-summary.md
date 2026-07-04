@@ -1,4 +1,4 @@
-# Family Loop — Executive Summary
+# LoopedIn — Executive Summary
 
 ## One-line vision
 A private, event-centered social app for families and friend groups that turns planning life together into shared memories.
@@ -10,12 +10,12 @@ The current market is fragmented:
 - private photo apps preserve memories but do not coordinate life
 - group chats coordinate life poorly because everything gets buried
 
-Family Loop sits in the whitespace between these categories.
+LoopedIn sits in the whitespace between these categories.
 
 ## Product thesis
 If people already plan life in one app, chat in another, and store memories in a third, there is an opportunity to create a better daily-driver product by anchoring all three around the event.
 
-In Family Loop, every event becomes a durable shared object:
+In LoopedIn, every event becomes a durable shared object:
 1. plan it
 2. discuss it
 3. get reminded about it
@@ -50,7 +50,7 @@ Most competitors choose one side of the market:
 - chat apps handle communication
 - event apps handle invites
 
-Family Loop can win by making the event the bridge between utility and emotion.
+LoopedIn can win by making the event the bridge between utility and emotion.
 
 ## Recommended wedge
 Start with **private group event planning + shared albums + contextual chat**.

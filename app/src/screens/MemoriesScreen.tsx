@@ -1,5 +1,7 @@
+import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
+import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectMemoriesViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
@@ -9,24 +11,25 @@ export function MemoriesScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.heroCard}>
-        <Text style={styles.heroMini}>{memoriesRecap.resurfacedLabel}</Text>
-        <Text style={styles.heroTitle}>{memoriesRecap.title}</Text>
-        <Text style={styles.heroCopy}>{memoriesRecap.description}</Text>
-        <View style={styles.actionRow}>
-          <Button label="View recap" />
-          <Button label="Share to group" tone="secondary" />
-        </View>
-      </View>
+      <PhotoCard
+        uri={memoriesRecap.coverUri}
+        title={memoriesRecap.title}
+        subtitle={`${memoriesRecap.resurfacedLabel} · ${memoriesRecap.ingredients}`}
+        height={320}
+      />
 
       <SurfaceCard>
         <Text style={styles.cardTitle}>Recap ingredients</Text>
         <Text style={styles.cardCopy}>{memoriesRecap.ingredients}</Text>
+        <View style={styles.actionRow}>
+          <Button label="View recap" />
+          <Button label="Share to group" tone="secondary" />
+        </View>
         <View style={styles.galleryRow}>
-          <View style={[styles.galleryTall, styles.galleryBase]} />
+          <Image source={{ uri: memoriesRecap.photoUris[0] }} style={[styles.galleryTall, styles.galleryBase]} contentFit="cover" transition={300} />
           <View style={styles.galleryColumn}>
-            <View style={styles.galleryBase} />
-            <View style={styles.galleryBase} />
+            <Image source={{ uri: memoriesRecap.photoUris[1] }} style={styles.galleryBase} contentFit="cover" transition={300} />
+            <Image source={{ uri: memoriesRecap.photoUris[2] }} style={styles.galleryBase} contentFit="cover" transition={300} />
           </View>
         </View>
       </SurfaceCard>
@@ -45,30 +48,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: 40,
   },
-  heroCard: {
-    backgroundColor: palette.coral,
-    borderRadius: 28,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  heroMini: {
-    color: 'rgba(255,255,255,0.84)',
-    textTransform: 'uppercase',
-    letterSpacing: 1.4,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  heroTitle: {
-    color: '#fff',
-    fontSize: 32,
-    lineHeight: 32,
-    fontWeight: '800',
-  },
-  heroCopy: {
-    color: 'rgba(255,255,255,0.92)',
-    fontSize: 14,
-    lineHeight: 22,
-  },
   actionRow: {
     flexDirection: 'row',
     gap: 10,
@@ -78,7 +57,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: palette.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   cardCopy: {
     color: palette.muted,
@@ -98,11 +77,12 @@ const styles = StyleSheet.create({
   galleryBase: {
     flex: 1,
     minHeight: 96,
-    borderRadius: 18,
-    backgroundColor: '#e8d2d4',
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: palette.peach,
   },
   galleryTall: {
-    minHeight: 200,
+    minHeight: 212,
     flex: 1.2,
   },
 });

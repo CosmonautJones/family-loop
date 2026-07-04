@@ -1,7 +1,9 @@
 import { StatusBar } from 'expo-status-bar';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
+import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
@@ -14,18 +16,15 @@ export function HomeScreen() {
     <View style={styles.root}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.eyebrow}>Loop mobile MVP</Text>
-        <Text style={styles.title}>A private social calendar for real life.</Text>
+        <Text style={styles.eyebrow}>LoopedIn mobile MVP</Text>
+        <Text style={styles.title}>A warmer private social calendar for real life.</Text>
         <Text style={styles.subtitle}>
-          This scaffold shows the home dashboard direction for the first Loop mobile build: next event,
-          recent activity, shared memories, and fast navigation into event detail.
+          Photo-first events, shared context, reminders, and memories — polished enough to feel like a daily habit.
         </Text>
 
-        <View style={styles.heroCard}>
-          <Text style={styles.heroMini}>{heroEvent.timeLabel}</Text>
-          <Text style={styles.heroTitle}>{heroEvent.title}</Text>
-          <Text style={styles.heroCopy}>{heroEvent.description}</Text>
-          <View style={styles.heroActions}>
+        <View>
+          <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.timeLabel} height={300} />
+          <View style={styles.heroOverlayActions}>
             <Button label="Open event" />
             <Button label="Add reminder" tone="secondary" />
           </View>
@@ -47,14 +46,17 @@ export function HomeScreen() {
               <Text style={styles.cardTitle}>Recent activity</Text>
               <Text style={styles.cardCopy}>{appSections.recentActivityTitle}</Text>
             </View>
-            <Chip label="Memories" />
+            <Chip label="Live" tone="coral" />
           </View>
           <View style={styles.divider} />
           {appSections.activity.map((item) => (
             <View key={item.title} style={styles.listItem}>
-              <View>
-                <Text style={styles.listTitle}>{item.title}</Text>
-                <Text style={styles.cardCopy}>{item.detail}</Text>
+              <View style={styles.activityMain}>
+                <Avatar uri={item.actor?.avatarUri} initials={item.actor?.initials ?? 'LI'} />
+                <View>
+                  <Text style={styles.listTitle}>{item.title}</Text>
+                  <Text style={styles.cardCopy}>{item.detail}</Text>
+                </View>
               </View>
               <Chip label={item.badge} tone={item.tone} />
             </View>
@@ -62,14 +64,11 @@ export function HomeScreen() {
         </SurfaceCard>
 
         <View style={styles.memoryRow}>
-          <View style={[styles.memoryCard, { backgroundColor: palette.coral }]}>
-            <Text style={styles.memoryMini}>{appSections.memories[0].eyebrow}</Text>
-            <Text style={styles.memoryTitle}>{appSections.memories[0].title}</Text>
-          </View>
-          <View style={[styles.memoryCard, { backgroundColor: palette.sage }]}>
-            <Text style={[styles.memoryMini, { color: '#234132' }]}>{appSections.memories[1].eyebrow}</Text>
-            <Text style={[styles.memoryTitle, { color: '#234132' }]}>{appSections.memories[1].title}</Text>
-          </View>
+          {appSections.memories.map((memory) => (
+            <View key={memory.title} style={styles.memoryTile}>
+              <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={`${memory.eyebrow} · ${memory.subtitle}`} height={172} />
+            </View>
+          ))}
         </View>
       </ScrollView>
     </View>
@@ -79,7 +78,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: palette.bg,
+    backgroundColor: 'transparent',
   },
   container: {
     padding: spacing.lg,
@@ -92,13 +91,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1.8,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   title: {
     color: palette.text,
-    fontSize: 36,
-    lineHeight: 38,
-    fontWeight: '800',
+    fontSize: 38,
+    lineHeight: 40,
+    fontWeight: '900',
     marginTop: 10,
   },
   subtitle: {
@@ -108,37 +107,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
-  heroCard: {
-    backgroundColor: palette.plum,
-    borderRadius: 28,
-    padding: spacing.lg,
-    gap: spacing.sm,
-  },
-  heroMini: {
-    color: 'rgba(255,255,255,0.82)',
-    textTransform: 'uppercase',
-    letterSpacing: 1.4,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  heroTitle: {
-    color: '#fff',
-    fontSize: 32,
-    lineHeight: 32,
-    fontWeight: '800',
-    maxWidth: 240,
-  },
-  heroCopy: {
-    color: 'rgba(255,255,255,0.92)',
-    fontSize: 14,
-    lineHeight: 22,
-    maxWidth: 260,
-  },
-  heroActions: {
+  heroOverlayActions: {
+    position: 'absolute',
+    left: 18,
+    right: 18,
+    bottom: 18,
     flexDirection: 'row',
     gap: 10,
     flexWrap: 'wrap',
-    marginTop: 6,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -149,7 +125,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: palette.text,
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   cardCopy: {
     color: palette.muted,
@@ -159,7 +135,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(32,22,28,0.08)',
+    backgroundColor: palette.inkSoft,
   },
   listItem: {
     flexDirection: 'row',
@@ -167,34 +143,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  activityMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
   listTitle: {
     color: palette.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   memoryRow: {
     flexDirection: 'row',
     gap: 12,
   },
-  memoryCard: {
+  memoryTile: {
     flex: 1,
-    minHeight: 126,
-    borderRadius: 24,
-    padding: 16,
-    justifyContent: 'flex-end',
-  },
-  memoryMini: {
-    color: 'rgba(255,255,255,0.82)',
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontSize: 11,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  memoryTitle: {
-    color: '#fff',
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: '800',
   },
 });

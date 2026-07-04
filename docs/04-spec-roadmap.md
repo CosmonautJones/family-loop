@@ -1,7 +1,7 @@
-# Family Loop — Spec and Roadmap
+# LoopedIn — Spec and Roadmap
 
 ## Product definition
-Family Loop is a private, mobile-first social calendar app for families and friend groups. It combines event planning, contextual conversation, reminders, attendance, and shared photos into one event-centered experience.
+LoopedIn is a private, mobile-first social calendar app for families and friend groups. It combines event planning, contextual conversation, reminders, attendance, and shared photos into one event-centered experience.
 
 ---
 
@@ -372,4 +372,4 @@ Monetization and retention expand without diluting the event-centered identity.
 ---
 
 ## Recommendation
-Proceed into a design/prototype phase immediately, using the event detail page and home dashboard as the two highest-leverage artifacts. Those surfaces will reveal whether Family Loop can truly fuse utility and emotion into one daily-driver experience.
+Proceed into a design/prototype phase immediately, using the event detail page and home dashboard as the two highest-leverage artifacts. Those surfaces will reveal whether LoopedIn can truly fuse utility and emotion into one daily-driver experience.

@@ -1,10 +1,10 @@
-# Family Loop — Product Proposal
+# LoopedIn — Product Proposal
 
 ## Working title
-**Family Loop**
+**LoopedIn**
 
 Alternative names worth exploring later:
-- Loop
+- LoopedIn
 - Gatherly
 - Kinloop
 - Daycircle
@@ -14,7 +14,7 @@ Alternative names worth exploring later:
 ---
 
 ## Product summary
-Family Loop is a private mobile app for families and friend groups built around a simple idea:
+LoopedIn is a private mobile app for families and friend groups built around a simple idea:
 
 > Shared events should not live in one app, conversation in another, and memories in a third.
 
@@ -55,7 +55,7 @@ This fragmentation creates friction exactly where people want ease: family life,
 ## Vision
 Create the private social operating system for close groups.
 
-Family Loop should feel like:
+LoopedIn should feel like:
 - the practical clarity of a shared calendar
 - the warmth and immediacy of a private social app
 - the memory value of a shared photo archive
@@ -204,16 +204,16 @@ This loop ties utility and emotion together in a way chat-only or calendar-only 
 ## Differentiators
 
 ### Relative to family organizers
-Family Loop is more modern, social, and media-native.
+LoopedIn is more modern, social, and media-native.
 
 ### Relative to private photo apps
-Family Loop is more useful before the memory exists.
+LoopedIn is more useful before the memory exists.
 
 ### Relative to group chats
-Family Loop is more structured and retrievable.
+LoopedIn is more structured and retrievable.
 
 ### Relative to event apps
-Family Loop is built for persistent groups and recurring life, not only one-off parties.
+LoopedIn is built for persistent groups and recurring life, not only one-off parties.
 
 ---
 
@@ -279,4 +279,4 @@ Move forward with a concept/prototype phase focused on:
 - shared post-event gallery
 - premium home/calendar/event transitions
 
-If the prototype can demonstrate both practical utility and emotional pull, Family Loop has a credible wedge in a fragmented but real market gap.
+If the prototype can demonstrate both practical utility and emotional pull, LoopedIn has a credible wedge in a fragmented but real market gap.

@@ -19,6 +19,8 @@ export function selectHomeViewModel() {
     memories: homeMemories.map((memory) => ({
       eyebrow: memory.resurfacedLabel,
       title: memory.title,
+      coverUri: memory.coverUri,
+      subtitle: `${memory.photoCount || memory.peopleCount} moments · ${memory.tags.join(', ')}`,
     })),
   };
 }
@@ -56,6 +58,8 @@ export function selectMemoriesViewModel() {
     ingredients: `${memoriesRecap.photoCount} photos · ${memoriesRecap.peopleCount} people · ${memoriesRecap.commentCount} comments worth resurfacing`,
     tags: memoriesRecap.tags.join(', '),
     resurfacedLabel: memoriesRecap.resurfacedLabel,
+    coverUri: memoriesRecap.coverUri,
+    photoUris: memoriesRecap.photoUris,
   };
 }
 
