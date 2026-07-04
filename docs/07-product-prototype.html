@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loop — Interactive Product Prototype</title>
+  <style>
+    :root {
+      --bg: #f7f4f2;
+      --surface: rgba(255,255,255,.86);
+      --surface-strong: #ffffff;
+      --surface-soft: #f2ece8;
+      --text: #20161c;
+      --muted: #6d6370;
+      --line: rgba(32,22,28,.08);
+      --primary: #71365d;
+      --primary-2: #92507b;
+      --coral: #f06f67;
+      --gold: #f4c37b;
+      --sage: #aac5b1;
+      --sky: #c6d9f6;
+      --success: #355442;
+      --danger: #9c3e44;
+      --shadow: 0 28px 70px rgba(88, 40, 67, .14);
+      --radius-xl: 30px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --phone-w: 400px;
+      --nav-h: 82px;
+      --ease: 280ms cubic-bezier(.22, 1, .36, 1);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(240,111,103,.22), transparent 28%),
+        radial-gradient(circle at 100% 0%, rgba(113,54,93,.18), transparent 26%),
+        linear-gradient(180deg, #fbf9f8 0%, var(--bg) 100%);
+      overflow: hidden;
+    }
+    button, input, textarea, select { font: inherit; }
+    .page {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      height: 100vh;
+    }
+    .sidebar {
+      border-right: 1px solid var(--line);
+      padding: 28px 24px;
+      background: rgba(255,255,255,.4);
+      backdrop-filter: blur(24px);
+      overflow: auto;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      background: linear-gradient(145deg, var(--primary), var(--coral));
+      box-shadow: 0 18px 35px rgba(113,54,93,.26);
+      position: relative;
+    }
+    .logo::before, .logo::after {
+      content: '';
+      position: absolute;
+      background: rgba(255,255,255,.92);
+      border-radius: 999px;
+    }
+    .logo::before { inset: 12px 20px 12px 12px; }
+    .logo::after { inset: 12px 12px 12px 24px; opacity: .78; }
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1;
+    }
+    .tagline {
+      margin: 12px 0 24px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 15px;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 13px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .view-list, .toggle-list { display: grid; gap: 10px; }
+    .view-btn, .toggle-btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.8);
+      border-radius: 16px;
+      padding: 14px 15px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform var(--ease), border-color var(--ease), background var(--ease), box-shadow var(--ease);
+      color: var(--text);
+    }
+    .view-btn strong, .toggle-btn strong { display: block; margin-bottom: 4px; font-size: 15px; }
+    .view-btn span, .toggle-btn span { color: var(--muted); font-size: 13px; line-height: 1.4; display: block; }
+    .view-btn.active, .toggle-btn.active {
+      background: linear-gradient(180deg, rgba(113,54,93,.12), rgba(240,111,103,.08));
+      border-color: rgba(113,54,93,.24);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(113,54,93,.1);
+    }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge {
+      border-radius: 999px;
+      padding: 9px 12px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--text);
+    }
+    .workspace {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 30px;
+    }
+    .phone-shell {
+      width: min(var(--phone-w), 100%);
+      background: #141113;
+      border-radius: 42px;
+      padding: 12px;
+      box-shadow: 0 32px 90px rgba(18, 9, 16, .34);
+      position: relative;
+    }
+    .phone-shell::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 26px;
+      background: #0d0b0c;
+      border-radius: 0 0 20px 20px;
+      z-index: 4;
+    }
+    .screen {
+      min-height: 820px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, #fff 0%, #f8f3f1 100%);
+      overflow: hidden;
+      position: relative;
+    }
+    .screen-inner {
+      padding: 26px 20px 110px;
+      height: 820px;
+      overflow: auto;
+    }
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .hero-card {
+      background: linear-gradient(145deg, rgba(113,54,93,.98), rgba(240,111,103,.86));
+      color: #fff;
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: 0 26px 50px rgba(113,54,93,.25);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card::after {
+      content: '';
+      position: absolute;
+      inset: auto -30px -60px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.14);
+      filter: blur(2px);
+    }
+    .hero-mini {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      opacity: .84;
+      margin-bottom: 10px;
+    }
+    .hero-title {
+      font-size: 34px;
+      line-height: .96;
+      font-weight: 800;
+      max-width: 260px;
+      margin: 0 0 10px;
+    }
+    .hero-copy {
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 260px;
+      opacity: .92;
+    }
+    .cta-row, .chip-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .cta-row { margin-top: 16px; }
+    .cta {
+      border: none;
+      background: rgba(255,255,255,.92);
+      color: var(--primary);
+      border-radius: 999px;
+      padding: 11px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cta.secondary {
+      background: rgba(255,255,255,.16);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.24);
+    }
+    .card-stack { display: grid; gap: 14px; margin-top: 18px; }
+    .soft-card {
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      box-shadow: 0 12px 28px rgba(32,22,28,.05);
+    }
+    .row { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .title-md { font-size: 18px; font-weight: 800; margin: 0; }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; line-height: 1.45; }
+    .pill {
+      background: rgba(170,197,177,.26);
+      color: var(--success);
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .pill.coral { background: rgba(240,111,103,.16); color: var(--danger); }
+    .pill.sky { background: rgba(198,217,246,.34); color: #38527c; }
+    .avatar-row { display: flex; align-items: center; }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      margin-right: -9px;
+      border: 2px solid #fff;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .a1 { background: #71365d; }
+    .a2 { background: #f06f67; }
+    .a3 { background: #89a8dd; }
+    .a4 { background: #91b49c; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .memory {
+      min-height: 118px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(244,195,123,.92), rgba(240,111,103,.88));
+      color: #fff;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      box-shadow: 0 16px 30px rgba(240,111,103,.18);
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+    .day {
+      background: #fff;
+      border: 1px solid var(--line);
+      min-height: 70px;
+      border-radius: 18px;
+      padding: 10px;
+      font-size: 12px;
+      position: relative;
+    }
+    .day.active {
+      background: linear-gradient(180deg, rgba(113,54,93,.1), rgba(240,111,103,.06));
+      border-color: rgba(113,54,93,.22);
+      transform: translateY(-1px);
+    }
+    .event-dot {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--coral);
+      box-shadow: 14px 0 0 rgba(113,54,93,.8);
+    }
+    .chat-list { display: grid; gap: 12px; }
+    .bubble {
+      max-width: 84%;
+      padding: 13px 14px;
+      border-radius: 18px;
+      line-height: 1.45;
+      font-size: 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+    .bubble.self {
+      margin-left: auto;
+      background: linear-gradient(180deg, rgba(113,54,93,.92), rgba(146,80,123,.88));
+      color: #fff;
+      border-color: transparent;
+    }
+    .composer {
+      margin-top: 14px;
+      background: rgba(255,255,255,.94);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .shot {
+      min-height: 98px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #efc7bf, #c9b6e1);
+      position: relative;
+      overflow: hidden;
+    }
+    .shot.tall { min-height: 204px; }
+    .shot::after {
+      content: '';
+      position: absolute;
+      inset: auto 10px 10px auto;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.3);
+      backdrop-filter: blur(8px);
+    }
+    .bottom-nav {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      height: var(--nav-h);
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.76);
+      border-radius: 28px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      padding: 0 8px;
+      box-shadow: 0 22px 40px rgba(25, 16, 22, .12);
+      backdrop-filter: blur(14px);
+    }
+    .nav-item {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .nav-item.active { color: var(--primary); font-weight: 800; }
+    .nav-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background: rgba(113,54,93,.08);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+    }
+    .nav-item.active .nav-icon {
+      background: linear-gradient(145deg, rgba(113,54,93,.16), rgba(240,111,103,.12));
+    }
+    .hidden { display: none !important; }
+    .note {
+      position: absolute;
+      right: 36px;
+      bottom: 34px;
+      width: 280px;
+      background: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.7);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .proto-title { margin: 0 0 8px; font-size: 18px; }
+    .screen-view { display: none; animation: fadeUp var(--ease); }
+    .screen-view.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .event-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .event-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .event-action {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.84);
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .journey {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .journey-step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .journey-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: rgba(113,54,93,.1);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    @media (max-width: 1180px) {
+      body { overflow: auto; }
+      .page { grid-template-columns: 1fr; height: auto; }
+      .workspace { padding-top: 10px; }
+      .note { position: static; width: min(420px, 100%); margin-top: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="eyebrow">Loop prototype</div>
+          <h1>Family Loop</h1>
+        </div>
+      </div>
+      <p class="tagline">A clickable product prototype for a private event-centered social app where planning, conversation, reminders, and memories all orbit the same shared moment.</p>
+
+      <div class="panel">
+        <h2 class="section-title">Prototype views</h2>
+        <div class="view-list">
+          <button class="view-btn active" data-view="home"><strong>Home dashboard</strong><span>Next event, recent moments, and weekly utility in one glance.</span></button>
+          <button class="view-btn" data-view="event"><strong>Event detail</strong><span>The living page for logistics, RSVP, chat, and gallery.</span></button>
+          <button class="view-btn" data-view="calendar"><strong>Calendar</strong><span>Month + agenda view with event prominence and memory cues.</span></button>
+          <button class="view-btn" data-view="memory"><strong>Memories</strong><span>Auto recap, resurfacing, and emotional retention loop.</span></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="section-title">Focus toggles</h2>
+        <div class="toggle-list">
+          <button class="toggle-btn active" data-mode="family"><strong>Family mode</strong><span>Warm copy, milestone framing, and household rhythm.</span></button>
+          <button class="toggle-btn" data-mode="friends"><strong>Friend-group mode</strong><span>Slightly more playful event framing and social energy.</span></button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2 class="section-title">Design signals</h2>
+        <div class="badge-row">
+          <div class="badge">Private by default</div>
+          <div class="badge">Event-native UX</div>
+          <div class="badge">Photo-led memories</div>
+          <div class="badge">Apple × Airbnb warmth</div>
+          <div class="badge">Motion-ready surfaces</div>
+          <div class="badge">Daily-driver practicality</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <div class="phone-shell">
+        <div class="screen">
+          <div class="screen-inner">
+            <div id="view-home" class="screen-view active">
+              <div class="topline"><span>Tuesday, July 14</span><span>Loop · Home</span></div>
+              <section class="hero-card">
+                <div class="hero-mini" id="home-mini">Next up · Today 6:30 PM</div>
+                <h2 class="hero-title" id="home-title">Lake Picnic with Family</h2>
+                <p class="hero-copy" id="home-copy">One page for logistics, the running chat, and the photos that make the day worth revisiting later.</p>
+                <div class="cta-row">
+                  <button class="cta">Open event</button>
+                  <button class="cta secondary">Add a reminder</button>
+                </div>
+              </section>
+
+              <div class="card-stack">
+                <article class="soft-card row">
+                  <div>
+                    <h3 class="title-md">This week</h3>
+                    <div class="small muted">4 events · 2 reminders · 1 memory recap waiting</div>
+                  </div>
+                  <div class="pill sky">Agenda</div>
+                </article>
+
+                <article class="soft-card">
+                  <div class="row">
+                    <div>
+                      <h3 class="title-md">Recent activity</h3>
+                      <div class="small muted">Context stays attached to real events.</div>
+                    </div>
+                    <div class="avatar-row">
+                      <div class="avatar a1">TJ</div>
+                      <div class="avatar a2">EM</div>
+                      <div class="avatar a3">AL</div>
+                    </div>
+                  </div>
+                  <div class="card-stack">
+                    <div class="row"><div><strong>Emma added 12 photos</strong><div class="small muted">Saturday zoo trip recap is ready</div></div><div class="pill">Memories</div></div>
+                    <div class="row"><div><strong>Dinner moved to 7:30</strong><div class="small muted">Everyone sees the update in context</div></div><div class="pill coral">Updated</div></div>
+                  </div>
+                </article>
+
+                <div class="grid-2">
+                  <article class="memory"><div class="hero-mini">On this day</div><strong>Summer fireworks recap</strong></article>
+                  <article class="memory" style="background: linear-gradient(145deg, rgba(170,197,177,.95), rgba(113,54,93,.82));"><div class="hero-mini">Coming soon</div><strong>Friday dinner club</strong></article>
+                </div>
+              </div>
+            </div>
+
+            <div id="view-event" class="screen-view">
+              <div class="topline"><span>Event detail</span><span>Invite-only</span></div>
+              <section class="hero-card" style="background: linear-gradient(145deg, rgba(113,54,93,.96), rgba(244,195,123,.78));">
+                <div class="hero-mini" id="event-mini">Saturday · Jul 18 · 7:00 PM</div>
+                <div class="event-header">
+                  <div>
+                    <h2 class="hero-title" id="event-title">Rooftop Movie Night</h2>
+                    <p class="hero-copy" id="event-copy">The event page is the source of truth for the plan, the thread, and the photo stream afterward.</p>
+                  </div>
+                  <div class="pill">14 going</div>
+                </div>
+                <div class="event-actions">
+                  <button class="event-action">Going</button>
+                  <button class="event-action">Chat</button>
+                  <button class="event-action">Directions</button>
+                  <button class="event-action">Add photo</button>
+                </div>
+              </section>
+
+              <div class="card-stack">
+                <article class="soft-card">
+                  <div class="row">
+                    <div>
+                      <h3 class="title-md">Event pulse</h3>
+                      <div class="small muted">Everything relevant stays connected to the moment.</div>
+                    </div>
+                    <div class="avatar-row">
+                      <div class="avatar a1">TJ</div>
+                      <div class="avatar a2">KA</div>
+                      <div class="avatar a4">RO</div>
+                    </div>
+                  </div>
+                  <div class="journey">
+                    <div class="journey-step"><div class="journey-num">1</div><div><strong>Logistics</strong><div class="small muted">7 PM · 400 W terrace · Bring blankets + drinks</div></div></div>
+                    <div class="journey-step"><div class="journey-num">2</div><div><strong>Conversation</strong><div class="small muted">Poll for movie choice, parking notes, weather backup plan</div></div></div>
+                    <div class="journey-step"><div class="journey-num">3</div><div><strong>Afterward</strong><div class="small muted">Upload photos and turn the event into a recap card automatically</div></div></div>
+                  </div>
+                </article>
+
+                <article class="soft-card">
+                  <h3 class="title-md">Thread</h3>
+                  <div class="chat-list" style="margin-top: 14px;">
+                    <div class="bubble">Can someone grab sparkling water and ice?</div>
+                    <div class="bubble self">Yep — I’ll bring both and the projector stand.</div>
+                    <div class="bubble">Perfect. Sunset hits around 8:15, so let’s start gathering early.</div>
+                  </div>
+                  <div class="composer"><span>Reply in context…</span><strong>Send</strong></div>
+                </article>
+
+                <article class="soft-card">
+                  <div class="row"><h3 class="title-md">Shared gallery</h3><div class="pill sky">Preview</div></div>
+                  <div class="gallery">
+                    <div class="shot tall"></div>
+                    <div class="shot"></div>
+                    <div class="shot"></div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div id="view-calendar" class="screen-view">
+              <div class="topline"><span>Calendar</span><span>Month · July</span></div>
+              <section class="soft-card" style="padding: 18px 18px 20px; background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(250,245,242,.98));">
+                <div class="row">
+                  <div>
+                    <h2 class="title-md" style="font-size: 26px;">July rhythm</h2>
+                    <div class="small muted">Utility-first, but never flat.</div>
+                  </div>
+                  <div class="pill">7 plans</div>
+                </div>
+                <div class="calendar-grid">
+                  <div class="day">1</div><div class="day">2</div><div class="day">3</div><div class="day">4</div><div class="day active">5<div class="event-dot"></div></div><div class="day">6</div><div class="day">7</div>
+                  <div class="day">8</div><div class="day">9</div><div class="day active">10<div class="event-dot"></div></div><div class="day">11</div><div class="day active">12<div class="event-dot"></div></div><div class="day">13</div><div class="day">14</div>
+                  <div class="day">15</div><div class="day">16</div><div class="day">17</div><div class="day active">18<div class="event-dot"></div></div><div class="day">19</div><div class="day">20</div><div class="day">21</div>
+                  <div class="day">22</div><div class="day">23</div><div class="day">24</div><div class="day">25<div class="event-dot"></div></div><div class="day">26</div><div class="day">27</div><div class="day">28</div>
+                </div>
+              </section>
+
+              <div class="card-stack">
+                <article class="soft-card row"><div><strong>Today</strong><div class="small muted">Lake picnic · 6:30 PM · 8 going</div></div><div class="pill">Open</div></article>
+                <article class="soft-card row"><div><strong>Jul 18</strong><div class="small muted">Rooftop movie night · Poll live</div></div><div class="pill sky">Maybe</div></article>
+                <article class="soft-card row"><div><strong>Jul 25</strong><div class="small muted">Family birthday brunch · Gallery enabled</div></div><div class="pill coral">Host</div></article>
+              </div>
+            </div>
+
+            <div id="view-memory" class="screen-view">
+              <div class="topline"><span>Memories</span><span>Auto recap</span></div>
+              <section class="hero-card" style="background: linear-gradient(145deg, rgba(240,111,103,.94), rgba(244,195,123,.82));">
+                <div class="hero-mini">On this day · 1 year ago</div>
+                <h2 class="hero-title" id="memory-title">Summer Cabin Weekend</h2>
+                <p class="hero-copy" id="memory-copy">The app turns plans into stories — same attendees, same context, same photos, no digging through chat archives.</p>
+                <div class="cta-row">
+                  <button class="cta">View recap</button>
+                  <button class="cta secondary">Share to group</button>
+                </div>
+              </section>
+              <div class="card-stack">
+                <article class="soft-card">
+                  <div class="row"><div><h3 class="title-md">Recap ingredients</h3><div class="small muted">48 photos · 6 people · 3 comments worth resurfacing</div></div><div class="pill">Ready</div></div>
+                  <div class="gallery">
+                    <div class="shot tall"></div>
+                    <div class="shot"></div>
+                    <div class="shot"></div>
+                  </div>
+                </article>
+                <article class="soft-card row"><div><strong>Tagged moments</strong><div class="small muted">Fireworks, dock breakfast, grandparents, game night</div></div><div class="pill sky">Tags</div></article>
+                <article class="soft-card row"><div><strong>Bring it back to today</strong><div class="small muted">Drop this recap into the current group chat or next event thread</div></div><div class="pill coral">Resurface</div></article>
+              </div>
+            </div>
+          </div>
+
+          <nav class="bottom-nav">
+            <div class="nav-item active"><div class="nav-icon">◐</div><div>Home</div></div>
+            <div class="nav-item"><div class="nav-icon">▦</div><div>Calendar</div></div>
+            <div class="nav-item"><div class="nav-icon">＋</div><div>Create</div></div>
+            <div class="nav-item"><div class="nav-icon">✦</div><div>Memories</div></div>
+            <div class="nav-item"><div class="nav-icon">☺</div><div>Groups</div></div>
+          </nav>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="eyebrow">Prototype notes</div>
+        <h3 class="proto-title">Event-centered habit loop</h3>
+        <div class="small muted">Every view reinforces the same product loop: see what’s next, coordinate inside the event, capture the moment, then return later for memory value.</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const viewButtons = [...document.querySelectorAll('.view-btn')];
+    const views = [...document.querySelectorAll('.screen-view')];
+    const modeButtons = [...document.querySelectorAll('.toggle-btn')];
+
+    const content = {
+      family: {
+        home: {
+          mini: 'Next up · Today 6:30 PM',
+          title: 'Lake Picnic with Family',
+          copy: 'One page for logistics, the running chat, and the photos that make the day worth revisiting later.'
+        },
+        event: {
+          mini: 'Saturday · Jul 18 · 7:00 PM',
+          title: 'Emma’s Birthday Brunch',
+          copy: 'The event page is where the plan, guest context, and post-brunch memories stay together.'
+        },
+        memory: {
+          title: 'Summer Cabin Weekend',
+          copy: 'The app turns plans into stories — same attendees, same context, same photos, no digging through chat archives.'
+        }
+      },
+      friends: {
+        home: {
+          mini: 'Next up · Friday 7:00 PM',
+          title: 'Rooftop Movie Night',
+          copy: 'Lightweight enough for group plans, polished enough that you actually want to keep your memories here.'
+        },
+        event: {
+          mini: 'Friday · Jul 18 · 7:00 PM',
+          title: 'Friends Rooftop Night',
+          copy: 'The event page becomes the live thread, RSVP board, and the drop zone for every photo after the credits roll.'
+        },
+        memory: {
+          title: 'City Weekend Recap',
+          copy: 'Plans don’t vanish after they happen — they become shared highlights you can resurface into the next hang.'
+        }
+      }
+    };
+
+    let mode = 'family';
+
+    function setView(name) {
+      viewButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === name));
+      views.forEach(view => view.classList.toggle('active', view.id === `view-${name}`));
+    }
+
+    function applyMode(nextMode) {
+      mode = nextMode;
+      modeButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.mode === nextMode));
+      document.getElementById('home-mini').textContent = content[nextMode].home.mini;
+      document.getElementById('home-title').textContent = content[nextMode].home.title;
+      document.getElementById('home-copy').textContent = content[nextMode].home.copy;
+      document.getElementById('event-mini').textContent = content[nextMode].event.mini;
+      document.getElementById('event-title').textContent = content[nextMode].event.title;
+      document.getElementById('event-copy').textContent = content[nextMode].event.copy;
+      document.getElementById('memory-title').textContent = content[nextMode].memory.title;
+      document.getElementById('memory-copy').textContent = content[nextMode].memory.copy;
+    }
+
+    viewButtons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    modeButtons.forEach(btn => btn.addEventListener('click', () => applyMode(btn.dataset.mode)));
+
+    applyMode('family');
+  </script>
+</body>
+</html>

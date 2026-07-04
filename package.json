@@ -1,0 +1,12 @@
+{
+  "name": "family-loop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "preview:prototype": "python3 -m http.server 8765 -d docs",
+    "preview:brand": "python3 -m http.server 8765 -d docs",
+    "preview:landing": "python3 -m http.server 8765 -d docs"
+  }
+}

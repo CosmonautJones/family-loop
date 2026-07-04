@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Loop — The private social calendar for real life</title>
+  <style>
+    :root {
+      --bg: #fbf9f8;
+      --surface: rgba(255,255,255,.88);
+      --surface-strong: #ffffff;
+      --text: #20161c;
+      --muted: #6d6370;
+      --line: rgba(32,22,28,.08);
+      --plum: #71365d;
+      --coral: #f06f67;
+      --sage: #aac5b1;
+      --gold: #f4c37b;
+      --sky: #c6d9f6;
+      --shadow: 0 30px 80px rgba(93,44,71,.14);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --max: 1220px;
+      --ease: 320ms cubic-bezier(.22,1,.36,1);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(240,111,103,.2), transparent 26%),
+        radial-gradient(circle at 100% 0%, rgba(113,54,93,.18), transparent 24%),
+        linear-gradient(180deg, #fff 0%, var(--bg) 100%);
+    }
+    a { color: inherit; text-decoration: none; }
+    .shell { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(18px);
+      background: rgba(251,249,248,.72);
+      border-bottom: 1px solid rgba(255,255,255,.6);
+    }
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      width: 44px; height: 44px; border-radius: 16px;
+      background: linear-gradient(145deg, var(--plum), var(--coral));
+      box-shadow: 0 18px 30px rgba(113,54,93,.24);
+      position: relative;
+    }
+    .logo::before, .logo::after {
+      content: '';
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+    }
+    .logo::before { inset: 10px 18px 10px 10px; }
+    .logo::after { inset: 10px 10px 10px 22px; opacity: .76; }
+    .brand strong { font-size: 18px; }
+    .nav-links { display: flex; gap: 18px; color: var(--muted); font-size: 14px; }
+    .nav-cta {
+      padding: 11px 16px;
+      border-radius: 999px;
+      background: var(--text);
+      color: #fff;
+      font-weight: 700;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 34px;
+      align-items: center;
+      padding: 58px 0 36px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(113,54,93,.08);
+      color: var(--plum);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    h1 {
+      font-size: clamp(46px, 7vw, 78px);
+      line-height: .93;
+      margin: 18px 0 18px;
+      letter-spacing: -.04em;
+    }
+    .hero-copy {
+      font-size: 19px;
+      line-height: 1.6;
+      color: var(--muted);
+      max-width: 620px;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+    .btn {
+      padding: 14px 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-weight: 800;
+      transition: transform var(--ease), box-shadow var(--ease), background var(--ease);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { background: var(--text); color: #fff; box-shadow: 0 14px 28px rgba(32,22,28,.12); }
+    .btn.secondary { background: rgba(255,255,255,.85); color: var(--text); border-color: var(--line); }
+    .hero-note { margin-top: 18px; color: var(--muted); font-size: 14px; }
+    .phone-frame {
+      background: #141113;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: 0 36px 100px rgba(18,8,15,.28);
+      width: min(420px, 100%);
+      justify-self: center;
+      position: relative;
+    }
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 118px;
+      height: 25px;
+      background: #0d0b0c;
+      border-radius: 0 0 18px 18px;
+      z-index: 3;
+    }
+    .phone-screen {
+      min-height: 760px;
+      border-radius: 28px;
+      background: linear-gradient(180deg, #fff 0%, #f7f1ee 100%);
+      padding: 24px 18px 104px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero-card {
+      background: linear-gradient(145deg, rgba(113,54,93,.98), rgba(240,111,103,.88));
+      color: #fff;
+      border-radius: 28px;
+      padding: 22px;
+      box-shadow: 0 22px 48px rgba(113,54,93,.24);
+    }
+    .hero-card small { letter-spacing: .1em; text-transform: uppercase; opacity: .82; }
+    .hero-card h3 { margin: 12px 0 10px; font-size: 32px; line-height: .96; }
+    .hero-card p { margin: 0; line-height: 1.55; opacity: .92; }
+    .mini-stack { display: grid; gap: 12px; margin-top: 16px; }
+    .mini-card {
+      background: rgba(255,255,255,.92);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .chip {
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(170,197,177,.24);
+      color: #355442;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .gallery { display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .shot { min-height: 96px; border-radius: 18px; background: linear-gradient(135deg, #edc8c0, #c8b7de); }
+    .shot.tall { min-height: 206px; }
+    .section { padding: 36px 0; }
+    .section-head { max-width: 760px; margin-bottom: 22px; }
+    .section-head h2 { margin: 0 0 12px; font-size: clamp(30px, 4.5vw, 50px); line-height: .98; }
+    .section-head p { margin: 0; color: var(--muted); line-height: 1.7; font-size: 17px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,.72);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+    .card h3 { margin: 0 0 10px; font-size: 22px; }
+    .card p { margin: 0; color: var(--muted); line-height: 1.65; }
+    .journey { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .step { padding: 22px; border-radius: var(--radius-lg); background: rgba(255,255,255,.82); border: 1px solid var(--line); }
+    .step .num {
+      width: 38px; height: 38px; border-radius: 14px;
+      background: rgba(113,54,93,.1); color: var(--plum);
+      display: grid; place-items: center; font-weight: 900; margin-bottom: 14px;
+    }
+    .split {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    }
+    .feature-list { display: grid; gap: 14px; }
+    .feature {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 16px 0; border-bottom: 1px solid var(--line);
+    }
+    .feature:last-child { border-bottom: none; }
+    .dot {
+      width: 12px; height: 12px; border-radius: 50%; background: var(--coral); margin-top: 7px; flex: 0 0 auto;
+      box-shadow: 14px 0 0 rgba(113,54,93,.82);
+    }
+    .quote {
+      background: linear-gradient(145deg, rgba(113,54,93,.96), rgba(169,197,177,.84));
+      color: #fff;
+      border-radius: 30px;
+      padding: 30px;
+      box-shadow: 0 30px 60px rgba(77,38,60,.18);
+    }
+    .quote strong { display: block; font-size: 32px; line-height: 1.05; margin-bottom: 12px; }
+    .footer {
+      padding: 42px 0 64px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .footer-card {
+      display: flex; justify-content: space-between; gap: 18px; align-items: center;
+      background: rgba(255,255,255,.82);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 22px;
+    }
+    @media (max-width: 1100px) {
+      .hero, .split, .journey, .grid-3 { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 720px) {
+      .hero { padding-top: 34px; }
+      .footer-card { flex-direction: column; align-items: flex-start; }
+      .shell { padding: 0 18px; }
+      .nav-inner { padding: 16px 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="brand">
+        <div class="logo"></div>
+        <strong>Loop</strong>
+      </div>
+      <nav class="nav-links">
+        <a href="#product">Product</a>
+        <a href="#how">How it works</a>
+        <a href="#why">Why Loop</a>
+        <a href="#memory">Memories</a>
+      </nav>
+      <a class="nav-cta" href="#cta">View concept</a>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="hero" id="cta">
+      <div>
+        <div class="eyebrow">Private by default</div>
+        <h1>Loop — The private social calendar for real life</h1>
+        <p class="hero-copy">Loop gives families and friend groups one calm place to plan events, chat in context, stay on top of reminders, and keep the photos that matter after the moment is over.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#product">See the product</a>
+          <a class="btn secondary" href="07-product-prototype.html">Open prototype</a>
+        </div>
+        <div class="hero-note">Plan it. Chat in context. Keep the memory.</div>
+      </div>
+
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="hero-card">
+            <small>Next up · tonight 6:30 PM</small>
+            <h3>Lake Picnic</h3>
+            <p>One page for the plan, the running chat, the reminders, and the photo recap after sunset.</p>
+          </div>
+          <div class="mini-stack">
+            <div class="mini-card"><div><strong>Friday dinner moved</strong><div style="color:var(--muted); font-size:13px;">Everyone sees the update in context</div></div><div class="chip">Updated</div></div>
+            <div class="mini-card"><div><strong>12 new photos</strong><div style="color:var(--muted); font-size:13px;">Zoo day recap is ready</div></div><div class="chip">Memories</div></div>
+          </div>
+          <div class="gallery">
+            <div class="shot tall"></div>
+            <div class="shot"></div>
+            <div class="shot"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="product">
+      <div class="section-head">
+        <h2>The event becomes the center of shared life</h2>
+        <p>Instead of splitting calendar rows, buried group-chat details, and scattered photos across multiple apps, Loop treats every event as a living shared object.</p>
+      </div>
+      <div class="grid-3">
+        <article class="card"><h3>Shared calendar</h3><p>Month and agenda views built for actual groups, not solo productivity.</p></article>
+        <article class="card"><h3>Contextual conversation</h3><p>Comments, reminders, and updates stay attached to the event instead of disappearing in the scroll.</p></article>
+        <article class="card"><h3>Memory capture</h3><p>Photos, tags, and recaps stay with the event after it happens, turning coordination into lasting value.</p></article>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <div class="section-head">
+        <h2>How Loop works</h2>
+        <p>A simple loop ties utility and emotion together. The same event you check in the morning becomes the memory you revisit months later.</p>
+      </div>
+      <div class="journey">
+        <div class="step"><div class="num">1</div><strong>Create the plan</strong><p>Set the date, invite your people, and make the event page the source of truth.</p></div>
+        <div class="step"><div class="num">2</div><strong>Coordinate in context</strong><p>Chat, RSVP, and updates happen inside the event instead of in a messy side thread.</p></div>
+        <div class="step"><div class="num">3</div><strong>Capture the moment</strong><p>Add photos and reactions as the event unfolds or right after it ends.</p></div>
+        <div class="step"><div class="num">4</div><strong>Keep the memory</strong><p>Loop turns the event into a recap card and resurfaces it when it matters again.</p></div>
+      </div>
+    </section>
+
+    <section class="section" id="why">
+      <div class="split">
+        <div class="card">
+          <div class="section-head" style="margin-bottom: 12px;">
+            <h2 style="font-size:36px;">Why people would switch</h2>
+            <p>Today’s default stack is fragmented: group chat for coordination, calendar for dates, and photos for storage. Loop makes the workflow coherent.</p>
+          </div>
+          <div class="feature-list">
+            <div class="feature"><div class="dot"></div><div><strong>Less group-chat chaos</strong><div style="color:var(--muted);">Plans stop getting buried in unrelated conversation.</div></div></div>
+            <div class="feature"><div class="dot"></div><div><strong>More emotional retention</strong><div style="color:var(--muted);">Every event can become a recap worth keeping.</div></div></div>
+            <div class="feature"><div class="dot"></div><div><strong>Private by default</strong><div style="color:var(--muted);">Built for the people you actually do life with, not a public audience.</div></div></div>
+          </div>
+        </div>
+        <div class="quote" id="memory">
+          <strong>“A private social app where planning and memory live in the same place.”</strong>
+          <div style="line-height:1.7; opacity:.94;">That’s the wedge. Useful enough for an ordinary Tuesday, beautiful enough for birthdays, trips, dinners, and everything worth remembering afterward.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Built for both families and friend groups</h2>
+        <p>The underlying model is the same: close groups need one shared place for events, reminders, and photos. The tone flexes, but the product loop stays consistent.</p>
+      </div>
+      <div class="grid-3">
+        <article class="card"><h3>Families</h3><p>School events, dinner plans, birthdays, extended-family gatherings, weekly rhythm.</p></article>
+        <article class="card"><h3>Close friends</h3><p>Dinner clubs, rooftop nights, cabin weekends, travel groups, recurring hangs.</p></article>
+        <article class="card"><h3>Couples and roommates</h3><p>A simpler coordination layer with memory value built in from day one.</p></article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-card">
+        <div>
+          <strong style="display:block; color:var(--text); font-size:18px; margin-bottom:6px;">Loop concept repo</strong>
+          <div>Prototype, research, roadmap, brand package, and app scaffold live together in the repository.</div>
+        </div>
+        <a class="btn primary" href="07-product-prototype.html">Open interactive prototype</a>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

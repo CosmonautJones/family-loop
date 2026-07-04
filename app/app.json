@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "Loop",
+    "slug": "loop-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#FBF9F8"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#71365D"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
