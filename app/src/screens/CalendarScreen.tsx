@@ -1,18 +1,17 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
-import { appSections } from '../data/sampleData';
-import { calendarDays, eventCollection, getFeaturedEvent } from '../features/events';
+import { selectCalendarViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
-const spotlightEvent = getFeaturedEvent();
-
 export function CalendarScreen() {
+  const viewModel = selectCalendarViewModel();
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Calendar</Text>
       <Text style={styles.title}>See the month, then drill into the moment.</Text>
-      <Text style={styles.subtitle}>{appSections.calendarSummary}</Text>
+      <Text style={styles.subtitle}>{viewModel.calendarSummary}</Text>
 
       <SurfaceCard>
         <View style={styles.headerRow}>
@@ -20,51 +19,29 @@ export function CalendarScreen() {
             <Text style={styles.cardTitle}>July rhythm</Text>
             <Text style={styles.cardCopy}>A month view that still feels warm and social.</Text>
           </View>
-          <Chip label={`${eventCollection.length} plans`} tone="sky" />
+          <Chip label="7 plans" tone="sky" />
         </View>
 
         <View style={styles.grid}>
-          {calendarDays.map((eventDay) => (
-            <View key={eventDay.day} style={[styles.day, eventDay.highlight && styles.dayActive]}>
-              <Text style={styles.dayNumber}>{eventDay.day}</Text>
-              {eventDay.highlight ? <View style={styles.dot} /> : null}
+          {viewModel.calendarEvents.map((event) => (
+            <View key={event.day} style={[styles.day, event.highlight && styles.dayActive]}>
+              <Text style={styles.dayNumber}>{event.day}</Text>
+              {event.highlight ? <View style={styles.dot} /> : null}
             </View>
           ))}
         </View>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Day spotlight</Text>
-        <Text style={styles.cardCopy}>{spotlightEvent.title}</Text>
-        <Text style={styles.detailCopy}>{spotlightEvent.timeLabel} · {spotlightEvent.location}</Text>
-        <Text style={styles.cardCopy}>{spotlightEvent.notes}</Text>
       </SurfaceCard>
 
       <SurfaceCard>
         <Text style={styles.cardTitle}>Upcoming agenda</Text>
         <View style={styles.list}>
-          {appSections.agenda.map((item) => (
+          {viewModel.agenda.map((item) => (
             <View key={item.title} style={styles.listRow}>
-              <View style={{ flex: 1 }}>
+              <View>
                 <Text style={styles.listTitle}>{item.title}</Text>
                 <Text style={styles.cardCopy}>{item.detail}</Text>
               </View>
               <Chip label={item.badge} tone={item.tone} />
-            </View>
-          ))}
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Host checklist</Text>
-        <View style={styles.list}>
-          {eventCollection.map((event) => (
-            <View key={event.id} style={styles.listRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.listTitle}>{event.title}</Text>
-                <Text style={styles.cardCopy}>{event.host} · {event.invitees.length} invitees</Text>
-              </View>
-              <Chip label={event.statusLabel} tone={event.statusLabel === 'Host' ? 'coral' : event.statusLabel === 'Maybe' ? 'sky' : 'sage'} />
             </View>
           ))}
         </View>
@@ -117,13 +94,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
-  },
-  detailCopy: {
-    color: palette.text,
-    fontSize: 15,
-    lineHeight: 22,
-    fontWeight: '700',
-    marginTop: spacing.sm,
   },
   grid: {
     marginTop: spacing.md,

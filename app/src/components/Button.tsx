@@ -1,12 +1,24 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { palette, radii } from '../theme/tokens';
 
-type ButtonTone = 'primary' | 'secondary';
+import type { ButtonTone } from '../types/ui';
 
 export function Button({ label, tone = 'primary' }: { label: string; tone?: ButtonTone }) {
   return (
-    <Pressable style={[styles.base, tone === 'primary' ? styles.primary : styles.secondary]}>
-      <Text style={[styles.text, tone === 'primary' ? styles.primaryText : styles.secondaryText]}>{label}</Text>
+    <Pressable
+      style={[
+        styles.base,
+        tone === 'primary' ? styles.primary : tone === 'ghost' ? styles.ghost : styles.secondary,
+      ]}
+    >
+      <Text
+        style={[
+          styles.text,
+          tone === 'primary' ? styles.primaryText : tone === 'ghost' ? styles.ghostText : styles.secondaryText,
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -24,6 +36,11 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.24)',
     borderWidth: 1,
   },
+  ghost: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+  },
   text: {
     fontWeight: '800',
   },
@@ -31,6 +48,9 @@ const styles = StyleSheet.create({
     color: palette.plum,
   },
   secondaryText: {
+    color: '#fff',
+  },
+  ghostText: {
     color: '#fff',
   },
 });

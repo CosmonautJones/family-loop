@@ -1,14 +1,16 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
 import { SurfaceCard } from '../components/SurfaceCard';
-import { memoriesRecap } from '../data/sampleData';
+import { selectMemoriesViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
 export function MemoriesScreen() {
+  const memoriesRecap = selectMemoriesViewModel();
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.heroCard}>
-        <Text style={styles.heroMini}>On this day · 1 year ago</Text>
+        <Text style={styles.heroMini}>{memoriesRecap.resurfacedLabel}</Text>
         <Text style={styles.heroTitle}>{memoriesRecap.title}</Text>
         <Text style={styles.heroCopy}>{memoriesRecap.description}</Text>
         <View style={styles.actionRow}>

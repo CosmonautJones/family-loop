@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { palette, radii } from '../theme/tokens';
 
-type ChipTone = 'sage' | 'sky' | 'coral';
+import type { AccentTone } from '../types/ui';
+
 
 const tones = {
   sage: { backgroundColor: 'rgba(170,197,177,0.28)', color: '#355442' },
@@ -9,7 +10,7 @@ const tones = {
   coral: { backgroundColor: 'rgba(240,111,103,0.18)', color: '#9C3E44' },
 } as const;
 
-export function Chip({ label, tone = 'sage' }: { label: string; tone?: ChipTone }) {
+export function Chip({ label, tone = 'sage' }: { label: string; tone?: AccentTone }) {
   return (
     <View style={[styles.chip, { backgroundColor: tones[tone].backgroundColor }]}>
       <Text style={[styles.text, { color: tones[tone].color }]}>{label}</Text>

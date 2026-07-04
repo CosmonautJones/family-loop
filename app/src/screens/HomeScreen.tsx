@@ -3,10 +3,13 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
-import { appSections, heroEvent } from '../data/sampleData';
+import { selectHomeViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
 export function HomeScreen() {
+  const appSections = selectHomeViewModel();
+  const heroEvent = appSections.heroEvent;
+
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
@@ -53,7 +56,7 @@ export function HomeScreen() {
                 <Text style={styles.listTitle}>{item.title}</Text>
                 <Text style={styles.cardCopy}>{item.detail}</Text>
               </View>
-              <Chip label={item.badge} tone={item.badge === 'Recap' ? 'coral' : 'sky'} />
+              <Chip label={item.badge} tone={item.tone} />
             </View>
           ))}
         </SurfaceCard>

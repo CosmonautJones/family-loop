@@ -2,10 +2,12 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
-import { groupsOverview } from '../data/sampleData';
+import { selectGroupsViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
 export function GroupsScreen() {
+  const groupsOverview = selectGroupsViewModel();
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Groups & onboarding</Text>
