@@ -21,15 +21,15 @@ const tabIcons = {
 } as const;
 
 export function AppShell() {
-  const { tabItems, activeTab, activeSurface, setActiveTab, openEventDetail } = useAppShellState();
+  const { tabItems, activeTab, activeSurface, setActiveTab, openEventDetail, closeEventDetail } = useAppShellState();
 
   return (
     <AppBackground>
       <View style={styles.root}>
         <View style={styles.content}>
-          {activeSurface === 'EventDetail' ? <EventDetailScreen onBack={() => setActiveTab('Home')} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={openEventDetail} /> : null}
-          {activeTab === 'Calendar' ? <CalendarScreen /> : null}
+          {activeSurface === 'EventDetail' ? <EventDetailScreen backLabel={`Back to ${activeTab.toLowerCase()}`} onBack={closeEventDetail} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={() => openEventDetail('Home')} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={() => openEventDetail('Calendar')} /> : null}
           {activeTab === 'Create' ? <CreateEventScreen /> : null}
           {activeTab === 'Memories' ? <MemoriesScreen /> : null}
           {activeTab === 'Groups' ? <GroupsScreen /> : null}

@@ -2,51 +2,51 @@
 
 ## Mission
 
-Align the harness and repo docs around LoopedIn as a mobile-first product.
+Complete the current mobile backlog slices.
 
 ## Business / product reason
 
-Future work should judge product decisions against the iOS/Android app first. Without that clarity, the repo can drift into a generic web/social/dashboard product.
+The current backlog should resolve the obvious mobile MVP gaps before new product ideas are added.
 
 ## User story
 
-As a product builder, I want the harness docs to make mobile the primary surface so every next slice improves phone-first coordination.
+As a family organizer, I want Calendar, Event Detail, Create, photos, and reminders to behave like a coherent mobile loop so the app feels useful beyond the first hero screen.
 
 ## Acceptance criteria
 
-- [x] Vision, core loop, taste bar, and anti-goals state mobile as the main product surface.
-- [x] Architecture and README files clarify iOS/Android first, web preview/companion second.
-- [x] Product rubric includes mobile-specific checks.
-- [x] Backlog prioritizes mobile slices over web/admin surfaces.
+- [x] Calendar agenda rows open Event Detail and return to Calendar.
+- [x] Add Photo becomes a scoped local staged-photo/gallery state.
+- [x] Create Event is tightened into a short mobile draft flow with visible local feedback.
+- [x] Reminder/notification copy states exist without implying push delivery is wired.
 
 ## Files or modules likely involved
 
-- docs/vision.md
-- docs/core-loop.md
-- docs/taste-bar.md
-- docs/anti-goals.md
-- docs/10-loop-architecture-and-workflow.md
-- evals/product-rubric.md
-- README.md
-- app/README.md
+- app/src/navigation/AppShell.tsx
+- app/src/navigation/useAppShellState.ts
+- app/src/screens/CalendarScreen.tsx
+- app/src/screens/EventDetailScreen.tsx
+- app/src/screens/CreateEventScreen.tsx
+- app/src/store/useLoopedInStore.ts
 - tasks/backlog.md
 
 ## Required checks
 
 - [x] powershell -ExecutionPolicy Bypass -File .\scripts\check-harness.ps1
 - [x] npm test
-- [x] rg "mobile-first|iOS|Android|web preview|companion" docs README.md app/README.md tasks evals
+- [x] cd app; npm test
+- [x] cd app; npx tsc --noEmit
+- [x] Expo web smoke: Calendar -> Event Detail, Add Photo, Stage Reminder, Create preview
 
 ## Do not touch
 
-- App runtime code.
 - Backend or auth scaffolding.
-- Broad navigation structure.
+- External media picker or push notification plumbing.
+- Full navigation library migration.
 
 ## Risks
 
-- Overcorrecting into mobile-only language that hides the usefulness of web preview.
-- Editing old research artifacts more than needed.
+- Local draft states can feel fake if labels imply backend delivery.
+- The temporary shell bridge should not grow into a hidden custom router.
 
 ## Definition of done
 

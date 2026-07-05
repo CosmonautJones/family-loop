@@ -19,15 +19,19 @@ const rsvpNotes: Record<RSVPStatus, string> = {
   declined: 'You are marked out. The event stays visible for context and photos.',
 };
 
-export function EventDetailScreen({ onBack }: { onBack?: () => void }) {
+export function EventDetailScreen({ backLabel = 'Back', onBack }: { backLabel?: string; onBack?: () => void }) {
   const eventDetail = selectEventDetailViewModel();
   const eventThread = eventDetail.thread;
   const currentStatus = useLoopedInStore((state) => state.rsvpOverrides[eventDetail.id] ?? 'going');
   const setRsvpStatus = useLoopedInStore((state) => state.setRsvpStatus);
+  const stagedPhotoCount = useLoopedInStore((state) => state.stagedPhotoCounts[eventDetail.id] ?? 0);
+  const stageEventPhoto = useLoopedInStore((state) => state.stageEventPhoto);
+  const reminderDrafted = useLoopedInStore((state) => Boolean(state.reminderDrafts[eventDetail.id]));
+  const toggleReminderDraft = useLoopedInStore((state) => state.toggleReminderDraft);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {onBack ? <Button label="Back to home" onPress={onBack} /> : null}
+      {onBack ? <Button label={backLabel} onPress={onBack} /> : null}
       <View style={styles.heroCard}>
         <Text style={styles.heroMini}>{eventDetail.timeLabel}</Text>
         <View style={styles.heroHeader}>
@@ -47,10 +51,25 @@ export function EventDetailScreen({ onBack }: { onBack?: () => void }) {
               onPress={() => setRsvpStatus(eventDetail.id, status)}
             />
           ))}
-          <Button label="Add photo" tone="ghost" />
+          <Button label={stagedPhotoCount > 0 ? 'Stage another' : 'Stage photo'} tone="ghost" onPress={() => stageEventPhoto(eventDetail.id)} />
         </View>
         <Text style={styles.responseNote}>{rsvpNotes[currentStatus]}</Text>
       </View>
+
+      <SurfaceCard>
+        <View style={styles.galleryHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Reminder draft</Text>
+            <Text style={styles.cardCopy}>
+              {reminderDrafted
+                ? 'Morning-of reminder copy is staged for this event. Push delivery is not wired yet.'
+                : 'No reminder is staged. Keep timing visible here before push notifications exist.'}
+            </Text>
+          </View>
+          <Chip label={reminderDrafted ? 'Staged' : 'Off'} tone={reminderDrafted ? 'sage' : 'sky'} />
+        </View>
+        <Button label={reminderDrafted ? 'Clear reminder' : 'Stage reminder'} onPress={() => toggleReminderDraft(eventDetail.id)} />
+      </SurfaceCard>
 
       <SurfaceCard>
         <Text style={styles.cardTitle}>Event pulse</Text>
@@ -65,6 +84,26 @@ export function EventDetailScreen({ onBack }: { onBack?: () => void }) {
             </View>
           ))}
         </View>
+      </SurfaceCard>
+
+      <SurfaceCard>
+        <View style={styles.galleryHeader}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Event gallery</Text>
+            <Text style={styles.cardCopy}>
+              {stagedPhotoCount > 0
+                ? `${stagedPhotoCount} photo${stagedPhotoCount === 1 ? '' : 's'} staged locally for the event recap.`
+                : 'No photos yet. Stage the first one when the event starts.'}
+            </Text>
+          </View>
+          <Chip label={stagedPhotoCount > 0 ? 'Draft' : 'Empty'} tone={stagedPhotoCount > 0 ? 'coral' : 'sky'} />
+        </View>
+        {stagedPhotoCount > 0 ? (
+          <View style={styles.photoDraft}>
+            <Text style={styles.photoDraftIcon}>+</Text>
+            <Text style={styles.photoDraftText}>Ready to attach after media upload is wired.</Text>
+          </View>
+        ) : null}
       </SurfaceCard>
 
       <SurfaceCard>
@@ -98,6 +137,10 @@ const styles = StyleSheet.create({
   step: { width: 32, height: 32, borderRadius: 12, backgroundColor: 'rgba(113,54,93,0.1)', justifyContent: 'center', alignItems: 'center' },
   stepText: { color: palette.plum, fontWeight: '800', fontSize: 13 },
   listTitle: { color: palette.text, fontSize: 15, fontWeight: '800' },
+  galleryHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  photoDraft: { borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)', padding: 14, gap: 6 },
+  photoDraftIcon: { color: palette.plum, fontSize: 22, lineHeight: 24, fontWeight: '900' },
+  photoDraftText: { color: palette.text, fontSize: 14, lineHeight: 20, fontWeight: '700' },
   thread: { marginTop: spacing.md, gap: spacing.sm },
   bubble: { maxWidth: '84%', borderRadius: 18, padding: 13, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)' },
   selfBubble: { alignSelf: 'flex-end', backgroundColor: palette.plum, borderColor: palette.plum },

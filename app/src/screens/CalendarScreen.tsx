@@ -1,10 +1,10 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectCalendarViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
-export function CalendarScreen() {
+export function CalendarScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
   const viewModel = selectCalendarViewModel();
 
   return (
@@ -36,13 +36,19 @@ export function CalendarScreen() {
         <Text style={styles.cardTitle}>Upcoming agenda</Text>
         <View style={styles.list}>
           {viewModel.agenda.map((item) => (
-            <View key={item.title} style={styles.listRow}>
+            <Pressable
+              key={item.title}
+              accessibilityRole="button"
+              accessibilityLabel={`Open ${item.title}`}
+              onPress={onOpenEvent}
+              style={styles.listRow}
+            >
               <View>
                 <Text style={styles.listTitle}>{item.title}</Text>
                 <Text style={styles.cardCopy}>{item.detail}</Text>
               </View>
               <Chip label={item.badge} tone={item.tone} />
-            </View>
+            </Pressable>
           ))}
         </View>
       </SurfaceCard>
@@ -136,6 +142,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+    borderRadius: 18,
+    paddingVertical: 6,
   },
   listTitle: {
     color: palette.text,

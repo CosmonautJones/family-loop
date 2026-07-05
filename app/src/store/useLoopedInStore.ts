@@ -12,6 +12,10 @@ export type LoopedInStore = {
   resetDraftEvent: () => void;
   rsvpOverrides: Record<string, RSVPStatus>;
   setRsvpStatus: (eventId: string, status: RSVPStatus) => void;
+  stagedPhotoCounts: Record<string, number>;
+  stageEventPhoto: (eventId: string) => void;
+  reminderDrafts: Record<string, boolean>;
+  toggleReminderDraft: (eventId: string) => void;
 };
 
 export const useLoopedInStore = create<LoopedInStore>((set) => ({
@@ -33,5 +37,19 @@ export const useLoopedInStore = create<LoopedInStore>((set) => ({
   rsvpOverrides: {},
   setRsvpStatus: (eventId, status) => set((state) => ({
     rsvpOverrides: { ...state.rsvpOverrides, [eventId]: status },
+  })),
+  stagedPhotoCounts: {},
+  stageEventPhoto: (eventId) => set((state) => ({
+    stagedPhotoCounts: {
+      ...state.stagedPhotoCounts,
+      [eventId]: (state.stagedPhotoCounts[eventId] ?? 0) + 1,
+    },
+  })),
+  reminderDrafts: {},
+  toggleReminderDraft: (eventId) => set((state) => ({
+    reminderDrafts: {
+      ...state.reminderDrafts,
+      [eventId]: !state.reminderDrafts[eventId],
+    },
   })),
 }));

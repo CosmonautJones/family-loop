@@ -24,6 +24,17 @@ Future slices now prioritize phone ergonomics, mobile event coordination, and mo
 ### Links / commits
 Committed in repo history.
 
+## 2026-07-05 - Mobile backlog loop
+
+### Summary
+Completed the active backlog slices: Calendar agenda opens Event Detail, Add Photo stages local gallery drafts, Create Event is shorter and more mobile-focused, and Event Detail includes reminder draft copy without push plumbing.
+
+### Result
+The mobile loop now has fewer dead buttons and clearer phone-first behavior across Calendar, Event Detail, Create, photos, and reminders.
+
+### Links / commits
+Committed in repo history.
+
 ## Template
 
 ```md

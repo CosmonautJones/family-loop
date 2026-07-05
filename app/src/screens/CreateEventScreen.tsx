@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
@@ -7,37 +8,53 @@ import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 
 export function CreateEventScreen() {
+  const [draftStatus, setDraftStatus] = useState('Ready to save on this device.');
+  const [previewVisible, setPreviewVisible] = useState(false);
   const draftEvent = useLoopedInStore((state) => state.draftEvent);
   const updateDraftEvent = useLoopedInStore((state) => state.updateDraftEvent);
   const resetDraftEvent = useLoopedInStore((state) => state.resetDraftEvent);
-  const draftFields = buildCreateEventFields(draftEvent);
+  const draftFields = buildCreateEventFields(draftEvent).filter((field) => !['Invitees', 'Cover treatment'].includes(field.label));
+  const resetDraft = () => {
+    resetDraftEvent();
+    setDraftStatus('Draft reset to the starter plan.');
+    setPreviewVisible(false);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Create</Text>
-      <Text style={styles.title}>Create event draft</Text>
+      <Text style={styles.title}>Plan the next event</Text>
       <Text style={styles.subtitle}>
-        Start a practical event flow with the details people actually need before they reply.
+        Capture the four details people need before they can reply.
       </Text>
 
       <View style={styles.heroCard}>
-        <Text style={styles.heroMini}>Draft summary</Text>
+        <Text style={styles.heroMini}>Mobile draft</Text>
         <Text style={styles.heroTitle}>{draftEvent.title}</Text>
         <Text style={styles.heroCopy}>{summarizeDraftEvent(draftEvent)}</Text>
+        <Text style={styles.statusText}>{draftStatus}</Text>
         <View style={styles.heroActions}>
-          <Button label="Save draft" />
-          <Button label="Share preview" tone="secondary" />
-          <Button label="Reset" tone="ghost" onPress={resetDraftEvent} />
+          <Button label="Save draft" onPress={() => setDraftStatus('Draft saved locally for this group.')} />
+          <Button label={previewVisible ? 'Hide preview' : 'Preview invite'} tone="secondary" onPress={() => setPreviewVisible((visible) => !visible)} />
+          <Button label="Reset" tone="ghost" onPress={resetDraft} />
         </View>
       </View>
+
+      {previewVisible ? (
+        <SurfaceCard>
+          <Text style={styles.cardTitle}>Invite preview</Text>
+          <Text style={styles.cardCopy}>{draftEvent.title}</Text>
+          <Text style={styles.previewCopy}>{summarizeDraftEvent(draftEvent)}</Text>
+        </SurfaceCard>
+      ) : null}
 
       <SurfaceCard>
         <View style={styles.rowBetween}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Draft fields</Text>
-            <Text style={styles.cardCopy}>Each field maps to the shared event model for calendar and detail views.</Text>
+            <Text style={styles.cardTitle}>Phone-first details</Text>
+            <Text style={styles.cardCopy}>Keep the first pass short enough to finish while standing in the kitchen.</Text>
           </View>
-          <Chip label="Persistent" tone="sky" />
+          <Chip label="4 fields" tone="sky" />
         </View>
         <View style={styles.fieldList}>
           {draftFields.map((field) => (
@@ -51,8 +68,8 @@ export function CreateEventScreen() {
       </SurfaceCard>
 
       <SurfaceCard>
-        <Text style={styles.cardTitle}>Fast edits</Text>
-        <Text style={styles.cardCopy}>These simulate a real editable flow while persistence and backend wiring mature.</Text>
+        <Text style={styles.cardTitle}>One-tap edits</Text>
+        <Text style={styles.cardCopy}>Quick changes keep the mobile draft moving without opening a long form.</Text>
         <View style={styles.heroActions}>
           <Button label="Make it brunch" onPress={() => updateDraftEvent({ title: 'Sunday brunch after the market' })} />
           <Button label="Move later" tone="secondary" onPress={() => updateDraftEvent({ timeLabel: '6:00 PM' })} />
@@ -89,6 +106,7 @@ const styles = StyleSheet.create({
   heroMini: { color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', letterSpacing: 1.4, fontSize: 11, fontWeight: '700' },
   heroTitle: { color: '#fff', fontSize: 28, lineHeight: 30, fontWeight: '900' },
   heroCopy: { color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22 },
+  statusText: { color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 18, fontWeight: '800' },
   heroActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 6 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
@@ -98,6 +116,7 @@ const styles = StyleSheet.create({
   fieldLabel: { color: palette.muted, textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 11, fontWeight: '800' },
   fieldValue: { color: palette.text, fontSize: 16, lineHeight: 22, fontWeight: '800', marginTop: 6 },
   fieldHelper: { color: palette.muted, fontSize: 13, lineHeight: 18, marginTop: 6 },
+  previewCopy: { color: palette.text, fontSize: 15, lineHeight: 22, fontWeight: '800', marginTop: spacing.sm },
   chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: spacing.md },
   coverNote: { color: palette.text, fontSize: 14, lineHeight: 20, marginTop: spacing.sm },
 });
