@@ -8,8 +8,18 @@ import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
 
 const rsvpOptions: RSVPStatus[] = ['going', 'maybe', 'declined'];
+const rsvpLabels: Record<RSVPStatus, string> = {
+  going: 'Going',
+  maybe: 'Maybe',
+  declined: "Can't go",
+};
+const rsvpNotes: Record<RSVPStatus, string> = {
+  going: 'You are counted in. The host can plan around you.',
+  maybe: 'You are marked as maybe. The group knows your plan is not final.',
+  declined: 'You are marked out. The event stays visible for context and photos.',
+};
 
-export function EventDetailScreen() {
+export function EventDetailScreen({ onBack }: { onBack?: () => void }) {
   const eventDetail = selectEventDetailViewModel();
   const eventThread = eventDetail.thread;
   const currentStatus = useLoopedInStore((state) => state.rsvpOverrides[eventDetail.id] ?? 'going');
@@ -17,26 +27,29 @@ export function EventDetailScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {onBack ? <Button label="Back to home" onPress={onBack} /> : null}
       <View style={styles.heroCard}>
         <Text style={styles.heroMini}>{eventDetail.timeLabel}</Text>
         <View style={styles.heroHeader}>
           <View style={{ flex: 1 }}>
             <Text style={styles.heroTitle}>{eventDetail.title}</Text>
+            <Text style={styles.heroLocation}>{eventDetail.location}</Text>
             <Text style={styles.heroCopy}>{eventDetail.description}</Text>
           </View>
-          <Chip label={`${eventDetail.rsvpSummary} · ${currentStatus}`} tone="sage" />
+          <Chip label={`${eventDetail.rsvpSummary} / ${rsvpLabels[currentStatus]}`} tone="sage" />
         </View>
         <View style={styles.actionRow}>
           {rsvpOptions.map((status) => (
             <Button
               key={status}
-              label={status === currentStatus ? `${status} ✓` : status}
+              label={rsvpLabels[status]}
               tone={status === currentStatus ? 'primary' : 'secondary'}
               onPress={() => setRsvpStatus(eventDetail.id, status)}
             />
           ))}
           <Button label="Add photo" tone="ghost" />
         </View>
+        <Text style={styles.responseNote}>{rsvpNotes[currentStatus]}</Text>
       </View>
 
       <SurfaceCard>
@@ -74,8 +87,10 @@ const styles = StyleSheet.create({
   heroMini: { color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', letterSpacing: 1.4, fontSize: 11, fontWeight: '700' },
   heroHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   heroTitle: { color: '#fff', fontSize: 32, lineHeight: 32, fontWeight: '900' },
+  heroLocation: { color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 18, marginTop: 6, fontWeight: '800' },
   heroCopy: { color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, marginTop: 8 },
   actionRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 6 },
+  responseNote: { color: 'rgba(255,255,255,0.86)', fontSize: 13, lineHeight: 19 },
   cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
   cardCopy: { color: palette.muted, fontSize: 14, lineHeight: 20, marginTop: 4 },
   journey: { marginTop: spacing.md, gap: spacing.sm },

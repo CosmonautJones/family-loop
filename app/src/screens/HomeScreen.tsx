@@ -8,7 +8,7 @@ import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
-export function HomeScreen() {
+export function HomeScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
   const appSections = selectHomeViewModel();
   const heroEvent = appSections.heroEvent;
 
@@ -24,9 +24,8 @@ export function HomeScreen() {
 
         <View>
           <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.timeLabel} height={300} />
-          <View style={styles.heroOverlayActions}>
-            <Button label="Open event" />
-            <Button label="Add reminder" tone="secondary" />
+          <View style={styles.heroActions}>
+            <Button label="Open event" onPress={onOpenEvent} />
           </View>
         </View>
 
@@ -107,14 +106,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
-  heroOverlayActions: {
-    position: 'absolute',
-    left: 18,
-    right: 18,
-    bottom: 18,
+  heroActions: {
     flexDirection: 'row',
     gap: 10,
     flexWrap: 'wrap',
+    marginTop: 12,
   },
   rowBetween: {
     flexDirection: 'row',

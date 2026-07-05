@@ -12,6 +12,7 @@ export function selectHomeViewModel() {
       title: heroEvent.title,
       timeLabel: `${heroEvent.statusLabel} · ${formatEventDateRange(heroEvent.startsAt, heroEvent.endsAt)}`,
       description: heroEvent.description,
+      coverUri: heroEvent.coverUri ?? '',
     },
     weekSummary: homeWeekSummary,
     recentActivityTitle: homeActivityTitle,
@@ -65,8 +66,10 @@ export function selectMemoriesViewModel() {
 
 export function selectEventDetailViewModel() {
   return {
+    id: eventDetail.id,
     title: eventDetail.title,
     timeLabel: formatEventDateRange(eventDetail.startsAt, eventDetail.endsAt),
+    location: eventDetail.location,
     description: eventDetail.description,
     rsvpSummary: selectEventRsvpSummary(eventRsvps),
     sections: selectEventTimeline(eventDetail),

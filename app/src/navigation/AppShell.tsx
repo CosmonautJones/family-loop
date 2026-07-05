@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppBackground } from '../components/AppBackground';
 import { CalendarScreen } from '../screens/CalendarScreen';
 import { CreateEventScreen } from '../screens/CreateEventScreen';
+import { EventDetailScreen } from '../screens/EventDetailScreen';
 import { GroupsScreen } from '../screens/GroupsScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MemoriesScreen } from '../screens/MemoriesScreen';
@@ -20,13 +21,14 @@ const tabIcons = {
 } as const;
 
 export function AppShell() {
-  const { tabItems, activeTab, setActiveTab } = useAppShellState();
+  const { tabItems, activeTab, activeSurface, setActiveTab, openEventDetail } = useAppShellState();
 
   return (
     <AppBackground>
       <View style={styles.root}>
         <View style={styles.content}>
-          {activeTab === 'Home' ? <HomeScreen /> : null}
+          {activeSurface === 'EventDetail' ? <EventDetailScreen onBack={() => setActiveTab('Home')} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={openEventDetail} /> : null}
           {activeTab === 'Calendar' ? <CalendarScreen /> : null}
           {activeTab === 'Create' ? <CreateEventScreen /> : null}
           {activeTab === 'Memories' ? <MemoriesScreen /> : null}

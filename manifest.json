@@ -1,0 +1,30 @@
+{
+  "name": "ai-builder-harness",
+  "version": "0.2.0",
+  "created_for": "Travis Jones",
+  "purpose": "Reusable harness for building sharper apps with long-running agents, project profiles, product taste, review loops, and scoped missions.",
+  "primary_tools": [
+    "Cursor",
+    "Claude Code",
+    "Codex",
+    "GitHub Copilot",
+    "Local AI/RAG"
+  ],
+  "entry_points": [
+    "README.md",
+    "GETTING_STARTED.md",
+    "project-profiles/README.md",
+    "prompts/apply-project-profile.md",
+    "prompts/master-start-app.md"
+  ],
+  "profiles": [
+    "agentic-dev-tool",
+    "local-rag-app",
+    "ai-video-tool",
+    "game-dev-tool",
+    "internal-work-automation",
+    "ai-research-dashboard",
+    "mobile-web-saas",
+    "blank-profile-template"
+  ]
+}

@@ -138,6 +138,7 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(photoCard, /LinearGradient/);
   assert.doesNotMatch(homeScreen, /\.\.\/data\/sampleData/);
   assert.match(homeScreen, /selectHomeViewModel/);
+  assert.match(homeScreen, /onOpenEvent/);
   assert.doesNotMatch(calendarScreen, /\.\.\/data\/sampleData/);
   assert.match(calendarScreen, /selectCalendarViewModel/);
   assert.doesNotMatch(eventScreen, /\.\.\/data\/sampleData/);
@@ -161,6 +162,8 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(shell, /BlurView/);
   assert.match(shell, /Ionicons/);
   assert.match(shell, /CalendarScreen/);
+  assert.match(shell, /EventDetailScreen/);
+  assert.match(shell, /openEventDetail/);
   assert.match(shell, /CreateEventScreen/);
   assert.match(shell, /MemoriesScreen/);
   assert.match(shell, /GroupsScreen/);
