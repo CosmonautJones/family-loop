@@ -33,8 +33,11 @@ test('mobile scaffold files exist', () => {
     'src/app/queries.ts',
     'src/store/useLoopedInStore.ts',
     'src/services/api.ts',
+    'src/services/index.ts',
     'src/services/mockAdapter.ts',
     'src/services/mockData.ts',
+    'src/services/supabaseAdapter.ts',
+    'src/services/supabaseClient.ts',
     'src/features/home/fixtures.ts',
     'src/features/calendar/fixtures.ts',
     'src/features/groups/fixtures.ts',
@@ -75,8 +78,11 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   const appQueries = read('src/app/queries.ts');
   const appStore = read('src/store/useLoopedInStore.ts');
   const serviceApi = read('src/services/api.ts');
+  const serviceIndex = read('src/services/index.ts');
   const mockAdapter = read('src/services/mockAdapter.ts');
   const mockData = read('src/services/mockData.ts');
+  const supabaseAdapter = read('src/services/supabaseAdapter.ts');
+  const supabaseClient = read('src/services/supabaseClient.ts');
   const homeFixtures = read('src/features/home/fixtures.ts');
   const calendarFixtures = read('src/features/calendar/fixtures.ts');
   const groupFixtures = read('src/features/groups/fixtures.ts');
@@ -120,8 +126,14 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(appStore, /stageEventPhoto/);
   assert.match(appStore, /toggleReminderDraft/);
   assert.match(serviceApi, /export interface LoopedInService/);
+  assert.match(serviceIndex, /hasSupabaseConfig/);
+  assert.match(serviceIndex, /createSupabaseLoopedInService/);
   assert.match(mockAdapter, /createMockLoopedInService/);
   assert.match(mockData, /createMockDatabase/);
+  assert.match(supabaseAdapter, /createSupabaseLoopedInService/);
+  assert.match(supabaseAdapter, /loopedin_groups/);
+  assert.match(supabaseClient, /EXPO_PUBLIC_SUPABASE_URL/);
+  assert.match(supabaseClient, /EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY/);
   assert.match(homeFixtures, /heroEvent/);
   assert.match(calendarFixtures, /calendarEvents/);
   assert.match(groupFixtures, /groupsOverview/);

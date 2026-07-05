@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { loopedInService } from '../services/mockAdapter';
+import { loopedInService } from '../services';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 
 export function useActiveGroupQuery() {
