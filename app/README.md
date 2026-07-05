@@ -1,6 +1,6 @@
 # LoopedIn Mobile Scaffold
 
-This Expo/React Native scaffold now splits the MVP foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
+This Expo/React Native scaffold is the main LoopedIn product surface. It splits the mobile MVP foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
 
 ## Included
 - Expo app shell
@@ -18,6 +18,9 @@ This Expo/React Native scaffold now splits the MVP foundation into theme tokens,
 - event creation persistence and edit-after-save flow
 - media upload/recap generation integration
 - production navigation/state libraries
+
+## Product stance
+Build and review this app as mobile-first. Web is useful for fast local preview, but iOS/Android ergonomics should decide screen hierarchy, action placement, and scope.
 
 ## Run
 ```bash

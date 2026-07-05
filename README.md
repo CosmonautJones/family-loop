@@ -1,9 +1,11 @@
 # LoopedIn
 
-A concept repo for a private, event-centered social app for families and friend groups.
+A mobile-first repo for a private, event-centered social app for families and friend groups.
 
 ## Purpose
-This repository captures the initial product research, proposal, roadmap, technical spec, and visual concept artifacts for **LoopedIn** — a calendar-style, photo-rich, modern social app centered on shared events, memories, and communication.
+This repository captures the initial product research, proposal, roadmap, technical spec, visual concept artifacts, and Expo scaffold for **LoopedIn** — a calendar-style, photo-rich, modern mobile app centered on shared events, memories, and communication.
+
+The main product surface is the iOS/Android app in `app/`. Web is currently for local preview and later companion thinking, not the primary product direction.
 
 ## Artifacts
 - `docs/01-executive-summary.md`
@@ -35,7 +37,7 @@ npm install
 npm start
 ```
 
-See `docs/10-loop-architecture-and-workflow.md` for the recommended app structure, screen model, sample data strategy, and agent/subagent contribution workflow.
+See `docs/10-loop-architecture-and-workflow.md` for the mobile-first app structure, screen model, sample data strategy, and agent/subagent contribution workflow.
 
 ## Concept summary
 LoopedIn blends:

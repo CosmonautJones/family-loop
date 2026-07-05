@@ -14,6 +14,8 @@ Can the user get value almost immediately?
 
 Score: 4
 
+Mobile check: can someone open the app on a phone and understand the next event without setup or desktop-style scanning?
+
 ## Core loop
 
 Is the main action satisfying enough to repeat?
@@ -31,6 +33,8 @@ Score: 4
 How many steps before value?
 
 Score: 4
+
+Mobile check: are the primary actions reachable and readable without hover, keyboard shortcuts, or wide-screen assumptions?
 
 ## Differentiation
 
@@ -56,4 +60,4 @@ Delay public social, AI, direct messaging, billing, admin, and heavy settings un
 
 ## Product verdict
 
-LoopedIn has a clear wedge: the event page as the private source of truth before, during, and after shared plans. The next product risk is making the RSVP/detail loop feel real enough before adding more surfaces.
+LoopedIn has a clear wedge: the mobile event page as the private source of truth before, during, and after shared plans. The next product risk is making mobile RSVP, calendar, and event creation feel real enough before adding desktop or web companion surfaces.

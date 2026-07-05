@@ -1,22 +1,22 @@
 # Core Loop
 
 ```text
-User has a shared plan to coordinate
--> LoopedIn shows the next event and its context
--> user updates attendance, logistics, thread, or photos
+User has a shared plan to coordinate on their phone
+-> LoopedIn shows the next event and its context in the mobile app
+-> user updates attendance, logistics, thread, or photos with thumb-friendly actions
 -> the group sees one reliable event record
 -> the event becomes a recap/memory after it happens
--> user returns for the next shared plan
+-> mobile reminders and resurfaced memories bring the user back
 ```
 
 ## Primary loop
 
-1. Open Home to see what matters next.
-2. Open the event detail page.
-3. Confirm or change RSVP.
-4. Read the latest thread/logistics context.
-5. Add reminders, notes, or photos when those flows exist.
-6. Return through reminders, updates, and resurfaced memories.
+1. Open the mobile Home screen to see what matters next.
+2. Tap into the event detail page.
+3. Confirm or change RSVP with one thumb-friendly action.
+4. Read the latest thread/logistics context without leaving the event.
+5. Add reminders, notes, or photos when those mobile flows exist.
+6. Return through mobile reminders, updates, and resurfaced memories.
 
 ## Current proof point
 

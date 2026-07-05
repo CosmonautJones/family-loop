@@ -2,23 +2,22 @@
 
 ## Mission
 
-Polish the Event Detail RSVP loop so the app's core event-centered value is clear and TypeScript clean.
+Align the harness and repo docs around LoopedIn as a mobile-first product.
 
 ## Business / product reason
 
-Event Detail is the canonical LoopedIn surface. If attendance state, logistics, and thread context feel unfinished, the product collapses back into a prettier calendar mock.
+Future work should judge product decisions against the iOS/Android app first. Without that clarity, the repo can drift into a generic web/social/dashboard product.
 
 ## User story
 
-As a family organizer, I want to open an event and instantly see my RSVP state, plan context, and latest thread so that I trust the event page more than scattered chat messages.
+As a product builder, I want the harness docs to make mobile the primary surface so every next slice improves phone-first coordination.
 
 ## Acceptance criteria
 
-- [x] Event Detail exposes a stable event id through the selector so RSVP overrides target the right event.
-- [x] Home receives the hero event cover image through its selector.
-- [x] Home's primary event CTA opens the Event Detail surface.
-- [x] RSVP controls use clear labels and show human-readable feedback for the current response.
-- [x] Harness docs describe the LoopedIn vision, core loop, taste bar, and anti-goals.
+- [x] Vision, core loop, taste bar, and anti-goals state mobile as the main product surface.
+- [x] Architecture and README files clarify iOS/Android first, web preview/companion second.
+- [x] Product rubric includes mobile-specific checks.
+- [x] Backlog prioritizes mobile slices over web/admin surfaces.
 
 ## Files or modules likely involved
 
@@ -26,29 +25,28 @@ As a family organizer, I want to open an event and instantly see my RSVP state, 
 - docs/core-loop.md
 - docs/taste-bar.md
 - docs/anti-goals.md
-- app/src/app/selectors.ts
-- app/src/navigation/AppShell.tsx
-- app/src/navigation/useAppShellState.ts
-- app/src/screens/EventDetailScreen.tsx
-- app/src/screens/HomeScreen.tsx
+- docs/10-loop-architecture-and-workflow.md
+- evals/product-rubric.md
+- README.md
+- app/README.md
+- tasks/backlog.md
 
 ## Required checks
 
 - [x] powershell -ExecutionPolicy Bypass -File .\scripts\check-harness.ps1
 - [x] npm test
-- [x] cd app; npm test
-- [x] cd app; npx tsc --noEmit
+- [x] rg "mobile-first|iOS|Android|web preview|companion" docs README.md app/README.md tasks evals
 
 ## Do not touch
 
+- App runtime code.
 - Backend or auth scaffolding.
 - Broad navigation structure.
-- Existing concept docs beyond the harness additions.
 
 ## Risks
 
-- Making the RSVP UI look functional beyond the current local override behavior.
-- Expanding into create-event or notification work before the detail loop is clean.
+- Overcorrecting into mobile-only language that hides the usefulness of web preview.
+- Editing old research artifacts more than needed.
 
 ## Definition of done
 

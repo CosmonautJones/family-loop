@@ -1,8 +1,10 @@
 # Vision
 
-LoopedIn is a private, event-centered social calendar for families and close friend groups.
+LoopedIn is a mobile-first, private, event-centered social calendar for families and close friend groups.
 
 Shared plans should not be split across calendar rows, buried group chats, and forgotten photo threads. The event is the anchor: logistics, RSVP, discussion, reminders, photos, and recap all stay attached to the same shared moment.
+
+The primary product is the iOS/Android app. Web exists for local preview, docs, and a possible later companion experience, but the product decisions should be judged against a phone-in-hand coordination moment first.
 
 ## Target users
 
@@ -20,3 +22,9 @@ A user opens the app and immediately understands what is next, who is going, wha
 ## Magic moment
 
 The first time a user taps into an event and sees the plan, attendance state, thread, and memory path in one place, the app should feel more reliable than chat and warmer than a calendar.
+
+## Platform stance
+
+- Main surface: mobile app in `app/`, built with Expo and React Native.
+- First production targets: iOS and Android.
+- Secondary surface: web preview or later lightweight companion only after the mobile loop is strong.

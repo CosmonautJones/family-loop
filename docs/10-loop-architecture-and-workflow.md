@@ -13,7 +13,7 @@ Use this doc as the implementation bridge between the concept artifacts in `docs
 ---
 
 ## System architecture at a glance
-LoopedIn should be implemented as an **event-centered mobile client** backed by a service layer that treats the event as the primary object.
+LoopedIn should be implemented as an **event-centered mobile client** backed by a service layer that treats the event as the primary object. The mobile app is the main product surface; web is useful for previewing and may become a companion later, but it should not drive product shape.
 
 ### Product object hierarchy
 1. **Group** is the permission boundary.
@@ -23,6 +23,8 @@ LoopedIn should be implemented as an **event-centered mobile client** backed by 
 
 ### Recommended system shape
 - **Mobile client:** Expo + React Native + TypeScript
+- **Primary platform target:** iOS and Android first
+- **Web stance:** preview/companion only until the mobile loop is excellent
 - **Client state:**
   - server-backed data via TanStack Query when backend work begins
   - local UI/session state via a lightweight store such as Zustand
@@ -91,7 +93,7 @@ This keeps the code structure aligned with the product roadmap instead of coupli
 ---
 
 ## Screen model for the MVP foundation
-The mobile app should be organized around a small set of high-value surfaces.
+The mobile app should be organized around a small set of high-value phone surfaces.
 
 ### 1. Home dashboard
 **Purpose:** answer “what matters next?” within seconds.
@@ -166,7 +168,7 @@ Keep creation fast by default, then allow richer editing inside event detail aft
 ---
 
 ## Suggested navigation model
-Recommended bottom navigation for the first real build:
+Recommended bottom navigation for the first real mobile build:
 - **Home**
 - **Calendar**
 - **Create**
@@ -177,6 +179,7 @@ Recommended bottom navigation for the first real build:
 - Event detail must be reachable from Home, Calendar, Memories, and notifications.
 - Group switching should update all event-derived surfaces consistently.
 - Avoid splitting event conversation into a separate top-level tab in MVP; it belongs to the event.
+- Avoid desktop-first navigation patterns unless a later companion web app earns them.
 
 ---
 

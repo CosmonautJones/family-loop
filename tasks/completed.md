@@ -11,7 +11,18 @@ Installed the AI Builder Harness, added LoopedIn-specific vision/core-loop/taste
 The app now type-checks, the web build renders, and the Home -> Event Detail -> RSVP feedback path is verified in a browser smoke check.
 
 ### Links / commits
-Pending local commit.
+Committed in repo history.
+
+## 2026-07-05 - Mobile-first product focus
+
+### Summary
+Updated the harness docs, architecture guide, README files, product rubric, current mission, and backlog so LoopedIn is explicitly judged as an iOS/Android-first mobile app.
+
+### Result
+Future slices now prioritize phone ergonomics, mobile event coordination, and mobile navigation. Web remains framed as preview or later companion work.
+
+### Links / commits
+Committed in repo history.
 
 ## Template
 
