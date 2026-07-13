@@ -49,6 +49,7 @@ test('mobile scaffold files exist', () => {
     'src/app/selectors.ts',
     'src/app/AppProviders.tsx',
     'src/app/queries.ts',
+    'src/features/auth/AuthSessionProvider.tsx',
     'src/store/useLoopedInStore.ts',
     'src/services/api.ts',
     'src/services/index.ts',
@@ -94,6 +95,7 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   const appSelectors = read('src/app/selectors.ts');
   const appProviders = read('src/app/AppProviders.tsx');
   const appQueries = read('src/app/queries.ts');
+  const authProvider = read('src/features/auth/AuthSessionProvider.tsx');
   const appStore = read('src/store/useLoopedInStore.ts');
   const serviceApi = read('src/services/api.ts');
   const serviceIndex = read('src/services/index.ts');
@@ -139,16 +141,26 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(appSelectors, /selectEventDetailViewModel/);
   assert.match(appProviders, /QueryClientProvider/);
   assert.match(appQueries, /useActiveEventsQuery/);
+  assert.match(appQueries, /useGroupsQuery/);
+  assert.match(authProvider, /'restoring' \| 'signedOut' \| 'authenticated' \| 'error'/);
+  assert.match(authProvider, /queryClient\.clear\(\)/);
+  assert.match(authProvider, /groupsQuery\.data\[0\]\?\.id \?\? ''/);
+  assert.doesNotMatch(authProvider, /refreshSession\(/);
   assert.match(appStore, /useLoopedInStore/);
   assert.match(appStore, /setRsvpStatus/);
   assert.match(appStore, /stageEventPhoto/);
   assert.match(appStore, /toggleReminderDraft/);
   assert.match(serviceApi, /export interface LoopedInService/);
+  assert.match(serviceApi, /getSession\(\): Promise<AuthSession \| null>/);
+  assert.match(serviceApi, /onAuthStateChange/);
   assert.match(serviceIndex, /hasSupabaseConfig/);
   assert.match(serviceIndex, /createSupabaseLoopedInService/);
+  assert.match(serviceIndex, /isServiceConfigured/);
   assert.match(mockAdapter, /createMockLoopedInService/);
   assert.match(mockData, /createMockDatabase/);
   assert.match(supabaseAdapter, /createSupabaseLoopedInService/);
+  assert.match(supabaseAdapter, /auth\.getSession\(\)/);
+  assert.match(supabaseAdapter, /auth\.onAuthStateChange/);
   assert.match(supabaseAdapter, /loopedin_groups/);
   assert.match(supabaseClient, /EXPO_PUBLIC_SUPABASE_URL/);
   assert.match(supabaseClient, /EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY/);

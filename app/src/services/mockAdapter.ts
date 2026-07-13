@@ -5,21 +5,25 @@ const wait = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resol
 
 export function createMockLoopedInService(seed: MockDatabase = createMockDatabase()): LoopedInService {
   const db = cloneDatabase(seed);
+  const mockSession = {
+    userId: 'person-you',
+    displayName: 'You',
+    token: 'mock-loopedin-token',
+    expiresAt: '2026-12-31T23:59:59Z',
+  };
 
   return {
     auth: {
       login: (email) => wait({
-        userId: 'person-you',
+        ...mockSession,
         displayName: email.split('@')[0] || 'You',
-        token: 'mock-loopedin-token',
-        expiresAt: '2026-12-31T23:59:59Z',
       }),
       logout: () => wait(undefined),
+      getSession: () => wait(mockSession),
+      onAuthStateChange: () => () => undefined,
       refreshSession: () => wait({
-        userId: 'person-you',
-        displayName: 'You',
+        ...mockSession,
         token: 'mock-loopedin-token-refreshed',
-        expiresAt: '2026-12-31T23:59:59Z',
       }),
     },
     groups: {

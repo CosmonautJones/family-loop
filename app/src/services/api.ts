@@ -18,6 +18,8 @@ export interface AuthSession {
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>;
   logout(): Promise<void>;
+  getSession(): Promise<AuthSession | null>;
+  onAuthStateChange(listener: (session: AuthSession | null) => void): () => void;
   refreshSession(): Promise<AuthSession>;
 }
 

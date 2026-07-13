@@ -10,6 +10,7 @@ import type {
   UpdateEventPayload,
 } from './api';
 import { getSupabaseClient } from './supabaseClient';
+import type { Session } from '@supabase/supabase-js';
 
 type GroupRow = {
   id: string;
@@ -76,6 +77,15 @@ type ProfileRow = {
 };
 
 const mediaBucket = 'loopedin-event-media';
+
+function mapSession(session: Session): AuthSession {
+  return {
+    userId: session.user.id,
+    displayName: session.user.email?.split('@')[0] ?? 'You',
+    token: session.access_token,
+    expiresAt: new Date((session.expires_at ?? 0) * 1000).toISOString(),
+  };
+}
 
 function throwIfError(error: { message: string } | null) {
   if (error) throw new Error(error.message);
@@ -265,6 +275,17 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async logout() {
         const { error } = await supabase.auth.signOut();
         throwIfError(error);
+      },
+      async getSession() {
+        const { data, error } = await supabase.auth.getSession();
+        throwIfError(error);
+        return data.session ? mapSession(data.session) : null;
+      },
+      onAuthStateChange(listener) {
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+          listener(session ? mapSession(session) : null);
+        });
+        return () => data.subscription.unsubscribe();
       },
       async refreshSession(): Promise<AuthSession> {
         const { data, error } = await supabase.auth.refreshSession();

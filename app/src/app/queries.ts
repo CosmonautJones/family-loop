@@ -10,6 +10,14 @@ export function useActiveGroupQuery() {
   });
 }
 
+export function useGroupsQuery(enabled = true) {
+  return useQuery({
+    queryKey: ['groups'],
+    queryFn: () => loopedInService.groups.listGroups(),
+    enabled,
+  });
+}
+
 export function useActiveEventsQuery() {
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   return useQuery({
