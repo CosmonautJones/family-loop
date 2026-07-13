@@ -3,6 +3,8 @@ node_modules/
 dist/
 build/
 coverage/
+.codex/
+app/.expo/
 .DS_Store
 Thumbs.db
 .env

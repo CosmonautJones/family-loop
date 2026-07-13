@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve('C:/Users/Travis/Desktop/Projects/family-loop');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const requiredDocs = [
   'docs/01-executive-summary.md',
@@ -15,7 +16,9 @@ const requiredDocs = [
   'docs/07-product-prototype.html',
   'docs/08-brand-package.md',
   'docs/09-landing-page.html',
-  'docs/10-loop-architecture-and-workflow.md'
+  'docs/10-loop-architecture-and-workflow.md',
+  'docs/architecture.md',
+  'evals/review-log.md'
 ];
 
 test('concept documentation artifacts exist', () => {
