@@ -25,6 +25,8 @@ The current UI is therefore fixture-first. Service-backed query hooks in `app/sr
 
 ADR 001 governs upcoming migrations: configured and authenticated service data accessed through TanStack Query is authoritative; deterministic mocks are limited to unconfigured/test use; configured backend failures remain visible; Query owns server state; Zustand owns transient UI state only; and migrated screens explicitly render loading, error, empty, and populated states. This is an adopted boundary, not a claim that current screens already comply.
 
+`AuthSessionProvider` now implements the session side of that boundary. Unconfigured builds enter the deterministic prototype without credentials. Configured builds restore a persisted Supabase session and gate the shell behind explicit restoring, signed-out, authentication-error, group-loading, group-error, and no-group states. The authenticated group list is Query-owned and resolves the active group; configured failures never select fixtures. Feature screens remain fixture-backed until M2.
+
 ## Service boundary
 
 `app/src/services/api.ts` defines the service contract for auth, groups, events, RSVPs, activity, event messages, media, and notifications. `app/src/services/index.ts` selects an adapter at startup:

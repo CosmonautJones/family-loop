@@ -32,4 +32,4 @@
 
 ## UX verdict
 
-PASS — At 390x844, Home leads with the next event's title, date, time, location, image, context, and action before secondary modules. Event Detail preserves the same event identity. The zero-event copy is direct and routes to Create without fabricated activity or memories; its rendered branch awaits a real data source or future integration harness.
+PASS — M1 adds calm, narrow phone-first restoring, sign-in, group-loading, group-error, and no-group surfaces. At 390x844, the configured signed-out branch showed only the expected email/password gate with disabled submit and no protected content, while unconfigured mock mode opened the existing Home-to-Event Detail loop with the same event identity. Live auth remains `NOT RUN — ENV unavailable`.

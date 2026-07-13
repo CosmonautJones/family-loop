@@ -10,6 +10,9 @@ type SessionStatus = 'restoring' | 'signedOut' | 'authenticated' | 'error';
 type AuthSessionContextValue = {
   configured: boolean;
   error: string | null;
+  groupError: string | null;
+  groups: { id: string }[] | undefined;
+  groupsPending: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   pending: boolean;
@@ -95,7 +98,18 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   }, [applySession]);
 
   return (
-    <AuthSessionContext.Provider value={{ configured: isServiceConfigured, error, login, logout, pending, session, status }}>
+    <AuthSessionContext.Provider value={{
+      configured: isServiceConfigured,
+      error,
+      groupError: groupsQuery.error instanceof Error ? groupsQuery.error.message : null,
+      groups: groupsQuery.data,
+      groupsPending: groupsQuery.isPending,
+      login,
+      logout,
+      pending,
+      session,
+      status,
+    }}>
       {children}
     </AuthSessionContext.Provider>
   );

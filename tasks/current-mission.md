@@ -2,6 +2,8 @@
 
 Mission ID: `FAMILY-LOOP-DATA-001`
 
+Status: Complete; final Sergeant commit pending.
+
 ## Mission
 
 Add the minimum session gate needed for trustworthy service-backed work: restore an existing configured Supabase session, present a small email/password sign-in surface when configured and signed out, keep configured authentication failures visible, and preserve deterministic unconfigured prototype operation. This mission establishes session state only; it does not migrate product data screens.
@@ -96,20 +98,20 @@ Wave 2 success criterion: the mock and configured-unauthenticated phone paths ar
 
 ## Acceptance criteria
 
-- [ ] The implementation changes only files in the authorized manifest and adds no dependency, migration, deployment, or environment file.
-- [ ] Unconfigured startup opens the deterministic mock-backed prototype without requesting credentials.
-- [ ] Configured startup blocks the product shell until session restoration resolves.
-- [ ] Configured signed-out startup presents only the minimum email/password sign-in flow.
-- [ ] Configured login pending, login error, restore error, authenticated, and logout transitions are explicit and testable.
-- [ ] A configured auth failure remains visible and does not select or render the mock fallback.
-- [ ] Session/server state has one owner consistent with ADR 001; Zustand remains limited to transient UI state.
-- [ ] No secret, access token, password, or environment value is read, printed, recorded, or committed.
-- [ ] Existing Home-to-Event Detail and other fixture-backed product behavior remains intact after the session gate.
-- [ ] Focused tests cover adapter selection and the configured/unconfigured session-gate invariants at the strongest practical local boundary.
-- [ ] Mock phone smoke confirms the prototype opens and the core shell remains usable.
-- [ ] Configured-unauthenticated phone smoke confirms the sign-in boundary appears without credential mutation and protected UI does not.
-- [ ] Conditional live-auth verification follows the rule below and is recorded accurately.
-- [ ] Required checks pass, architecture and evaluation records reflect actual behavior, the review log is updated, and residual risks/follow-ups are listed.
+- [x] The implementation changes only files in the authorized manifest and adds no dependency, migration, deployment, or environment file.
+- [x] Unconfigured startup opens the deterministic mock-backed prototype without requesting credentials; verified at 390x844.
+- [x] Configured startup blocks the product shell until session restoration resolves.
+- [x] Configured signed-out startup presents only the minimum email/password sign-in flow.
+- [x] Configured login pending, login error, restore error, authenticated, and logout transitions are explicit and testable.
+- [x] A configured auth failure remains visible and does not select or render the mock fallback.
+- [x] Session/server state has one owner consistent with ADR 001; Zustand remains limited to transient UI state.
+- [x] No secret, access token, password, or environment value was read, printed, recorded, or committed during implementation.
+- [x] Existing Home-to-Event Detail and other fixture-backed product behavior remains intact in tests after the session gate.
+- [x] Focused tests cover adapter selection and the configured/unconfigured session-gate invariants at the strongest practical local boundary.
+- [x] Mock phone smoke confirms the prototype opens and the Home-to-same-event-detail core shell route remains usable at 390x844.
+- [x] Configured-unauthenticated phone smoke confirms the sign-in boundary appears without credential mutation and protected UI does not at 390x844.
+- [x] Conditional live-auth verification follows the rule below and is recorded accurately as `NOT RUN — ENV unavailable`.
+- [x] Required automated checks pass, architecture and evaluation records reflect actual behavior, the review log is updated, and residual risks/follow-ups are listed.
 
 ## Verification commands
 
@@ -173,9 +175,9 @@ The Sergeant owns commits, integration, wave transitions, and final acceptance. 
 
 ## Definition of done
 
-- [ ] Both waves are accepted in order by the Sergeant.
-- [ ] Every acceptance criterion has direct evidence or the permitted conditional live-auth result.
-- [ ] All required commands and both phone smoke paths are recorded with results.
-- [ ] Review log, architecture, task history, code rubric, UX rubric, and regression checklist are current and truthful.
-- [ ] Risks and follow-ups are recorded without absorbing later missions.
+- [x] Both waves are accepted in order by the Sergeant.
+- [x] Every acceptance criterion has direct evidence or the permitted conditional live-auth result.
+- [x] All required commands and both phone smoke paths are recorded with results.
+- [x] Review log, architecture, task history, code rubric, UX rubric, and regression checklist are current and truthful.
+- [x] Risks and follow-ups are recorded without absorbing later missions.
 - [ ] Sergeant commits the scoped, reviewable mission result.

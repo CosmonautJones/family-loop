@@ -1,5 +1,22 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-DATA-001 Wave 2 implementation review
+
+- Added configured session/auth/group gates and preserved direct unconfigured mock entry.
+- Configured states are explicit: restoring, signed out/auth error, group loading, group error, no groups, and authenticated shell. No configured failure branch renders fixtures.
+- Minimal sign-in includes email, password, disabled pending/invalid submit, and inline accessible errors; no sign-up, recovery, OAuth, or group creation was added.
+- Root `npm test`: PASS (11/11).
+- App `npm test`: PASS (5/5).
+- App `npx tsc --noEmit`: PASS.
+- App `npm run lint`: PASS, but remains a placeholder command.
+- Harness: PASS.
+- `git diff --check`: PASS (line-ending warnings only).
+- Mock phone smoke: PASS at 390x844 using `EXPO_NO_DOTENV=1` with Supabase process variables unset. Home showed Emma's Birthday Brunch; the unique visible `Open event` action opened Event Detail with the same title plus attendance, logistics, and thread context.
+- Configured-unauthenticated phone smoke: PASS at 390x844 using the existing configured local Expo start. Only LOOPEDIN, Welcome back, email, password, and disabled Sign in were shown; protected shell content was absent and no login was submitted.
+- Live auth: `NOT RUN — ENV unavailable`.
+- Limitation: lint remains a placeholder command and remote deployment remains unverified.
+- Gate: PASS. Both required non-mutating phone paths and all implementation checks are green.
+
 ## 2026-07-13 — Persistent data campaign M0
 
 - G3 targeted fix: added the explicit M0 allowed-files/systems manifest, ordered task ownership boundaries, and stop conditions requested by review; no runtime or product evidence changed.

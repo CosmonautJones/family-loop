@@ -67,6 +67,7 @@ test('mobile scaffold files exist', () => {
     'src/features/events/eventData.ts',
     'src/features/events/index.ts',
     'src/screens/HomeScreen.tsx',
+    'src/screens/AuthScreen.tsx',
     'src/screens/CalendarScreen.tsx',
     'src/screens/EventDetailScreen.tsx',
     'src/screens/CreateEventScreen.tsx',
@@ -116,6 +117,7 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   const avatar = read('src/components/Avatar.tsx');
   const photoCard = read('src/components/PhotoCard.tsx');
   const homeScreen = read('src/screens/HomeScreen.tsx');
+  const authScreen = read('src/screens/AuthScreen.tsx');
   const calendarScreen = read('src/screens/CalendarScreen.tsx');
   const eventScreen = read('src/screens/EventDetailScreen.tsx');
   const createEventScreen = read('src/screens/CreateEventScreen.tsx');
@@ -145,6 +147,7 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(authProvider, /'restoring' \| 'signedOut' \| 'authenticated' \| 'error'/);
   assert.match(authProvider, /queryClient\.clear\(\)/);
   assert.match(authProvider, /groupsQuery\.data\[0\]\?\.id \?\? ''/);
+  assert.match(authProvider, /groupError: groupsQuery\.error/);
   assert.doesNotMatch(authProvider, /refreshSession\(/);
   assert.match(appStore, /useLoopedInStore/);
   assert.match(appStore, /setRsvpStatus/);
@@ -203,6 +206,10 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.doesNotMatch(groupsScreen, /\.\.\/data\/sampleData/);
   assert.match(groupsScreen, /selectGroupsViewModel/);
   assert.doesNotMatch(homeScreen, /mobile MVP|A warmer private social calendar for real life/);
+  assert.match(authScreen, /secureTextEntry/);
+  assert.match(authScreen, /disabled=\{pending \|\| invalid\}/);
+  assert.match(authScreen, /accessibilityRole="alert"/);
+  assert.doesNotMatch(authScreen, /Sign up|Reset password|Forgot password|OAuth/);
   assert.match(homeScreen, /PhotoCard/);
   assert.match(homeScreen, /Avatar/);
   assert.match(calendarScreen, /See the month, then drill into the moment\./);
@@ -210,6 +217,10 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(memoriesScreen, /Recap ingredients/);
   assert.match(groupsScreen, /Groups & onboarding/);
   assert.match(shell, /export function AppShell/);
+  assert.match(shell, /auth\.configured && auth\.status === 'restoring'/);
+  assert.match(shell, /auth\.configured && auth\.groupError/);
+  assert.match(shell, /auth\.configured && auth\.groups\?\.length === 0/);
+  assert.match(shell, /auth\.configured \? \(/);
   assert.match(shell, /BlurView/);
   assert.match(shell, /Ionicons/);
   assert.match(shell, /CalendarScreen/);

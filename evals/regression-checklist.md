@@ -8,6 +8,8 @@ Use this before considering a mission complete.
 - [x] First-run experience is unchanged; onboarding was out of scope.
 - [x] Existing-group zero-event state works at the selector/component boundary.
 - [x] Error-state behavior is unchanged; error plumbing was out of scope.
+- [x] Unconfigured mode still reaches the existing fixture-backed shell without credentials.
+- [x] Configured auth and group failures have explicit non-fixture gates.
 
 ## Product constraints
 
@@ -22,6 +24,8 @@ Use this before considering a mission complete.
 - [x] App starts locally.
 - [x] No secrets committed.
 - [x] No unrelated files changed.
+- [x] TypeScript and harness checks pass for M1.
+- [x] Mock and configured-unauthenticated phone smoke pass at 390x844.
 
 ## Review
 

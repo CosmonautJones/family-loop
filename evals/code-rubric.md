@@ -30,4 +30,4 @@
 
 ## Code verdict
 
-PASS — The change stays within the Home coordination mission, uses a small event-ID shell seam, and adds executable selector behavior tests. No dependency or generic fixture-mode framework was added. The remaining risk is that the rendered screens are still fixture-backed.
+PASS (M1 implementation) — The change uses one React session context, additive adapter methods, the existing Query client, and explicit configured/unconfigured branches. Query cache resets on session identity changes and configured group resolution is Query-owned. No dependency, schema, polling, or fallback framework was added. Structural tests and TypeScript pass; phone smoke remains an explicit final gate.

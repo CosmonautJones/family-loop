@@ -2,6 +2,17 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - Persistent data M1 session gate
+
+### Summary
+Added a single session context with Supabase session restoration and auth-state subscription, deterministic unconfigured operation, Query cache reset on identity changes, Query-owned configured group resolution, and minimal phone-first auth/status gates.
+
+### Result
+Root tests, app tests, TypeScript, the placeholder lint command, harness, and diff checks pass. At 390x844, the configured branch showed only the signed-out email/password gate with protected UI absent and no login submitted; the mock branch opened Home and preserved Emma's Birthday Brunch identity through Event Detail. Live auth is `NOT RUN — ENV unavailable`; remote deployment remains unverified.
+
+### Links / commits
+Wave 1 foundation: `f2a2904`; Wave 2 commit pending Sergeant.
+
 ## 2026-07-05 - Event Detail RSVP polish
 
 ### Summary
