@@ -7,6 +7,7 @@ export type AppSurface = AppTab | 'EventDetail';
 export function useAppShellState() {
   const [activeSurface, setActiveSurface] = useState<AppSurface>('Home');
   const [returnTab, setReturnTab] = useState<AppTab>('Home');
+  const [activeEventId, setActiveEventId] = useState<string>();
   const activeTab = tabs.includes(activeSurface as AppTab) ? activeSurface as AppTab : returnTab;
 
   const tabItems = useMemo(
@@ -18,8 +19,9 @@ export function useAppShellState() {
     setReturnTab(tab);
     setActiveSurface(tab);
   };
-  const openEventDetail = (sourceTab: AppTab = activeTab) => {
+  const openEventDetail = (sourceTab: AppTab = activeTab, eventId?: string) => {
     setReturnTab(sourceTab);
+    setActiveEventId(eventId);
     setActiveSurface('EventDetail');
   };
   const closeEventDetail = () => setActiveSurface(returnTab);
@@ -29,6 +31,7 @@ export function useAppShellState() {
     tabItems,
     activeTab,
     activeSurface,
+    activeEventId,
     setActiveTab,
     openEventDetail,
     closeEventDetail,

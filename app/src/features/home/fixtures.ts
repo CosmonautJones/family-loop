@@ -7,19 +7,19 @@ export const people: Person[] = [
 ];
 
 export const heroEvent: Event = {
-  id: 'event-lake-picnic',
+  id: 'event-birthday-brunch',
   groupId: 'group-jones-family',
-  title: 'Lake Picnic with Family',
-  startsAt: '2026-07-04T18:30:00-05:00',
-  endsAt: '2026-07-04T20:30:00-05:00',
-  location: 'North Shore Park',
-  description: 'One event page for reminders, chat, and the shared album after sunset.',
+  title: 'Emma’s Birthday Brunch',
+  startsAt: '2026-07-18T11:00:00-05:00',
+  endsAt: '2026-07-18T13:00:00-05:00',
+  location: 'Botanical Garden Cafe',
+  description: 'Confirm the plan, check who is going, and keep brunch updates together.',
   statusLabel: 'Next up',
   visibility: 'group',
   coverUri: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
   timeline: [
-    { title: 'Logistics', detail: 'Picnic blankets, grill slot, and grandparents pickup notes.' },
-    { title: 'Conversation', detail: 'Keep updates, weather pivots, and snack swaps in one thread.' },
+    { title: 'Logistics', detail: 'Botanical Garden Cafe · 11:00 AM · Bring wrapped gifts' },
+    { title: 'Conversation', detail: 'Parking notes, allergy reminders, and gift coordination live here' },
     { title: 'Afterward', detail: 'Photos and recap stay attached to the event automatically.' },
   ],
 };

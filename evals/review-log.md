@@ -8,3 +8,14 @@
 - Established this review log and added required-artifact checks.
 - Product behavior changed: no.
 - Risks or follow-ups: screen data remains fixture-backed even though service query hooks exist; address that only through a future scoped mission.
+
+## 2026-07-13 — Home coordination loop
+
+- Replaced Home's prototype/marketing lead with a phone-first next-event hierarchy.
+- Moved the featured fixture to July 18, 2026 and aligned its identity with Event Detail.
+- Added an event-ID seam through the existing shell so Home opens the same event record.
+- Added a deterministic selector path for an existing group with zero events; activity and memories are empty and the Home CTA selects the existing Create tab.
+- Added executable populated/empty selector tests and focused shell wiring checks.
+- Verification: root tests 10/10, app tests 5/5, TypeScript, harness, and diff check passed. Expo web at 390x844 confirmed populated Home -> Emma's Birthday Brunch detail.
+- Limitation: empty Home was not browser-smoked because doing so would require a speculative runtime fixture toggle; selector behavior and CTA wiring were verified directly.
+- Scope review: no onboarding, backend/query plumbing, dependency, navigation-library, or unrelated screen changes.

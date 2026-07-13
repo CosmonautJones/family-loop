@@ -10,12 +10,12 @@ LoopedIn is currently an Expo and React Native mobile prototype. The event is th
 
 ## Shell and navigation
 
-`app/src/navigation/AppShell.tsx` is the current application shell. It renders one of five tab surfaces: Home, Calendar, Create, Memories, or Groups. `useAppShellState.ts` is a small local navigation bridge that also opens Event Detail and remembers the tab to return to. This is not a general router and should remain small until a navigation-library migration is explicitly required.
+`app/src/navigation/AppShell.tsx` is the current application shell. It renders one of five tab surfaces: Home, Calendar, Create, Memories, or Groups. `useAppShellState.ts` is a small local navigation bridge that also opens Event Detail, carries the selected event ID, and remembers the tab to return to. This is not a general router and should remain small until a navigation-library migration is explicitly required.
 
 ## Data flow and state
 
 - `app/src/features/**/fixtures.ts` contains deterministic prototype data.
-- `app/src/app/selectors.ts` converts those fixtures into screen-ready view models. Home, Calendar, Event Detail, Memories, and Groups currently read these selectors directly.
+- `app/src/app/selectors.ts` converts those fixtures into screen-ready view models. Home's selector accepts explicit event/activity/memory input so an existing group with zero events produces an honest empty state; its default remains fixture-backed. Home, Calendar, Event Detail, Memories, and Groups currently read these selectors directly.
 - `app/src/store/useLoopedInStore.ts` is a Zustand store for active-group selection and local interaction state: event drafts, RSVP overrides, staged-photo counts, and reminder drafts.
 - Draft event and active-group values use the storage helpers in `app/src/lib/storage.ts`; the other interaction state is in-memory.
 

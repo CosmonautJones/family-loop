@@ -17,6 +17,8 @@ export const eventDetail: Event = {
   ],
 };
 
+export const eventDetails: Event[] = [eventDetail];
+
 export const eventRsvps: RSVP[] = [
   { eventId: 'event-birthday-brunch', personId: 'person-emma', personName: 'Emma', status: 'going' },
   { eventId: 'event-birthday-brunch', personId: 'person-mia', personName: 'Mia', status: 'going' },

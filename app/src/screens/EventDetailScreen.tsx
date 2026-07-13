@@ -19,8 +19,8 @@ const rsvpNotes: Record<RSVPStatus, string> = {
   declined: 'You are marked out. The event stays visible for context and photos.',
 };
 
-export function EventDetailScreen({ backLabel = 'Back', onBack }: { backLabel?: string; onBack?: () => void }) {
-  const eventDetail = selectEventDetailViewModel();
+export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eventId?: string; backLabel?: string; onBack?: () => void }) {
+  const eventDetail = selectEventDetailViewModel(eventId);
   const eventThread = eventDetail.thread;
   const currentStatus = useLoopedInStore((state) => state.rsvpOverrides[eventDetail.id] ?? 'going');
   const setRsvpStatus = useLoopedInStore((state) => state.setRsvpStatus);

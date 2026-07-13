@@ -32,4 +32,4 @@
 
 ## UX verdict
 
-TBD
+PASS — At 390x844, Home leads with the next event's title, date, time, location, image, context, and action before secondary modules. Event Detail preserves the same event identity. The zero-event copy is direct and routes to Create without fabricated activity or memories; its rendered branch awaits a real data source or future integration harness.

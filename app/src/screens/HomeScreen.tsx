@@ -8,7 +8,7 @@ import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
 import { palette, spacing } from '../theme/tokens';
 
-export function HomeScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
+export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
   const appSections = selectHomeViewModel();
   const heroEvent = appSections.heroEvent;
 
@@ -16,20 +16,25 @@ export function HomeScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
     <View style={styles.root}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.eyebrow}>LoopedIn mobile MVP</Text>
-        <Text style={styles.title}>A warmer private social calendar for real life.</Text>
-        <Text style={styles.subtitle}>
-          Photo-first events, shared context, reminders, and memories — polished enough to feel like a daily habit.
-        </Text>
-
-        <View>
-          <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.timeLabel} height={300} />
-          <View style={styles.heroActions}>
-            <Button label="Open event" onPress={onOpenEvent} />
+        <Text style={styles.eyebrow}>What’s next</Text>
+        {heroEvent ? (
+          <View>
+            <Text style={styles.title}>{heroEvent.title}</Text>
+            <Text style={styles.subtitle}>{heroEvent.timeLabel} · {heroEvent.location}</Text>
+            <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.description} height={260} />
+            <View style={styles.heroActions}>
+              <Button label="Open event" onPress={() => onOpenEvent?.(heroEvent.id)} />
+            </View>
           </View>
-        </View>
+        ) : (
+          <SurfaceCard>
+            <Text style={styles.cardTitle}>No events planned yet</Text>
+            <Text style={styles.cardCopy}>Create the first event for this group so everyone knows what’s next.</Text>
+            <Button label="Create event" onPress={onCreateEvent} />
+          </SurfaceCard>
+        )}
 
-        <SurfaceCard>
+        {heroEvent ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
               <Text style={styles.cardTitle}>This week</Text>
@@ -37,9 +42,9 @@ export function HomeScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
             </View>
             <Chip label="Agenda" tone="sky" />
           </View>
-        </SurfaceCard>
+        </SurfaceCard> : null}
 
-        <SurfaceCard>
+        {appSections.activity.length > 0 ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
               <Text style={styles.cardTitle}>Recent activity</Text>
@@ -60,15 +65,15 @@ export function HomeScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
               <Chip label={item.badge} tone={item.tone} />
             </View>
           ))}
-        </SurfaceCard>
+        </SurfaceCard> : null}
 
-        <View style={styles.memoryRow}>
+        {appSections.memories.length > 0 ? <View style={styles.memoryRow}>
           {appSections.memories.map((memory) => (
             <View key={memory.title} style={styles.memoryTile}>
               <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={`${memory.eyebrow} · ${memory.subtitle}`} height={172} />
             </View>
           ))}
-        </View>
+        </View> : null}
       </ScrollView>
     </View>
   );

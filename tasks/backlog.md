@@ -4,13 +4,13 @@
 
 | Priority | Task | Why it matters | Notes |
 |---|---|---|---|
-| Done | Current mobile backlog slices | Calendar, Event Detail, Create, photos, and reminders now have scoped mobile behavior | Add new slices only after review |
+| Done | Home coordination loop | Home now leads with a valid next event, preserves event identity, and handles an existing group with zero events | Empty browser smoke waits for a real data source |
 
 ## Product improvements
 
 - Keep Event Detail as the mobile proof point before adding new top-level surfaces.
 - Treat web as preview/companion until the iOS/Android loop feels strong.
-- Next new slice should come from a fresh mobile walkthrough, not an old placeholder.
+- Connect rendered selectors to a real data source only through a separately scoped mission.
 
 ## UX improvements
 
@@ -19,6 +19,7 @@
 ## Code improvements
 
 - Move the temporary shell surface bridge to a real mobile navigator when navigation requirements expand.
+- Add integration coverage for the empty Home branch when real group event data can produce it without a fixture toggle.
 
 ## Research tasks
 

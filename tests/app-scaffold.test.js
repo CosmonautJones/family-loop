@@ -1,12 +1,30 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 
 const appRoot = path.resolve('C:/Users/Travis/Desktop/Projects/family-loop/app');
 
 function read(rel) {
   return fs.readFileSync(path.join(appRoot, rel), 'utf8');
+}
+
+function loadCompiledSelectors() {
+  const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loopedin-selectors-'));
+  const tsc = path.join(appRoot, 'node_modules', 'typescript', 'bin', 'tsc');
+  execFileSync(process.execPath, [tsc,
+    path.join(appRoot, 'src/app/selectors.ts'),
+    '--outDir', outDir,
+    '--module', 'commonjs',
+    '--target', 'es2020',
+    '--esModuleInterop',
+    '--skipLibCheck',
+  ]);
+  const require = createRequire(path.join(outDir, 'selector-test.cjs'));
+  return require(path.join(outDir, 'app/selectors.js'));
 }
 
 test('mobile scaffold files exist', () => {
@@ -172,7 +190,7 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(memoriesScreen, /selectMemoriesViewModel/);
   assert.doesNotMatch(groupsScreen, /\.\.\/data\/sampleData/);
   assert.match(groupsScreen, /selectGroupsViewModel/);
-  assert.match(homeScreen, /A warmer private social calendar for real life\./);
+  assert.doesNotMatch(homeScreen, /mobile MVP|A warmer private social calendar for real life/);
   assert.match(homeScreen, /PhotoCard/);
   assert.match(homeScreen, /Avatar/);
   assert.match(calendarScreen, /See the month, then drill into the moment\./);
@@ -194,4 +212,32 @@ test('domain models, fixtures, selectors, and screens use feature-oriented modul
   assert.match(shellState, /setActiveTab/);
   assert.match(shellState, /returnTab/);
   assert.match(shellState, /Groups/);
+});
+
+test('Home selectors expose populated and existing-group empty states', () => {
+  const { selectHomeViewModel } = loadCompiledSelectors();
+
+  const populated = selectHomeViewModel();
+  assert.equal(populated.heroEvent.id, 'event-birthday-brunch');
+  assert.match(populated.heroEvent.timeLabel, /Jul 18/);
+  assert.ok(populated.activity.length > 0);
+  assert.ok(populated.memories.length > 0);
+
+  const empty = selectHomeViewModel({ events: [] });
+  assert.equal(empty.heroEvent, null);
+  assert.deepEqual(empty.activity, []);
+  assert.deepEqual(empty.memories, []);
+});
+
+test('Home event identity reaches Event Detail and empty CTA reaches Create', () => {
+  const { selectHomeViewModel, selectEventDetailViewModel } = loadCompiledSelectors();
+  const homeEvent = selectHomeViewModel().heroEvent;
+  assert.equal(selectEventDetailViewModel(homeEvent.id).id, homeEvent.id);
+
+  const homeScreen = read('src/screens/HomeScreen.tsx');
+  const shell = read('src/navigation/AppShell.tsx');
+  assert.match(homeScreen, /onOpenEvent\?\.\(heroEvent\.id\)/);
+  assert.match(homeScreen, /Create event/);
+  assert.match(shell, /openEventDetail\('Home', eventId\)/);
+  assert.match(shell, /onCreateEvent=\{\(\) => setActiveTab\('Create'\)\}/);
 });

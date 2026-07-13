@@ -1,23 +1,43 @@
 import { calendarAgenda, calendarEvents, calendarSummary } from '../features/calendar/fixtures';
-import { eventDetail, eventRsvps, eventThread } from '../features/events/fixtures';
+import { eventDetail, eventDetails, eventRsvps, eventThread } from '../features/events/fixtures';
 import { selectEventRsvpSummary, selectEventThreadPreview, selectEventTimeline } from '../features/events/selectors';
 import { groupsOverview } from '../features/groups/fixtures';
 import { heroEvent, homeActivity, homeActivityTitle, homeMemories, homeWeekSummary } from '../features/home/fixtures';
 import { memoriesRecap } from '../features/memories/fixtures';
 import { formatEventDateRange } from '../lib/date';
+import type { Event, EventActivity, MemoryItem } from '../types/domain';
 
-export function selectHomeViewModel() {
+type HomeViewModelInput = {
+  events?: Event[];
+  activity?: EventActivity[];
+  memories?: MemoryItem[];
+};
+
+const defaultHomeInput: HomeViewModelInput = {
+  events: [heroEvent],
+  activity: homeActivity,
+  memories: homeMemories,
+};
+
+export function selectHomeViewModel(input: HomeViewModelInput = defaultHomeInput) {
+  const events = input.events ?? defaultHomeInput.events ?? [];
+  const nextEvent = events[0];
+  const activity = nextEvent ? input.activity ?? defaultHomeInput.activity ?? [] : [];
+  const memories = nextEvent ? input.memories ?? defaultHomeInput.memories ?? [] : [];
+
   return {
-    heroEvent: {
-      title: heroEvent.title,
-      timeLabel: `${heroEvent.statusLabel} · ${formatEventDateRange(heroEvent.startsAt, heroEvent.endsAt)}`,
-      description: heroEvent.description,
-      coverUri: heroEvent.coverUri ?? '',
-    },
+    heroEvent: nextEvent ? {
+      id: nextEvent.id,
+      title: nextEvent.title,
+      timeLabel: `${nextEvent.statusLabel} · ${formatEventDateRange(nextEvent.startsAt, nextEvent.endsAt)}`,
+      location: nextEvent.location,
+      description: nextEvent.description,
+      coverUri: nextEvent.coverUri ?? '',
+    } : null,
     weekSummary: homeWeekSummary,
     recentActivityTitle: homeActivityTitle,
-    activity: homeActivity,
-    memories: homeMemories.map((memory) => ({
+    activity,
+    memories: memories.map((memory) => ({
       eyebrow: memory.resurfacedLabel,
       title: memory.title,
       coverUri: memory.coverUri,
@@ -64,15 +84,17 @@ export function selectMemoriesViewModel() {
   };
 }
 
-export function selectEventDetailViewModel() {
+export function selectEventDetailViewModel(eventId: string = eventDetail.id) {
+  const selectedEvent = eventDetails.find((event) => event.id === eventId) ?? eventDetail;
+
   return {
-    id: eventDetail.id,
-    title: eventDetail.title,
-    timeLabel: formatEventDateRange(eventDetail.startsAt, eventDetail.endsAt),
-    location: eventDetail.location,
-    description: eventDetail.description,
+    id: selectedEvent.id,
+    title: selectedEvent.title,
+    timeLabel: formatEventDateRange(selectedEvent.startsAt, selectedEvent.endsAt),
+    location: selectedEvent.location,
+    description: selectedEvent.description,
     rsvpSummary: selectEventRsvpSummary(eventRsvps),
-    sections: selectEventTimeline(eventDetail),
+    sections: selectEventTimeline(selectedEvent),
     thread: selectEventThreadPreview(eventThread),
   };
 }
