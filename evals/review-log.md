@@ -1,5 +1,15 @@
 # Review Log
 
+## 2026-07-13 — Persistent data campaign M0
+
+- Recorded repository capabilities while separating code presence from live deployment proof.
+- Adopted ADR 001: configured/authenticated Query data is authoritative; mocks are unconfigured/test-only; configured failures stay visible; Zustand remains transient.
+- Sequenced M0-M6 across session, the durable event/RSVP backbone, thread, media, reminders/notifications, and derived memories/closeout with narrow non-goals.
+- Docker is unavailable and remote deployment is unverified; no live migration, RLS, bucket, or service claim is made.
+- Product behavior changed: no.
+- Verification: root tests 11/11, app tests 5/5, TypeScript, harness, and diff check passed.
+- Status: complete.
+
 ## 2026-07-13 — Repository readiness repair
 
 - Added the required current-state architecture document after confirming it was missing.

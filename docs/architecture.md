@@ -21,6 +21,10 @@ LoopedIn is currently an Expo and React Native mobile prototype. The event is th
 
 The current UI is therefore fixture-first. Service-backed query hooks in `app/src/app/queries.ts` are foundation code and are not yet the source of truth for rendered screen content.
 
+## Adopted data and session boundary
+
+ADR 001 governs upcoming migrations: configured and authenticated service data accessed through TanStack Query is authoritative; deterministic mocks are limited to unconfigured/test use; configured backend failures remain visible; Query owns server state; Zustand owns transient UI state only; and migrated screens explicitly render loading, error, empty, and populated states. This is an adopted boundary, not a claim that current screens already comply.
+
 ## Service boundary
 
 `app/src/services/api.ts` defines the service contract for auth, groups, events, RSVPs, activity, event messages, media, and notifications. `app/src/services/index.ts` selects an adapter at startup:
@@ -28,7 +32,7 @@ The current UI is therefore fixture-first. Service-backed query hooks in `app/sr
 - The in-memory mock adapter is used when Expo Supabase environment variables are absent.
 - The Supabase adapter is used when `EXPO_PUBLIC_SUPABASE_URL` and a publishable or anonymous key are present.
 
-The Supabase client persists auth sessions through AsyncStorage. Adapter availability does not imply that auth or backend flows are complete in the current UI.
+The Supabase client persists auth sessions through AsyncStorage. Adapter availability does not imply that auth or backend flows are complete in the current UI. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions are intended infrastructure rather than live proof.
 
 ## Product and implementation constraints
 

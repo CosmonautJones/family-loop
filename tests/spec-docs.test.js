@@ -18,6 +18,7 @@ const requiredDocs = [
   'docs/09-landing-page.html',
   'docs/10-loop-architecture-and-workflow.md',
   'docs/architecture.md',
+  'docs/adr/001-data-source-and-session-boundary.md',
   'evals/review-log.md'
 ];
 
@@ -25,6 +26,23 @@ test('concept documentation artifacts exist', () => {
   for (const rel of requiredDocs) {
     assert.equal(fs.existsSync(path.join(root, rel)), true, `${rel} should exist`);
   }
+});
+
+test('accepted ADRs use the numeric filename convention and required sections', () => {
+  const adrDir = path.join(root, 'docs/adr');
+  const adrs = fs.readdirSync(adrDir).filter((file) => file.endsWith('.md'));
+
+  assert.ok(adrs.length > 0, 'at least one ADR should exist');
+  for (const file of adrs) {
+    assert.match(file, /^\d{3}-[a-z0-9-]+\.md$/);
+  }
+
+  const adr = fs.readFileSync(path.join(adrDir, '001-data-source-and-session-boundary.md'), 'utf8');
+  for (const section of ['Status', 'Context', 'Problem', 'Decision', 'Alternatives', 'Consequences', 'Validation', 'Evidence links']) {
+    assert.match(adr, new RegExp(`## ${section}`));
+  }
+  assert.match(adr, /## Assumptions and inferences/);
+  assert.match(adr, /## Non-decisions/);
 });
 
 test('spec roadmap includes MVP and roadmap phases', () => {

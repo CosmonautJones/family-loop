@@ -1,53 +1,68 @@
 # Current Mission
 
-Mission ID: `FAMILY-LOOP-ASSESS-001`
+Mission ID: `FAMILY-LOOP-DATA-000`
 
 ## Mission
 
-Make Home answer what matters next and support an existing group with zero events.
-
-## Business / product reason
-
-Home should deliver the product's first value on a phone: a clear next event that opens one reliable event record. A group without plans should get an honest path to create one, not fixture activity.
-
-## User story
-
-As a family organizer, I want Home to show the next shared plan immediately, open that same plan, and help me create one when my group has no events.
+Baseline the persistent-data campaign before runtime changes: verify repository state, adopt the data/session boundary, and sequence the smallest core-loop missions.
 
 ## Acceptance criteria
 
-- [x] A chronologically valid next event dominates Home's first phone viewport.
-- [x] Opening the Home event displays that same event in Event Detail.
-- [x] An existing group with zero events has no fabricated activity or memories.
-- [x] The empty Home state offers a thumb-friendly route to the existing Create tab.
-- [x] Prototype and marketing framing is removed from Home.
-- [x] Focused executable tests cover populated, empty, and event-identity behavior.
+- [x] Current capabilities and proof limits are recorded without claiming a live backend.
+- [x] ADR 001 defines source-of-truth, fallback, server-state, and transient-state boundaries.
+- [x] M1-M6 are ordered with dependencies and narrow non-goals.
+- [x] Sergeant verifies documentation against the repository and runs required checks.
+- [x] Review log records the verification result.
+
+## Campaign sequence
+
+1. **M0 — Baseline and decision:** capability matrix, ADR 001, campaign order.
+2. **M1 — Session gate:** minimum session/loading/error boundary for authenticated service access.
+3. **M2 — Persistent event loop:** active-group event reads, Create persistence, same-ID detail, and durable RSVP.
+4. **M3 — Event thread:** event-scoped message history and send.
+5. **M4 — Event media:** private event-image upload, list, access, and delete.
+6. **M5 — Reminders and notifications:** durable event reminder preferences and useful in-app updates.
+7. **M6 — Derived memories and closeout:** completed-event memories plus full campaign hardening.
+
+Missions are sequential; later entries are sequencing, not authorization to implement them early.
+
+## Current-state verification matrix
+
+| Capability | Repository evidence | Rendered behavior | Status |
+|---|---|---|---|
+| Users/sessions | Auth contract and persisted Supabase client session | No authenticated session gate | Defined; remote unverified |
+| Groups/memberships | Schema and service methods | Fixture-derived screens | Defined; remote unverified |
+| Events | Mock/Supabase methods and query hooks | Fixture-first Home/Calendar/Detail | Not rendered source of truth |
+| RSVPs | Service methods plus local overrides | Zustand-local interaction | Durability unverified |
+| Messages | Event-scoped schema/service methods | Fixture/read-only thread | Durability unverified |
+| Images/media | Private-bucket definitions and adapter methods | Staged local counts | Deployment/upload unverified |
+| Notifications/reminders | Partial schema/service and local drafts | No delivery; local drafts | Partial foundation |
+| Memories/recaps | Fixture presentation | No dedicated durable record | Not durably implemented |
+
+Docker is unavailable, so the local Supabase stack is unproven. Remote deployment is unverified. No migration, bucket, RLS, or live-service claim is made.
 
 ## Required checks
 
-- [x] powershell -ExecutionPolicy Bypass -File .\scripts\check-harness.ps1
-- [x] npm test
-- [x] cd app; npm test
-- [x] cd app; npx tsc --noEmit
-- [x] git diff --check
-- [x] Expo web smoke at 390x844: populated Home -> same Event Detail
-- [x] Empty Home selector and CTA wiring verified without adding a runtime fixture toggle
+- [x] Sergeant documentation review
+- [x] `powershell -ExecutionPolicy Bypass -File .\scripts\check-harness.ps1`
+- [x] `npm test`
+- [x] `cd app; npm test`
+- [x] `cd app; npx tsc --noEmit`
+- [x] `git diff --check`
 
 ## Do not touch
 
-- Onboarding or the no-groups state.
-- Backend/query integration or loading/error plumbing.
-- Navigation library migration, dependencies, or unrelated redesigns.
+- Runtime code, Auth UI, migrations, deployment, dependencies, secrets/environment inspection, or M1-M6 features.
+- Billing, settings, teams, notification delivery, onboarding, or unrelated visual work.
 
 ## Risks and follow-ups
 
-- The zero-event branch is deterministic at the selector/component boundary but has no production data source yet.
-- The empty Home branch was not browser-smoked because exposing it would require a speculative runtime fixture toggle; executable selector and wiring tests cover it instead.
-- The temporary shell event-ID bridge should remain small until a navigation migration is explicitly required.
+- Repository definitions are not deployment proof.
+- M1 needs explicit authorization for its narrow Auth-area change.
+- RLS/private storage require an available safe environment before live verification.
 
 ## Definition of done
 
-- [x] Acceptance criteria met
-- [x] Relevant checks run
-- [x] Review log updated
-- [x] Follow-up risks listed
+- [x] Documentation drafted
+- [x] Sergeant verification complete
+- [x] Checks pass and review log is finalized
