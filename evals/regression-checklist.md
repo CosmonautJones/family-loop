@@ -162,7 +162,10 @@
 - [x] Local baseline → candidate → baseline rehearsal passed release-header, CSP/security, cache, hashed-asset consistency, and extensionless SPA fallback checks.
 - [x] Promoted candidate passed 320/390/430/1280 no-overflow/landmark/navigation, reduced motion, sequential focus, 200% scale proxy, exact-event deep link, Back/reload, and reduced-height validation focus.
 - [x] Rollback changed only the frontend alias; no destructive/down database migration or hosted mutation occurred.
-- [ ] Identical artifact promotion across distinct hosted backends requires an approved runtime-config design because Expo public backend values are currently compile-time.
+- [x] Release web startup validates an exact public runtime overlay before rendering App or creating a service/client; missing/invalid configuration fails closed to an accessible state.
+- [x] Exact artifact `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d` ran unchanged under distinct local-demo and loopback-Supabase IDs; config was external/no-store and exact backend origin drove CSP.
+- [x] Runtime-config rehearsal restored artifact plus overlay after invalid-config proof; final performance budgets remained green at 3,252/2,712/2,668 ms LCP and 178/115/94 ms longest task.
+- [ ] Identical artifact promotion and compatibility across distinct hosted backends remains `NOT RUN`; the loopback overlay used the same local Supabase stack as existing configured proof.
 - [ ] GitHub-hosted green commit, named host/environments/operators, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
 
 ## OPORD 017 local backup, restore, and data lifecycle

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const [url, environmentId, expectedText] = process.argv.slice(2);
-if (!url || !/^[a-z0-9][a-z0-9-]{0,62}$/.test(environmentId ?? '') || !expectedText) {
+if (!url || (environmentId !== 'none' && !/^[a-z0-9][a-z0-9-]{0,62}$/.test(environmentId ?? '')) || !expectedText) {
   throw new Error('Usage: node scripts/check-runtime-config-browser.mjs <url> <environment-id> <expected-text>');
 }
 
@@ -26,10 +26,10 @@ const exitCode = await new Promise((resolveExit, rejectExit) => {
 try {
   if (exitCode !== 0) throw new Error(`Chrome runtime-config smoke failed (${exitCode}): ${error.slice(-300)}`);
   const normalized = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-  if (!normalized.includes(environmentId) || !normalized.includes(expectedText)) {
+  if ((environmentId !== 'none' && !normalized.includes(environmentId)) || !normalized.includes(expectedText)) {
     throw new Error('Runtime-config browser smoke did not render the expected environment and state.');
   }
-  process.stdout.write(`Runtime browser state: ${environmentId} / ${expectedText}: PASS\n`);
+  process.stdout.write(`Runtime browser state: ${environmentId === 'none' ? 'no environment exposed' : environmentId} / ${expectedText}: PASS\n`);
 } finally {
   const resolvedProfile = resolve(profile);
   if (resolvedProfile.startsWith(resolve(tmpdir()))) {

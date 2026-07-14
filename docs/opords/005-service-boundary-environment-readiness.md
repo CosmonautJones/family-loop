@@ -6,7 +6,7 @@ PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are execut
 
 ## Situation and evidence
 
-- `app/src/services/api.ts` defines auth, groups, events, RSVPs, activity, messages, media, and notification contracts, and adapter selection depends on Expo Supabase variables (`docs/architecture.md:50-56`).
+- `app/src/services/api.ts` defines auth, groups, events, RSVPs, activity, messages, media, and notification contracts. Development/native selection uses Expo variables; immutable web releases validate a public runtime overlay before lazy adapter/client creation.
 - Default local mode is versioned and reload-durable; memory mode is explicit test-only; Supabase mode is explicit and never falls back on configured failures.
 - Loopback Supabase is available and exercised through migration, database lint, family/media E2E, and a configured four-session browser scenario. Remote deployment remains unverified.
 
@@ -73,7 +73,7 @@ Readiness must include the failure experience: configured outages, timeouts, rat
 | Bounded idempotent retries/no duplicate writes | PARTIAL | Invite, notification, media, and durable-local mutations have targeted idempotency/locking; no uniform retry policy. |
 | Privileged operations server-only | COMPLETE LOCALLY | Narrow security-definer RPCs and local RLS tests; service role is not shipped to client. |
 | Evidence modes never conflated | COMPLETE | Architecture, review log, and runbooks explicitly distinguish them. |
-| Environment names/adapter selection documented | COMPLETE | `docs/architecture.md`, service selector, and local runbooks. |
+| Environment names/adapter selection documented | COMPLETE | `docs/architecture.md`, strict runtime-config validator, lazy service/client selector, and release runbook. The exact artifact ran with local and loopback-Supabase overlays and failed closed on an invalid overlay. |
 | No remote state changes | COMPLETE | Local-only audit trail. |
 | Concrete next-order prerequisites | COMPLETE | Dependency registry and per-order external gates. |
 

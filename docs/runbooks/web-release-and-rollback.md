@@ -4,33 +4,33 @@ This runbook proves the repository-local part of OPORD 016. It creates immutable
 
 ## Release model
 
-Each artifact contains the Expo static export and `release-manifest.json`. The manifest has no wall-clock build time. It records the app version, environment identifier, exact 40-character source commit, commit epoch, local data mode, sorted file sizes and SHA-256 values, and a canonical artifact SHA-256. Rebuilding the same commit for the same environment must produce the same manifest and digest.
+Each artifact contains the Expo static export and `release-manifest.json`. The manifest has no wall-clock build time or environment identifier. It records the app version, exact 40-character source commit, commit epoch, runtime data mode, sorted file sizes and SHA-256 values, and a canonical artifact SHA-256. Environment IDs, backend URLs, and public keys live only in the external overlay and cannot change the artifact digest.
 
-The build operates on `git archive` output for the requested commit, runs `npm ci`, sets `EXPO_NO_DOTENV=1` and `EXPO_PUBLIC_DATA_MODE=local`, removes all supported Supabase public variables from the child environment, and refuses non-example tracked `.env*` files. This rehearsal therefore cannot consume the repository's ignored `.env.local` and cannot contact a hosted backend. Public Supabase SDK example domains can exist inside dependency code; their presence is not evidence of configured backend access.
+The build operates on `git archive` output for the requested commit, runs `npm ci`, sets `EXPO_NO_DOTENV=1` and `EXPO_PUBLIC_DATA_MODE=runtime`, removes all supported Supabase public variables from the child environment, and refuses non-example tracked `.env*` files. This rehearsal therefore cannot consume the repository's ignored `.env.local` or bake an environment endpoint/key into the artifact.
 
-The current Supabase client configuration is compiled into Expo public variables. A real dev/staging/production release cannot honestly promote one identical artifact across distinct backend endpoints until either the host injects a narrowly validated runtime config or those environments deliberately share a backend (which is forbidden by the separation policy). Do not work around this by rebuilding an artifact under the same release ID.
+Before `App` renders or a service/client is created, the web root fetches `/runtime-config.json` with `no-store` and validates its exact schema. `local` accepts no backend fields. `supabase` requires an HTTPS URL (HTTP only for loopback) and a publishable/anonymous key; unknown fields, unsafe IDs/URLs, and secret/service-role-looking keys fail closed to an accessible unavailable state. The config is never logged. Native and local development retain their explicit compile-environment path.
 
 ## Build and verify
 
-Use a clean, reviewed source commit and an environment identifier that names the artifact's intended scope:
+Use a clean, reviewed source commit. Build once; environments do not belong in this command:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-web-release.ps1 `
-  -EnvironmentId local-rehearsal `
-  -OutputPath .codex/opord16/build-a `
+  -OutputPath .codex/opord16/candidate `
   -SourceRevision <commit>
-
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-web-release.ps1 `
-  -EnvironmentId local-rehearsal `
-  -OutputPath .codex/opord16/build-b `
-  -SourceRevision <same-commit>
-
-Compare-Object `
-  (Get-Content -Raw .codex/opord16/build-a/release-manifest.json) `
-  (Get-Content -Raw .codex/opord16/build-b/release-manifest.json)
 ```
 
-`Compare-Object` must return no difference. Artifacts are disposable/ignored; release evidence records only non-secret IDs, commit, and digest.
+Scan the result for any known environment endpoint/project identifier without printing keys. Artifacts and overlays are disposable/ignored; tracked evidence records only non-secret IDs, commit, and digest.
+
+Create two untracked public overlays. The key shown below is a placeholder, never a secret or service-role key:
+
+```json
+{"schemaVersion":1,"environmentId":"local-demo","dataMode":"local"}
+```
+
+```json
+{"schemaVersion":1,"environmentId":"staging","dataMode":"supabase","supabaseUrl":"https://project.example.supabase.co","supabasePublishableKey":"sb_publishable_REPLACE_FROM_APPROVED_SOURCE"}
+```
 
 ## Local promotion and rollback rehearsal
 
@@ -41,6 +41,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/rehearse-web-release
   -BaselineArtifact .codex/opord16/baseline `
   -CandidateArtifact .codex/opord16/candidate `
   -WorkPath .codex/opord16/rehearsal `
+  -PrimaryRuntimeConfig .codex/opord16/local.json `
+  -SecondaryRuntimeConfig .codex/opord16/staging.json `
   -Port 8087
 ```
 
@@ -50,7 +52,11 @@ The rehearsal verifies both manifests before copying them into `releases/<artifa
 - content-addressed Expo assets use `public, max-age=31536000, immutable`;
 - a hashed asset path never changes bytes across the two artifacts;
 - CSP, frame, MIME-sniffing, referrer, permissions, and opener policies are consistent across promotion and rollback;
-- `X-LoopedIn-Release` changes to the candidate and returns to the baseline.
+- `X-LoopedIn-Release` changes to the candidate and returns to the baseline;
+- `runtime-config.json` is external to the digest and always `no-store`;
+- `X-LoopedIn-Environment` and CSP follow the validated overlay while release bytes stay fixed;
+- a rejected service-role-looking overlay exposes no environment/backend and renders the accessible unavailable state;
+- rollback restores both the baseline artifact and primary overlay.
 
 Rollback changes only the frontend alias. Database migrations remain forward-only; never run a destructive down migration as part of frontend rollback.
 
@@ -61,7 +67,8 @@ The loopback server is an executable policy reference, not production hosting co
 | Surface | Required policy |
 |---|---|
 | TLS | HTTPS only; valid chain/name/renewal; redirect HTTP; add HSTS only after HTTPS and subdomain ownership are proven. |
-| CSP | Start from the local policy. Add only the exact staged API/Storage origins to `connect-src` and required image origins to `img-src`; never use a wildcard for backend access. |
+| CSP | Derive `connect-src` only from the validated exact runtime backend origin and its WebSocket equivalent; never use a wildcard. |
+| Runtime config | Serve `/runtime-config.json` outside the immutable artifact with `no-store`; protect changes with the same review/approval as promotion. It contains public client configuration only. |
 | HTML/manifest | `no-cache` so aliases and entrypoints revalidate after promotion or rollback. |
 | Hashed JS/fonts/assets | One year plus `immutable`; filenames must be content addressed. |
 | SPA fallback | Extensionless routes return `index.html`; missing files with extensions stay 404. Hash deep links remain supported. |
@@ -73,12 +80,20 @@ Before any hosted action, name dev/staging/production identifiers, host/DNS/TLS 
 ## Remaining external gates
 
 - GitHub-hosted green required checks tied to the candidate commit.
-- A runtime configuration decision that permits the same immutable artifact across isolated backend environments.
 - Named host, staging/production endpoints, DNS/TLS ownership, secret custody, release/rollback operators, and maintenance window.
 - Hosted header/TLS/cache/SPA verification, configured backend compatibility, monitoring, and a real staging promotion/rollback.
 - Physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% zoom, and moderated older-adult use.
 
 No production approval is implied by the local rehearsal.
+
+## 2026-07-14 runtime-config evidence
+
+- Exact source `522aed7217ea` produced release `0.1.0-522aed7217ea`: three files, one 986,099-byte JavaScript bundle, digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`.
+- The artifact contains neither the loopback endpoint/publishable key nor the previously configured hosted project identifier.
+- The same candidate passed `runtime-local-demo` and `runtime-loopback-supabase` overlays. The latter targets the same local Supabase stack used by the retained configured scenario; this proves target switching, not two independent database instances or hosted compatibility.
+- Local mode passed 320/390/430/1280 widths, landmarks/tabs, reduced motion, sequential focus, 200% scale proxy, exact-event deep link, Back/reload, and invalid-form focus. The loopback-Supabase overlay rendered its correct environment and configured sign-in state.
+- An invalid service-role-looking overlay returned 503/no-store, omitted environment/backend CSP, and rendered `LoopedIn is unavailable`. Baseline/local artifact+config rollback passed.
+- Retained performance budgets still pass under the approved profile: LCP 3,252/2,712/2,668 ms; longest tasks 178/115/94 ms; exact-event route 648 ms; width 390/390; backend requests zero.
 
 ## 2026-07-14 local evidence
 

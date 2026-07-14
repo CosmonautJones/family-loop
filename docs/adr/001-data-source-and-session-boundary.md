@@ -22,6 +22,7 @@ Incremental persistence could create competing sources of truth or silently show
 6. Migrated surfaces explicitly represent loading, error, empty, and populated states.
 7. Session resolution gates authenticated queries.
 8. Local loopback evidence and hosted/production evidence are reported separately; local success never implies deployment, recovery email, backup, or restore readiness.
+9. Release web artifacts compile only a runtime-config bootstrap. Before rendering `App`, the bootstrap fetches and validates one public, non-secret `/runtime-config.json`; service and Supabase clients are lazy and cannot be created first. Native and development builds retain the explicit compile-environment path.
 
 ## Alternatives
 
@@ -36,6 +37,7 @@ Incremental persistence could create competing sources of truth or silently show
 - Failures are truthful and diagnosable, though less polished.
 - Mutations invalidate/update Query rather than durable Zustand mirrors.
 - Deterministic fixtures remain seed/test inputs, not a configured-backend fallback.
+- One immutable web artifact can move between environments; the environment overlay is independently reviewed, served with `no-store`, and fails closed before protected UI or services exist.
 
 ## Assumptions and inferences
 

@@ -47,11 +47,12 @@ Completed-event history is derived rather than separately persisted. Home and Me
 
 ## Service boundary
 
-`app/src/services/api.ts` defines the service contract for auth, groups, events, RSVPs, activity, event messages, media, notifications, and reminder preferences. `app/src/services/index.ts` selects exactly one adapter at startup:
+`app/src/services/api.ts` defines the service contract for auth, groups, events, RSVPs, activity, event messages, media, notifications, and reminder preferences. `app/src/services/index.ts` lazily selects exactly one adapter after configuration is ready:
 
 - Durable local AsyncStorage is the default when `EXPO_PUBLIC_DATA_MODE` is unset or set to a local value.
 - The in-memory adapter is selected only by `EXPO_PUBLIC_DATA_MODE=memory` and remains the deterministic isolated-test path.
 - The Supabase adapter is selected only by `EXPO_PUBLIC_DATA_MODE=supabase`. Missing Supabase URL/key configuration produces a visible unavailable-service error; it never falls back to local Jones Family data.
+- Immutable web releases use `EXPO_PUBLIC_DATA_MODE=runtime`. The registered root fetches and strictly validates `/runtime-config.json` before rendering `App`; the lazy service and Supabase client cannot be created before that gate. The overlay accepts only `local` or `supabase`, rejects unknown fields, unsafe environment IDs, non-HTTPS non-loopback URLs, and non-publishable/service-role-looking keys, and retains no logging seam.
 
 The durable local seed contains one stable Jones Family group with five members, exactly three future trips and one completed trip relative to 2026-07-13, plus consistent RSVPs, event-scoped messages, memories, and media metadata. The configured local Supabase browser proof separately created a three-member family, trips, comments, private media, updates, and memories through the UI; it did not rely on this seed.
 
@@ -90,9 +91,9 @@ From the repository root, run `npm test`. For app changes, also run `cd app`, th
 
 ## Local web release boundary
 
-OPORD 016 adds a repository-local release boundary without selecting a host. `scripts/build-web-release.ps1` exports an exact Git commit with dotenv disabled and durable-local mode forced, then writes a timestamp-free canonical manifest of sorted file digests. `scripts/promote-web-release.ps1` verifies every byte before storing the artifact under its digest and atomically moving a named alias. `scripts/serve-web-release.mjs` is an executable loopback reference for CSP/security headers, immutable content-addressed assets, revalidated HTML, and extensionless SPA fallback; `scripts/rehearse-web-release.ps1` exercises candidate promotion and rollback through that alias.
+OPORD 016 adds a repository-local release boundary without selecting a host. `scripts/build-web-release.ps1` exports an exact Git commit with dotenv disabled and runtime mode forced, then writes an environment-neutral, timestamp-free canonical manifest of sorted file digests. `scripts/promote-web-release.ps1` verifies every byte before storing the artifact under its digest and atomically moving a named alias. `scripts/serve-web-release.mjs` serves an external validated `runtime-config.json` with `no-store`, derives `connect-src` from its exact backend origin, and remains an executable loopback reference for security headers, immutable content-addressed assets, revalidated HTML, and extensionless SPA fallback. `scripts/rehearse-web-release.ps1` exercises two environment overlays against one candidate plus invalid-config and artifact/config rollback.
 
-This is local artifact integrity and rollback evidence, not deployment evidence. No host, DNS, TLS, staging backend, production backend, secret store, or remote environment is configured. The Supabase endpoint is currently an Expo public compile-time variable, so identical artifact promotion across isolated hosted backends requires a separate runtime-configuration decision before a hosted release can satisfy environment separation.
+This is local artifact/config integrity and rollback evidence, not deployment evidence. No host, DNS, TLS, staging backend, production backend, secret store, or remote environment is configured. The compile-time backend blocker is closed locally; distinct hosted environment inventory, configuration custody, backend compatibility, and promotion authorization remain external gates.
 
 ## Local recovery boundary
 

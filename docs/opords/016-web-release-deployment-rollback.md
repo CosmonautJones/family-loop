@@ -1,10 +1,10 @@
 # OPORD 016 — Web Release, Deployment, and Rollback
 
 ## Status
-PARTIAL/CONDITIONAL — reproducible immutable local artifacts, digest-addressed promotion, host-neutral security/cache/SPA policy, mobile-web candidate smoke, and artifact rollback are implemented and rehearsed on loopback. Hosted environment separation, TLS, configured backend compatibility, staging/production promotion, and manual production approval remain `NOT RUN`.
+PARTIAL/CONDITIONAL — reproducible environment-neutral artifacts, external validated runtime configuration, digest-addressed promotion, host-neutral security/cache/SPA policy, mobile-web candidate smoke, invalid-config fail-closed behavior, and artifact/config rollback are implemented and rehearsed on loopback. Hosted environments, TLS, backend compatibility, staging/production promotion, and manual production approval remain `NOT RUN`.
 
 ## Situation and evidence
-The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. OPORD 015 now supplies substantive local quality gates but hosted CI remains unobserved. Repository tooling now builds an exact Git archive twice into the same canonical manifest, promotes verified digest-addressed artifacts through an atomic local alias, serves executable CSP/security/cache/SPA policy, and rehearses rollback. It does not show a hosted workflow, remote Supabase deployment, TLS, or production approval. Expo public backend variables are currently compiled into the bundle, so promoting one identical artifact across isolated hosted backends still requires an approved runtime-configuration design.
+The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. OPORD 015 supplies substantive local quality gates but hosted CI remains unobserved. Repository tooling builds an exact environment-neutral Git archive, promotes verified digest-addressed artifacts through an atomic local alias, serves a strict external public runtime overlay plus derived CSP/security/cache/SPA policy, and rehearses rollback. One exact candidate ran against a local-demo overlay and loopback-Supabase overlay without changing its digest. It does not show a hosted workflow, remote Supabase deployment, TLS, or production approval.
 
 ## Mission/objective
 Implement a controlled dev-to-staging-to-production web release path with reproducible immutable artifacts, environment separation, frontend/backend compatibility gates, TLS/security headers, observable verification, and rehearsed artifact rollback.
@@ -47,11 +47,11 @@ Every candidate passes the 320/390/430 CSS-pixel mobile-web matrix, 200% zoom/re
 
 | Criterion | Disposition | Evidence |
 |---|---|---|
-| Distinct dev/staging/production identities/secrets | PARTIAL/CONDITIONAL | The manifest requires an environment identifier and the runbook defines distinct scopes/custody. No hosted environments are named; compiled Expo backend variables block identical cross-backend artifact promotion. |
-| Same immutable artifact from green CI | LOCAL COMPLETE / CONDITIONAL | Two clean exact-commit exports produced identical canonical manifests/digests; local promotion verifies every file before storing by digest. GitHub-hosted CI and staging promotion remain `NOT RUN`. |
-| TLS/headers/cache/SPA/backend compatibility | PARTIAL/CONDITIONAL | Loopback CSP/security headers, immutable hashed assets, revalidated entrypoints, extensionless SPA fallback, exact-event reload, and cache-path consistency pass. TLS, hosted policy, and configured-backend compatibility remain `NOT RUN`. |
+| Distinct dev/staging/production identities/secrets | PARTIAL/CONDITIONAL | External overlays carry distinct validated IDs and only public configuration; candidate identity is environment-neutral. Local-demo and loopback-Supabase IDs passed, but no hosted environments/custodians are named. |
+| Same immutable artifact from green CI | LOCAL COMPLETE / CONDITIONAL | Exact commit `522aed7217ea` produced digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`; the same stored bytes ran under both overlays. GitHub-hosted CI and staging promotion remain `NOT RUN`. |
+| TLS/headers/cache/SPA/backend compatibility | PARTIAL/CONDITIONAL | Runtime config is `no-store`; exact backend origin drives CSP; unsafe config fails closed; immutable assets, revalidated entrypoints, extensionless fallback, and exact-event reload pass. TLS and hosted backend compatibility remain `NOT RUN`. |
 | Staging mobile/accessibility/core-loop gate | PARTIAL/CONDITIONAL | The promoted local candidate passes 320/390/430/1280, reduced motion, navigation, focus, deep-link/Back/reload, and 200% scale-proxy checks. This is not staging, physical-device, screen-reader, or moderated-human evidence. |
-| Rollback without destructive DB reversal | LOCAL COMPLETE / CONDITIONAL | The local alias moved baseline → candidate → baseline, with release header, fallback, cache, and CSP checks after rollback. No database reversal occurred. Staging rehearsal and named rollback authority remain `NOT RUN`. |
+| Rollback without destructive DB reversal | LOCAL COMPLETE / CONDITIONAL | The local alias and overlay moved baseline/local → candidate/local → candidate/loopback → invalid/fail-closed → baseline/local. Release/environment headers and policy were restored; no database reversal occurred. Staging authority remains `NOT RUN`. |
 
 ## Validation commands/evidence
 ### Always-local

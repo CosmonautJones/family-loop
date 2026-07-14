@@ -137,7 +137,7 @@ try {
   if ($invalidRuntimeResponse.StatusCode -ne 503 -or $invalidRuntimeResponse.Headers['Cache-Control'] -ne 'no-store') { throw 'Invalid runtime config did not fail closed.' }
   $invalidShellResponse = Get-ReleaseResponse '/event/runtime-config-proof'
   if ($invalidShellResponse.Headers['X-LoopedIn-Environment'] -ne 'unavailable') { throw 'Invalid runtime config leaked an environment identity.' }
-  & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/event/runtime-config-proof" invalid-proof 'LoopedIn is unavailable'
+  & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/event/runtime-config-proof" none 'LoopedIn is unavailable'
   if ($LASTEXITCODE -ne 0) { throw 'Invalid runtime browser state did not fail closed.' }
 
   Copy-Item -LiteralPath $primaryConfigPath -Destination $liveConfigPath -Force
