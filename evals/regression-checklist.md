@@ -24,7 +24,10 @@
 - [x] Exact CDP viewport proof at 320/390/430/1280: HTML/body `scrollWidth === clientWidth`; Family and Owner were present and all five tabs remained reachable.
 - [ ] Remote Supabase membership/RLS and real-phone Safari/Chrome — NOT RUN.
 - [ ] Substantive lint — placeholder command only; AMBER.
-- [ ] Independent Run 2 gate — pending; Run 1 defects are fixed but not self-certified final GREEN.
+- [x] Independent Run 2 gate — RED on retained-v1 role migration; the blocker is addressed by `483e55e` below.
+- [x] Retained pre-role v1 envelope migrates once to v2 on the same key; data/revision and valid roles survive, missing Jones roles receive deterministic owner/member values, and unsupported versions stay visible.
+- [x] CDP 320 hard reload from retained v1: width 320, Alex Owner, custom trip visible, stored v2 revision 11, custom event/message/notification and owner + four members preserved.
+- [ ] Independent Run 3 gate — pending; Run 2 migration blocker is fixed but not self-certified final GREEN.
 
 ## OPORD campaign documentation
 

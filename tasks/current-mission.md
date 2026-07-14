@@ -231,4 +231,12 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Fresh verification: root tests PASS 34/34; app tests PASS 23/23; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER. Remote Supabase/RLS remains unverified.
 - Run 1 defects are fixed. Wave 1 awaits the independent Run 2 gate and is not self-certified final GREEN.
 
-Current truth: **Wave 0 is complete. Wave 1 Run 1 defects are fixed in `8480c17` and await independent Run 2 review; Wave 2 has not started. No remote/live capability is claimed complete.**
+### Wave 1 independent Run 2 correction
+
+- Independent Run 2 reopened Wave 1 at **RED** because retained pre-role version-1 durable envelopes had no explicit role-schema migration.
+- Fix commit `483e55e` uses a version-2 envelope on the unchanged storage key and migrates v1 before publishing state. It preserves existing roles, all user data, and revision; assigns Jones `person-you` owner and other missing roles member; and keeps unsupported versions and migration-write failures visible.
+- Exact CDP at 320 hard-reloaded a retained v1 envelope with no horizontal overflow: Alex Owner and the custom trip rendered; stored state became v2 revision 11; custom event/message/notification and owner + four member roles were preserved.
+- Fresh verification: root tests PASS 35/35; app tests PASS 24/24; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER and remote Supabase/RLS remains unverified.
+- The Run 2 blocker is fixed. Wave 1 is ready for independent Run 3 and is not self-certified final GREEN.
+
+Current truth: **Wave 0 is complete. Wave 1 Run 2 migration blocker is fixed in `483e55e` and awaits independent Run 3 review; Wave 2 has not started. No remote/live capability is claimed complete.**

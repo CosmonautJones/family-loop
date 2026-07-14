@@ -1,5 +1,13 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 Run 2 correction
+
+- Independent Run 2 result: **RED**. Retained pre-role version-1 durable envelopes lacked an explicit schema migration, so a hard reload could not guarantee truthful member roles.
+- Fix commit `483e55e` introduces the version-2 envelope on the unchanged storage key and an explicit v1 migration. Existing valid roles, all collections/fields, and the monotonic revision are preserved; missing Jones `person-you` role becomes owner and other missing roles become member. Unsupported future versions and migration-write failures remain visible.
+- Exact CDP at 320 CSS pixels loaded a retained v1 envelope through a hard reload: document width remained 320, Alex rendered as Owner, the retained custom trip rendered, storage became v2 at revision 11, and the custom event/message/notification plus owner + four member roles were preserved.
+- Automated evidence: root tests PASS 35/35; app tests PASS 24/24; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER; remote Supabase/RLS remains unverified.
+- The durable migration blocker is fixed. Wave 1 is ready for independent Run 3 and is not self-certified final GREEN.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 Run 1 correction
 
 - Independent Run 1 result: **RED**. It found horizontal document overflow at narrow widths, ID-fabricated presentation roles, and no browser-verifiable selected-tab state. The earlier Wave 1 closeout below is provisional and superseded as final gate evidence.
