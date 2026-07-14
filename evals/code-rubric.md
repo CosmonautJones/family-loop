@@ -58,8 +58,9 @@
 - [x] URL photos require a valid HTTP(S) image URL, caption, alt text, source URL, and photographer credit.
 - [x] Browser file selection persists a validated local image record; unsupported and oversized files fail before durable storage, and failed photo input remains retryable.
 - [x] Photo deletion is pending-safe, event-isolated, durable across reload, and does not imply remote object deletion.
-- [x] Root tests 39/39 and app-local tests 39/39, TypeScript, harness, web export, diff, and exact 320/390/430/1280 browser checks pass.
+- [x] Root tests 39/39 and app-local tests 28/28, TypeScript, harness, web export, diff, and exact 320/390/430/1280 browser checks pass.
 - [x] Independent Wave 3 Run 2 — AMBER / PROCEED-WARN with zero blockers after Run 1 fixes `630ad85` and `e242761`.
+- [x] Records correction captures each command's own TAP summary; root and app counts must never be mirrored across suites.
 - [ ] Substantive lint, live Supabase/RLS/private storage/signed access, real-device Safari/Chrome, and multi-user behavior — unverified.
 
 - Did the implementation stay inside the mission?

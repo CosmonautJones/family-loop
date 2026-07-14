@@ -6,7 +6,7 @@
 Completed durable-local, event-scoped comments and responsive-web photo sharing across `daf38d6`, `7eae2b5`, `630ad85`, and `e242761`, including attributed URL photos, browser file selection, reload retention, deletion, validation, and retry-safe drafts.
 
 ### Result
-Independent Run 2 accepted AMBER / PROCEED-WARN with zero blockers after Run 1 fixes. Root and app-local tests pass 39/39 each; TypeScript, harness, Expo web export, diff check, and exact 320/390/430/1280 browser checks pass. Chrome exercised a comment, attributed URL photo, a real 609-byte PNG file selection, hard reload, deletion, invalid input, and retained retry state. Lint remains a placeholder, the React Native Web shadow warning is pre-existing, and live Supabase/RLS/private storage/signed access, multi-user behavior, and physical devices remain unverified.
+Independent Run 2 accepted AMBER / PROCEED-WARN with zero blockers after Run 1 fixes. Authoritative per-command results are root tests 39/39 and app-local tests 28/28; TypeScript, harness, Expo web export, diff check, and exact 320/390/430/1280 browser checks pass. Chrome exercised a comment, attributed URL photo, a real 609-byte PNG file selection, hard reload, deletion, invalid input, and retained retry state. Lint remains a placeholder, the React Native Web shadow warning is pre-existing, and live Supabase/RLS/private storage/signed access, multi-user behavior, and physical devices remain unverified. The earlier mirrored app 39/39 record is superseded; future closeouts must capture each command's own TAP summary.
 
 ### Links / commits
 `daf38d6`, `7eae2b5`, `630ad85`, `e242761`.

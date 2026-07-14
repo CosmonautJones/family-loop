@@ -48,8 +48,9 @@
 - [x] Unsupported/oversized browser files fail before durable persistence; invalid URL-photo input remains visible and retryable.
 - [x] Comment, attributed URL photo, selected file, reload retention, deletion, and invalid-photo retry were exercised in Chrome.
 - [x] Exact CDP widths 320×844, 390×844, 430×932, and 1280×900 had no document overflow.
-- [x] Root tests 39/39 and app-local tests 39/39; TypeScript, harness, web export, and diff check pass.
+- [x] Root tests 39/39 and app-local tests 28/28; TypeScript, harness, web export, and diff check pass.
 - [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers after Run 1 draft-retention and file-guard fixes.
+- [x] Closeout counts were read from each command's own TAP summary; the earlier mirrored app 39/39 claim is superseded.
 - [ ] Placeholder lint, pre-existing React Native Web shadow warning, live Supabase/RLS/private storage/signed access, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
 
 ## OPORD campaign documentation
