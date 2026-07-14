@@ -60,7 +60,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const submitMessage = () => {
     const body = messageDraft.trim();
     if (!body || sendMessage.isPending) return;
-    sendMessage.mutate({ eventId: eventDetail.id, body }, { onSuccess: () => setMessageDraft('') });
+    sendMessage.mutate({ eventId: eventDetail.id, body }, { onSuccess: () => setMessageDraft((current) => current.trim() === body ? '' : current) });
   };
   const sendDisabled = !messageDraft.trim() || sendMessage.isPending;
   const submitPhoto = () => {
@@ -75,22 +75,28 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       setPhotoError('Use an HTTPS image address or choose an image file.');
       return;
     }
+    const submittedSourceUrl = sourceUrl.trim();
+    if (submittedSourceUrl && !/^https:\/\/(?:www\.)?unsplash\.com\//i.test(submittedSourceUrl)) {
+      setPhotoError('Use the HTTPS Unsplash photo page for attribution.');
+      return;
+    }
+    const submittedCreatorName = creatorName.trim();
     setPhotoError('');
     uploadMedia.mutate({
       eventId: eventDetail.id,
       fileUri,
       caption,
       altText,
-      creatorName: creatorName.trim() || undefined,
-      sourceName: sourceUrl.trim() ? 'Unsplash' : undefined,
-      sourceUrl: sourceUrl.trim() || undefined,
+      creatorName: submittedCreatorName || undefined,
+      sourceName: submittedSourceUrl ? 'Unsplash' : undefined,
+      sourceUrl: submittedSourceUrl || undefined,
     }, {
       onSuccess: () => {
-        setPhotoUri('');
-        setPhotoCaption('');
-        setPhotoAltText('');
-        setCreatorName('');
-        setSourceUrl('');
+        setPhotoUri((current) => current.trim() === fileUri ? '' : current);
+        setPhotoCaption((current) => current.trim() === caption ? '' : current);
+        setPhotoAltText((current) => current.trim() === altText ? '' : current);
+        setCreatorName((current) => current.trim() === submittedCreatorName ? '' : current);
+        setSourceUrl((current) => current.trim() === submittedSourceUrl ? '' : current);
       },
     });
   };
@@ -105,8 +111,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     input.onchange = () => {
       const file = input.files?.[0];
       if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        setPhotoError('Choose an image smaller than 5 MB.');
+      if (file.size > 1024 * 1024) {
+        setPhotoError('Choose a JPEG, PNG, or WebP image no larger than 1 MiB.');
         return;
       }
       const reader = new FileReader();
@@ -114,6 +120,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       reader.onload = () => {
         setPhotoUri(String(reader.result ?? ''));
         setPhotoError('');
+        uploadMedia.reset();
       };
       reader.readAsDataURL(file);
     };
@@ -143,7 +150,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               onPress={() => setRsvpStatus(status)}
             />
           ))}
-          <Button label="Add photo" tone="ghost" onPress={choosePhoto} />
+          <Button label="Add photo" tone="ghost" disabled={uploadMedia.isPending} onPress={choosePhoto} />
         </View>
         <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
         {upsertRsvp.isError ? <Text accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
@@ -197,11 +204,11 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                 <Image accessibilityLabel={item.altText} source={{ uri: item.uri }} style={styles.photo} />
                 <Text style={styles.photoCaption}>{item.caption}</Text>
                 <Text style={styles.photoMeta}>Shared {formatMessageTime(item.uploadedAt)}</Text>
-                {item.creatorName || item.sourceName ? (
-                  <Pressable accessibilityRole="link" disabled={!item.sourceUrl} onPress={() => item.sourceUrl ? Linking.openURL(item.sourceUrl) : undefined} style={styles.attributionLink}>
+                {item.creatorName || item.sourceName ? isSafeHttpsUrl(item.sourceUrl) ? (
+                  <Pressable accessibilityRole="link" onPress={() => Linking.openURL(item.sourceUrl!)} style={styles.attributionLink}>
                     <Text style={styles.attributionText}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` on ${item.sourceName}` : ''}</Text>
                   </Pressable>
-                ) : null}
+                ) : <Text style={styles.photoMeta}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` via ${item.sourceName}` : ''}</Text> : null}
                 <Button
                   label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? 'Removing…' : 'Remove photo'}
                   tone="ghost"
@@ -218,12 +225,12 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         <View style={styles.photoComposer}>
           <Text style={styles.listTitle}>Add a photo</Text>
           <Button label={photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'} tone="secondary" disabled={uploadMedia.isPending} onPress={choosePhoto} />
-          <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" keyboardType="url" onChangeText={setPhotoUri} placeholder="Or paste an HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri.startsWith('data:') ? 'Image file selected' : photoUri} editable={!photoUri.startsWith('data:') && !uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Or paste an HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri.startsWith('data:') ? 'Image file selected' : photoUri} editable={!photoUri.startsWith('data:') && !uploadMedia.isPending} />
           {photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
-          <TextInput accessibilityLabel="Photo caption" onChangeText={setPhotoCaption} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Image description" onChangeText={setPhotoAltText} placeholder="Describe the image for family members who cannot see it" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Photographer name" onChangeText={setCreatorName} placeholder="Photographer name (for Unsplash photos)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" keyboardType="url" onChangeText={setSourceUrl} placeholder="Unsplash source page (when applicable)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Image description" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Describe the image for family members who cannot see it" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Photographer name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Photographer name (for Unsplash photos)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS Unsplash photo page (when applicable)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} />
           <Button label={uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'} disabled={uploadMedia.isPending} onPress={submitPhoto} />
           {photoError || uploadMedia.isError ? <Text accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
           {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
@@ -253,7 +260,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           <TextInput
             accessibilityLabel="Message"
             multiline
-            onChangeText={setMessageDraft}
+            editable={!sendMessage.isPending}
+            onChangeText={(value) => { setMessageDraft(value); sendMessage.reset(); }}
             placeholder="Add a note for this event"
             placeholderTextColor={palette.muted}
             style={styles.composerInput}
@@ -280,6 +288,10 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
 
 function formatMessageTime(value: string) {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
+}
+
+function isSafeHttpsUrl(value?: string): value is string {
+  return Boolean(value && /^https:\/\//i.test(value));
 }
 
 function DetailState({ title, detail, backLabel, onBack }: { title: string; detail: string; backLabel: string; onBack?: () => void }) {
