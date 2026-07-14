@@ -2,6 +2,17 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - FAMILY-LOOP-WEB-001 responsive-web campaign correction
+
+### Summary
+Corrected the source-of-truth product documents and all 17 planned OPORDs to a responsive Expo/React Native Web app optimized for iOS Safari and Android Chrome phone browsers, with desktop web secondary and native apps separately authorized future work. Preserved the 17 IDs, 60 tasks, dependency graph, canonical order, and backend scope.
+
+### Result
+External Run 3 accepted AMBER / PROCEED-WARN with zero blockers: G1 PASS; G2 WARN for placeholder lint assigned to OPORD 015; G3/G4/G5 PASS. Real-phone browser, assistive-technology, moderated older-adult, live-backend, and deployment evidence remains `NOT RUN`.
+
+### Links / commits
+`4e6fb85`, `0cd69b5`, and `1361e03`.
+
 ## 2026-07-13 - FAMILY-LOOP-OPORD-001 engineering campaign plan
 
 Authored `docs/opords/README.md` and exactly 17 dependency-resolvable operations orders with 60 bounded tasks covering the full frontend, backend, server/database, security, quality, accessibility, release, and operations surface. Campaign commits: `6c612ce`, `0291b3f`, and `fd6061d`. External Run 3 gate: G1 PASS; G2 WARN because lint remains a placeholder assigned to OPORD 015; G3/G4/G5 PASS; zero blockers; overall AMBER / PROCEED-WARN. Product behavior changed: no. Remote Supabase, native-device, human-usability, deployment, backup, and restore validation were not run and are not claimed.

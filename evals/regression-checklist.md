@@ -2,6 +2,9 @@
 
 ## OPORD campaign documentation
 
+- [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.
+- [x] Exactly 17 OPORDs and 60 task rows preserved after platform correction.
+
 - [x] Exactly 17 numeric OPORDs are indexed with resolvable, acyclic dependencies.
 - [x] The obsolete combined OPORD 015 is absent; CI, release/rollback, and backup/data lifecycle are separate executable orders 015-017.
 - [x] Every OPORD has the required mission, territory, usability, execution, acceptance, validation, stop, risk, and done sections.

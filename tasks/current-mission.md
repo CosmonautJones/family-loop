@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-WEB-001`
 
-Status: In progress — targeted Run 1 RED correction implemented; external re-review pending.
+Status: Complete — external Run 3 accepted AMBER / PROCEED-WARN with zero blockers.
 
 ## Objective
 
@@ -85,4 +85,8 @@ Stop before runtime files, dependencies, configuration, credentials, remote syst
 - [x] All acceptance criteria have direct repository evidence.
 - [x] Required commands pass or retain an explicit truthful limitation.
 - [x] Review log and campaign records are updated.
-- [ ] Explicit manifest is committed with a clean worktree.
+- [x] Explicit manifest is committed with a clean worktree.
+
+## Completion evidence
+
+Campaign correction commits: `4e6fb85`, `0cd69b5`, and `1361e03`. External Run 3 gate: G1 PASS; G2 WARN because lint remains a placeholder assigned to OPORD 015; G3/G4/G5 PASS; zero blockers; overall AMBER / PROCEED-WARN. Exactly 17 OPORDs and 60 task rows remain. Real-phone browser, assistive-technology, moderated older-adult, live-backend, and deployment checks remain `NOT RUN` and are not inferred from this documentation mission.
