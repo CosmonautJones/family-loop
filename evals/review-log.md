@@ -1,5 +1,13 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 0 Run 2 closeout
+
+- External Run 2 accepted the corrected Wave 0 checkpoint: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
+- The external gate accepted 40 adversarial mutations as evidence of same-runtime coordinated durability; the exact mutation mix was not provided and is not invented in this record.
+- Fresh fix evidence retained for the accepted checkpoint: root tests PASS 29/29; app tests PASS 18/18; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder and is WARN, not substantive lint evidence.
+- Wave 0 is **COMPLETE**. The broader `FAMILY-LOOP-FULL-001` campaign remains **IN PROGRESS**, with Wave 1 pending authorization; no later wave is complete.
+- Limitations remain explicit: actual browser hard reload was not run; remote Supabase, RLS, private media, and multi-user behavior are not proven; Safari/no-Web-Locks cross-tab atomicity is not proven; and Unsplash attribution/domain handling remains a later media-wave follow-up.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 0 Run 1 correction
 
 - External/reviewer Run 1 result: **RED**. Review found a stale multi-adapter lost-update risk and a serialization rollback gap in the durable local persistence path.
@@ -9,7 +17,7 @@
 - Coordination claims must remain platform-accurate: prefer `navigator.locks` when available, use an explicit module-level fallback otherwise, and document the Safari limitation that a module fallback does not serialize independent tabs when Web Locks is unavailable.
 - Targeted correction evidence: root tests PASS 29/29; app tests PASS 18/18; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder and is WARN rather than substantive lint evidence.
 - Independent internal review confirms the revisioned envelope, latest-state deterministic replay under a per-key lock, retention of both A+B event mutations, retention of concurrent RSVP/message/media mutations, and safe stringify-failure rollback and reset behavior.
-- Internal Run 1 fix gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. The correction is ready for external re-review; external GREEN and final Wave 0 completion are not claimed.
+- Internal Run 1 fix gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. This was subsequently accepted by external Run 2 as recorded above.
 - Limitation: `navigator.locks` is used when available. The module fallback coordinates adapter instances only inside the same JavaScript runtime; cross-tab atomicity on Safari or any environment without Web Locks is `NOT PROVEN`.
 - The broader campaign remains in progress.
 

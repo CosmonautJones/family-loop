@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-FULL-001`
 
-Status: `IN PROGRESS — WAVE 0 RUN 1 FIX COMPLETE — EXTERNAL RE-REVIEW PENDING`
+Status: `IN PROGRESS — WAVE 0 COMPLETE — WAVE 1 PENDING AUTHORIZATION`
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
@@ -134,10 +134,11 @@ Create a durable, deterministic local service mode that preserves the existing s
 - External/reviewer Run 1: **RED**. The gate found a stale multi-adapter lost-update risk and an incomplete serialization rollback boundary. The previous AMBER/completion claim and its automated results remain historical run evidence, but are superseded as Wave 0 completion evidence.
 - The targeted Run 1 persistence correction is **COMPLETE**. Fresh internal evidence: root tests PASS 29/29; app tests PASS 18/18; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder and is WARN, not substantive lint evidence.
 - Independent internal review confirms the revisioned envelope; latest-state deterministic replay under a per-key lock; retention of both A+B event mutations; retention of concurrent RSVP, message, and media mutations; and safe stringify-failure rollback and reset behavior.
-- Internal Run 1 fix gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. Wave 0 is ready for external re-review; external GREEN and final Wave 0 completion are not claimed.
+- External Run 2 accepted the corrected Wave 0 checkpoint: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. The gate accepted 40 adversarial mutations as evidence of same-runtime coordinated durability. The exact mutation mix was not supplied in the gate handoff and is not inferred here.
 - Fix acceptance requires: a revisioned persistence envelope; same-runtime, per-key serialization; a latest-state re-read followed by replay or a visible conflict so acknowledged data is preserved; rollback across stringify, storage-write, and validation failures; and multi-instance regression tests.
 - Coordination must be described honestly: use `navigator.locks` when available with an explicit module-level fallback, and document that the fallback cannot guarantee cross-tab serialization on Safari where Web Locks is unavailable. Cross-tab durability beyond the exercised mechanism must not be inferred.
-- Campaign status remains **IN PROGRESS**. Wave 0 reopening does not change the prohibition on claiming remote persistence, multi-user server behavior, RLS, private media, later UX waves, or the full application.
+- Wave 0 is **COMPLETE**. Fresh fix evidence remains root tests PASS 29/29; app tests PASS 18/18; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder WARN.
+- Campaign status remains **IN PROGRESS** and Wave 1 is pending authorization. Wave 0 completion does not claim an actual browser hard reload, remote Supabase, RLS, private media, multi-user behavior, later waves, or the full application. Safari/no-Web-Locks cross-tab atomicity remains unproven, and Unsplash attribution/domain handling remains a media-wave follow-up.
 
 ### Wave 0 acceptance criteria
 
@@ -214,4 +215,4 @@ This mission is complete only when all authorized waves pass their acceptance an
 - every ADR/OPORD is completed with cited evidence or explicitly superseded by an approved record;
 - required checks pass, the review log is current, risks/follow-ups are listed, and the worktree is scoped and reviewable.
 
-Current truth: **The Wave 0 Run 1 fix is complete with an internal AMBER / PROCEED-WARN, zero-blocker gate; external re-review is pending. The broader campaign remains in progress. No external GREEN, later wave, or remote/live capability is claimed complete.**
+Current truth: **External Run 2 accepted Wave 0 as COMPLETE at AMBER / PROCEED-WARN with zero blockers. Wave 1 is pending authorization and the broader campaign remains in progress. No later wave or remote/live capability is claimed complete.**

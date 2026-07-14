@@ -8,10 +8,11 @@
 - [x] Jones Family seed identity, chronology, RSVPs, event comments, memories, and media metadata are internally consistent.
 - [x] Supabase mode is explicit and cannot silently fall back when configuration is absent or the backend fails.
 - [x] Unsplash demonstration URLs retain captions; private upload and formal attribution/domain handling remain later media work.
-- [x] Independent Wave 0 gate — AMBER / PROCEED-WARN, zero blockers; root 27/27, app 16/16, TypeScript, harness, web export, and diff check pass.
+- [x] External Run 2 Wave 0 gate — AMBER / PROCEED-WARN, zero blockers; 40 adversarial mutations accepted as same-runtime coordinated-durability evidence (exact mix not supplied); fresh fix evidence root 29/29, app 18/18, TypeScript, harness, web export, and diff check pass.
 - [ ] Substantive lint — placeholder command only.
 - [ ] Actual browser hard-reload — NOT RUN; adapter reconstruction passed, but it is limited evidence.
-- [ ] Browser durability does not prove remote/multi-user/RLS behavior.
+- [ ] Browser durability does not prove remote/multi-user/RLS/private-media behavior; Safari/no-Web-Locks cross-tab atomicity is also unproven.
+- [ ] Unsplash attribution/domain handling — follow-up in the private-media wave.
 
 ## OPORD campaign documentation
 

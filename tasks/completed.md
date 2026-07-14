@@ -2,6 +2,17 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - FAMILY-LOOP-FULL-001 Wave 0 durable local foundation
+
+### Summary
+Completed the durable local service checkpoint across commits `93b37ea` and `9a32367`: deterministic Jones Family data, revisioned persistence, same-runtime coordinated mutation replay, explicit recovery, and configured-backend no-fallback behavior.
+
+### Result
+External Run 2 accepted AMBER / PROCEED-WARN with zero blockers, including 40 adversarial mutations as same-runtime coordinated-durability evidence. Fresh fix evidence: root 29/29, app 18/18, TypeScript, harness, Expo web export, and diff check pass; lint remains a placeholder WARN. Actual browser hard reload, remote Supabase/RLS/private media/multi-user behavior, and Safari/no-Web-Locks cross-tab atomicity remain unproven; Unsplash attribution remains follow-up work. This closes Wave 0 only—the broader campaign remains in progress and Wave 1 is pending authorization.
+
+### Links / commits
+`93b37ea`, `9a32367`.
+
 ## 2026-07-13 - FAMILY-LOOP-WEB-001 responsive-web campaign correction
 
 ### Summary
