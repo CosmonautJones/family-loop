@@ -10,6 +10,7 @@ import type {
   UpdateEventPayload,
 } from './api';
 import { getSupabaseClient } from './supabaseClient';
+import { validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 
 type GroupRow = {
@@ -232,6 +233,7 @@ async function mapMedia(row: MediaRow): Promise<MediaItem> {
     eventId: row.event_id,
     uri: await createSignedMediaUrl(row.storage_path),
     caption: row.caption ?? 'Shared moment',
+    altText: row.caption ?? 'Shared family photo',
     uploadedBy: row.uploaded_by,
     uploadedAt: row.uploaded_at,
   };
@@ -527,11 +529,15 @@ export function createSupabaseLoopedInService(): LoopedInService {
     },
     media: {
       async uploadMedia(payload: MediaUploadPayload) {
+        validateMediaUpload(payload);
+        if ((payload.caption?.trim() && payload.caption.trim() !== payload.altText.trim()) || payload.sourceUrl || payload.creatorName || payload.sourceName || payload.creatorUrl) {
+          throw new Error('This Supabase project needs the media metadata migration before it can preserve captions, alt text, and attribution separately.');
+        }
         const userId = await getCurrentUserId();
-        const extension = payload.fileUri.split('.').pop()?.split('?')[0] || 'jpg';
-        const storagePath = `${payload.eventId}/${userId}-${Date.now()}.${extension}`;
         const response = await fetch(payload.fileUri);
         const blob = await response.blob();
+        const extension = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
+        const storagePath = `${payload.eventId}/${userId}-${Date.now()}.${extension}`;
 
         const { error: uploadError } = await supabase.storage.from(mediaBucket).upload(storagePath, blob);
         throwIfError(uploadError);
@@ -541,7 +547,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
           .insert({
             event_id: payload.eventId,
             storage_path: storagePath,
-            caption: payload.caption ?? null,
+            caption: payload.altText.trim(),
             uploaded_by: userId,
           })
           .select('id, event_id, storage_path, caption, uploaded_by, uploaded_at')

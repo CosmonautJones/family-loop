@@ -92,7 +92,7 @@ test('durable local service persists the family loop across reconstruction and c
   });
   await first.rsvps.upsertRsvp({ eventId: event.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' });
   await first.thread.sendMessage(event.id, 'The hotel is booked.');
-  await first.media.uploadMedia({ eventId: event.id, fileUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80', caption: 'Test photo' });
+  await first.media.uploadMedia({ eventId: event.id, fileUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80', caption: 'Test photo', altText: 'Family beside a lake', sourceUrl: 'https://unsplash.com', creatorName: 'Unsplash contributor' });
   await first.events.createEvent({ groupId: 'group-private', title: 'Other group event', startsAt: '2027-02-01T10:00:00Z', endsAt: '2027-02-01T11:00:00Z', location: 'Elsewhere', description: 'Must stay isolated' });
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
@@ -173,7 +173,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   assert.equal(corruptWrites, 1, 'explicit reset is allowed to overwrite corrupt storage');
 
   const writeFailure = new Error('storage is full');
-  let persisted = JSON.stringify({ version: 2, database: { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
+  let persisted = JSON.stringify({ version: 3, database: { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
   const failing = {
     getItem: async () => persisted,
     setItem: async () => { throw writeFailure; },
@@ -185,7 +185,7 @@ test('durable local service surfaces corrupt storage and write errors without si
 
   let unsupportedWrites = 0;
   const unsupported = {
-    getItem: async () => JSON.stringify({ version: 3, database: {} }),
+    getItem: async () => JSON.stringify({ version: 4, database: {} }),
     setItem: async () => { unsupportedWrites += 1; },
     removeItem: async () => undefined,
   };
@@ -209,7 +209,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
 });
 
-test('durable local service migrates pre-role v1 members to v2 without losing user data or revision', async () => {
+test('durable local service migrates pre-role v1 members to v3 without losing user data or revision', async () => {
   const { durableAdapter, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   for (const member of legacy.groups[0].members) delete member.role;
@@ -235,14 +235,14 @@ test('durable local service migrates pre-role v1 members to v2 without losing us
   assert.equal((await migrated.thread.listMessages('event-legacy-custom'))[0].body, 'Keep this note.');
   assert.ok((await migrated.notifications.listNotifications()).some((item) => item.id === 'notification-legacy-custom'));
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 2);
+  assert.equal(stored.version, 3);
   assert.equal(stored.revision, 7);
   assert.equal(writes, 1);
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.deepEqual((await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.role), members.map((member) => member.role));
   assert.equal((await reconstructed.events.getEvent('event-legacy-custom')).title, 'Retained custom plan');
-  assert.equal(writes, 1, 'a migrated v2 envelope must remain stable on later reconstruction');
+  assert.equal(writes, 1, 'a migrated v3 envelope must remain stable on later reconstruction');
 
   const legacyRaw = JSON.stringify({ version: 1, revision: 7, database: legacy });
   const failedMigration = durableAdapter.createDurableLocalLoopedInService({
@@ -251,6 +251,48 @@ test('durable local service migrates pre-role v1 members to v2 without losing us
     removeItem: async () => undefined,
   });
   await assert.rejects(failedMigration.groups.listGroupMembers('group-jones-family'), /migration write failed/);
+});
+
+test('media uploads are event-scoped, accessible, attributed when remote, removable, and v2-safe', async () => {
+  const { durableAdapter, mockAdapter, mockData } = loadCompiledModules();
+  const service = mockAdapter.createMockLoopedInService();
+  const local = await service.media.uploadMedia({
+    eventId: 'event-door-county',
+    fileUri: 'data:image/png;base64,iVBORw0KGgo=',
+    caption: 'Cabin arrival',
+    altText: 'The family standing outside the cabin',
+  });
+  assert.equal(local.altText, 'The family standing outside the cabin');
+  assert.deepEqual((await service.media.listMedia('event-door-county')).map((item) => item.id), [local.id]);
+  assert.deepEqual(await service.media.listMedia('event-yellowstone'), []);
+  await service.media.deleteMedia(local.id);
+  assert.deepEqual(await service.media.listMedia('event-door-county'), []);
+  await assert.rejects(service.media.deleteMedia(local.id), /missing media/i);
+  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'data:text/plain;base64,aGk=', altText: 'Text' }), /JPEG, PNG, or WebP/i);
+  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'https://example.com/photo.jpg', altText: 'Remote photo' }), /source link and creator name/i);
+  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'data:image/png;base64,aGk=', altText: '   ' }), /describe the photo/i);
+
+  const legacy = mockData.createMockDatabase();
+  delete legacy.media[0].altText;
+  const values = new Map([[durableAdapter.durableDatabaseKey, JSON.stringify({ version: 2, revision: 12, database: legacy })]]);
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const migrated = durableAdapter.createDurableLocalLoopedInService(storage);
+  assert.equal((await migrated.media.listMedia('event-lake-geneva'))[0].altText, legacy.media[0].caption);
+  const envelope = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
+  assert.equal(envelope.version, 3);
+  assert.equal(envelope.revision, 12);
+});
+
+test('media Query contract is exact-event keyed and invalidates after add or remove', () => {
+  const queries = read('src/app/queries.ts');
+  assert.match(queries, /media: \(eventId: string\) => \['media', eventId\]/);
+  assert.match(queries, /useEventMediaQuery[\s\S]*?listMedia\(eventId\)/);
+  assert.match(queries, /useUploadMediaMutation[\s\S]*?queryKeys\.media\(media\.eventId\)/);
+  assert.match(queries, /useDeleteMediaMutation[\s\S]*?queryKeys\.media\(eventId\)/);
 });
 
 test('durable local services serialize stale-instance mutations and advance revisions', async () => {
@@ -273,7 +315,7 @@ test('durable local services serialize stale-instance mutations and advance revi
   await Promise.all([
     first.rsvps.upsertRsvp({ eventId: eventA.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' }),
     second.thread.sendMessage(eventB.id, 'I saved both dates.'),
-    first.media.uploadMedia({ eventId: eventA.id, fileUri: 'https://example.com/photo.jpg', caption: 'Shared photo' }),
+    first.media.uploadMedia({ eventId: eventA.id, fileUri: 'https://example.com/photo.jpg', caption: 'Shared photo', altText: 'Family sharing a trip photo', sourceUrl: 'https://example.com/photo', creatorName: 'Example photographer' }),
   ]);
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);

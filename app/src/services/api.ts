@@ -94,6 +94,11 @@ export interface MediaUploadPayload {
   eventId: string;
   fileUri: string;
   caption?: string;
+  altText: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  creatorName?: string;
+  creatorUrl?: string;
 }
 
 export interface MediaApi {

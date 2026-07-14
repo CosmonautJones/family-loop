@@ -3,7 +3,7 @@ import { createMockLoopedInService } from './mockAdapter';
 import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 2;
+export const durableDatabaseVersion = 3;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -42,7 +42,7 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
 
 function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
   const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
-  if (parsed.version !== 1 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
@@ -61,9 +61,13 @@ function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrat
   } else if (database.groups.some((group) => group.members?.some((member) => !['owner', 'admin', 'member'].includes(member.role)))) {
     throw new Error('Malformed local group member role. Reset and reseed to recover.');
   }
+  database.media = database.media.map((item) => ({
+    ...item,
+    altText: item.altText?.trim() || item.caption?.trim() || 'Shared family photo',
+  }));
   return {
     envelope: { version: durableDatabaseVersion, revision: parsed.revision ?? 0, database },
-    migrated: parsed.version === 1,
+    migrated: parsed.version !== durableDatabaseVersion,
   };
 }
 

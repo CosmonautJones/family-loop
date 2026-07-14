@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { loopedInService } from '../services';
-import type { CreateEventPayload, CreateRsvpPayload } from '../services/api';
+import type { CreateEventPayload, CreateRsvpPayload, MediaUploadPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 
 export const queryKeys = {
@@ -11,6 +11,7 @@ export const queryKeys = {
   event: (eventId: string) => ['event', eventId] as const,
   rsvps: (eventId: string) => ['rsvps', eventId] as const,
   messages: (eventId: string) => ['messages', eventId] as const,
+  media: (eventId: string) => ['media', eventId] as const,
 };
 
 export function useActiveGroupQuery() {
@@ -69,6 +70,32 @@ export function useEventMessagesQuery(eventId: string) {
     queryKey: queryKeys.messages(eventId),
     queryFn: () => loopedInService.thread.listMessages(eventId),
     enabled: Boolean(eventId),
+  });
+}
+
+export function useEventMediaQuery(eventId: string) {
+  return useQuery({
+    queryKey: queryKeys.media(eventId),
+    queryFn: () => loopedInService.media.listMedia(eventId),
+    enabled: Boolean(eventId),
+  });
+}
+
+export function useUploadMediaMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: MediaUploadPayload) => loopedInService.media.uploadMedia(payload),
+    onSuccess: (media) => queryClient.invalidateQueries({ queryKey: queryKeys.media(media.eventId) }),
+  });
+}
+
+export function useDeleteMediaMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ mediaId }: { eventId: string; mediaId: string }) => loopedInService.media.deleteMedia(mediaId),
+    onSuccess: (_result, { eventId }) => queryClient.invalidateQueries({ queryKey: queryKeys.media(eventId) }),
   });
 }
 

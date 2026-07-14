@@ -1,5 +1,6 @@
 import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, LoopedInService, MediaUploadPayload, UpdateEventPayload } from './api';
 import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData';
+import { validateMediaUpload } from './mediaValidation';
 
 const wait = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 120));
 
@@ -138,13 +139,16 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       },
     },
     media: {
-      uploadMedia: (payload: MediaUploadPayload) => {
-        const item = { id: `media-created-${nextMediaId++}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption ?? 'New shared moment', uploadedBy: 'person-you', uploadedAt: new Date().toISOString() };
+      uploadMedia: async (payload: MediaUploadPayload) => {
+        validateMediaUpload(payload);
+        if (!db.events.some((event) => event.id === payload.eventId)) return Promise.reject(new Error(`Missing event ${payload.eventId}`));
+        const item = { id: `media-created-${nextMediaId++}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption?.trim() || 'New shared moment', altText: payload.altText.trim(), uploadedBy: 'person-you', uploadedAt: new Date().toISOString(), sourceName: payload.sourceName?.trim() || undefined, sourceUrl: payload.sourceUrl?.trim() || undefined, creatorName: payload.creatorName?.trim() || undefined, creatorUrl: payload.creatorUrl?.trim() || undefined };
         db.media.push(item);
         return changed(item);
       },
       listMedia: (eventId) => wait(db.media.filter((item) => item.eventId === eventId)),
       deleteMedia: (mediaId) => {
+        if (!db.media.some((item) => item.id === mediaId)) return Promise.reject(new Error(`Missing media ${mediaId}`));
         db.media = db.media.filter((item) => item.id !== mediaId);
         return changed(undefined);
       },

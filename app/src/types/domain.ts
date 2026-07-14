@@ -70,9 +70,14 @@ export type MediaItem = {
   eventId: EventId;
   uri: string;
   caption: string;
+  altText: string;
   uploadedBy: PersonId;
   uploadedAt: string;
   blurhash?: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  creatorName?: string;
+  creatorUrl?: string;
 };
 
 export type Event = {
