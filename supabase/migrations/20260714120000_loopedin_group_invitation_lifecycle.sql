@@ -318,6 +318,36 @@ begin
 end;
 $$;
 
+create or replace function public.loopedin_match_group_invite_email(target_token text, target_email text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  normalized_token text := lower(btrim(coalesce(target_token, '')));
+  normalized_email text := lower(btrim(coalesce(target_email, '')));
+  requested_hash bytea;
+begin
+  if normalized_token !~ '^[0-9a-f]{64}$'
+     or normalized_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then
+    return jsonb_build_object('ok', false, 'code', 'input');
+  end if;
+  requested_hash := extensions.digest(decode(normalized_token, 'hex'), 'sha256');
+  update public.loopedin_group_invitations
+  set status = 'expired'
+  where token_hash = requested_hash and status = 'pending' and expires_at <= now();
+  if exists (
+    select 1 from public.loopedin_group_invitations
+    where token_hash = requested_hash and invitee_email = normalized_email
+      and status = 'pending' and expires_at > now()
+  ) then
+    return jsonb_build_object('ok', true, 'code', 'ready');
+  end if;
+  return jsonb_build_object('ok', false, 'code', 'unavailable');
+end;
+$$;
+
 create or replace function public.loopedin_decline_group_invite(target_token text)
 returns jsonb
 language plpgsql
@@ -499,6 +529,7 @@ revoke all on function public.loopedin_can_create_group() from public;
 revoke all on function public.loopedin_create_group_invite(uuid, text, text) from public;
 revoke all on function public.loopedin_validate_group_invite(text) from public;
 revoke all on function public.loopedin_accept_group_invite(text) from public;
+revoke all on function public.loopedin_match_group_invite_email(text, text) from public;
 revoke all on function public.loopedin_decline_group_invite(text) from public;
 revoke all on function public.loopedin_list_group_invites(uuid) from public;
 revoke all on function public.loopedin_revoke_group_invite(uuid) from public;
@@ -511,6 +542,7 @@ grant execute on function public.loopedin_can_create_group() to authenticated;
 grant execute on function public.loopedin_create_group_invite(uuid, text, text) to authenticated;
 grant execute on function public.loopedin_validate_group_invite(text) to anon, authenticated;
 grant execute on function public.loopedin_accept_group_invite(text) to authenticated;
+grant execute on function public.loopedin_match_group_invite_email(text, text) to anon, authenticated;
 grant execute on function public.loopedin_decline_group_invite(text) to authenticated;
 grant execute on function public.loopedin_list_group_invites(uuid) to authenticated;
 grant execute on function public.loopedin_revoke_group_invite(uuid) to authenticated;

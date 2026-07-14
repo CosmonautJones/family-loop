@@ -132,12 +132,22 @@ try {
   assert.match(anonymousContext.maskedEmail, /^m\*{3}@/);
   assert.deepEqual(Object.keys(anonymousContext).sort(), ['code', 'expiresAt', 'groupId', 'groupName', 'inviterName', 'maskedEmail', 'ok'].sort());
   assert.deepEqual(await ok(rpc('loopedin_validate_group_invite', anonKey, { target_token: randomToken() }), 'anonymous invalid invite'), { code: 'unavailable', ok: false });
+  const matchedEmail = await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: mayaInvite.token, target_email: maya.email.toUpperCase() }), 'matching invitation email');
+  assert.deepEqual(matchedEmail, { code: 'ready', ok: true });
+  const wrongEmail = await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: mayaInvite.token, target_email: outsider.email }), 'wrong invitation email');
+  const unknownEmail = await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: mayaInvite.token, target_email: `unknown-${run}@loopedin.test` }), 'unknown invitation email');
+  const badToken = await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: randomToken(), target_email: outsider.email }), 'unknown invitation token');
+  assert.deepEqual(wrongEmail, { code: 'unavailable', ok: false });
+  assert.deepEqual(unknownEmail, wrongEmail);
+  assert.deepEqual(badToken, wrongEmail);
+  assert.deepEqual(await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: null, target_email: 'not-an-email' }), 'malformed invite match input'), { code: 'input', ok: false });
   assert.equal((await ok(rpc('loopedin_accept_group_invite', outsider.token, { target_token: mayaInvite.token }), 'wrong account accept')).code, 'unavailable');
   const responseLossRetry = await createInvite(alex, family.id, maya.email, mayaInvite.token);
   assert.equal(responseLossRetry.invitationId, mayaInvite.invitationId);
   assert.equal(responseLossRetry.code, 'existing');
   assert.equal((await ok(rpc('loopedin_accept_group_invite', maya.token, { target_token: mayaInvite.token }), 'Maya accepts')).code, 'joined');
   assert.equal((await ok(rpc('loopedin_accept_group_invite', maya.token, { target_token: mayaInvite.token }), 'Maya replay accepts')).code, 'joined');
+  assert.deepEqual(await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: mayaInvite.token, target_email: maya.email }), 'used invite unavailable'), { code: 'unavailable', ok: false });
 
   const revoked = await createInvite(alex, family.id, jordan.email);
   const [sameRetryA, sameRetryB] = await Promise.all([
@@ -150,6 +160,7 @@ try {
   assert.equal(duplicate.code, 'already_pending');
   await ok(rpc('loopedin_revoke_group_invite', alex.token, { target_invitation_id: revoked.invitationId }), 'revoke invite');
   assert.equal((await ok(rpc('loopedin_revoke_group_invite', alex.token, { target_invitation_id: revoked.invitationId }), 'revoke replay')).code, 'revoked');
+  assert.deepEqual(await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: revoked.token, target_email: jordan.email }), 'revoked invite unavailable'), { code: 'unavailable', ok: false });
   assert.equal((await ok(rpc('loopedin_accept_group_invite', jordan.token, { target_token: revoked.token }), 'revoked unavailable')).code, 'unavailable');
   const declined = await createInvite(alex, family.id, jordan.email);
   assert.equal((await ok(rpc('loopedin_decline_group_invite', jordan.token, { target_token: declined.token }), 'decline invite')).code, 'declined');
@@ -157,6 +168,7 @@ try {
   const expired = await createInvite(alex, family.id, jordan.email);
   sql(`update public.loopedin_group_invitations set created_at=now()-interval '8 days', expires_at=now()-interval '1 second' where id='${expired.invitationId}';`);
   assert.equal((await ok(rpc('loopedin_validate_group_invite', jordan.token, { target_token: expired.token }), 'expired unavailable')).code, 'unavailable');
+  assert.deepEqual(await ok(rpc('loopedin_match_group_invite_email', anonKey, { target_token: expired.token, target_email: jordan.email }), 'expired invite match unavailable'), { code: 'unavailable', ok: false });
   const accepted = await createInvite(alex, family.id, jordan.email);
   await ok(rpc('loopedin_accept_group_invite', jordan.token, { target_token: accepted.token }), 'Jordan accepts');
   assert.equal((await ok(rpc('loopedin_revoke_group_invite', alex.token, { target_invitation_id: accepted.invitationId }), 'accepted invite is not revocable')).code, 'not_pending');
