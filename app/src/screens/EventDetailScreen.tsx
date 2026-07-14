@@ -248,10 +248,10 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Edit plan</Text>
           <Text style={styles.cardCopy}>Update the shared essentials. The original plan length stays the same.</Text>
           {([
-            { key: 'title' as const, label: 'Trip or event name', placeholder: 'Family weekend' },
-            { key: 'date' as const, label: 'Start date', placeholder: 'YYYY-MM-DD' },
-            { key: 'time' as const, label: 'Start time', placeholder: 'HH:MM' },
-            { key: 'location' as const, label: 'Location', placeholder: 'City, address, or meeting place' },
+            { key: 'title' as const, label: 'Trip or event name', placeholder: 'Family weekend', autoComplete: 'off' as const },
+            { key: 'date' as const, label: 'Start date', placeholder: 'YYYY-MM-DD', autoComplete: 'off' as const },
+            { key: 'time' as const, label: 'Start time', placeholder: 'HH:MM', autoComplete: 'off' as const },
+            { key: 'location' as const, label: 'Location', placeholder: 'City, address, or meeting place', autoComplete: 'street-address' as const },
           ]).map((field) => (
             <View key={field.key} style={styles.editField}>
               <Text nativeID={`edit-${field.key}-label`} style={styles.editLabel}>{field.label} (required)</Text>
@@ -262,6 +262,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                 accessibilityLabel={field.label}
                 accessibilityLabelledBy={`edit-${field.key}-label`}
                 aria-required
+                autoComplete={field.autoComplete}
                 editable={!updateEvent.isPending}
                 onChangeText={(value) => changeEditField(field.key, value)}
                 placeholder={field.placeholder}
@@ -274,7 +275,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           ))}
           <View style={styles.editField}>
             <Text style={styles.editLabel}>Notes (optional)</Text>
-            <TextInput nativeID="edit-description-input" accessibilityLabel="Notes, optional" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.muted} style={[styles.input, styles.notesInput]} value={editForm.description} />
+            <TextInput nativeID="edit-description-input" accessibilityLabel="Notes, optional" autoComplete="off" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.muted} style={[styles.input, styles.notesInput]} value={editForm.description} />
           </View>
           {updateEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.editError}>{updateEvent.error instanceof Error ? updateEvent.error.message : 'We couldn’t update this plan. Your changes are still here.'}</Text> : null}
           <View style={styles.lightActionRow}>
@@ -319,6 +320,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         ) : null}
         <View style={styles.composer}>
           <TextInput
+            nativeID="event-message-input"
             accessibilityLabel="Message"
             autoComplete="off"
             multiline
@@ -400,12 +402,12 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             ) : null}
             {photoMode === 'file' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>{photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'}</Text></Pressable> : null}
             {photoMode === 'link' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Use image file instead</Text></Pressable> : null}
-            {photoMode === 'link' ? <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput nativeID="event-photo-url-input" accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
             {photoMode && photoPreviewUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoPreviewUri }} style={styles.preview} /> : null}
-            {photoMode ? <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
-            {photoMode ? <TextInput accessibilityLabel="Image description" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Image description (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} /> : null}
-            {photoMode === 'link' ? <TextInput accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
-            {photoMode === 'link' ? <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Unsplash photo page (required)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} /> : null}
+            {photoMode ? <TextInput nativeID="event-photo-caption-input" accessibilityLabel="Photo caption" autoComplete="off" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
+            {photoMode ? <TextInput nativeID="event-photo-description-input" accessibilityLabel="Image description" autoComplete="off" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Image description (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput nativeID="event-photo-photographer-input" accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput nativeID="event-photo-source-input" accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Unsplash photo page (required)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} /> : null}
             {photoMode ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={submitPhoto} style={styles.planButton}><Text style={styles.planButtonText}>{uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'}</Text></Pressable> : null}
             <Pressable accessibilityRole="button" aria-controls="photo-composer" aria-expanded accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={() => { setPhotoComposerOpen(false); setPhotoMode(null); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Close photo form</Text></Pressable>
             {photoError || uploadMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
