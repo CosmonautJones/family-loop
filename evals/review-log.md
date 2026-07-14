@@ -363,3 +363,15 @@
 - Candidate browser evidence passed 320/390/430/1280 exact widths and landmark/tab contracts, reduced motion, sequential navigation, 200% page-scale proxy, exact-event deep link, Back/reload, and reduced-height invalid-form focus.
 - Final gates: root PASS 80/80; app-local PASS 62/62; substantive lint and TypeScript PASS; Expo export, harness, secret scan, four-migration integrity, release-script contracts, and diff check PASS. The read-only populated-scenario verifier retained 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media rows, 38 notifications, 3 Storage objects, and zero outsider residue. Port 8087 had no listener after rehearsal cleanup.
 - No hosted, database, Storage, DNS, TLS, deployment, secret, or production action occurred. Full OPORD completion remains blocked by compile-time backend configuration, hosted CI/environments/TLS, configured staging compatibility, named human approval/rollback authority, physical/mobile assistive-tech evidence, and a real hosted rehearsal.
+
+## 2026-07-14 — OPORD 017 local backup, isolated restore, and lifecycle dry run
+
+- Added dependency-free PBKDF2-SHA256/AES-256-GCM authenticated encryption, selected logical-schema backup, private Storage byte capture, migration/object hashing, isolated restore, and deterministic non-destructive lifecycle planning.
+- Fix loop 1: whole-cluster and clean schema restores collided with Supabase-managed hooks. The archive narrowed to authoritative application/auth/storage schemas and restores into a fresh database rather than cleaning a bootstrap database.
+- Fix loop 2: `pg_isready` observed the image's temporary init postmaster. Waiting for Docker health `healthy` removed the planned-shutdown race.
+- Fix loop 3: restored RLS lacked grants when privileges were omitted. Normal ACLs are restored while role-owned default ACL entries are filtered; member and outsider queries pass.
+- Final drill: authenticated-encrypted payload 608,653 bytes; exact counts 4/1/3/3/6/6/3/38/4/3; three object hashes/sizes and all migration hashes pass; missing event/object/media references are 0/0/0.
+- Restored RLS allowed the selected member 3 events/6 messages/3 media and returned 0/0/0 to the outsider. Observed snapshot age was 14.806 seconds and restore 7.745 seconds; neither is an approved RPO/RTO.
+- Live self-scope dry run found 21 owner candidates, all protected/blocked with no apply mode, and zero row/object discrepancies. Tests deny cross-user planning, exclude foreign IDs, prove deterministic bounds, authenticate encryption/tamper failure, and exercise both orphan directions.
+- The primary stack was read-only except removal of its temporary dump files. The populated scenario remained retained; disposable restore/plaintext and the test-passphrase artifact were removed.
+- Review verdict: **AMBER / PROCEED-WARN, zero local blockers**. Hosted backup/PITR/schedules, product/legal retention/grace/erasure policy, approved RPO/RTO, complete authenticated encrypted export, deletion/apply, and hosted restore remain required.

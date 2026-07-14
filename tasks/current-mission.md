@@ -221,7 +221,7 @@ The 17-order dependency graph and original task intent remain unchanged. Current
 
 - Locally closable product slices: OPORDs 001, 004, 007, 009, and 011 are `LOCAL COMPLETE / CONDITIONAL`; their remaining conditions are external device, human, hosted, or delivery gates rather than missing local core-loop behavior.
 - Partially complete slices: OPORDs 002, 003, 005, 006, 008, 010, 012, 013, and 014 retain named missing criteria. The largest product gaps are password recovery, realtime subscription/reconnect, persisted reminder preference, measured capacity/performance budgets, incident tabletop/runbook, and assistive-technology/human evidence.
-- Operational slices: OPORD 015 now has substantive lint, a least-privilege CI workflow, and local pass/failure proofs but lacks GitHub-hosted execution and required-check administration; OPORD 016 lacks hosted release/rollback; OPORD 017 lacks backup/restore/export/deletion/retention evidence.
+- Operational slices: OPORD 015 has substantive lint, a least-privilege CI workflow, and local pass/failure proofs but lacks GitHub-hosted execution and required-check administration; OPORD 016 lacks hosted release/rollback; OPORD 017 has local encrypted backup/isolated restore and lifecycle dry-run evidence but lacks hosted PITR and approved export/deletion/retention apply.
 - Current local evidence includes root/app tests, substantive zero-warning lint, TypeScript, Expo web export, harness, loopback database lint, family/media E2E, read-only populated-scenario verification, secret/dependency/migration checks, and diff checks. Hosted CI remains `NOT RUN`.
 - Explicitly `NOT RUN`: hosted deployment/migrations/monitoring/backup/restore, production recovery email, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% browser zoom, and moderated older-adult use. Local reduced-motion handling and emulation pass.
 
@@ -372,3 +372,12 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Final gates pass: root 80/80; app-local 62/62; substantive lint; TypeScript; Expo export; harness; secret and migration validators; release-script contracts; and diff check. The read-only configured-scenario verifier retained its exact 4/3/3/6/6/3/38/3 counts with zero outsider residue, and the rehearsal server left no listener.
 - No `.env.local`, hosted project, Auth account, database row, Storage object, DNS/TLS, deployment, or remote environment was read or changed. The populated loopback scenario remains intact.
 - OPORD 016 is **PARTIAL/CONDITIONAL**. The local artifact/promotion/rollback slice passes, but the current compile-time Supabase public configuration cannot promote one identical artifact across isolated hosted backends. Runtime configuration, hosted CI, named environments/operators, DNS/TLS, configured staging compatibility, physical devices/AT/human evidence, hosted rollback, and manual production approval remain `NOT RUN`.
+
+## OPORD 017 local recovery and lifecycle checkpoint
+
+- Encrypted local backup captures application-owned logical schemas, exact migration inventory, and all private event-media bytes without printing or persisting the runtime passphrase.
+- A fresh database in a disposable isolated Docker container restored exact 4 profiles, 1 group, 3 memberships, 3 events, 6 RSVPs, 6 messages, 3 media, 38 notifications, 4 Auth users, and 3 Storage objects.
+- All private object hashes/sizes matched; row/event/object reconciliation was zero. Restored RLS let a member see 3/6/3 events/messages/media and the outsider see 0/0/0.
+- Observed restore was 7.745 seconds from a 14.806-second-old snapshot. These are not approved RTO/RPO targets.
+- Self-scoped planning is deterministic, bounded, cross-user-denying, and dry-run only. It found 21 protected/blocked owner candidates and zero live media orphans; fixtures cover both orphan directions.
+- The populated primary stack remained read-only. Hosted PITR/scheduling, retention/grace/legal policy, complete authenticated export, deletion/apply, hosted restore, and production authorization remain open. OPORD 017 is **PARTIAL/CONDITIONAL**.

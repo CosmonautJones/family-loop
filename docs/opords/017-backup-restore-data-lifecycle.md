@@ -1,10 +1,10 @@
 # OPORD 017 — Backup, Restore, and Data Lifecycle
 
 ## Status
-NOT RUN — local lifecycle cleanup tests exist, but backup/PITR, isolated restore, export/deletion, retention, orphan reconciliation, and RPO/RTO acceptance are not implemented or exercised.
+PARTIAL/CONDITIONAL — encrypted local database/private-object backup and a genuinely isolated restore drill pass with count, hash, foreign-reference, and member/outsider RLS evidence. Self-scoped export/deletion inventory and bidirectional orphan reconciliation are deterministic dry runs only. Hosted backup/PITR, approved RPO/RTO/retention, production authentication/export, deletion apply, and legal/product policy remain open.
 
 ## Situation and evidence
-Forward migrations and local tests cover relational/private-object ownership and cleanup-safe media operations. The browser scenario verifier reconciles three active media rows with three private Storage objects, but that is not backup or restore evidence. No PITR, object-version protection, restore drill, export/deletion, retention, or orphan-reconciliation job exists.
+Forward migrations and local tests cover relational/private-object ownership and cleanup-safe media operations. The local drill now encrypts a selected logical database dump plus private object bytes, restores into an isolated disposable database, and reconciles exact counts, hashes, references, and RLS. A self-scoped operator planner provides bounded deletion and bidirectional orphan dry runs. Hosted PITR/object-version protection, approved export/deletion/retention behavior, apply jobs, and approved RPO/RTO still do not exist.
 
 ## Mission/objective
 Implement and prove recoverability for database and private objects, then implement auditable user export/deletion, retention, and orphan reconciliation without weakening event/group privacy.
@@ -48,11 +48,11 @@ Export and deletion requests must explain scope, timing, grace/recovery limits, 
 
 | Criterion | Disposition | Evidence |
 |---|---|---|
-| Encrypted DB backup/PITR and private-object strategy | NOT RUN | Requires approved hosted controls and product/legal RPO/retention decisions. |
-| Isolated restore within RTO with DB/object/RLS/core-loop integrity | NOT RUN | No restore environment or drill. |
-| Complete scoped encrypted auditable export | NOT IMPLEMENTED / NOT RUN | No export flow. |
-| Deliberate idempotent cross-user-safe deletion | NOT IMPLEMENTED / NOT RUN | Membership/media cleanup tests are not account-erasure evidence. |
-| Dry-run retention/orphan plan before apply | NOT IMPLEMENTED / NOT RUN | Scenario row/object count reconciliation is read-only proof only. |
+| Encrypted DB backup/PITR and private-object strategy | LOCAL PASS / HOSTED OPEN | AES-256-GCM package contains a selected logical schema backup, migration inventory, and all three private object bytes/hashes. Hosted schedule/PITR and approved retention/RPO remain `NOT RUN`. |
+| Isolated restore within RTO with DB/object/RLS/core-loop integrity | LOCAL PASS / TARGET OPEN | Disposable no-primary-volume/network restore matched 4/1/3/3/6/6/3/38/4/3 counts, 3/3 object hashes, zero reference drift, member 3/6/3 visibility, and outsider 0/0/0. Observed 7.745-second restore from a 14.806-second-old snapshot; no approved target exists. |
+| Complete scoped encrypted auditable export | PARTIAL | Deterministic self-scoped identifier inventory denies cross-user planning and contains no family content. Production authentication, approved content scope, encrypted user delivery, and audit/completion flow are not implemented. |
+| Deliberate idempotent cross-user-safe deletion | DRY RUN ONLY | Deterministic bounded plans deny cross-user scope and expose no apply mode. All 21 owner candidates remain protected/blocked pending product/legal policy and destructive authorization. |
+| Dry-run retention/orphan plan before apply | LOCAL DRY-RUN PASS | Bidirectional row/object comparison found zero discrepancies in the retained scenario; fixture tests cover both orphan directions, bounding, and review-only exclusions. No retention or apply job exists. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -67,6 +67,8 @@ rg -n "loopedin_event_media|storage_path|storage.buckets|storage.objects" supaba
 
 Run fixture-backed export/delete idempotency, cross-user isolation, retention dry-run, and row/object reconciliation tests without remote credentials.
 
+Run the local encrypted backup/restore and lifecycle dry run using `docs/runbooks/local-backup-restore-data-lifecycle.md`. The passphrase must be runtime-only; the default drill removes its artifact.
+
 ### Conditional-staging/mobile-web/human
 With explicit authorization, verify backup/PITR metadata, restore into a disposable isolated environment, restore private objects, run RLS/integrity/core-loop checks, exercise encrypted export/deletion on synthetic users, and run retention/orphan dry-run before any apply. Production restore/deletion and human testing remain NOT RUN unless separately approved.
 
@@ -78,3 +80,5 @@ Database/object point-in-time mismatch, backups conflicting with erasure duties,
 
 ## Definition of done
 Backup/PITR and private-object protection are configured, an isolated restore drill passes RPO/RTO/integrity/RLS checks, export/deletion and retention/orphan flows have scoped executable evidence, and every production/destructive action has explicit authorization and audit history.
+
+Local checkpoint: the recoverability drill and non-destructive planning slice are complete. The OPORD remains PARTIAL/CONDITIONAL because hosted PITR/scheduling, approved targets/policies, complete authenticated export, deliberate deletion, and retention/orphan apply are still required by this definition.

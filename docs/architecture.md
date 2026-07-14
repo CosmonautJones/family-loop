@@ -87,3 +87,11 @@ From the repository root, run `npm test`. For app changes, also run `cd app`, th
 OPORD 016 adds a repository-local release boundary without selecting a host. `scripts/build-web-release.ps1` exports an exact Git commit with dotenv disabled and durable-local mode forced, then writes a timestamp-free canonical manifest of sorted file digests. `scripts/promote-web-release.ps1` verifies every byte before storing the artifact under its digest and atomically moving a named alias. `scripts/serve-web-release.mjs` is an executable loopback reference for CSP/security headers, immutable content-addressed assets, revalidated HTML, and extensionless SPA fallback; `scripts/rehearse-web-release.ps1` exercises candidate promotion and rollback through that alias.
 
 This is local artifact integrity and rollback evidence, not deployment evidence. No host, DNS, TLS, staging backend, production backend, secret store, or remote environment is configured. The Supabase endpoint is currently an Expo public compile-time variable, so identical artifact promotion across isolated hosted backends requires a separate runtime-configuration decision before a hosted release can satisfy environment separation.
+
+## Local recovery boundary
+
+OPORD 017 uses one authenticated-encrypted package containing a logical dump of `public`, `loopedin_private`, `auth`, and `storage`, the exact migration inventory, and every private event-media byte with size/SHA-256 metadata. The passphrase is runtime-only.
+
+Restore never targets the primary stack. It waits for a random standalone Supabase Postgres container to become healthy, creates a fresh `restored` database, restores a filtered archive there, reconstructs private bytes in a temporary directory, reconciles counts/references/hashes, and runs member/outsider RLS queries before guaranteed cleanup.
+
+The lifecycle planner is intentionally not an application service or UI. It provides deterministic, self-scoped, identifier-only export/deletion inventory and bidirectional media orphan dry runs while product/legal policy is absent. It has no apply mode and is not production authentication, a portable user export, or account erasure. Hosted backup/PITR, approved RPO/RTO/retention, encrypted export delivery, deletion/grace/legal-hold behavior, and scheduled orphan apply remain external gates.

@@ -94,7 +94,7 @@ Canonical execution order: OPORD-001 -> OPORD-002 -> OPORD-005 -> OPORD-006 -> O
 | 014 | PARTIAL/CONDITIONAL | Local integration matrices, 320/390/430/1280 Chrome, Lighthouse 100/100, keyboard/landmark/reduced-motion checks, and 200% scale proxy | Physical iOS/Android, VoiceOver/TalkBack, practical 200% browser zoom, and moderated older-adult study `NOT RUN` |
 | 015 | PARTIAL/CONDITIONAL | Substantive pinned lint; three least-privilege CI jobs; secret/audit/migration validators; local clean and five seeded-failure proofs | GitHub-hosted runs, disposable-PR failure proof, and administrator-required checks `NOT RUN` |
 | 016 | PARTIAL/CONDITIONAL | Exact-commit canonical artifacts, digest verification/store, local alias promotion/rollback, executable CSP/security/cache/SPA policy, and mobile-web candidate smoke | Hosted environment separation/runtime config, GitHub-hosted green commit, DNS/TLS, configured staging backend, physical devices, deployment, and production approval `NOT RUN` |
-| 017 | NOT RUN | Private row/object lifecycle and cleanup-safe local tests exist | Backup/PITR, isolated restore, export/deletion, retention, orphan-reconciliation drill, RPO/RTO `NOT RUN` |
+| 017 | PARTIAL/CONDITIONAL | Encrypted local relational/private-object backup; disposable isolated restore with exact counts/hashes/references and member/outsider RLS; bounded self-scope deletion/orphan dry runs | Hosted backup/PITR/schedule, approved RPO/RTO/retention/legal policy, complete authenticated encrypted export, destructive deletion/apply, and hosted restore remain `NOT RUN` |
 
 Machine-readable adjacency list (the same `Depends on:` values appear in each order):
 
@@ -151,7 +151,7 @@ Each execution updates this table by linking evidence rather than changing `Plan
 | Media | Hardened schema/adapter/UI present | Private Storage/RLS matrix plus URL and actual file upload pass | Physical Safari/Chrome camera/gallery and hosted Storage not run |
 | Notifications/reminders | In-app updates present; reminder preference absent | Recipient isolation, exact-event navigation, mark/read/clear pass | Reminder preference incomplete; production delivery deferred |
 | Memories | Derived Query-backed presentation | Completed-event media/comment derivation and reload pass | Physical/mobile-human validation not run |
-| Backup/restore/release | Local immutable-artifact and rollback tooling present | Loopback promotion/cache/header/SPA/mobile smoke and rollback pass | Hosted staging release and restore rehearsal not run |
+| Backup/restore/release | Local immutable-artifact, rollback, encrypted backup, and isolated restore tooling present | Loopback promotion/rollback plus exact-count/hash/reference/RLS recovery drill pass | Hosted staging release, PITR, and restore rehearsal not run |
 
 ## Campaign completion rule
 

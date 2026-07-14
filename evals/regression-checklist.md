@@ -139,6 +139,17 @@
 - [ ] Identical artifact promotion across distinct hosted backends requires an approved runtime-config design because Expo public backend values are currently compile-time.
 - [ ] GitHub-hosted green commit, named host/environments/operators, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
 
+## OPORD 017 local backup, restore, and data lifecycle
+
+- [x] Logical schemas and all private event-media objects are packaged with migration/object hashes under authenticated AES-256-GCM encryption; the runtime passphrase is not logged or stored.
+- [x] Restore uses a fresh database in a random disposable Docker container with no primary volume/network and removes plaintext/container state in `finally`.
+- [x] Counts match at 4/1/3/3/6/6/3/38/4/3 for profiles/groups/memberships/events/RSVPs/messages/media/notifications/Auth users/objects; all three object hashes/sizes pass.
+- [x] Restored reference checks are zero; member RLS sees 3/6/3 events/messages/media and outsider RLS sees 0/0/0.
+- [x] Observed snapshot age 14.806s and restore 7.745s are recorded as measurements, not approved RPO/RTO targets.
+- [x] Self-scoped dry-run planning denies cross-user scope, excludes foreign user IDs, is deterministic/bounded, exposes no apply mode, and found zero live row/object discrepancies.
+- [x] Fixture tests exercise both orphan directions with review-only grace/retention/legal-hold exclusions.
+- [ ] Hosted backup/PITR/schedule/retention, approved RPO/RTO, complete authenticated encrypted export, deletion/apply, legal/product policy, and hosted restore remain `NOT RUN`.
+
 ## Wave 5 mobile accessibility implementation
 
 - [x] Exactly one main landmark wraps the active screen and the fixed navigation appears before it in DOM order.
