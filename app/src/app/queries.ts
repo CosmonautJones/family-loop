@@ -19,9 +19,10 @@ export const queryKeys = {
   invitations: (groupId: string) => ['groups', groupId, 'invitations'] as const,
   canCreateGroup: ['groups', 'can-create'] as const,
   notifications: ['notifications'] as const,
+  reminder: (eventId: string, userId: string) => ['reminder', eventId, userId] as const,
 };
 
-const protectedQueryRoots = new Set(['event', 'events', 'rsvps', 'messages', 'media', 'notifications', 'profiles']);
+const protectedQueryRoots = new Set(['event', 'events', 'rsvps', 'messages', 'media', 'notifications', 'reminder', 'profiles']);
 
 export function evictGroupScopedQueries(queryClient: QueryClient) {
   queryClient.removeQueries({ predicate: (query) => {
@@ -255,6 +256,25 @@ export function useEventMediaQuery(eventId: string) {
   });
 }
 
+export function useEventReminderQuery(eventId: string, userId: string) {
+  return useQuery({
+    queryKey: queryKeys.reminder(eventId, userId),
+    queryFn: () => loopedInService.reminders.getPreference(eventId),
+    enabled: Boolean(eventId && userId),
+  });
+}
+
+export function useSetEventReminderMutation(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ eventId, enabled }: { eventId: string; enabled: boolean }) => {
+      if (enabled) await loopedInService.reminders.enablePreference(eventId);
+      else await loopedInService.reminders.disablePreference(eventId);
+    },
+    onSuccess: (_result, { eventId }) => queryClient.invalidateQueries({ queryKey: queryKeys.reminder(eventId, userId), exact: true }),
+  });
+}
+
 export function useUploadMediaMutation() {
   const queryClient = useQueryClient();
 
@@ -316,6 +336,7 @@ export function useDeleteEventMutation() {
       queryClient.removeQueries({ queryKey: queryKeys.rsvps(eventId), exact: true });
       queryClient.removeQueries({ queryKey: queryKeys.messages(eventId), exact: true });
       queryClient.removeQueries({ queryKey: queryKeys.media(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: ['reminder', eventId] });
       return queryClient.invalidateQueries({ queryKey: queryKeys.events(groupId) });
     },
   });

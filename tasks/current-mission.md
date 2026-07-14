@@ -6,7 +6,7 @@ Status: `IN PROGRESS — CONFIGURED LOCAL CORE LOOP COMPLETE — OPORDS RECONCIL
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
-Latest checkpoint: OPORD 003 password recovery is locally complete. Loopback Supabase Auth/Mailpit and configured 390×844 Chrome prove neutral known/unknown requests, password replacement, old/new login, authenticated reload, replay/invalid recovery, offline copy, and disposable-account/message cleanup. Hosted mail/redirect/rate-limit and physical iOS/Android evidence remain external gates.
+Latest checkpoint: OPORD 010 reminder preference is locally complete. Durable-local v7, two authenticated loopback users, existing self-user/event-member RLS, and configured 390×844 Chrome prove exact-user/event persistence, isolation, idempotent disable, reload, keyboard focus, no overflow, and failure-intent retry while making no push/email delivery claim. Hosted and physical-device evidence remain external gates.
 
 ## Commander's intent
 
@@ -221,8 +221,8 @@ This mission is complete only when all authorized waves pass their acceptance an
 
 The 17-order dependency graph and original task intent remain unchanged. Current acceptance is now recorded criterion-by-criterion in each OPORD and summarized in `docs/opords/README.md`.
 
-- Locally closable product slices: OPORDs 001, 004, 007, 008, 009, and 011 are `LOCAL COMPLETE / CONDITIONAL`; their remaining conditions are external device, human, hosted, or delivery gates rather than missing local core-loop behavior.
-- Partially complete slices: OPORDs 002, 003, 005, 006, 010, 012, 013, and 014 retain named missing criteria. OPORD 003's local password-recovery slice and OPORD 008's local exact-event realtime slice are complete; their hosted/physical proof remains external. The largest remaining product gaps are persisted reminder preference and assistive-technology/human evidence.
+- Locally closable product slices: OPORDs 001, 004, 007, 008, 009, 010, and 011 are `LOCAL COMPLETE / CONDITIONAL`; their remaining conditions are external device, human, hosted, or delivery gates rather than missing local core-loop behavior.
+- Partially complete slices: OPORDs 002, 003, 005, 006, 012, 013, and 014 retain named missing criteria. OPORD 003's local password-recovery slice, OPORD 008's local exact-event realtime slice, and OPORD 010's persisted reminder preference are complete; their hosted/physical proof remains external. The largest remaining product evidence gap is assistive-technology and moderated-human validation.
 - Operational slices: OPORD 015 has substantive lint, a least-privilege CI workflow, and local pass/failure proofs but lacks GitHub-hosted execution and required-check administration; OPORD 016 lacks hosted release/rollback; OPORD 017 has local encrypted backup/isolated restore and lifecycle dry-run evidence but lacks hosted PITR and approved export/deletion/retention apply.
 - Current local evidence includes root/app tests, substantive zero-warning lint, TypeScript, Expo web export, harness, loopback database lint, family/media E2E, read-only populated-scenario verification, secret/dependency/migration checks, and diff checks. Hosted CI remains `NOT RUN`.
 - Explicitly `NOT RUN`: hosted deployment/migrations/monitoring/backup/restore, production recovery email, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% browser zoom, and moderated older-adult use. Local reduced-motion handling and emulation pass.
@@ -383,3 +383,15 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Observed restore was 7.745 seconds from a 14.806-second-old snapshot. These are not approved RTO/RPO targets.
 - Self-scoped planning is deterministic, bounded, cross-user-denying, and dry-run only. It found 21 protected/blocked owner candidates and zero live media orphans; fixtures cover both orphan directions.
 - The populated primary stack remained read-only. Hosted PITR/scheduling, retention/grace/legal policy, complete authenticated export, deletion/apply, hosted restore, and production authorization remain open. OPORD 017 is **PARTIAL/CONDITIONAL**.
+
+## 2026-07-14 — OPORD 010 local per-user event reminder preference
+
+- Added the smallest reminder service contract: exact-current-user/event read, idempotent enable/upsert, and idempotent disable/delete. Memory, durable-local, and Supabase adapters share the contract; no schema, dependency, settings center, scheduler, worker, push, email, or SMS work was added.
+- Durable-local advances from envelope v6 to v7. Retained v1–v6 data and revision migrate once with an empty reminder collection; reminder mutations use the existing captured-actor and coordinated-write boundary.
+- Supabase reuses `loopedin_reminder_drafts` and its existing self-user/event-member RLS. Two authenticated users enabled independent preferences on the same retained event, signed out and back in, and saw only their own row. One user's repeated disable did not change the other; an outsider could not read the event or insert by direct ID.
+- Event Detail renders one 48px `switch` with explicit `aria-checked`, `Morning of event`, explicit On/Off state, and honest copy that this is an in-app preference while push/email delivery is inactive. Loading, error/refetch, pending, success, and retained-intent retry states remain local to the preference card.
+- Configured 390×844 Chrome passed 390/390 no-overflow, 48px target, keyboard `:focus-visible`, exact-event deep-link/reload persistence, and a real local-gateway outage. The failed disable retained confirmed On state plus `Retry turning off`; retry after Kong recovery persisted Off.
+- Fix loop: the first rendered gate found that React Native Web emitted `role=switch` but not DOM `aria-checked` from `accessibilityState`. Explicit `aria-checked` fixed the semantics and the repeated browser gate passed.
+- Cleanup is part of both loopback harnesses. The final read-only verifier retained exactly 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 0 reminders, 3 Storage objects, and zero outsider residue.
+- Final gates: root PASS 88/88; app-local PASS 66/66; substantive ESLint and TypeScript PASS; configured Expo export, harness, secret scan across 194 files, four-migration integrity, database lint, family/media/reminder loopback matrices, configured reminder browser proof, populated-scenario verification, and diff check PASS. `npm audit --audit-level=high` exits zero; 11 moderate transitive Expo-toolchain advisories remain because the offered fix is a breaking Expo 57 upgrade outside this mission.
+- Local verdict: **GREEN** for OPORD 010's implementable slice. Hosted RLS, production delivery, physical Safari/Chrome, assistive technology, and moderated family/older-adult use remain `NOT RUN`; actual push/email/SMS delivery remains an explicit non-goal.

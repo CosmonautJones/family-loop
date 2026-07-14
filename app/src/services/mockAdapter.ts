@@ -196,6 +196,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         db.activity = db.activity.filter((activity) => activity.eventId !== eventId);
         db.memories = db.memories.filter((memory) => memory.eventId !== eventId);
         db.notifications = db.notifications.filter((notification) => notification.eventId !== eventId);
+        db.reminders = db.reminders.filter((reminder) => reminder.eventId !== eventId);
         return changed(undefined);
       },
     },
@@ -303,6 +304,25 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
           const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
           return notification.userId === profile.id && groupId && allowedGroups.has(groupId) ? { ...notification, read: true } : notification;
         });
+        return changed(undefined);
+      },
+    },
+    reminders: {
+      getPreference: async (eventId) => {
+        const { profile } = requireEventMembership(eventId);
+        return wait(db.reminders.find((item) => item.eventId === eventId && item.userId === profile.id) ?? null);
+      },
+      enablePreference: async (eventId) => {
+        const { profile } = requireEventMembership(eventId);
+        const next = { eventId, userId: profile.id, timing: 'morning_of_event' as const, enabled: true as const, updatedAt: new Date().toISOString() };
+        const existing = db.reminders.find((item) => item.eventId === eventId && item.userId === profile.id);
+        if (existing) Object.assign(existing, next);
+        else db.reminders.push(next);
+        return changed(existing ?? next);
+      },
+      disablePreference: async (eventId) => {
+        const { profile } = requireEventMembership(eventId);
+        db.reminders = db.reminders.filter((item) => item.eventId !== eventId || item.userId !== profile.id);
         return changed(undefined);
       },
     },

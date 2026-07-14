@@ -87,7 +87,7 @@ Canonical execution order: OPORD-001 -> OPORD-002 -> OPORD-005 -> OPORD-006 -> O
 | 007 | LOCAL COMPLETE / CONDITIONAL | Durable create/edit/cancel, exact-ID Home/Calendar/detail, RSVP/refetch/reload across users; configured browser proof | DST/locale matrix and physical/mobile-human checks `NOT RUN` |
 | 008 | PARTIAL | Durable event-isolated comments and multi-session reload pass | Realtime subscription, reconnect convergence, and cleanup lifecycle `NOT IMPLEMENTED/NOT RUN` |
 | 009 | LOCAL COMPLETE / CONDITIONAL | Pending/active/deleting lifecycle, signed private reads, upload/list/delete, RLS/Storage attacks, actual browser file selection; `a9769ec`, `c6ee2b2` | Physical Safari/Chrome camera/gallery and hosted Storage `NOT RUN` |
-| 010 | PARTIAL | Recipient-scoped in-app updates, exact-event navigation, read/clear persistence; `c612a75` | Persisted reminder preference is not implemented; production delivery is excluded and `NOT RUN` |
+| 010 | LOCAL COMPLETE / CONDITIONAL | Recipient-scoped in-app updates plus exact-user/event `Morning of event` preference, two-session RLS/relogin/isolation, 390px outage/retry/reload/focus proof; `c612a75` plus current mission | Hosted policy state, physical devices, and human checks `NOT RUN`; production delivery is excluded |
 | 011 | LOCAL COMPLETE / CONDITIONAL | Completed-event derived memories from exact event comments/media, empty/error/query states, browser proof | Physical-browser/human usability `NOT RUN` |
 | 012 | PARTIAL | Representative 20/100/100/50 capacity, reload/server-restart persistence, exact-once retry/draft protections, throttled-browser metrics, reduced motion, and no-overflow proof | Warm Slow-3G LCP and long-task budgets fail; cold offline, hosted load, and physical-device tests remain unsupported or `NOT RUN` |
 | 013 | PARTIAL | Local owner/member/outsider RLS and Storage attack matrices; privacy-safe errors; incident runbook/tabletop | Production telemetry, named hosted ownership, external assessment, and hosted enforcement `NOT RUN` |
@@ -149,7 +149,7 @@ Each execution updates this table by linking evidence rather than changing `Plan
 | Groups/events/RSVP | Present | Four-session local creation/invite/transfer plus CRUD/RSVP/RLS pass | Hosted CRUD/RLS not run |
 | Event chat | Durable scoped comments present | Multi-user isolation and reload pass | Realtime subscription/reconnect not implemented |
 | Media | Hardened schema/adapter/UI present | Private Storage/RLS matrix plus URL and actual file upload pass | Physical Safari/Chrome camera/gallery and hosted Storage not run |
-| Notifications/reminders | In-app updates present; reminder preference absent | Recipient isolation, exact-event navigation, mark/read/clear pass | Reminder preference incomplete; production delivery deferred |
+| Notifications/reminders | In-app updates plus persisted fixed event preference present | Recipient isolation, exact-event navigation, mark/read/clear, two-user preference isolation/relogin, outsider denial, and configured retry pass | Hosted/physical evidence deferred; push/email/SMS delivery excluded |
 | Memories | Derived Query-backed presentation | Completed-event media/comment derivation and reload pass | Physical/mobile-human validation not run |
 | Backup/restore/release | Local immutable-artifact, rollback, encrypted backup, and isolated restore tooling present | Loopback promotion/rollback plus exact-count/hash/reference/RLS recovery drill pass | Hosted staging release, PITR, and restore rehearsal not run |
 

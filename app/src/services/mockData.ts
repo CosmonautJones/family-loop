@@ -1,5 +1,5 @@
 import type { Event, EventActivity, EventMessage, Group, GroupMember, MediaItem, MemoryItem, RSVP } from '../types/domain';
-import type { NotificationItem } from './api';
+import type { NotificationItem, ReminderPreference } from './api';
 
 export type MockDatabase = {
   groups: Group[];
@@ -10,6 +10,7 @@ export type MockDatabase = {
   memories: MemoryItem[];
   media: MediaItem[];
   notifications: NotificationItem[];
+  reminders: ReminderPreference[];
 };
 
 const members: GroupMember[] = [
@@ -72,13 +73,16 @@ export function createMockDatabase(): MockDatabase {
     activity: [{ id: 'activity-lake-photos', eventId: 'event-lake-geneva', actor: members[1], title: 'Maya shared 3 reunion photos', detail: 'The Lake Geneva memory is ready', badge: 'Photos', tone: 'coral', createdAt: '2026-06-15T10:05:00-05:00' }],
     memories: [{ id: 'memory-lake-geneva', eventId: 'event-lake-geneva', title: 'Lake Geneva Reunion', description: 'A sunny family weekend by the water.', capturedOn: '2026-06-14T17:00:00-05:00', photoCount: 3, peopleCount: 5, commentCount: 1, tags: ['Lake', 'Reunion', 'Family'], resurfacedLabel: 'Last month', coverUri: media[0].uri, photoUris: media.map((item) => item.uri) }],
     notifications: members.map((member) => ({ id: member.id === 'person-you' ? 'notification-door-county' : `notification-door-county-${member.id}`, userId: member.id, kind: 'message' as const, title: 'New Door County note', body: 'Maya reserved the cabin and saved the first-floor room.', eventId: 'event-door-county', groupId: 'group-jones-family', read: false, createdAt: '2026-07-10T18:10:00-05:00' })),
+    reminders: [],
   });
 }
 
 export function createEmptyMockDatabase(): MockDatabase {
-  return { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] };
+  return { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [], reminders: [] };
 }
 
 export function cloneDatabase(database: MockDatabase): MockDatabase {
-  return JSON.parse(JSON.stringify(database));
+  const clone = JSON.parse(JSON.stringify(database)) as MockDatabase;
+  clone.reminders ??= [];
+  return clone;
 }

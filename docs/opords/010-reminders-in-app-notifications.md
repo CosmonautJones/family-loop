@@ -1,10 +1,10 @@
 # OPORD 010 — Reminders and In-App Notifications
 
 ## Status
-PARTIAL — recipient-scoped in-app updates are implemented and locally proven; the stated persisted reminder-preference slice is not implemented. Push/email/SMS remain excluded.
+LOCAL COMPLETE / CONDITIONAL — recipient-scoped in-app updates and the per-user event reminder preference are implemented and proven against loopback Supabase. Push/email/SMS remain excluded; hosted and physical-device evidence is conditional.
 
 ## Situation and evidence
-Dead transient reminder controls/state were removed because no reminder scheduling service exists. Commit `c612a75` adds privacy-safe database-generated per-recipient updates for event, RSVP, comment, and media activity. Configured browser sessions proved separate unread counts, exact-event navigation, mark-all-read, and reload persistence.
+Dead transient reminder controls/state were removed because no reminder scheduling service exists. Commit `c612a75` adds privacy-safe database-generated per-recipient updates for event, RSVP, comment, and media activity. The current implementation reuses the existing `loopedin_reminder_drafts` table and self-user/event-member RLS for one fixed, truthful `Morning of event` preference; disabling deletes that user's row. Configured browser sessions proved separate unread counts, exact-event navigation, mark-all-read, preference reload persistence, and recoverable writes without claiming scheduled delivery.
 
 ## Mission/objective
 Persist a simple per-user event reminder preference and provide a truthful in-app notification list/read loop tied back to exact events, refreshed on visit and browser-tab resume.
@@ -45,10 +45,10 @@ State reminder timing in plain, concrete words (“Morning of event”), expose 
 
 | Criterion | Disposition | Evidence |
 |---|---|---|
-| Reminder preference survives refetch and is user/event isolated | NOT IMPLEMENTED | Reminder UI/state was deliberately removed rather than claim unsupported delivery. |
+| Reminder preference survives refetch and is user/event isolated | COMPLETE LOCALLY | Durable-local v7 reconstruction plus two authenticated loopback users on the same event; each saw only their row, relogin retained both, one user's idempotent disable left the other unchanged, and outsider direct-ID insert was denied. |
 | Chronological notifications, persisted unread, exact-event links | COMPLETE LOCALLY | `c612a75`; recipient-count E2E and configured browser mark/read/navigation proof. |
-| Errors preserve state and never substitute fixtures | COMPLETE LOCALLY | Query/error contracts and configured boundary tests. |
-| No push implication | COMPLETE | Copy and architecture explicitly scope the feature to in-app updates. |
+| Errors preserve state and never substitute fixtures | COMPLETE LOCALLY | Query/error contracts plus a configured 390px outage/retry: failed disable kept confirmed On state and exact retry intent, then succeeded once local Kong returned. |
+| No push implication | COMPLETE | Event Detail says this is an in-app preference and that push/email delivery are not active. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -59,10 +59,18 @@ powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
 git diff --check
 ```
 
-Also record adapter/query isolation tests, a 390x844 reminder/list/read/deep-link smoke, and configured signed-out smoke; label lint as the repository placeholder.
+Also run:
+
+```powershell
+.\scripts\test-local-supabase-reminders.ps1 -RunMarker family-browser-v1
+.\scripts\test-local-supabase-reminder-browser.ps1 -RunMarker family-browser-v1 -WebUrl http://127.0.0.1:8090
+.\scripts\verify-local-supabase-browser-scenario.ps1 -RunMarker family-browser-v1
+```
+
+The browser harness expects an explicitly loopback-configured static export at the supplied URL. Substantive ESLint is required; no placeholder lint claim remains.
 
 ### Conditional-staging/mobile-web/human
-Run live RLS/two-user checks only with safe approval; iOS Safari/Android Chrome and human tests are currently NOT RUN. Notifications API and service-worker delivery remain deferred.
+Loopback RLS/two-user checks pass. Hosted RLS, iOS Safari/Android Chrome, assistive technology, and human tests are currently `NOT RUN`. Notifications API and service-worker delivery remain deferred.
 
 ## Stop conditions/authorization limits
 Stop before Notifications API, service-worker, push/device-token work, background services, remote jobs, migrations/policies, credentials, new packages, or a notification-settings center.
@@ -71,4 +79,4 @@ Stop before Notifications API, service-worker, push/device-token work, backgroun
 Misleading delivery language, stale unread counts, deleted-event links, timezone ambiguity, and notification overload. Push delivery remains a separately scoped mission.
 
 ## Definition of done
-The narrow persisted reminder and in-app read loop passes checks and phone smoke, docs/review log are updated, and live/push limitations are explicit.
+Met locally. The narrow persisted reminder and in-app read loop passes service, RLS, configured 390px failure/retry, reload/deep-link, focus, target-size, and no-overflow checks. Hosted/physical evidence and actual push/email delivery are not claimed.

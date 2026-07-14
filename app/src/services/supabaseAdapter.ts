@@ -13,6 +13,7 @@ import type {
   GroupInvitationPreview,
   MediaUploadPayload,
   NotificationItem,
+  ReminderPreference,
   UpdateEventPayload,
 } from './api';
 import { getSupabaseClient } from './supabaseClient';
@@ -89,6 +90,13 @@ type NotificationRow = {
   group_id: string | null;
   read: boolean;
   created_at: string;
+};
+
+type ReminderRow = {
+  event_id: string;
+  user_id: string;
+  enabled: boolean;
+  updated_at: string;
 };
 
 type ProfileRow = {
@@ -287,6 +295,16 @@ function mapNotification(row: NotificationRow): NotificationItem {
   };
 }
 
+function mapReminder(row: ReminderRow): ReminderPreference {
+  return {
+    eventId: row.event_id,
+    userId: row.user_id,
+    timing: 'morning_of_event',
+    enabled: true,
+    updatedAt: row.updated_at,
+  };
+}
+
 function mapMessage(row: MessageRow, profile?: ProfileRow, self = false): EventMessage {
   return {
     id: row.id,
@@ -424,6 +442,12 @@ export function createSupabaseLoopedInService(): LoopedInService {
       const { error: removeError } = await supabase.storage.from(mediaBucket).remove([claimedMedia.storage_path]);
       if (!removeError) await supabase.rpc('loopedin_finalize_media_deletion', { target_media_id: operation.id });
     }
+  }
+
+  async function requireAccessibleEvent(eventId: string) {
+    const { data, error } = await supabase.from('loopedin_events').select('id').eq('id', eventId).maybeSingle();
+    throwIfError(error);
+    if (!data) throw userServiceError('You don’t have access to that event.');
   }
 
   const service: LoopedInService = {
@@ -877,6 +901,38 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async clearAll() {
         const userId = await getCurrentUserId();
         const { error } = await supabase.from('loopedin_notifications').update({ read: true }).eq('user_id', userId).eq('read', false);
+        throwIfError(error);
+      },
+    },
+    reminders: {
+      async getPreference(eventId) {
+        await requireAccessibleEvent(eventId);
+        const userId = await getCurrentUserId();
+        const { data, error } = await supabase
+          .from('loopedin_reminder_drafts')
+          .select('event_id, user_id, enabled, updated_at')
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .eq('enabled', true)
+          .maybeSingle();
+        throwIfError(error);
+        return data ? mapReminder(data as ReminderRow) : null;
+      },
+      async enablePreference(eventId) {
+        await requireAccessibleEvent(eventId);
+        const userId = await getCurrentUserId();
+        const { data, error } = await supabase
+          .from('loopedin_reminder_drafts')
+          .upsert({ event_id: eventId, user_id: userId, remind_at: null, body: 'Morning of event', enabled: true }, { onConflict: 'event_id,user_id' })
+          .select('event_id, user_id, enabled, updated_at')
+          .single();
+        throwIfError(error);
+        return mapReminder(data as ReminderRow);
+      },
+      async disablePreference(eventId) {
+        await requireAccessibleEvent(eventId);
+        const userId = await getCurrentUserId();
+        const { error } = await supabase.from('loopedin_reminder_drafts').delete().eq('event_id', eventId).eq('user_id', userId);
         throwIfError(error);
       },
     },

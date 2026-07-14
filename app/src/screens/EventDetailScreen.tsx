@@ -7,7 +7,7 @@ import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
-import { useActiveGroupMembersQuery, useDeleteEventMutation, useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUpdateEventMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
+import { useActiveGroupMembersQuery, useDeleteEventMutation, useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventReminderQuery, useEventRsvpsQuery, useSendMessageMutation, useSetEventReminderMutation, useUpdateEventMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { buildEventUpdate, canManageEvent, eventToForm, validateEventForm, type EventForm, type EventFormErrors, type RequiredEventField } from '../features/events/createEvent';
 
@@ -50,6 +50,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const editInputRefs = useRef<Partial<Record<RequiredEventField, TextInput | null>>>({});
   const upsertRsvp = useUpsertRsvpMutation();
   const auth = useAuthSession();
+  const reminderQuery = useEventReminderQuery(eventId ?? '', auth.session?.userId ?? '');
+  const setReminder = useSetEventReminderMutation(auth.session?.userId ?? '');
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const eventDetail = eventQuery.data?.groupId === activeGroupId ? selectEventDetailViewModel(eventQuery.data, rsvpsQuery.data ?? [], []) : null;
   const identity = auth.session;
@@ -204,6 +206,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     } catch { /* The mutation exposes a retry action below. */ }
   };
   const canManagePlan = Boolean(eventQuery.data && canManageEvent(eventQuery.data, currentMember));
+  const reminderEnabled = Boolean(reminderQuery.data?.enabled);
+  const changeReminder = (enabled: boolean) => setReminder.mutate({ eventId: eventDetail.id, enabled });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -284,6 +288,39 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           </View>
         </SurfaceCard>
       ) : null}
+
+      <SurfaceCard>
+        <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event reminder</Text>
+        <Text style={styles.reminderTiming}>Morning of event</Text>
+        <Text style={styles.cardCopy}>This saves an in-app preference for this event. Push and email delivery are not active.</Text>
+        {reminderQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading your preference…</Text> : null}
+        {reminderQuery.isError ? (
+          <View style={styles.feedback}>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{reminderQuery.error instanceof Error ? reminderQuery.error.message : 'We couldn’t load your reminder preference.'}</Text>
+            <Button label="Retry reminder preference" tone="secondary" onPress={() => reminderQuery.refetch()} />
+          </View>
+        ) : null}
+        {reminderQuery.isSuccess ? (
+          <Pressable
+            accessibilityLabel={`Morning of event reminder preference, ${reminderEnabled ? 'on' : 'off'}`}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: reminderEnabled, disabled: setReminder.isPending }}
+            aria-checked={reminderEnabled}
+            disabled={setReminder.isPending}
+            onPress={() => changeReminder(!reminderEnabled)}
+            style={[styles.reminderSwitch, reminderEnabled && styles.reminderSwitchOn]}
+          >
+            <Text style={[styles.reminderSwitchText, reminderEnabled && styles.reminderSwitchTextOn]}>{setReminder.isPending ? 'Saving…' : reminderEnabled ? 'On' : 'Off'}</Text>
+          </Pressable>
+        ) : null}
+        {setReminder.isError ? (
+          <View style={styles.feedback}>
+            <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>We couldn’t save your preference. Your choice is ready to retry.</Text>
+            <Button label={`Retry turning ${setReminder.variables?.enabled ? 'on' : 'off'}`} tone="secondary" onPress={() => setReminder.variables && changeReminder(setReminder.variables.enabled)} />
+          </View>
+        ) : null}
+        {setReminder.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>In-app preference {reminderEnabled ? 'on' : 'off'}.</Text> : null}
+      </SurfaceCard>
 
       <SurfaceCard>
         <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event details</Text>
@@ -448,6 +485,11 @@ const styles = StyleSheet.create({
   planOptionsLabel: { color: 'rgba(255,255,255,0.82)', fontSize: 12, lineHeight: 18, fontWeight: '800' },
   cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
   cardCopy: { color: palette.muted, fontSize: 14, lineHeight: 20, marginTop: 4 },
+  reminderTiming: { color: palette.text, fontSize: 16, lineHeight: 22, fontWeight: '800', marginTop: spacing.xs },
+  reminderSwitch: { minWidth: 72, minHeight: 48, alignSelf: 'flex-start', marginTop: spacing.md, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(113,54,93,0.24)', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  reminderSwitchOn: { backgroundColor: palette.plum, borderColor: palette.plum },
+  reminderSwitchText: { color: palette.plum, fontSize: 15, lineHeight: 20, fontWeight: '900' },
+  reminderSwitchTextOn: { color: '#fff' },
   journey: { marginTop: spacing.md, gap: spacing.sm },
   journeyRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   step: { width: 32, height: 32, borderRadius: 12, backgroundColor: 'rgba(113,54,93,0.1)', justifyContent: 'center', alignItems: 'center' },

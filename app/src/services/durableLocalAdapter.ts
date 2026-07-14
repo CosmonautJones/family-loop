@@ -4,7 +4,7 @@ import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData
 import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 6;
+export const durableDatabaseVersion = 7;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -43,14 +43,18 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
 
 function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
   const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
-  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== 5 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== 5 && parsed.version !== 6 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
+    throw new Error('Malformed local database payload. Reset and reseed to recover.');
+  }
+  if (parsed.version === durableDatabaseVersion && !Array.isArray(parsed.database.reminders)) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
   if (parsed.revision !== undefined && (!Number.isSafeInteger(parsed.revision) || parsed.revision < 0)) {
     throw new Error('Malformed local database revision. Reset and reseed to recover.');
   }
   const database = cloneDatabase(parsed.database);
+  database.reminders = Array.isArray(database.reminders) ? database.reminders : [];
   if (parsed.version === 1) {
     database.groups = database.groups.map((group) => ({
       ...group,
@@ -133,6 +137,7 @@ export function createDurableLocalLoopedInService(
     thread: new Set(['sendMessage']),
     media: new Set(['uploadMedia', 'deleteMedia']),
     notifications: new Set(['markRead', 'clearAll']),
+    reminders: new Set(['enablePreference', 'disablePreference']),
   };
 
   const mutate = async <K extends keyof LoopedInService>(name: K, property: string, args: unknown[], invocationActor: LocalActorSessionStore) => {
@@ -187,6 +192,7 @@ export function createDurableLocalLoopedInService(
     thread: section('thread'),
     media: section('media'),
     notifications: section('notifications'),
+    reminders: section('reminders'),
     resetAndReseed: async () => {
       const recovery = ready.catch(() => undefined).then(() => withStorageLock(async () => {
         const previous = committed;

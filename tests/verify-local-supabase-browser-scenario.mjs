@@ -62,6 +62,7 @@ function readScenario() {
         from public.loopedin_notifications notifications join marked_users users on users.id = notifications.user_id join target_group groups on groups.id = notifications.group_id
         group by users.email
       ) summary),
+      'reminders', (select count(*) from public.loopedin_reminder_drafts reminders join target_events events on events.id = reminders.event_id),
       'storage', (select json_build_object(
         'bucketPrivate', bool_and(not buckets.public),
         'objects', count(objects.name),
@@ -77,6 +78,7 @@ function readScenario() {
         'rsvps', (select count(*) from public.loopedin_rsvps where user_id = outsider.id),
         'media', (select count(*) from public.loopedin_event_media where uploaded_by = outsider.id),
         'notifications', (select count(*) from public.loopedin_notifications where user_id = outsider.id),
+        'reminders', (select count(*) from public.loopedin_reminder_drafts where user_id = outsider.id),
         'storageObjects', (select count(*) from storage.objects where owner_id = outsider.id::text)
       ) from marked_users outsider where outsider.email = ${quote(`browser-outsider${suffix}`)})
     );
@@ -144,8 +146,9 @@ assert.deepEqual(scenario.notificationUsers, [
   { email: emails.maya, total: 11, read: 0, unread: 11 },
   { email: emails.owner, total: 14, read: 14, unread: 0 },
 ]);
+assert.equal(scenario.reminders, 0);
 assert.deepEqual(scenario.storage, { bucketPrivate: true, objects: 3, missingObjects: 0, ownerMismatch: 0, pathMismatch: 0 });
 assert.equal(scenario.extraStorageObjects, 0);
-assert.deepEqual(scenario.outsiderResidue, { memberships: 0, events: 0, messages: 0, rsvps: 0, media: 0, notifications: 0, storageObjects: 0 });
+assert.deepEqual(scenario.outsiderResidue, { memberships: 0, events: 0, messages: 0, rsvps: 0, media: 0, notifications: 0, reminders: 0, storageObjects: 0 });
 
-console.log(`Browser scenario verified read-only: run=${runMarker}; identities=4; members=3; trips=3; messages=6; rsvps=6; media=3; notifications=38; storageObjects=3; outsiderResidue=0`);
+console.log(`Browser scenario verified read-only: run=${runMarker}; identities=4; members=3; trips=3; messages=6; rsvps=6; media=3; notifications=38; reminders=0; storageObjects=3; outsiderResidue=0`);

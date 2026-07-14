@@ -172,6 +172,20 @@ export interface NotificationsApi {
   clearAll(): Promise<void>;
 }
 
+export interface ReminderPreference {
+  eventId: string;
+  userId: string;
+  timing: 'morning_of_event';
+  enabled: true;
+  updatedAt: string;
+}
+
+export interface RemindersApi {
+  getPreference(eventId: string): Promise<ReminderPreference | null>;
+  enablePreference(eventId: string): Promise<ReminderPreference>;
+  disablePreference(eventId: string): Promise<void>;
+}
+
 export interface LoopedInService {
   auth: AuthApi;
   groups: GroupsApi;
@@ -181,4 +195,5 @@ export interface LoopedInService {
   thread: ThreadApi;
   media: MediaApi;
   notifications: NotificationsApi;
+  reminders: RemindersApi;
 }

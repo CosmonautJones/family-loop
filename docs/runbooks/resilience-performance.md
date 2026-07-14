@@ -32,7 +32,7 @@ Run from the repository root:
 node --test --test-name-pattern="representative family capacity" tests/app-scaffold.test.js
 ```
 
-The test builds one authorized family with the approved volume, reads its member/event/comment/media collections, projects Home and exact Event Detail state, then reconstructs the version-6 durable-local adapter from the serialized envelope. It asserts exact counts, chronological/exact-event identity, 99 later Home events after the hero, a 20-person RSVP summary, parallel local reads at or below 250 ms, and selector processing at or below 200 ms.
+The test builds one authorized family with the approved volume, reads its member/event/comment/media collections, projects Home and exact Event Detail state, then reconstructs the current version-7 durable-local adapter from the serialized envelope. It asserts exact counts, chronological/exact-event identity, 99 later Home events after the hero, a 20-person RSVP summary, parallel local reads at or below 250 ms, and selector processing at or below 200 ms.
 
 Measured on Windows/Node 22 on 2026-07-14:
 

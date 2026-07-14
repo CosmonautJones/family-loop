@@ -33,7 +33,8 @@ The final multi-user run opened the real browser file chooser for an 847-byte PN
 | Actor TOCTOU | Protected calls capture the actor at invocation and retain it through the async lock wait | PASS, regression coverage |
 | Event management | Creator or owner/admin may update/delete; ordinary non-creator member may not | PASS |
 | Photo deletion | Uploader or owner/admin may delete; unrelated ordinary member may not | PASS |
-| Notifications | Records are per recipient; list/clear require that recipient and current family membership | PASS; v6 migration fans legacy group records out deterministically |
+| Notifications | Records are per recipient; list/clear require that recipient and current family membership | PASS; v7 migration fans legacy group records out deterministically |
+| Reminder preference | Exact user/event preference; enable upserts and disable deletes only the captured actor's row | PASS across two durable actors and authenticated loopback RLS sessions; no scheduled delivery is claimed |
 | Durable failure | Failed plan mutations do not publish partial local state | PASS |
 
 This is local policy evidence, not a live RLS certification. The checked-in Supabase policies also have an unresolved mismatch: media metadata deletion is uploader/manager-scoped, while the Storage object delete policy permits any event member. In addition, object upload plus metadata insert and metadata delete plus object removal are multi-step, nontransactional operations. A failed second step can leave an orphan object or missing metadata. No shared remote project was mutated to test or repair either risk.
@@ -57,12 +58,12 @@ Observable WCAG 2.2-oriented checks covered keyboard reachability, one main land
 
 1. `7deb3fa` established the local actor chooser and shared two-tab proof.
 2. `93dc773` aligned manager/creator permissions, notification family checks, and actor capture against TOCTOU.
-3. `1311332` made notifications recipient-scoped and migrated retained envelopes to v6.
+3. `1311332` made notifications recipient-scoped and migrated retained envelopes to v6; the later OPORD 010 preference slice advances retained envelopes to v7 with an empty reminder collection.
 4. `2b6d725` simplified Event Detail around the core plan loop.
 5. `a52e43b` corrected DST preservation, timeline/location truth, fail-closed deletion, photo/edit recovery, and navigation details.
 6. `0601baa` cleared stale media-mode fields and synchronized Supabase timeline updates with the displayed location.
 
-## Final gates
+## Historical final gates at the original run
 
 ```text
 root npm test                         PASS 56/56
@@ -71,13 +72,25 @@ app npx tsc --noEmit                  PASS
 scripts/check-harness.ps1             PASS
 Expo web export                       PASS
 git diff --check                      PASS
-app npm run lint                      WARN — exits 0 but remains a placeholder
+app npm run lint                      WARN — historical placeholder, superseded by substantive zero-warning ESLint
 ```
+
+## OPORD 010 reminder follow-up
+
+The preference harnesses operate only on an existing retained event and clean both users' rows in `finally`:
+
+```powershell
+.\scripts\test-local-supabase-reminders.ps1 -RunMarker family-browser-v1
+.\scripts\test-local-supabase-reminder-browser.ps1 -RunMarker family-browser-v1 -WebUrl http://127.0.0.1:8090
+.\scripts\verify-local-supabase-browser-scenario.ps1 -RunMarker family-browser-v1
+```
+
+The service/RLS run proved two users can hold isolated `Morning of event` preferences on the same event across new sessions; one user's repeated disable did not alter the other, and outsider direct-ID insertion failed. The configured 390×844 browser run proved a 48px switch, explicit checked semantics, keyboard-visible focus, reload/deep-link persistence, 390px no-overflow, and a failed disable that retained On plus `Retry turning off` until local Kong recovered. Final verification reported zero reminder rows. This is an in-app preference only; no worker, schedule, push, email, or SMS delivery was exercised or promised.
 
 ## Remaining limits
 
 - Local `sessionStorage` actor selection is a demo seam, not password/session security.
 - Shared browser storage is not server-side multi-user synchronization and retains the previously documented no-Web-Locks/Safari atomicity warning.
-- Live Supabase migrations, RLS, storage policies, rollback behavior, auth, invitations, and cross-account isolation are `NOT RUN`.
+- Hosted Supabase migrations, RLS, storage policies, rollback behavior, auth, invitations, and cross-account isolation are `NOT RUN`; loopback coverage is documented above and in the configured-browser runbook.
 - Physical iOS Safari/Android Chrome, screen readers, moderated family/older-adult usability, deployment, backup, and restore are `NOT RUN`.
 - The app has no service-worker shell; a cold offline reload remains unsupported.

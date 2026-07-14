@@ -12,6 +12,17 @@
 - [x] Dedicated synthetic Auth user, email, token-bearing browser profile, and static server are removed after proof; retained family-browser-v1 users remain untouched.
 - [ ] Hosted redirect allowlist, production email delivery/templates/rate limits, physical iOS Safari/Android Chrome, and assistive technology — `NOT RUN`.
 
+## OPORD 010 reminder preference
+
+- [x] Exact-user/event read, enable/upsert, and disable/delete exist across memory, durable-local, and Supabase adapters.
+- [x] Durable-local v7 preserves reminder preferences across reconstruction and migrates v1–v6 with an empty collection without changing retained data/revision.
+- [x] Two authenticated loopback users can enable the same event independently across relogin; one user's idempotent disable leaves the other unchanged.
+- [x] Outsider event read is empty and direct-ID reminder insert is denied by existing self-user/event-member RLS.
+- [x] Event Detail uses a 48px switch with explicit checked semantics, `Morning of event`, On/Off state, honest no-push/email copy, and pending/error/refetch/retry/success states.
+- [x] Configured 390×844 Chrome passes exact-event deep link, reload persistence, keyboard focus-visible, no horizontal overflow, failed-write intent retention, and successful retry after local gateway recovery.
+- [x] Both harnesses remove their preferences; populated scenario returns exactly zero reminder rows and zero outsider residue.
+- [ ] Hosted RLS/project state, actual push/email/SMS delivery, physical iOS/Android, assistive technology, and moderated use — `NOT RUN` or explicit non-goals.
+
 ## Local multi-user and KISS gate
 
 - [x] Two same-origin tabs independently choose Alex/Maya via explicitly demo-only `sessionStorage`; one-tab sign-out and reload do not overwrite the other identity.
@@ -100,7 +111,7 @@
 - [x] Lake Geneva renders three photos and one comment in the completed-event history.
 - [x] Memories loading, error/retry, empty, populated, exact-route, Back, and hard-reload behavior are covered.
 - [x] Home and Memories expose the same service-backed history without introducing a second durable source of truth.
-- [x] Reminder UI and dead reminder/staged-photo transient state are absent.
+- [x] Dead reminder/staged-photo transient state is absent; the later OPORD 010 preference card is service-backed and explicitly does not claim delivery.
 - [x] Calendar copy is truthful and its actions retain a 48px minimum target.
 - [x] Exact Chrome viewports 320×844, 390×844, 430×932, and 1280×900 have no document overflow.
 - [x] Root tests 43/43 and app-local tests 32/32; TypeScript, harness, Expo web export, and diff check pass.
@@ -124,7 +135,7 @@
 ## OPORD 012 resilience and capacity
 
 - [x] Approved representative volume is covered: 20 members, 100 events, 100 comments, and 50 media metadata records on one exact event.
-- [x] Focused capacity test preserves exact event identity/order and reconstructs the version-6 durable-local envelope with exact counts.
+- [x] Focused capacity test preserves exact event identity/order and reconstructs the version-7 durable-local envelope with exact counts.
 - [x] Local parallel reads stay within 250 ms and selector processing stays within the 200 ms local-processing budget.
 - [x] Warm durable-local support is explicit; configured writes are not queued offline.
 - [ ] Cold disconnected reload — intentionally unsupported; no service worker/PWA shell exists.

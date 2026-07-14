@@ -28,6 +28,7 @@ function createUnavailableSupabaseService(): LoopedInService {
       subscribeMessages: () => () => undefined,
     }, media: unavailable as LoopedInService['media'],
     notifications: unavailable as LoopedInService['notifications'],
+    reminders: unavailable as LoopedInService['reminders'],
   };
 }
 
