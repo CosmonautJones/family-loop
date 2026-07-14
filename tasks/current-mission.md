@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-FULL-001`
 
-Status: `IN PROGRESS — LOCAL WAVES 0-6 COMPLETE — REMOTE/PRODUCTION GATE BLOCKED PENDING SEPARATE AUTHORIZATION`
+Status: `IN PROGRESS — LOCAL WAVES 0-6 + LOCAL MULTI-USER/KISS GATE COMPLETE — REMOTE/PRODUCTION GATE PENDING SEPARATE AUTHORIZATION`
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
@@ -313,3 +313,15 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Corrupt and future-version envelopes produced visible errors without overwrite, and deliberate local restoration succeeded. In-session offline mutation was **NOT SEPARATELY EXERCISED**; the adapter is architecturally local after load, but the journey directly proved only online reload/restart durability. A cold offline reload **fails** with the browser network error because there is no service worker/offline shell. Offline-shell/PWA work remains a separately authorized non-goal, not a passed criterion.
 - Review history: Run 1 found the Calendar blocker; Run 2 found a transient avatar TypeScript blocker; Run 3 passed with zero blockers. Reproduction and recovery steps are in `docs/runbooks/full-local-jones-family-e2e.md`.
 - Local Waves 0-6 and the full local Jones Family proof are **COMPLETE**. The broader production mission remains **IN PROGRESS** and blocked at the separate remote authorization gate. Supabase/RLS/private storage, auth/multi-user behavior, physical Safari/Android devices, screen readers, practical 200% zoom, deployment, backup, and restore remain `NOT RUN`.
+
+## Local multi-user and KISS closeout
+
+- Commits `7deb3fa`, `93dc773`, and `1311332` add an explicitly labeled per-tab local actor chooser, enforce captured-actor membership/ownership rules, and scope notifications per recipient through durable envelope v6. The chooser uses `sessionStorage`; it is not production authentication or an invitation flow.
+- Two fresh same-origin tabs independently selected Alex and Maya. Alex created a shared plan, Maya saw it after reload, their Going/Maybe RSVPs and comments persisted with correct authors/viewer-relative alignment, and each saw only permitted plan/photo controls. Signing Alex out did not sign Maya out.
+- Service contracts reject an outsider across Jones group/event/RSVP/thread/media/notification reads; reject RSVP spoofing and actor-switch TOCTOU; enforce creator/manager event controls and uploader/manager media removal; and require notification recipient plus current membership.
+- Commits `2b6d725`, `a52e43b`, and `0601baa` simplified Event Detail and fixed edit/DST/timeline, fail-closed cancellation, photo-mode, and Supabase timeline consistency defects. Final KISS code and rendered fast gates were GREEN; the final local security gate was AMBER / PROCEED-WARN with zero local blockers.
+- Exact 320px review covered long-content Memories/Event Detail, validation focus/recovery, location edits, collapsed link/file photo modes, destructive-action cancel/confirm, and Maya's denied management controls; 390px and 430px retained no document overflow. Review used Nielsen heuristics and observable WCAG 2.2-oriented behavior without claiming certification.
+- The multi-user browser run opened a real chooser for an 847-byte PNG, but its extension could not programmatically attach it. Prior Wave 3 evidence remains the actual-file browser proof (609-byte PNG); actor-owned data-URL media is covered at the service boundary.
+- Authoritative final checks: root 56/56, app-local 45/45, TypeScript, harness, Expo web export, and diff check PASS. Lint exits 0 but remains a placeholder WARN.
+- Remaining remote blockers are explicit: checked-in metadata deletion is uploader/manager-scoped while Storage deletion permits any event member, and remote object/database operations are nontransactional. Remote auth/invites/RLS/private storage, physical browsers/assistive technology, deployment, backup, and restore remain `NOT RUN`.
+- Detailed evidence: `docs/runbooks/full-local-multiuser-family-e2e.md`.

@@ -1,5 +1,16 @@
 # Review Log
 
+## 2026-07-14 — local multi-user, security, and KISS final gate
+
+- Accepted commits: `7deb3fa`, `93dc773`, `1311332`, `2b6d725`, `a52e43b`, and `0601baa`.
+- Two same-origin tabs independently selected Alex/Maya through the explicitly labeled local-demo `sessionStorage` chooser. Shared plan convergence, distinct RSVPs/comments, viewer-relative authorship, reload/session isolation, and role-sensitive plan/media controls passed.
+- Security fix loops aligned creator/manager rules, captured actors through lock waits, outsider/cross-family denial, RSVP spoof resistance, uploader/manager media deletion, and per-recipient notifications plus v6 migration. Final local security gate: **AMBER / PROCEED-WARN, ZERO LOCAL BLOCKERS**.
+- The Event Detail KISS loop was reduced to plan → RSVP → thread → collapsed photos. Exact 320px error recovery, plan edits, mode-specific photo fields, cancellation, permissions, full Memories content, and 390/430 overflow checks passed. Final code and rendered KISS gates: **GREEN**.
+- Final automation: root 56/56; app-local 45/45; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder WARN.
+- Multi-user chooser opened for an 847-byte PNG but attachment was blocked by the automation extension; it is not recorded as a pass. Earlier Wave 3 selected a real 609-byte PNG; multi-user media ownership is independently exercised by service tests.
+- Remote warning: metadata deletion and Storage deletion policies do not yet match, and multi-step object/database writes and deletes are nontransactional. No remote project was mutated. Auth/invites/RLS/private storage and physical-device/assistive-technology evidence remain `NOT RUN`.
+- Full matrix and reproduction notes: `docs/runbooks/full-local-multiuser-family-e2e.md`.
+
 ## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 4 external final gate
 
 - External review accepted `d4f4b4d` and records commit `3d80a62` at **AMBER / PROCEED-WARN, ZERO BLOCKERS**.

@@ -1,5 +1,18 @@
 # Regression Checklist
 
+## Local multi-user and KISS gate
+
+- [x] Two same-origin tabs independently choose Alex/Maya via explicitly demo-only `sessionStorage`; one-tab sign-out and reload do not overwrite the other identity.
+- [x] Created plan, distinct RSVPs, comments, authorship/self alignment, and URL media converge across actors and reload.
+- [x] Creator/manager event controls, uploader/manager photo deletion, outsider denial, RSVP anti-spoofing, actor capture, and recipient-scoped notifications pass local service contracts.
+- [x] Home, Calendar, Family, Memories, exact event routes, one main landmark, five tabs, and 320/390/430 no-overflow behavior pass.
+- [x] Blank edit focus/recovery, valid location edit, collapsed link/file modes, and cancellation dismiss/confirm pass the rendered KISS gate.
+- [x] Final gates: root 56/56, app-local 45/45, TypeScript, harness, Expo web export, and diff check pass.
+- [ ] Multi-user PNG attachment — chooser opened for an 847-byte file, but extension file injection failed. Prior Wave 3 real 609-byte PNG evidence remains valid; service tests cover actor ownership.
+- [ ] Substantive lint — command remains a placeholder WARN.
+- [ ] Remote metadata/Storage delete-policy parity and transactional compensation — unresolved and `NOT RUN` against a live project.
+- [ ] Production auth/invites/RLS/private storage, physical browsers, screen readers, moderated usability, deployment, backup, and restore — `NOT RUN`.
+
 ## Wave 6 full local Jones Family journey
 
 - [x] Fresh local seed has five members, three future trips, and completed Lake Geneva.

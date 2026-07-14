@@ -1,5 +1,14 @@
 # Code Rubric
 
+## Local multi-user, authorization, and KISS closeout
+
+- [x] `7deb3fa` keeps selected demo identity per tab and shared records in the existing durable service; the UI labels this boundary honestly.
+- [x] `93dc773` and `1311332` enforce captured-actor membership, creator/manager and uploader/manager rules, outsider denial, RSVP anti-spoofing, and recipient-scoped notifications with v6 migration coverage.
+- [x] `2b6d725`, `a52e43b`, and `0601baa` simplify Event Detail and close DST/timeline, delete, validation, media-mode, and Supabase timeline correctness gaps without new dependencies.
+- [x] Final gates are independently transcribed: root 56/56, app-local 45/45, TypeScript, harness, Expo export, and diff check pass; lint is placeholder WARN.
+- [ ] Remote parity is incomplete: Storage object deletion is broader than metadata deletion, and object/database steps lack transactional compensation.
+- [ ] Local demo actors and adapter contracts do not prove production authentication, invitations, RLS, or server synchronization.
+
 ## Wave 6 local E2E and recovery
 
 - [x] Commit `178a69e` preserves one service/Query-owned durable source of truth and corrects the Calendar projection without adding a dependency or remote mutation.

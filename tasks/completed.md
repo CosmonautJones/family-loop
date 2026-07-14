@@ -1,5 +1,13 @@
 # Completed Work
 
+## 2026-07-14 - FAMILY-LOOP-FULL-001 local multi-user and KISS checkpoint
+
+Completed the bounded local checkpoint across `7deb3fa`, `93dc773`, `1311332`, `2b6d725`, `a52e43b`, and `0601baa`. Two tabs selected Alex/Maya independently through the explicitly demo-only `sessionStorage` actor chooser and converged on shared plans, distinct RSVPs/comments, viewer-relative authorship, reload-safe identity, and permitted plan/photo controls. Outsider, spoofing, TOCTOU, ownership, notification-recipient, and failure-rollback contracts pass locally.
+
+The simplified Event Detail passed the rendered KISS fast gate at 320px plus no-overflow checks at 390/430px. Final automation: root 56/56, app-local 45/45, TypeScript, harness, Expo web export, and diff check pass; lint remains a placeholder WARN. The multi-user file chooser opened for an 847-byte PNG but attachment was blocked by the automation extension, so only the prior Wave 3 real-PNG journey and current actor-owned service test are claimed.
+
+This closes only the local multi-user/KISS checkpoint. Remote auth/invites/RLS/private storage, the metadata-versus-Storage delete-policy mismatch, nontransactional remote media operations, physical devices/assistive technology, deployment, backup, and restore remain open. See `docs/runbooks/full-local-multiuser-family-e2e.md`.
+
 ## 2026-07-14 - FAMILY-LOOP-FULL-001 Wave 6 full local journey
 
 Completed the isolated, durable-local Jones Family journey through implementation/fix commit `178a69e`. Run 1 found Calendar treating completed Lake Geneva as upcoming, counting six shared plans, and selecting June; the fix filtered completed events so the agenda truthfully showed five upcoming plans. Run 2 exposed a transient avatar TypeScript error. Both were fixed, and independent Run 3 finished with zero blockers.
