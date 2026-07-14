@@ -3,7 +3,7 @@ import { createMockLoopedInService } from './mockAdapter';
 import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 1;
+export const durableDatabaseVersion = 2;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -40,16 +40,31 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
   return withFallbackLock(durableDatabaseKey, operation);
 }
 
-function parseEnvelope(raw: string): DurableDatabaseEnvelope {
-  const parsed = JSON.parse(raw) as Partial<DurableDatabaseEnvelope>;
-  if (parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
+  const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
+  if (parsed.version !== 1 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
   if (parsed.revision !== undefined && (!Number.isSafeInteger(parsed.revision) || parsed.revision < 0)) {
     throw new Error('Malformed local database revision. Reset and reseed to recover.');
   }
-  return { version: durableDatabaseVersion, revision: parsed.revision ?? 0, database: parsed.database };
+  const database = cloneDatabase(parsed.database);
+  if (parsed.version === 1) {
+    database.groups = database.groups.map((group) => ({
+      ...group,
+      members: group.members?.map((member) => ({
+        ...member,
+        role: member.role ?? (group.id === 'group-jones-family' && member.id === 'person-you' ? 'owner' : 'member'),
+      })),
+    }));
+  } else if (database.groups.some((group) => group.members?.some((member) => !['owner', 'admin', 'member'].includes(member.role)))) {
+    throw new Error('Malformed local group member role. Reset and reseed to recover.');
+  }
+  return {
+    envelope: { version: durableDatabaseVersion, revision: parsed.revision ?? 0, database },
+    migrated: parsed.version === 1,
+  };
 }
 
 export function createDurableLocalLoopedInService(
@@ -66,7 +81,11 @@ export function createDurableLocalLoopedInService(
 
   const load = async () => {
     const raw = await storage.getItem(durableDatabaseKey);
-    if (raw !== null) return parseEnvelope(raw);
+    if (raw !== null) {
+      const parsed = parseEnvelope(raw);
+      if (parsed.migrated) await storage.setItem(durableDatabaseKey, JSON.stringify(parsed.envelope));
+      return parsed.envelope;
+    }
     const envelope: DurableDatabaseEnvelope = { version: durableDatabaseVersion, revision: 0, database: cloneDatabase(seedFactory()) };
     const serialized = JSON.stringify(envelope);
     await storage.setItem(durableDatabaseKey, serialized);
@@ -140,7 +159,7 @@ export function createDurableLocalLoopedInService(
           const raw = await storage.getItem(durableDatabaseKey);
           let revision = -1;
           if (raw !== null) {
-            try { revision = parseEnvelope(raw).revision; } catch { /* Explicit recovery may replace corrupt storage. */ }
+            try { revision = parseEnvelope(raw).envelope.revision; } catch { /* Explicit recovery may replace corrupt storage. */ }
           }
           const next: DurableDatabaseEnvelope = {
             version: durableDatabaseVersion,

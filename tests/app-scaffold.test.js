@@ -171,7 +171,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   assert.equal(corruptWrites, 1, 'explicit reset is allowed to overwrite corrupt storage');
 
   const writeFailure = new Error('storage is full');
-  let persisted = JSON.stringify({ version: 1, database: { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
+  let persisted = JSON.stringify({ version: 2, database: { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
   const failing = {
     getItem: async () => persisted,
     setItem: async () => { throw writeFailure; },
@@ -183,7 +183,7 @@ test('durable local service surfaces corrupt storage and write errors without si
 
   let unsupportedWrites = 0;
   const unsupported = {
-    getItem: async () => JSON.stringify({ version: 2, database: {} }),
+    getItem: async () => JSON.stringify({ version: 3, database: {} }),
     setItem: async () => { unsupportedWrites += 1; },
     removeItem: async () => undefined,
   };
@@ -205,6 +205,50 @@ test('durable local service surfaces corrupt storage and write errors without si
   });
   await assert.rejects(initialFailure.groups.listGroups(), /initial seed write failed/);
   await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
+});
+
+test('durable local service migrates pre-role v1 members to v2 without losing user data or revision', async () => {
+  const { durableAdapter, mockData } = loadCompiledModules();
+  const legacy = mockData.createMockDatabase();
+  for (const member of legacy.groups[0].members) delete member.role;
+  legacy.events.push({
+    id: 'event-legacy-custom', groupId: 'group-jones-family', title: 'Retained custom plan',
+    startsAt: '2027-06-01T10:00:00Z', endsAt: '2027-06-01T12:00:00Z', location: 'Home',
+    description: 'User-created before migration', statusLabel: 'Plan', visibility: 'group', timeline: [],
+  });
+  legacy.messages.push({ id: 'message-legacy-custom', eventId: 'event-legacy-custom', body: 'Keep this note.', authorName: 'Alex Jones', self: true, createdAt: '2027-05-01T10:00:00Z' });
+  legacy.notifications.push({ id: 'notification-legacy-custom', kind: 'event_update', title: 'Keep', body: 'Preserved', read: false, createdAt: '2027-05-01T10:00:00Z' });
+
+  const values = new Map([[durableAdapter.durableDatabaseKey, JSON.stringify({ version: 1, revision: 7, database: legacy })]]);
+  let writes = 0;
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { writes += 1; values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const migrated = durableAdapter.createDurableLocalLoopedInService(storage);
+  const members = await migrated.groups.listGroupMembers('group-jones-family');
+  assert.deepEqual(members.map((member) => member.role), ['owner', 'member', 'member', 'member', 'member']);
+  assert.equal((await migrated.events.getEvent('event-legacy-custom')).description, 'User-created before migration');
+  assert.equal((await migrated.thread.listMessages('event-legacy-custom'))[0].body, 'Keep this note.');
+  assert.ok((await migrated.notifications.listNotifications()).some((item) => item.id === 'notification-legacy-custom'));
+  const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
+  assert.equal(stored.version, 2);
+  assert.equal(stored.revision, 7);
+  assert.equal(writes, 1);
+
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  assert.deepEqual((await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.role), members.map((member) => member.role));
+  assert.equal((await reconstructed.events.getEvent('event-legacy-custom')).title, 'Retained custom plan');
+  assert.equal(writes, 1, 'a migrated v2 envelope must remain stable on later reconstruction');
+
+  const legacyRaw = JSON.stringify({ version: 1, revision: 7, database: legacy });
+  const failedMigration = durableAdapter.createDurableLocalLoopedInService({
+    getItem: async () => legacyRaw,
+    setItem: async () => { throw new Error('migration write failed'); },
+    removeItem: async () => undefined,
+  });
+  await assert.rejects(failedMigration.groups.listGroupMembers('group-jones-family'), /migration write failed/);
 });
 
 test('durable local services serialize stale-instance mutations and advance revisions', async () => {
