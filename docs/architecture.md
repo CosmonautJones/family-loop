@@ -1,5 +1,7 @@
 # Current Architecture
 
+The planned evolution of this architecture is governed by the 15 separately authorized operations orders in `docs/opords/README.md`. They describe future work and evidence gates; they do not assert that planned server, database, native, security, release, or operations capabilities are live.
+
 LoopedIn is currently an Expo and React Native mobile prototype. The event is the central product object; the code should continue to favor the path from a group to its events and then to RSVP, discussion, media, and memory state.
 
 ## Application entry and providers

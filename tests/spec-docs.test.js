@@ -45,6 +45,61 @@ test('accepted ADRs use the numeric filename convention and required sections', 
   assert.match(adr, /## Non-decisions/);
 });
 
+test('engineering campaign contains exactly 15 ordered OPORDs with the required contract', () => {
+  const opordDir = path.join(root, 'docs/opords');
+  const files = fs.readdirSync(opordDir)
+    .filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file))
+    .sort();
+
+  assert.equal(files.length, 15);
+  assert.deepEqual(files.map((file) => file.slice(0, 3)), Array.from({ length: 15 }, (_, index) => String(index + 1).padStart(3, '0')));
+  assert.equal(new Set(files.map((file) => file.replace(/^\d{3}-/, ''))).size, 15);
+
+  const headings = [
+    'Status',
+    'Situation and evidence',
+    'Mission/objective',
+    'Dependencies',
+    'Non-goals',
+    'Authorized territory (files/systems)',
+    'Forbidden territory',
+    'Older-adult usability guardrail',
+    'Execution',
+    'Acceptance criteria',
+    'Validation commands/evidence',
+    'Stop conditions/authorization limits',
+    'Risks/follow-ups',
+    'Definition of done'
+  ];
+
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(opordDir, file), 'utf8');
+    assert.match(content, /^# (?:FAMILY-LOOP-)?OPORD(?:-| )\d{3} — .+/m, `${file} needs a unique titled order`);
+    for (const heading of headings) {
+      assert.match(content, new RegExp(`^## ${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), `${file} missing ${heading}`);
+    }
+    assert.match(content, /Always-local/i, `${file} must separate always-local evidence`);
+    assert.match(content, /Conditional-(staging|native|human)/i, `${file} must separate conditional evidence`);
+  }
+});
+
+test('OPORD index resolves dependencies and covers the full engineering scope', () => {
+  const indexPath = path.join(root, 'docs/opords/README.md');
+  assert.equal(fs.existsSync(indexPath), true);
+  const content = fs.readFileSync(indexPath, 'utf8');
+  const links = [...content.matchAll(/\]\((\d{3}-[a-z0-9-]+\.md)\)/g)].map((match) => match[1]);
+  assert.equal(new Set(links).size, 15);
+  for (const link of links) assert.equal(fs.existsSync(path.join(root, 'docs/opords', link)), true, `${link} should resolve`);
+
+  for (const domain of [
+    'Older-adult accessibility', 'Frontend navigation', 'Authentication', 'API/server',
+    'Database, RLS, migrations', 'Events, RSVP, and calendar', 'Chat and realtime',
+    'Images and private object storage', 'Reminders and notifications', 'Memories and recaps',
+    'Offline behavior', 'Security, privacy, observability', 'native, accessibility, and usability tests',
+    'CI, deployment, release, backup, restore'
+  ]) assert.match(content, new RegExp(domain, 'i'), `coverage matrix missing ${domain}`);
+});
+
 test('spec roadmap includes MVP and roadmap phases', () => {
   const content = fs.readFileSync(path.join(root, 'docs/04-spec-roadmap.md'), 'utf8');
   assert.match(content, /Core MVP feature specification/);

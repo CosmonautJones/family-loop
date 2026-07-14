@@ -1,5 +1,15 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-OPORD-001 campaign documentation
+
+- Scope reviewed: one index, 15 numeric OPORDs, portable documentation-contract tests, and authorized architecture/mission/evaluation records. No runtime, dependency, environment, credential, deployment, or remote file changed.
+- Coverage spans product simplicity, accessible design, auth/recovery, users/groups/invitations, service/environment boundary, database/RLS/indexes, events/calendar/RSVP, realtime conversation, private media, notifications, memories, resilience/performance, security/observability, native/usability tests, and CI/release/backup/data lifecycle.
+- Baseline honesty: M1-M3 exist; remote Supabase remains unverified, Docker unavailable, lint a placeholder, and native/human validation not run. Future OPORDs require fresh authorization.
+- Independent review: all 15 numbered files were checked against the heading contract, dependency index, path/line evidence or explicit inference, older-adult guardrails, measurable acceptance, local/conditional validation split, and RED stop conditions. The first review found a missing explicit validation split and 44-point UI targets; both were corrected to named subheadings and a 48-point campaign floor before the final gate.
+- Automated verification: root `npm test` PASS (21/21); app `npm test` PASS (13/13); app `npx tsc --noEmit` PASS; harness PASS; `git diff --check` PASS. App `npm run lint` exits successfully but remains the pre-existing placeholder and is not substantive lint proof.
+- Conditional evidence: remote Supabase, Docker-backed database, iOS/Android native, screen reader, reduced motion, moderated older-adult, deployment, backup, and restore checks were `NOT RUN` because this was a documentation-only mission without a safe authorized environment or participants.
+- Gate: GREEN for the campaign documentation. This does not certify any planned runtime capability.
+
 ## 2026-07-13 — FAMILY-LOOP-DATA-003 final review
 
 - Commits reviewed: `ad6ae77` (runnable Query/adapter contract) and `28f9ba4` (runnable Event Detail thread UI).

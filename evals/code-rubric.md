@@ -1,5 +1,15 @@
 # Code Rubric
 
+## OPORD campaign planning gate
+
+- [x] Exactly 15 sequential orders have unique filenames and an indexed dependency chain.
+- [x] Every order identifies narrow file/system territory and RED authorization boundaries.
+- [x] Required headings and engineering-domain coverage have portable executable checks.
+- [x] Mock/schema/adapter presence is separated from live server or database proof.
+- [ ] Runtime implementation — deferred to separately authorized OPORD executions.
+- [ ] Substantive lint — repository command remains a placeholder.
+- [ ] Live database, native, release, backup, and restore gates — not run here.
+
 ## M3 event-thread evidence
 
 - Event message server state is Query-owned and keyed by event ID.

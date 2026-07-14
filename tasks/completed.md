@@ -2,6 +2,10 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - FAMILY-LOOP-OPORD-001 engineering campaign plan
+
+Authored `docs/opords/README.md` and exactly 15 dependency-ordered operations orders covering the full frontend, backend, server/database, security, quality, accessibility, release, and operations surface. Added executable documentation-contract tests and linked the campaign from architecture and mission records. Product behavior changed: no. Remote Supabase, native-device, human-usability, deployment, backup, and restore validation were not run and are not claimed.
+
 ## 2026-07-13 - Persistent data M3 event thread
 
 ### Summary

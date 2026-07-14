@@ -1,5 +1,15 @@
 # Regression Checklist
 
+## OPORD campaign documentation
+
+- [x] Exactly 15 numeric OPORDs are indexed in dependency order.
+- [x] Every OPORD has the required mission, territory, usability, execution, acceptance, validation, stop, risk, and done sections.
+- [x] Coverage includes all requested frontend, backend, server/database, security, quality, release, and operations domains.
+- [x] Future orders do not claim authorization or live proof.
+- [x] Existing M4-M6 persistent-data backlog entries remain and are mapped rather than deleted.
+- [ ] Native-device, screen-reader, reduced-motion, and moderated older-adult validation — NOT RUN; future OPORD 014.
+- [ ] Remote Supabase, deploy, backup, and restore validation — NOT RUN; safe authorized environment unavailable here.
+
 ## M3 event thread
 
 - [x] Messages remain isolated by exact event ID.
