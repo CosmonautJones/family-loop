@@ -1,5 +1,18 @@
 # Code Rubric
 
+## Wave 0 durable local service
+
+- [x] Default/unconfigured mode uses the durable AsyncStorage adapter; `memory` is an explicit isolated-test mode.
+- [x] Only `EXPO_PUBLIC_DATA_MODE=supabase` selects Supabase, and missing configuration fails visibly without local fallback.
+- [x] A version-1 envelope persists service data and rejects malformed or unsupported payloads without silent reseeding.
+- [x] Reset/reseed is an explicit test/development service method, not a production UI behavior.
+- [x] Automated contracts cover reconstruction durability, event/RSVP/message/media mutations, event isolation, seed shape, explicit reseed, storage failures, and configured-backend honesty.
+- [x] Jones Family seed has five stable members, three future trips, one completed trip, and consistent related records relative to 2026-07-13.
+- [x] Independent Wave 0 gate — AMBER / PROCEED-WARN with zero blockers: root 27/27, app 16/16, TypeScript, harness, web export, and diff check pass.
+- [ ] Substantive lint — command exits 0 but remains a placeholder; WARN.
+- [ ] Actual browser hard-reload — NOT RUN; adapter reconstruction is automated evidence and web export proves bundling only.
+- [ ] Remote database durability, multi-user synchronization, RLS, private object storage, and Unsplash attribution/domain treatment — not proven by Wave 0.
+
 ## OPORD campaign planning gate
 
 - [x] Exactly 17 orders have unique filenames and a machine-checked acyclic dependency graph.

@@ -1,31 +1,13 @@
-import type { Group } from '../../types/domain';
+import { createMockDatabase } from '../../services/mockData';
+
+const database = createMockDatabase();
 
 export const groupsOverview = {
-  description:
-    'LoopedIn starts with one private group, one real event, and just enough setup to feel instantly useful.',
-  groups: [
-    {
-      id: 'group-jones-family',
-      name: 'Jones Family',
-      description: 'Primary family calendar and shared memories',
-      kind: 'family',
-      badge: 'Active',
-      tone: 'sage',
-      memberCount: 6,
-    },
-    {
-      id: 'group-dinner-club',
-      name: 'Friday Dinner Club',
-      description: 'Recurring friend-group plans and recaps',
-      kind: 'friends',
-      badge: 'Friends',
-      tone: 'sky',
-      memberCount: 8,
-    },
-  ] satisfies Group[],
+  description: 'One private place for the Jones Family to plan trips, answer questions, and keep the photos afterward.',
+  groups: database.groups,
   steps: [
-    { title: 'Create the group', detail: 'Name the circle, choose family or friends, and invite the core people first.' },
-    { title: 'Start with one event', detail: 'A dinner, birthday, or weekend plan is enough to make the app feel real.' },
-    { title: 'Keep the photos attached', detail: 'After the event, upload the highlights so the memory stays where the plan lived.' },
+    { title: 'Check the next trip', detail: 'See where and when everyone is meeting without searching old messages.' },
+    { title: 'Answer in one place', detail: 'RSVP and add a comment directly on the trip.' },
+    { title: 'Keep the photos attached', detail: 'Shared photos stay with the family memory after the trip.' },
   ],
 } as const;

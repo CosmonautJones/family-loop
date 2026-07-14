@@ -16,18 +16,20 @@ LoopedIn is currently a responsive web app built with Expo and React Native Web.
 
 ## Data flow and state
 
-- `app/src/features/**/fixtures.ts` still supplies deterministic prototype content for non-migrated surfaces such as memories and groups.
+- `app/src/features/**/fixtures.ts` still supplies deterministic prototype content for non-migrated presentation paths. The service seed is the canonical Jones Family data for service-backed paths.
 - `app/src/app/selectors.ts` converts supplied domain records into screen-ready view models. Home sorts Query-owned events chronologically, keeps the next event as its hero, and projects every later upcoming event into an exact-ID list; Calendar receives the same event records. Event Detail receives the event and RSVPs loaded for its stable ID. Honest empty and not-found states do not substitute fixture events.
 - `app/src/app/queries.ts` defines stable group, event-list, event-detail, RSVP, and event-message keys plus event-create, RSVP-upsert, and message-send mutations. Successful message sends invalidate only the selected event's message list, so refetch remains authoritative without optimistic duplicates.
 - `app/src/store/useLoopedInStore.ts` owns active-group selection and transient interaction state such as staged-photo counts and reminder drafts. It no longer mirrors RSVP state or durable event drafts.
 
-The event coordination loop is Query-owned in both configured and unconfigured modes. The unconfigured adapter remains deterministic and mutable for the life of its process; that is not evidence of device- or process-restart durability.
+The event coordination loop is Query-owned in every data mode. By default, and whenever `EXPO_PUBLIC_DATA_MODE` is unset, the app uses a durable local adapter backed by AsyncStorage (browser storage on web). Its version-1 envelope stores the local database under `loopedin:local-database:v1`, so event, RSVP, message, and media-metadata mutations survive adapter reconstruction and browser reload. Persistence failures, malformed payloads, and unsupported envelope versions remain visible rather than silently resetting or reseeding.
+
+`EXPO_PUBLIC_DATA_MODE=memory` explicitly selects the in-memory factory used for isolated automated tests. The durable adapter exposes `resetAndReseed()` only as an explicit test/development recovery seam; no production UI silently invokes it.
 
 Mock seed events use unique stable IDs, and the mock adapter explicitly sorts group event reads by start time rather than relying on insertion order. This keeps Home, Calendar, and Event Detail identity-consistent as new events are created during a running process.
 
 ## Adopted data and session boundary
 
-ADR 001 governs upcoming migrations: configured and authenticated service data accessed through TanStack Query is authoritative; deterministic mocks are limited to unconfigured/test use; configured backend failures remain visible; Query owns server state; Zustand owns transient UI state only; and migrated screens explicitly render loading, error, empty, and populated states. This is an adopted boundary, not a claim that current screens already comply.
+ADR 001 governs upcoming migrations: service data accessed through TanStack Query is authoritative; deterministic memory data is limited to explicit test use; configured backend failures remain visible; Query owns service state; Zustand owns transient UI state only; and migrated screens explicitly render loading, error, empty, and populated states.
 
 `AuthSessionProvider` now implements the session side of that boundary. Unconfigured builds enter the deterministic prototype without credentials. Configured builds restore a persisted Supabase session and gate the shell behind explicit restoring, signed-out, authentication-error, group-loading, group-error, and no-group states. The authenticated group list is Query-owned and resolves the active group; configured failures never select fixtures. The M2 event screens and M3 Event Detail thread comply with this boundary; other product slices remain fixture-backed until their separately authorized missions.
 
@@ -35,12 +37,15 @@ Event messages are scoped by stable event ID. The mock and Supabase adapters tri
 
 ## Service boundary
 
-`app/src/services/api.ts` defines the service contract for auth, groups, events, RSVPs, activity, event messages, media, and notifications. `app/src/services/index.ts` selects an adapter at startup:
+`app/src/services/api.ts` defines the service contract for auth, groups, events, RSVPs, activity, event messages, media, and notifications. `app/src/services/index.ts` selects exactly one adapter at startup:
 
-- The in-memory mock adapter is used when Expo Supabase environment variables are absent.
-- The Supabase adapter is used when `EXPO_PUBLIC_SUPABASE_URL` and a publishable or anonymous key are present.
+- Durable local AsyncStorage is the default when `EXPO_PUBLIC_DATA_MODE` is unset or set to a local value.
+- The in-memory adapter is selected only by `EXPO_PUBLIC_DATA_MODE=memory` and remains the deterministic isolated-test path.
+- The Supabase adapter is selected only by `EXPO_PUBLIC_DATA_MODE=supabase`. Missing Supabase URL/key configuration produces a visible unavailable-service error; it never falls back to local Jones Family data.
 
-The Supabase client uses AsyncStorage for auth-session persistence; on web, the React Native Web-compatible storage implementation supplies the browser-backed session boundary. Adapter availability does not imply that remote backend flows are deployed or verified. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions are intended infrastructure rather than live proof. Live Supabase event/RSVP CRUD for M2 is `NOT RUN — ENV unavailable`.
+The durable seed contains one stable Jones Family group with five members, exactly three future trips and one completed trip relative to 2026-07-13, plus consistent RSVPs, event-scoped messages, memories, and media metadata. Seed images are Unsplash URLs with local captions. Formal attribution/domain treatment remains follow-up work for the private-media wave; these URLs are demonstration metadata, not proof of uploaded private media.
+
+The Supabase client uses AsyncStorage for auth-session persistence. Local browser durability is not remote persistence, multi-user synchronization, authenticated authorization, deployed database/RLS, or private-storage proof. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions remain intended infrastructure rather than live proof.
 
 ## Product and implementation constraints
 

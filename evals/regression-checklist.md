@@ -1,5 +1,18 @@
 # Regression Checklist
 
+## Wave 0 durable local service
+
+- [x] Default/unconfigured mode is reload-durable local AsyncStorage, not process-only memory.
+- [x] Tests can explicitly select the isolated memory factory and reset/reseed without leaking state.
+- [x] Version-1 persistence errors are visible and never trigger silent data replacement.
+- [x] Jones Family seed identity, chronology, RSVPs, event comments, memories, and media metadata are internally consistent.
+- [x] Supabase mode is explicit and cannot silently fall back when configuration is absent or the backend fails.
+- [x] Unsplash demonstration URLs retain captions; private upload and formal attribution/domain handling remain later media work.
+- [x] Independent Wave 0 gate — AMBER / PROCEED-WARN, zero blockers; root 27/27, app 16/16, TypeScript, harness, web export, and diff check pass.
+- [ ] Substantive lint — placeholder command only.
+- [ ] Actual browser hard-reload — NOT RUN; adapter reconstruction passed, but it is limited evidence.
+- [ ] Browser durability does not prove remote/multi-user/RLS behavior.
+
 ## OPORD campaign documentation
 
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.
@@ -39,7 +52,7 @@ Use this before considering a mission complete.
 - [x] Home and Calendar obtain active-group events through Query and retain the zero-event Create route.
 - [x] Create, same-ID Event Detail, and RSVP use the service/Query boundary in automated coverage.
 - [x] Unknown event IDs render an explicit state rather than another fixture event.
-- [x] Complete M2 mock phone loop verified at 390x844 through mutation/refetch; hard reload correctly documented as resetting process-local mock data.
+- [x] Historical M2 phone evidence covered the then-process-local adapter; Wave 0 now adds automated durable-adapter reconstruction coverage. A fresh browser reload gate remains pending.
 - [x] Configured-boundary no-fallback phone smoke verified at 390x844.
 
 ## Product constraints

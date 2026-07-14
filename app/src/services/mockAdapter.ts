@@ -3,17 +3,26 @@ import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData
 
 const wait = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 120));
 
-export function createMockLoopedInService(seed: MockDatabase = createMockDatabase()): LoopedInService {
+export type MockServiceOptions = {
+  onChange?: (database: MockDatabase) => Promise<void>;
+};
+
+export function createMockLoopedInService(seed: MockDatabase = createMockDatabase(), options: MockServiceOptions = {}): LoopedInService {
   const db = cloneDatabase(seed);
-  let nextGroupId = 1;
-  let nextEventId = 1;
-  let nextMessageId = 1;
-  let nextMediaId = 1;
+  const nextId = (prefix: string, ids: string[]) => Math.max(0, ...ids.map((id) => id.startsWith(prefix) ? Number(id.slice(prefix.length)) || 0 : 0)) + 1;
+  let nextGroupId = nextId('group-created-', db.groups.map((item) => item.id));
+  let nextEventId = nextId('event-created-', db.events.map((item) => item.id));
+  let nextMessageId = nextId('message-created-', db.messages.map((item) => item.id));
+  let nextMediaId = nextId('media-created-', db.media.map((item) => item.id));
   const mockSession = {
     userId: 'person-you',
-    displayName: 'You',
+    displayName: 'Alex Jones',
     token: 'mock-loopedin-token',
     expiresAt: '2026-12-31T23:59:59Z',
+  };
+  const changed = async <T>(value: T) => {
+    await options.onChange?.(cloneDatabase(db));
+    return wait(value);
   };
 
   return {
@@ -36,17 +45,17 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       createGroup: (payload: CreateGroupPayload) => {
         const group = { id: `group-created-${nextGroupId++}`, badge: 'New', tone: 'coral' as const, memberCount: 1, ...payload };
         db.groups.push(group);
-        return wait(group);
+        return changed(group);
       },
       updateGroup: (groupId, patch) => {
         const group = db.groups.find((item) => item.id === groupId);
         if (!group) throw new Error(`Missing group ${groupId}`);
         Object.assign(group, patch);
-        return wait(group);
+        return changed(group);
       },
       deleteGroup: (groupId) => {
         db.groups = db.groups.filter((group) => group.id !== groupId);
-        return wait(undefined);
+        return changed(undefined);
       },
     },
     events: {
@@ -77,17 +86,17 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
           ...payload,
         };
         db.events.unshift(event);
-        return wait(event);
+        return changed(event);
       },
       updateEvent: (eventId, patch: UpdateEventPayload) => {
         const event = db.events.find((item) => item.id === eventId);
         if (!event) throw new Error(`Missing event ${eventId}`);
         Object.assign(event, patch);
-        return wait(event);
+        return changed(event);
       },
       deleteEvent: (eventId) => {
         db.events = db.events.filter((event) => event.id !== eventId);
-        return wait(undefined);
+        return changed(undefined);
       },
     },
     rsvps: {
@@ -96,17 +105,17 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         const existing = db.rsvps.find((rsvp) => rsvp.eventId === payload.eventId && rsvp.personId === payload.personId);
         if (existing) Object.assign(existing, payload);
         else db.rsvps.push(payload);
-        return wait(existing ?? payload);
+        return changed(existing ?? payload);
       },
       updateRsvp: (eventId, personId, patch) => {
         const rsvp = db.rsvps.find((item) => item.eventId === eventId && item.personId === personId);
         if (!rsvp) throw new Error(`Missing RSVP for ${personId}`);
         Object.assign(rsvp, patch);
-        return wait(rsvp);
+        return changed(rsvp);
       },
       deleteRsvp: (eventId, personId) => {
         db.rsvps = db.rsvps.filter((rsvp) => rsvp.eventId !== eventId || rsvp.personId !== personId);
-        return wait(undefined);
+        return changed(undefined);
       },
     },
     activity: {
@@ -124,19 +133,19 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         if (!trimmedBody) return Promise.reject(new Error('Write a message before sending.'));
         const message = { id: `message-created-${nextMessageId++}`, eventId, body: trimmedBody, authorName: mockSession.displayName, self: true, createdAt: new Date().toISOString() };
         db.messages.push(message);
-        return wait(message);
+        return changed(message);
       },
     },
     media: {
       uploadMedia: (payload: MediaUploadPayload) => {
         const item = { id: `media-created-${nextMediaId++}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption ?? 'New shared moment', uploadedBy: 'person-you', uploadedAt: new Date().toISOString() };
         db.media.push(item);
-        return wait(item);
+        return changed(item);
       },
       listMedia: (eventId) => wait(db.media.filter((item) => item.eventId === eventId)),
       deleteMedia: (mediaId) => {
         db.media = db.media.filter((item) => item.id !== mediaId);
-        return wait(undefined);
+        return changed(undefined);
       },
     },
     notifications: {
@@ -144,11 +153,11 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       markRead: (notificationId) => {
         const notification = db.notifications.find((item) => item.id === notificationId);
         if (notification) notification.read = true;
-        return wait(undefined);
+        return changed(undefined);
       },
       clearAll: () => {
         db.notifications = [];
-        return wait(undefined);
+        return changed(undefined);
       },
     },
   };

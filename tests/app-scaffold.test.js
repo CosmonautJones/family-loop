@@ -19,6 +19,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/app/selectors.ts'),
     path.join(appRoot, 'src/services/mockAdapter.ts'),
     path.join(appRoot, 'src/services/mockData.ts'),
+    path.join(appRoot, 'src/services/durableLocalAdapter.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -30,6 +31,7 @@ function loadCompiledModules() {
     selectors: require(path.join(outDir, 'app/selectors.js')),
     mockAdapter: require(path.join(outDir, 'services/mockAdapter.js')),
     mockData: require(path.join(outDir, 'services/mockData.js')),
+    durableAdapter: require(path.join(outDir, 'services/durableLocalAdapter.js')),
   };
 }
 
@@ -61,6 +63,107 @@ test('mobile scaffold and event-loop files exist', () => {
   }
 
   assert.equal(fs.existsSync(path.join(appRoot, 'src/data/sampleData.ts')), false);
+});
+
+test('durable local service persists the family loop across reconstruction and can reseed', async () => {
+  const { durableAdapter, mockData } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const first = durableAdapter.createDurableLocalLoopedInService(storage);
+  const unsubscribe = first.auth.onAuthStateChange(() => undefined);
+  assert.equal(typeof unsubscribe, 'function');
+  assert.doesNotThrow(() => unsubscribe());
+  const seedGroups = await first.groups.listGroups();
+  assert.equal(seedGroups[0].name, 'Jones Family');
+  assert.equal(seedGroups[0].members.length, 5);
+  assert.equal((await first.events.listEvents('group-jones-family')).length, 4);
+
+  const event = await first.events.createEvent({
+    groupId: 'group-jones-family', title: 'Family test trip',
+    startsAt: '2027-01-10T09:00:00-06:00', endsAt: '2027-01-11T17:00:00-06:00',
+    location: 'Madison, Wisconsin', description: 'Persistence test',
+  });
+  await first.rsvps.upsertRsvp({ eventId: event.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' });
+  await first.thread.sendMessage(event.id, 'The hotel is booked.');
+  await first.media.uploadMedia({ eventId: event.id, fileUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80', caption: 'Test photo' });
+  await first.events.createEvent({ groupId: 'group-private', title: 'Other group event', startsAt: '2027-02-01T10:00:00Z', endsAt: '2027-02-01T11:00:00Z', location: 'Elsewhere', description: 'Must stay isolated' });
+
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  assert.equal((await reconstructed.events.getEvent(event.id)).title, 'Family test trip');
+  assert.equal((await reconstructed.rsvps.listRsvps(event.id))[0].status, 'going');
+  assert.equal((await reconstructed.thread.listMessages(event.id))[0].body, 'The hotel is booked.');
+  assert.equal((await reconstructed.media.listMedia(event.id))[0].caption, 'Test photo');
+  assert.ok((await reconstructed.events.listEvents('group-jones-family')).every((item) => item.groupId === 'group-jones-family'));
+  assert.equal((await reconstructed.events.listEvents('group-private')).length, 1);
+
+  await reconstructed.resetAndReseed();
+  assert.equal(await reconstructed.events.getEvent(event.id), null);
+  assert.equal((await reconstructed.events.listEvents('group-jones-family')).length, mockData.createMockDatabase().events.length);
+});
+
+test('durable local service surfaces corrupt storage and write errors without silently resetting', async () => {
+  const { durableAdapter } = loadCompiledModules();
+  let corruptRaw = '{not-json';
+  let corruptWrites = 0;
+  const corrupt = {
+    getItem: async () => corruptRaw,
+    setItem: async (_key, value) => { corruptWrites += 1; corruptRaw = value; },
+    removeItem: async () => undefined,
+  };
+  const corruptService = durableAdapter.createDurableLocalLoopedInService(corrupt);
+  await assert.rejects(corruptService.groups.listGroups(), /JSON|position|property/i);
+  assert.equal(corruptWrites, 0, 'corrupt payload must not be overwritten automatically');
+  await corruptService.resetAndReseed();
+  assert.equal((await corruptService.groups.listGroups())[0].name, 'Jones Family');
+  assert.equal(corruptWrites, 1, 'explicit reset is allowed to overwrite corrupt storage');
+
+  const writeFailure = new Error('storage is full');
+  let persisted = JSON.stringify({ version: 1, database: { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
+  const failing = {
+    getItem: async () => persisted,
+    setItem: async () => { throw writeFailure; },
+    removeItem: async () => undefined,
+  };
+  const failingService = durableAdapter.createDurableLocalLoopedInService(failing);
+  await assert.rejects(failingService.events.createEvent({ groupId: 'group-a', title: 'Will fail', startsAt: '2027-01-01T10:00:00Z', endsAt: '2027-01-01T11:00:00Z', location: 'Here', description: 'Visible failure' }), /storage is full/);
+  assert.deepEqual(await failingService.events.listEvents('group-a'), [], 'failed mutation must roll back in-memory state');
+
+  let unsupportedWrites = 0;
+  const unsupported = {
+    getItem: async () => JSON.stringify({ version: 2, database: {} }),
+    setItem: async () => { unsupportedWrites += 1; },
+    removeItem: async () => undefined,
+  };
+  const unsupportedService = durableAdapter.createDurableLocalLoopedInService(unsupported);
+  await assert.rejects(unsupportedService.groups.listGroups(), /unsupported local database version/i);
+  assert.equal(unsupportedWrites, 0, 'unsupported payload must not be overwritten');
+
+  const partial = durableAdapter.createDurableLocalLoopedInService({
+    getItem: async () => JSON.stringify({ version: 1, database: { groups: [], events: [] } }),
+    setItem: async () => assert.fail('partial payload must not be overwritten'),
+    removeItem: async () => undefined,
+  });
+  await assert.rejects(partial.events.listEvents(), /malformed local database payload/i);
+
+  const initialFailure = durableAdapter.createDurableLocalLoopedInService({
+    getItem: async () => null,
+    setItem: async () => { throw new Error('initial seed write failed'); },
+    removeItem: async () => undefined,
+  });
+  await assert.rejects(initialFailure.groups.listGroups(), /initial seed write failed/);
+  await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
+});
+
+test('explicit Supabase mode has a visible missing-config path and never selects durable local fallback', () => {
+  const serviceIndex = read('src/services/index.ts');
+  assert.match(serviceIndex, /dataMode === 'supabase'/);
+  assert.match(serviceIndex, /createUnavailableSupabaseService/);
+  assert.match(serviceIndex, /Supabase data mode requires/);
+  assert.doesNotMatch(serviceIndex, /dataMode === 'supabase' && hasSupabaseConfig/);
 });
 
 test('App entry composes the navigation shell', () => {
@@ -179,7 +282,7 @@ test('mock thread is event-scoped, rejects blank sends, persists identity, and o
   await assert.rejects(service.thread.sendMessage('event-a', '   '), /write a message/i);
   const sent = await service.thread.sendMessage('event-a', '  We will bring ice  ');
   assert.equal(sent.body, 'We will bring ice');
-  assert.equal(sent.authorName, 'You');
+  assert.equal(sent.authorName, 'Alex Jones');
   assert.equal(sent.self, true);
 
   const eventA = await service.thread.listMessages('event-a');

@@ -1,4 +1,5 @@
 import type { CreateEventDraft } from '../features/events/createEvent';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const memoryStorage = new Map<string, string>();
 
@@ -23,3 +24,5 @@ export function loadDraftEvent() {
   const raw = getString(storageKeys.draftEvent);
   return raw ? (JSON.parse(raw) as CreateEventDraft) : null;
 }
+
+export const durableStorage = AsyncStorage;

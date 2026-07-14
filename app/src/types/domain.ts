@@ -21,6 +21,7 @@ export type Group = {
   badge: string;
   tone: AccentTone;
   memberCount: number;
+  members?: Person[];
   coverUri?: string;
 };
 

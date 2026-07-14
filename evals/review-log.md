@@ -1,5 +1,16 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 0 documentation handoff
+
+- Implementation documentation reflects the current durable local service: AsyncStorage is the default/unconfigured mode, `memory` is explicit for isolated tests, and only `EXPO_PUBLIC_DATA_MODE=supabase` selects the remote adapter.
+- The version-1 envelope, explicit reset/reseed recovery seam, stable Jones Family dataset, and visible storage/configuration failures are documented without claiming a production reset UI.
+- The seed includes five members, three future trips and one completed trip relative to 2026-07-13, with consistent RSVPs, event messages, memories, and Unsplash-backed media metadata/captions.
+- Evidence boundary: local browser durability is not remote persistence, multi-user synchronization, RLS, private media upload, or deployed server proof. Unsplash attribution/domain handling remains a later media-wave follow-up.
+- Independent line review required targeted fix loops for explicit-Supabase missing-config fallback, versioning the persistence envelope, rolling back failed writes, allowing explicit reset/reseed after corrupt initialization, validating the complete persisted payload, and preserving the asynchronous auth-unsubscribe contract. Each finding was repaired before final review.
+- Automated gate: root `npm test` PASS 27/27; app `npm test` PASS 16/16; app `npx tsc --noEmit` PASS; harness PASS; Expo web export PASS with temporary output removed; `git diff --check` PASS.
+- Lint exits 0 but remains a placeholder, so it is WARN rather than substantive lint evidence. Actual browser hard-reload was `NOT RUN`; adapter reconstruction is automated durability evidence and the web export proves bundling only.
+- Independent Wave 0 gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. Wave 0 is complete; the campaign remains in progress. Remote Supabase, RLS, private media, and multi-user verification remain `NOT RUN` and are not inferred.
+
 ## 2026-07-13 — FAMILY-LOOP-WEB-001 responsive-web campaign correction
 
 - External Run 1 review: RED. Blocking contradictions remained in `docs/04-spec-roadmap.md` and `docs/10-loop-architecture-and-workflow.md`, and active native-test wording remained in OPORDs 003, 004, 005, 008, and 015. The targeted correction is authorized; external re-review remains pending after evidence and commit.
