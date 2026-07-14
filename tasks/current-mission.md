@@ -373,7 +373,7 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - The promoted candidate passed 320/390/430/1280 exact widths, one main/five tabs/one selected tab, reduced motion, sequential focus, 200% page-scale proxy, exact-event deep link, Back/reload, and 320x500 invalid-form focus.
 - Final gates pass: root 80/80; app-local 62/62; substantive lint; TypeScript; Expo export; harness; secret and migration validators; release-script contracts; and diff check. The read-only configured-scenario verifier retained its exact 4/3/3/6/6/3/38/3 counts with zero outsider residue, and the rehearsal server left no listener.
 - No `.env.local`, hosted project, Auth account, database row, Storage object, DNS/TLS, deployment, or remote environment was read or changed. The populated loopback scenario remains intact.
-- OPORD 016 is **PARTIAL/CONDITIONAL**. The local artifact/promotion/rollback slice passes, but the current compile-time Supabase public configuration cannot promote one identical artifact across isolated hosted backends. Runtime configuration, hosted CI, named environments/operators, DNS/TLS, configured staging compatibility, physical devices/AT/human evidence, hosted rollback, and manual production approval remain `NOT RUN`.
+- OPORD 016 is **PARTIAL/CONDITIONAL**. The local artifact/runtime-config/promotion/rollback slice passes and removes the compile-time backend blocker. Hosted CI, named environments/operators/config custody, DNS/TLS, configured staging compatibility, physical devices/AT/human evidence, hosted rollback, and manual production approval remain `NOT RUN`.
 
 ## OPORD 017 local recovery and lifecycle checkpoint
 
