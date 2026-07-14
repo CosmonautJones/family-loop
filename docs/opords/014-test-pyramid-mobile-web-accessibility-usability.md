@@ -4,7 +4,7 @@
 PARTIAL/CONDITIONAL — layered automated, database, configured-browser, responsive-width, keyboard, reduced-motion, and Lighthouse gates pass; physical devices, screen readers, practical browser zoom, and moderated-human usability remain `NOT RUN`.
 
 ## Situation and evidence
-The reconciled baseline at `88d0ed9` passed root 70/70, app 58/58, TypeScript, Expo export, harness, database lint, family/media E2E, and the populated-scenario verifier. The 2026-07-14 local accessibility pass adds platform preference handling for Moti cards and Expo images plus a dependency-free Chrome/CDP gate. It covers 320/390/430 and 1280 CSS-pixel layouts, sequential navigation focus, exact-event deep link/Back/reload, invalid-form focus in a 320x500 keyboard-height proxy, reduced-motion emulation, and a 200% page-scale proxy. Lint remains a placeholder. Physical browsers, assistive technology, practical browser zoom/reflow, and human gates remain open.
+The reconciled baseline at `88d0ed9` passed root 70/70, app 58/58, TypeScript, Expo export, harness, database lint, family/media E2E, and the populated-scenario verifier. The 2026-07-14 local accessibility pass added platform preference handling for Expo images plus a dependency-free Chrome/CDP gate. Card surfaces are now intentionally static after measured Moti startup cost; image crossfades still resolve the platform reduced-motion preference. The gate covers 320/390/430 and 1280 CSS-pixel layouts, sequential navigation focus, exact-event deep link/Back/reload, invalid-form focus in a 320x500 keyboard-height proxy, reduced-motion emulation, and a 200% page-scale proxy. Substantive lint now passes under OPORD 015. Physical browsers, assistive technology, practical browser zoom/reflow, and human gates remain open.
 
 ## Mission/objective
 Establish the smallest credible layered quality gate for pure logic, server/database contracts, rendered responsive-web behavior, browser navigation, accessibility, and representative older-adult usability.
@@ -49,7 +49,7 @@ Test readable text, contrast, plain labels, 48x48 CSS-pixel targets, visible foc
 | Every core-loop risk has an owned evidence layer | COMPLETE | Tests, local Supabase scripts, runbooks, regression checklist, and this OPORD matrix. |
 | Automated 320/390/430 plus physical Safari/Chrome | PARTIAL/CONDITIONAL | Configured Chrome widths pass; physical iOS Safari/Android Chrome are `NOT RUN`. |
 | Back/history, deep links, reload, virtual keyboard | PARTIAL/CONDITIONAL | Exact-event deep link, Back, hard reload, and invalid-field visibility at 320x500 pass in headless Chrome; physical software-keyboard matrices are `NOT RUN`. |
-| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL/CONDITIONAL | >=48px touch, five sequential tabs, focused error relationships, reduced-motion media emulation, zero-duration card/image transitions, and a 200% CDP page-scale proxy pass. Practical browser zoom and VoiceOver/TalkBack are `NOT RUN`. |
+| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL/CONDITIONAL | >=48px touch, five sequential labeled tabs, focused error relationships, static card surfaces, zero-duration image transitions under reduced motion, and a 200% CDP page-scale proxy pass. Practical browser zoom and VoiceOver/TalkBack are `NOT RUN`. |
 | Desktop regression and anonymized human findings | PARTIAL | The same production export passes at 1280x900; no moderated-human sample exists. |
 
 ## Validation commands/evidence
@@ -80,7 +80,7 @@ On real phones, run iOS Safari with VoiceOver and Android Chrome with TalkBack, 
 Stop before adding dependencies/device-farm services, using production data, recruiting/recording without consent, broad redesign, or declaring accessibility compliance from partial checks.
 
 ## Risks/follow-ups
-Structural tests can pass while rendered behavior fails; desktop Chrome emulation does not prove mobile Safari/Chrome, a physical software keyboard, or assistive technology. The shared reduced-motion hook defaults to reduced motion until the async platform preference resolves, preventing first-paint motion for opted-out users; normal transitions remain available for subsequently mounted content. A small usability sample is directional only. A dependency-backed browser E2E mission requires measured justification and approval.
+Structural tests can pass while rendered behavior fails; desktop Chrome emulation does not prove mobile Safari/Chrome, a physical software keyboard, or assistive technology. Card surfaces do not animate. The shared reduced-motion hook defaults to reduced motion until the async platform preference resolves, preventing first-paint image motion for opted-out users; normal image crossfades remain available for subsequently mounted content. A small usability sample is directional only. A dependency-backed browser E2E mission requires measured justification and approval.
 
 ## Definition of done
 The layered matrix and critical regressions are executable, mobile Safari/Chrome and accessibility evidence is honest, desktop regression and usability limitations are recorded, and the review log is updated.

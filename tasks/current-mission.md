@@ -6,7 +6,7 @@ Status: `IN PROGRESS — CONFIGURED LOCAL CORE LOOP COMPLETE — OPORDS RECONCIL
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
-Latest checkpoint: OPORD 010 reminder preference is locally complete. Durable-local v7, two authenticated loopback users, existing self-user/event-member RLS, and configured 390×844 Chrome prove exact-user/event persistence, isolation, idempotent disable, reload, keyboard focus, no overflow, and failure-intent retry while making no push/email delivery claim. Hosted and physical-device evidence remain external gates.
+Latest checkpoint: OPORD 012's local mobile-web performance gap is closed. Three consecutive 390x844 warm production-export reloads under 500 kbps/400 ms RTT plus 4x CPU pass the unchanged 4,000 ms LCP and 200 ms longest-task budgets, and the final exact-event heading plus RSVP controls become usable in 646 ms. The KISS fix removed decorative tab icon fonts and Moti card entrances while preserving text labels, 48px targets, responsive widths, reduced-motion image behavior, keyboard focus, deep links, Back, and reload. Hosted and physical-device evidence remain external gates.
 
 ## Commander's intent
 

@@ -1,5 +1,13 @@
 # Code Rubric
 
+## OPORD 012 focused mobile-web startup correction
+
+- [x] A dependency-free CDP gate reproduces three warm 390x844 reloads under 500 kbps/400 ms RTT plus 4x CPU and fails on LCP >4,000 ms, main-thread task >200 ms, event usability >1,000 ms, or horizontal overflow.
+- [x] The before profile exposed one 332 ms task plus a 6,177,881-byte artifact retained by decorative icon and card-animation imports; no capacity-list or service rewrite was performed.
+- [x] Removing only the redundant icons and Moti wrapper yields one 980,027-byte JS bundle with no font assets, 2,200/2,208/2,368 ms LCP, 170/110/91 ms longest tasks, and a 646 ms final event route.
+- [x] Labeled >=48px tabs, selected state, keyboard order, 320/390/430/1280 widths, reduced-motion images, Back, deep links, reload, zoom proxy, and reduced-height invalid-field focus still pass.
+- [ ] Physical iOS Safari/Android Chrome performance and assistive-technology/human evidence remain external conditional gates.
+
 ## Local multi-user, authorization, and KISS closeout
 
 - [x] `7deb3fa` keeps selected demo identity per tab and shared records in the existing durable service; the UI labels this boundary honestly.

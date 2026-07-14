@@ -138,6 +138,9 @@
 - [x] Focused capacity test preserves exact event identity/order and reconstructs the version-7 durable-local envelope with exact counts.
 - [x] Local parallel reads stay within 250 ms and selector processing stays within the 200 ms local-processing budget.
 - [x] Warm durable-local support is explicit; configured writes are not queued offline.
+- [x] Three consecutive 390x844 warm production-export reloads under 500 kbps/400 ms RTT plus 4x CPU meet the <=4,000 ms LCP and <=200 ms longest-task budgets: 2,200/2,208/2,368 ms and 170/110/91 ms respectively, with zero configured-backend requests.
+- [x] The already-loaded exact event reaches its final heading and usable RSVP controls in 646 ms; document width remains 390/390.
+- [x] Removing decorative tab icons and Moti card entrances preserves five labeled >=48px tabs, reduced-motion image behavior, keyboard order, Back/deep-link/reload, and 320/390/430/1280 no-overflow checks.
 - [ ] Cold disconnected reload — intentionally unsupported; no service worker/PWA shell exists.
 - [ ] Offline write queue/background sync — intentionally not implemented.
 - [ ] Physical Safari/Chrome, VoiceOver/TalkBack, practical 200% zoom, and hosted load/reconnect — `NOT RUN`; local reduced-motion handling/emulation passes.
@@ -183,7 +186,7 @@
 - [x] Root tests 44/44 and app-local tests 33/33; TypeScript, harness, and Expo web export pass.
 - [x] Independent Run 1 RED keyboard defect reproduced and corrected; Run 2 accepted at AMBER / PROCEED-WARN with zero blockers.
 - [x] Sequential Home → Calendar → Create → Memories → Family keyboard order, Enter routing, one selected tab, one main landmark, and 320×844 width/overflow/navigation sanity passed.
-- [x] Platform reduced-motion state and changes disable Moti entrance displacement/fades and Expo image crossfades; normal transition durations remain covered.
+- [x] Card surfaces are static; platform reduced-motion state and changes disable Expo image crossfades while normal image transition durations remain covered.
 - [x] Dependency-free Chrome/CDP smoke passes 320/390/430/1280 overflow and landmark checks, five sequential tabs, exact-event deep-link/Back/reload, and invalid-field focus/visibility at a 320×500 keyboard-height proxy.
 - [x] A 200% CDP page-scale proxy reports scale 2, a 160 CSS-pixel visual viewport, and no document-width overflow from the 320 CSS-pixel layout.
 - [ ] Practical browser 200% zoom/reflow remains unverified; the CDP page-scale proxy is limited evidence and the pre-existing React Native Web warning remains advisory.

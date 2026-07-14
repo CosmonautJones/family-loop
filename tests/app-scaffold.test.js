@@ -1022,7 +1022,7 @@ test('mobile shell and primary flows expose landmarks, headings, useful image na
   assert.match(avatar, /accessible=\{false\}/);
 });
 
-test('core cards honor reduced-motion preference without removing normal transitions', () => {
+test('decorative surfaces stay static while images honor reduced-motion preference', () => {
   const reducedMotion = read('src/components/useReducedMotion.ts');
   const surfaceCard = read('src/components/SurfaceCard.tsx');
   const photoCard = read('src/components/PhotoCard.tsx');
@@ -1034,10 +1034,30 @@ test('core cards honor reduced-motion preference without removing normal transit
   assert.match(reducedMotion, /addEventListener\('reduceMotionChanged', setReduceMotion\)/);
   assert.match(reducedMotion, /mounted = false/);
   assert.match(reducedMotion, /subscription\.remove\(\)/);
-  assert.match(surfaceCard, /from=\{reduceMotion \? \{ opacity: 1, translateY: 0 \} : \{ opacity: 0, translateY: 10 \}\}/);
-  assert.match(surfaceCard, /duration: reduceMotion \? 0 : 360/);
+  assert.doesNotMatch(surfaceCard, /MotiView|useReducedMotion|transition|translateY/);
+  assert.match(surfaceCard, /return <View style=\{\[styles\.card, style\]\}>\{children\}<\/View>/);
   assert.match(photoCard, /transition=\{reduceMotion \? 0 : 300\}/);
   assert.match(avatar, /transition=\{reduceMotion \? 0 : 220\}/);
+});
+
+test('labeled mobile navigation does not load a decorative icon font', () => {
+  const shell = read('src/navigation/AppShell.tsx');
+  assert.doesNotMatch(shell, /@expo\/vector-icons|Ionicons|tabIcons/);
+  assert.match(shell, /minHeight: 58/);
+  assert.match(shell, /fontSize: 12/);
+});
+
+test('mobile performance gate retains the approved throttling and acceptance budgets', () => {
+  const performanceGate = read('../scripts/check-opord12-performance.mjs');
+  assert.match(performanceGate, /for \(let run = 1; run <= 3; run \+= 1\)/);
+  assert.match(performanceGate, /latency: 400/);
+  assert.match(performanceGate, /downloadThroughput: 500 \* 1024 \/ 8/);
+  assert.match(performanceGate, /setCPUThrottlingRate', \{ rate: 4 \}/);
+  assert.match(performanceGate, /run\.lcpMs > 4000/);
+  assert.match(performanceGate, /run\.longestTaskMs > 200/);
+  assert.match(performanceGate, /route\.routeMs > 1000/);
+  assert.match(performanceGate, /actions\.includes\('Going'\) && actions\.includes\('Maybe'\)/);
+  assert.match(performanceGate, /run\.backendRequests\.length/);
 });
 
 test('Family roles come from membership data and decorative glows cannot widen the document', () => {

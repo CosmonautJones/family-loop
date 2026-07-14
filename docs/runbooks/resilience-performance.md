@@ -68,7 +68,21 @@ Use a production Expo web export served from loopback, not Metro development tim
 
 ## Browser results
 
-At 390x844, the representative Home rendered 12 upcoming plans at a time without horizontal overflow. Opening the exact 100-comment/50-media event from already-loaded data took 333.8 ms and retained 390/390 document width. A warm production-export reload under Slow 3G plus 4x CPU recorded 6,528 ms LCP and a 673 ms long task, failing the 4,000 ms and 200 ms budgets. The trace attributed 2,050 ms of the text LCP delay to the icon font and found only 148 DOM elements, so a future fix should stay focused on startup/font delivery instead of speculative list virtualization.
+At 390x844, the representative Home rendered 12 upcoming plans at a time without horizontal overflow. Opening the exact 100-comment/50-media event from already-loaded data took 333.8 ms and retained 390/390 document width.
+
+The original production artifact contained 2,286,293 bytes of JavaScript and 3,890,364 bytes across 19 icon fonts (6,177,881 bytes total). Three controlled warm runs under 500 kbps/400 ms RTT plus 4x CPU recorded LCP at 2,156/2,352/2,292 ms, longest tasks at 332/170/127 ms, and CLS at 0.057/0.058/0.058. The first run therefore failed the 200 ms task budget. This corroborated the earlier DevTools trace that recorded 6,528 ms LCP, a 673 ms long task, and 2,050 ms of icon-font text delay.
+
+The focused correction removed decorative Ionicons from the already labeled five-tab bar and replaced Moti card entrance wrappers with static React Native views. Image crossfades retain reduced-motion handling. The resulting export contains one 980,027-byte JavaScript bundle, no font assets, and 981,256 total bytes: 57.1% less JavaScript and 84.1% fewer artifact bytes without changing data behavior or navigation labels.
+
+The final executable gate recorded three consecutive accepted runs:
+
+| Run | LCP | Longest task | CLS | Width |
+|---:|---:|---:|---:|---:|
+| 1 | 2,200 ms | 170 ms | 0.057 | 390/390 |
+| 2 | 2,208 ms | 110 ms | 0.057 | 390/390 |
+| 3 | 2,368 ms | 91 ms | 0.057 | 390/390 |
+
+Chrome 150 made zero configured-backend requests in all three local-mode runs. After restoring normal CPU/network conditions, the exact `Door County Weekend` route reached its final heading and usable Going/Maybe controls in 646 ms with 390/390 width. Run the same gate against a loopback production export with `node scripts/check-opord12-performance.mjs <base-url>`; it exits nonzero on any budget failure.
 
 With the loopback Supabase API gateway stopped, the configured comment draft remained and a visible retry persisted it exactly once after the gateway returned. The first failure exposed raw `Failed to fetch`, which fails the plain-language error requirement and is assigned to OPORD 013. After deleting the disposable event, the read-only verifier returned the original scenario counts with zero outsider residue.
 

@@ -1,6 +1,5 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { AppBackground } from '../components/AppBackground';
 import { CalendarScreen } from '../screens/CalendarScreen';
@@ -15,14 +14,6 @@ import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { AuthScreen, SessionStatusScreen } from '../screens/AuthScreen';
 import { FamilyOnboardingScreen } from '../screens/FamilyOnboardingScreen';
 import { useActiveGroupQuery } from '../app/queries';
-
-const tabIcons = {
-  Home: 'home',
-  Calendar: 'calendar',
-  Create: 'add-circle',
-  Memories: 'images',
-  Family: 'people',
-} as const;
 
 export function AppShell() {
   const { width } = useWindowDimensions();
@@ -68,11 +59,6 @@ export function AppShell() {
                   tabIndex={0}
                 >
                   {tab.active ? <LinearGradient colors={gradients.sunset} style={styles.activePill} /> : null}
-                  <Ionicons
-                    name={tabIcons[tab.label]}
-                    size={tab.label === 'Create' ? 25 : 20}
-                    color={tab.active ? palette.white : palette.muted}
-                  />
                   <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
                 </Pressable>
               ))}
