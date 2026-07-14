@@ -5,6 +5,10 @@ const wait = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resol
 
 export function createMockLoopedInService(seed: MockDatabase = createMockDatabase()): LoopedInService {
   const db = cloneDatabase(seed);
+  let nextGroupId = 1;
+  let nextEventId = 1;
+  let nextMessageId = 1;
+  let nextMediaId = 1;
   const mockSession = {
     userId: 'person-you',
     displayName: 'You',
@@ -30,7 +34,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       listGroups: () => wait([...db.groups]),
       getGroup: (groupId) => wait(db.groups.find((group) => group.id === groupId) ?? null),
       createGroup: (payload: CreateGroupPayload) => {
-        const group = { id: `group-${Date.now()}`, badge: 'New', tone: 'coral' as const, memberCount: 1, ...payload };
+        const group = { id: `group-created-${nextGroupId++}`, badge: 'New', tone: 'coral' as const, memberCount: 1, ...payload };
         db.groups.push(group);
         return wait(group);
       },
@@ -50,7 +54,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       getEvent: (eventId) => wait(db.events.find((event) => event.id === eventId) ?? null),
       createEvent: (payload: CreateEventPayload) => {
         const event = {
-          id: `event-${Date.now()}`,
+          id: `event-created-${nextEventId++}`,
           statusLabel: 'Draft',
           visibility: 'group' as const,
           timeline: [
@@ -98,14 +102,14 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
     thread: {
       listMessages: (eventId) => wait(db.messages.filter((message) => message.eventId === eventId)),
       sendMessage: (eventId, body) => {
-        const message = { id: `message-${Date.now()}`, eventId, body, authorName: 'You', self: true, createdAt: new Date().toISOString() };
+        const message = { id: `message-created-${nextMessageId++}`, eventId, body, authorName: 'You', self: true, createdAt: new Date().toISOString() };
         db.messages.push(message);
         return wait(message);
       },
     },
     media: {
       uploadMedia: (payload: MediaUploadPayload) => {
-        const item = { id: `media-${Date.now()}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption ?? 'New shared moment', uploadedBy: 'person-you', uploadedAt: new Date().toISOString() };
+        const item = { id: `media-created-${nextMediaId++}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption ?? 'New shared moment', uploadedBy: 'person-you', uploadedAt: new Date().toISOString() };
         db.media.push(item);
         return wait(item);
       },

@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import type { RSVPStatus } from '../types/domain';
 import type { CreateEventDraft } from '../features/events/createEvent';
 import { createEventDraft } from '../features/events/createEvent';
 import { loadDraftEvent, saveDraftEvent, saveString, storageKeys } from '../lib/storage';
@@ -10,8 +9,6 @@ export type LoopedInStore = {
   draftEvent: CreateEventDraft;
   updateDraftEvent: (patch: Partial<CreateEventDraft>) => void;
   resetDraftEvent: () => void;
-  rsvpOverrides: Record<string, RSVPStatus>;
-  setRsvpStatus: (eventId: string, status: RSVPStatus) => void;
   stagedPhotoCounts: Record<string, number>;
   stageEventPhoto: (eventId: string) => void;
   reminderDrafts: Record<string, boolean>;
@@ -34,10 +31,6 @@ export const useLoopedInStore = create<LoopedInStore>((set) => ({
     saveDraftEvent(createEventDraft);
     set({ draftEvent: createEventDraft });
   },
-  rsvpOverrides: {},
-  setRsvpStatus: (eventId, status) => set((state) => ({
-    rsvpOverrides: { ...state.rsvpOverrides, [eventId]: status },
-  })),
   stagedPhotoCounts: {},
   stageEventPhoto: (eventId) => set((state) => ({
     stagedPhotoCounts: {

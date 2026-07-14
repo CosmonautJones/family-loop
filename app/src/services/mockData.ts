@@ -51,6 +51,19 @@ export function createMockDatabase(): MockDatabase {
   };
 }
 
+export function createEmptyMockDatabase(): MockDatabase {
+  return {
+    groups: [],
+    events: [],
+    rsvps: [],
+    activity: [],
+    messages: [],
+    memories: [],
+    media: [],
+    notifications: [],
+  };
+}
+
 export function cloneDatabase(database: MockDatabase): MockDatabase {
   return JSON.parse(JSON.stringify(database));
 }

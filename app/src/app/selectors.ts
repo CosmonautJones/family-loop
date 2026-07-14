@@ -11,6 +11,7 @@ type HomeViewModelInput = {
   events?: Event[];
   activity?: EventActivity[];
   memories?: MemoryItem[];
+  now?: Date;
 };
 
 const defaultHomeInput: HomeViewModelInput = {
@@ -21,7 +22,14 @@ const defaultHomeInput: HomeViewModelInput = {
 
 export function selectHomeViewModel(input: HomeViewModelInput = defaultHomeInput) {
   const events = input.events ?? defaultHomeInput.events ?? [];
-  const nextEvent = events[0];
+  const now = input.now ?? new Date();
+  const upcomingEvents = events
+    .filter((event) => new Date(event.startsAt).getTime() >= now.getTime())
+    .sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
+  const pastEvents = events
+    .filter((event) => new Date(event.startsAt).getTime() < now.getTime())
+    .sort((left, right) => new Date(right.startsAt).getTime() - new Date(left.startsAt).getTime());
+  const nextEvent = upcomingEvents[0] ?? pastEvents[0];
   const activity = nextEvent ? input.activity ?? defaultHomeInput.activity ?? [] : [];
   const memories = nextEvent ? input.memories ?? defaultHomeInput.memories ?? [] : [];
 
@@ -34,7 +42,7 @@ export function selectHomeViewModel(input: HomeViewModelInput = defaultHomeInput
       description: nextEvent.description,
       coverUri: nextEvent.coverUri ?? '',
     } : null,
-    weekSummary: homeWeekSummary,
+    weekSummary: nextEvent ? homeWeekSummary : 'No upcoming events yet',
     recentActivityTitle: homeActivityTitle,
     activity,
     memories: memories.map((memory) => ({
@@ -84,8 +92,16 @@ export function selectMemoriesViewModel() {
   };
 }
 
-export function selectEventDetailViewModel(eventId: string = eventDetail.id) {
-  const selectedEvent = eventDetails.find((event) => event.id === eventId) ?? eventDetail;
+export function selectEventDetailViewModel(
+  eventOrId: Event | string = eventDetail,
+  rsvps = eventRsvps,
+  thread = eventThread,
+) {
+  const selectedEvent = typeof eventOrId === 'string'
+    ? eventDetails.find((event) => event.id === eventOrId)
+    : eventOrId;
+
+  if (!selectedEvent) return null;
 
   return {
     id: selectedEvent.id,
@@ -93,8 +109,8 @@ export function selectEventDetailViewModel(eventId: string = eventDetail.id) {
     timeLabel: formatEventDateRange(selectedEvent.startsAt, selectedEvent.endsAt),
     location: selectedEvent.location,
     description: selectedEvent.description,
-    rsvpSummary: selectEventRsvpSummary(eventRsvps),
+    rsvpSummary: selectEventRsvpSummary(rsvps),
     sections: selectEventTimeline(selectedEvent),
-    thread: selectEventThreadPreview(eventThread),
+    thread: selectEventThreadPreview(thread),
   };
 }

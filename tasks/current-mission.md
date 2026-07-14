@@ -1,42 +1,59 @@
 # Current Mission
 
-Mission ID: `FAMILY-LOOP-DATA-001`
+Mission ID: `FAMILY-LOOP-DATA-002`
 
-Status: Complete (`68b8869`).
+Status: Authorized for execution. Complete only after all three waves are committed in order and final acceptance is proven.
 
 ## Mission
 
-Add the minimum session gate needed for trustworthy service-backed work: restore an existing configured Supabase session, present a small email/password sign-in surface when configured and signed out, keep configured authentication failures visible, and preserve deterministic unconfigured prototype operation. This mission establishes session state only; it does not migrate product data screens.
+Replace the fixture-backed event backbone with the existing service and TanStack Query boundary. The active group and its events must load through Query; Create must persist an event and refresh the event views; Home, Calendar, and Event Detail must use the same event identity; and the authenticated user's RSVP must persist and survive reload. Preserve the deterministic mock adapter for unconfigured development and tests, while configured failures remain visible and never fall back to fixtures.
 
 ## Objective
 
-Give the app one explicit, testable session boundary with four states—restoring, signed out, authenticated, and error—so M2 can access configured data only after authentication without ever falling back silently to fixtures.
+Prove one durable, mobile-first coordination loop:
+
+```text
+resolved session and active group
+-> Query loads that group's events
+-> user creates an event
+-> Home and Calendar show the created event
+-> user opens that exact event by ID
+-> user changes their RSVP
+-> event and RSVP remain correct after reload/refetch
+```
+
+This mission adopts ADR 001 for the event slice: configured and authenticated service data is authoritative, Query owns server state and invalidation, Zustand owns transient UI state only, and migrated screens explicitly render loading, error, empty, and populated states.
 
 ## Non-goals
 
-- Onboarding, sign-up, OAuth, magic links, password recovery, profiles, invitations, or no-group setup.
-- Persisting events, RSVPs, messages, media, reminders, notifications, or memories.
-- Migrating Home, Calendar, Create, Event Detail, Groups, or Memories to query-backed data.
-- Navigation-library migration, settings, billing, teams, notification delivery, deployment, or schema changes.
-- New dependencies, broad visual redesign, remote administration, or credential creation/mutation.
+- Event editing/deletion, recurrence, invitations, external calendar sync, or a navigation-library migration.
+- Event thread/messages, media upload or galleries, reminders, notifications, or derived memories; these remain M3-M6.
+- Sign-up, onboarding, recovery, OAuth, profiles UI, no-group setup, or any expansion of the M1 Auth surface.
+- New schema, migrations, RLS/storage-policy changes, deployment configuration, remote administration, or credential work.
+- Billing, settings, teams, analytics, generic SaaS features, broad visual redesign, or new dependencies.
+- Claiming live Supabase, RLS, realtime, storage, or production readiness from mock/local evidence.
 
 ## Authorized manifest
 
-Only these files and file families may be created or edited:
+Only the following files may be created or edited during M2:
 
-- `app/src/services/api.ts`
-- `app/src/services/supabaseClient.ts`
-- `app/src/services/supabaseAdapter.ts`
-- `app/src/services/mockAdapter.ts`
-- `app/src/services/mockData.ts`
-- `app/src/services/index.ts`
 - `app/src/app/queries.ts`
-- `app/src/app/AppProviders.tsx`
+- `app/src/app/selectors.ts`
+- `app/src/features/events/createEvent.ts`
+- `app/src/features/events/eventData.ts`
+- `app/src/features/events/index.ts`
+- `app/src/features/events/selectors.ts`
 - `app/src/navigation/AppShell.tsx`
 - `app/src/navigation/useAppShellState.ts`
+- `app/src/screens/HomeScreen.tsx`
+- `app/src/screens/CalendarScreen.tsx`
+- `app/src/screens/CreateEventScreen.tsx`
+- `app/src/screens/EventDetailScreen.tsx`
+- `app/src/services/api.ts`
+- `app/src/services/mockAdapter.ts`
+- `app/src/services/mockData.ts`
+- `app/src/services/supabaseAdapter.ts`
 - `app/src/store/useLoopedInStore.ts`
-- `app/src/features/auth/**` (new files permitted)
-- `app/src/screens/AuthScreen.tsx` (new if chosen)
 - `app/src/types/domain.ts`
 - `tests/app-scaffold.test.js`
 - `tasks/current-mission.md`
@@ -48,74 +65,77 @@ Only these files and file families may be created or edited:
 - `evals/ux-rubric.md`
 - `evals/regression-checklist.md`
 
-Allowed systems are local repository read/write operations and the local checks listed below only.
+No environment file, Supabase migration, package manifest, lockfile, deployment file, Auth UI/provider file, or fixture file is authorized. The Sergeant owns commits, integration, wave transitions, and final acceptance. Each subordinate owner must remain inside its wave territory and must not perform Git mutations.
 
 ## Ordered execution
 
-### Wave 1 — Session foundation
+### Wave 1 — Query and adapter event contract
 
-Ownership: service/session owner has exclusive runtime ownership of `app/src/services/**`, `app/src/app/**`, `app/src/store/useLoopedInStore.ts`, `app/src/types/domain.ts`, and any new `app/src/features/auth/**` files. Mission-record ownership remains with `tasks/current-mission.md`.
+Ownership: the data-contract owner has exclusive ownership of `app/src/app/queries.ts`, `app/src/services/api.ts`, `app/src/services/mockAdapter.ts`, `app/src/services/mockData.ts`, `app/src/services/supabaseAdapter.ts`, and `app/src/types/domain.ts`. The test owner may edit only `tests/app-scaffold.test.js`. Mission-record ownership remains with `tasks/current-mission.md`.
 
-1. Define the smallest session API/state needed to distinguish restoring, signed out, authenticated, and error states without exposing tokens in UI or logs.
-2. Restore the existing Supabase session through the configured adapter/client and subscribe only if required to keep logout/login state accurate.
-3. Make adapter mode explicit enough that the shell can apply the configured and unconfigured contracts below.
-4. Preserve the deterministic mock adapter as the unconfigured/test path; do not make missing configuration an error and do not introduce a second server-state owner.
-5. Add focused structural/behavior checks within `tests/app-scaffold.test.js` for the session boundary and fallback rules.
+1. Audit the existing event and RSVP service methods against the repository schema without changing migrations, policies, or remote state.
+2. Define stable Query keys and enabled conditions for active-group events, event-by-ID detail, and event RSVPs. Auth/session and group resolution must gate configured queries.
+3. Add the smallest mutations needed for event creation and RSVP upsert/update. Successful mutations must update or invalidate every affected event, group-event, and RSVP query; failures must remain visible.
+4. Ensure the mock and Supabase adapters obey the same event/RSVP contract, including stable event identity, group scoping, chronological event results, authenticated-person RSVP semantics, and returned created/updated records.
+5. Keep unconfigured mock records deterministic but mutable for the duration of a test/app process so create and RSVP reload/refetch behavior can be proven without fixtures.
+6. Add focused contract/structural tests for Query ownership, configured failure behavior, mutation invalidation, group isolation, same-ID lookup, and RSVP upsert semantics.
 
-Wave 1 success criterion: session behavior can be exercised independently of product-data migration, configured failures cannot reach fixture UI as a fallback, and unconfigured local use remains deterministic.
+Wave 1 success criterion: the service/Query boundary can independently create, refetch, retrieve, and RSVP to the same group-scoped event in deterministic mock mode, while the configured path has no fixture fallback and no durable event/RSVP mirror in Zustand.
 
-### Wave 2 — Minimal session UI and closeout
+Wave 1 commit gate: the Sergeant reviews the diff, runs the automated checks relevant to the owned files, confirms no RED boundary was crossed, and commits Wave 1 before Wave 2 begins.
 
-Ownership: UI owner has exclusive runtime ownership of `app/src/navigation/**`, `app/src/screens/AuthScreen.tsx`, and UI files under `app/src/features/auth/**`. Test/review owner has exclusive ownership of the allowed test, task, documentation, and evaluation records other than this Wave 1 mission record.
+### Wave 2 — Persistent event UI loop
 
-1. Gate `AppShell` on the session boundary.
-2. Render a calm phone-first restoring state while configured session restoration is pending.
-3. Render a minimal email/password sign-in surface when configured and signed out; include pending/disabled behavior and a useful inline error. No sign-up or recovery affordance.
-4. Render the existing product shell only after configured authentication succeeds, and provide only the minimum logout path required to prove the gate.
-5. Keep unconfigured operation frictionless and clearly deterministic: it opens the existing mock-backed prototype without showing or requiring credentials.
-6. Run the complete verification matrix, update the allowed architecture/task/evaluation records, list residual risks, and move the finished mission summary to `tasks/completed.md` only after acceptance is proven.
+Ownership: the event-flow owner has exclusive ownership of `app/src/app/selectors.ts`, `app/src/features/events/createEvent.ts`, `app/src/features/events/eventData.ts`, `app/src/features/events/index.ts`, `app/src/features/events/selectors.ts`, `app/src/navigation/AppShell.tsx`, `app/src/navigation/useAppShellState.ts`, `app/src/screens/HomeScreen.tsx`, `app/src/screens/CalendarScreen.tsx`, `app/src/screens/CreateEventScreen.tsx`, `app/src/screens/EventDetailScreen.tsx`, and `app/src/store/useLoopedInStore.ts`. Wave 1 contract files are read-only unless the Sergeant explicitly returns the wave for a surgical correction.
 
-Wave 2 success criterion: the mock and configured-unauthenticated phone paths are visibly distinct and correct, the authenticated shell is unreachable while a configured session is absent or failing, and all required checks pass.
+1. Make Query-backed group events the source for Home and Calendar in both service modes; do not read event fixtures after the event slice is migrated.
+2. Render honest loading, error, empty, and populated event states. The empty state must still route to the existing Create surface, and configured request failures must not display fixture events.
+3. Submit Create through the event mutation using the resolved active group. Prevent duplicate submissions, show pending and useful inline failure states, clear only after success, and return to a view that shows the persisted event without a full restart.
+4. Route event selection by stable event ID and load Event Detail for that exact ID. Unknown/missing IDs must produce an explicit not-found/error state, never a different fixture event.
+5. Load RSVPs for the selected event and persist the current authenticated person's RSVP through the service mutation. In mock mode use the deterministic mock identity already supplied by the service/session boundary.
+6. Remove event drafts and RSVP overrides from durable Zustand ownership. Keep only transient form/navigation state that cannot become a competing event or RSVP source of truth.
+7. Preserve phone-first Home prominence, same-event navigation, thumb-friendly RSVP actions, and the existing non-event tab surfaces without redesigning them.
+8. Extend focused tests for all four rendered states, create-to-refetch, duplicate-submit prevention, same-ID detail, unknown ID, RSVP persistence, configured no-fallback behavior, and existing empty-group behavior.
 
-## Required behavior
+Wave 2 success criterion: at a 390x844 viewport, an unconfigured user can create an event, see it on Home/Calendar, open the same ID, change RSVP, and observe the result after refetch/reload; configured loading and failures are truthful and protected by the M1 session gate.
 
-### Unconfigured
+Wave 2 commit gate: the Sergeant reviews and smoke-tests the complete event loop, confirms Wave 1 contracts remain intact, and commits Wave 2 before closeout work begins.
 
-- When both supported Supabase configuration values are not present, select the deterministic mock service.
-- Open the existing fixture-backed prototype without a credential prompt.
-- Do not imply that mock login, persistence, RLS, or a live backend has been verified.
-- Keep this path usable by local development and tests.
+### Wave 3 — Verification, review, and mission closeout
 
-### Configured
+Ownership: the verification/records owner has exclusive ownership of `tests/app-scaffold.test.js`, `docs/architecture.md`, `tasks/backlog.md`, `tasks/completed.md`, `evals/review-log.md`, `evals/code-rubric.md`, `evals/ux-rubric.md`, and `evals/regression-checklist.md`. Runtime files from Waves 1 and 2 are read-only unless the Sergeant authorizes a surgical fix followed by rerunning the affected wave checks.
 
-- When the Supabase URL and publishable/anonymous key are configured, select only the Supabase service.
-- Restore an existing persisted session before rendering protected product UI.
-- While restoration is pending, render a loading/restoring state rather than fixtures.
-- With no valid session, render the minimal sign-in surface.
-- On login or restoration failure, render an actionable error and remain outside the product shell; never fall back to the mock adapter or fixture shell.
-- On successful authentication, render the existing shell without migrating its fixture-backed feature data in M1.
-- On logout, clear the authenticated UI and return to the configured signed-out state.
+1. Run the full verification matrix and inspect failures rather than weakening checks.
+2. Perform the required phone smoke in unconfigured mock mode: create an event, confirm Home and Calendar reflect it, open that exact event, change RSVP, and confirm event/RSVP durability after a page reload or the strongest available equivalent.
+3. Perform configured-boundary smoke with non-secret placeholder configuration only: verify the M1 gate prevents protected event queries/UI and that failures never fall back to mock/fixture content.
+4. Apply the conditional live Supabase rule below exactly. No live result may be inferred from repository definitions.
+5. Review the final diff against the product/code rubrics, ADR 001, manifest, non-goals, and every acceptance criterion. Record exact commands, smoke method, results, limitations, residual risks, and follow-ups.
+6. Update architecture and campaign records truthfully. Add the completed M2 summary to `tasks/completed.md`, mark M2 complete in `tasks/backlog.md`, and leave M3-M6 unabsorbed.
+
+Wave 3 success criterion: every acceptance item has direct evidence, required checks and phone smokes are recorded, live limitations are explicit, review records are current, and the final scoped diff is committed independently.
 
 ## Acceptance criteria
 
-- [x] The implementation changes only files in the authorized manifest and adds no dependency, migration, deployment, or environment file.
-- [x] Unconfigured startup opens the deterministic mock-backed prototype without requesting credentials; verified at 390x844.
-- [x] Configured startup blocks the product shell until session restoration resolves.
-- [x] Configured signed-out startup presents only the minimum email/password sign-in flow.
-- [x] Configured login pending, login error, restore error, authenticated, and logout transitions are explicit and testable.
-- [x] A configured auth failure remains visible and does not select or render the mock fallback.
-- [x] Session/server state has one owner consistent with ADR 001; Zustand remains limited to transient UI state.
-- [x] No secret, access token, password, or environment value was read, printed, recorded, or committed during implementation.
-- [x] Existing Home-to-Event Detail and other fixture-backed product behavior remains intact in tests after the session gate.
-- [x] Focused tests cover adapter selection and the configured/unconfigured session-gate invariants at the strongest practical local boundary.
-- [x] Mock phone smoke confirms the prototype opens and the Home-to-same-event-detail core shell route remains usable at 390x844.
-- [x] Configured-unauthenticated phone smoke confirms the sign-in boundary appears without credential mutation and protected UI does not at 390x844.
-- [x] Conditional live-auth verification follows the rule below and is recorded accurately as `NOT RUN — ENV unavailable`.
-- [x] Required automated checks pass, architecture and evaluation records reflect actual behavior, the review log is updated, and residual risks/follow-ups are listed.
+- [ ] Changes are confined to the authorized manifest; no dependency, migration, policy, environment, deployment, or Auth-surface file changes occur.
+- [ ] Home and Calendar obtain active-group events through TanStack Query and explicitly render loading, error, empty, and populated states.
+- [ ] Configured/authenticated event data is authoritative; a configured request or auth failure never renders mock or fixture events as fallback.
+- [ ] Unconfigured operation uses the deterministic mock service through the same Query/mutation path, not screen fixtures.
+- [ ] Create Event persists through the service contract, is group-scoped, prevents duplicate submission, reports failure, invalidates/refetches affected queries, and appears on Home and Calendar after success.
+- [ ] Selecting an event opens Event Detail for that exact stable ID; an unknown or missing ID cannot silently open another event.
+- [ ] Event Detail loads its event and RSVPs through Query and explicitly handles loading, error, not-found/empty, and populated states.
+- [ ] The current user's RSVP mutation persists through the service contract and remains correct after refetch/reload at the strongest available local boundary.
+- [ ] Query is the sole owner of durable events and RSVPs; Zustand contains no durable event draft, persisted event record, or RSVP override that competes with server state.
+- [ ] Existing group resolution, M1 session gate, zero-event Create path, Home-to-same-event behavior, and unrelated tab surfaces remain intact.
+- [ ] Focused tests cover adapter parity, group scoping, chronological results, mutation invalidation, create-to-detail identity, unknown IDs, duplicate submission, RSVP persistence, explicit screen states, and configured no-fallback behavior.
+- [ ] Mock phone smoke passes at 390x844 for the complete create -> Home/Calendar -> same-ID detail -> RSVP -> reload/refetch loop.
+- [ ] Configured-boundary phone smoke passes at 390x844 without credentials or remote mutation and proves protected content does not fall back to mock/fixtures.
+- [ ] Conditional live Supabase verification is either directly evidenced under the permitted rule or recorded exactly as `NOT RUN — ENV unavailable`.
+- [ ] All required automated commands pass; architecture, task history, review log, rubrics, and regression checklist accurately describe the implemented behavior and remaining limitations.
+- [ ] All three waves are reviewed and committed sequentially by the Sergeant, with no later mission silently absorbed.
 
 ## Verification commands
 
-Run from the repository root unless a directory change is included:
+Run from the repository root unless a directory change is shown:
 
 ```powershell
 npm test
@@ -128,56 +148,60 @@ powershell -ExecutionPolicy Bypass -File .\scripts\check-harness.ps1
 git diff --check
 ```
 
-Phone web smoke is required at a phone viewport for both modes:
+Required phone smoke at 390x844:
 
-1. Mock/unconfigured: start the app with Supabase configuration absent, verify the prototype shell opens without credential input, and exercise the existing Home-to-Event Detail route.
-2. Configured/unauthenticated: use non-secret placeholder configuration sufficient to exercise the configured boundary without attempting credential mutation; verify the restoring/signed-out boundary prevents protected shell rendering and that failure remains visible rather than falling back to mock data.
+1. Unconfigured/mock: start with Supabase process configuration absent; create a uniquely titled future event; verify it appears on Home and Calendar; open it and verify the same title/ID; change the current user's RSVP; reload/refetch; verify the event and RSVP remain correct at the strongest supported mock boundary. Record precisely whether persistence is process-local or survives a full process restart.
+2. Configured boundary: use non-secret placeholder configuration sufficient only to exercise the configured gate; do not submit credentials. Verify protected event UI is unreachable and the app does not render mock or fixture event content after restore/request failure.
 
-Record the exact local smoke method and result in `evals/review-log.md`.
+Record exact commands, viewport, method, and results in `evals/review-log.md`. A narrow structural test is not sufficient evidence for the end-to-end phone criteria.
 
-## Conditional live-auth rule
+## Conditional live Supabase restriction
 
-Live sign-in, session restore, and logout may be tested only when safe existing credentials are already available to the running environment without reading, revealing, copying, or reporting their values and without creating, resetting, or otherwise mutating credentials. If that condition is not already satisfied, record exactly:
+Live event creation, reads, and RSVP mutation may be tested only if all of the following are already true without discovery work:
+
+- A safe, pre-authorized Supabase environment and existing test identity/group are already available to the running process.
+- Testing requires no reading, printing, copying, reporting, creating, resetting, or mutating credentials, tokens, environment values, dashboards, or secret stores.
+- The existing schema and policies accept the M2 contract without migration, policy, bucket, deployment, or administrative changes.
+- The test data mutation is explicitly safe, confined to the existing test group, and can be identified as test data without touching real user content.
+
+If any condition is not already satisfied, do not inspect for it and record exactly:
 
 `NOT RUN — ENV unavailable`
 
-This conditional result does not fail M1 when all non-live acceptance evidence passes. It forbids inspecting environment files, secret stores, shell values, dashboards, logs, or remote configuration to discover credentials.
+That conditional result does not fail M2 when mock/contract/boundary evidence passes. It provides no evidence that remote schema, RLS, realtime, storage, or deployment is ready.
 
 ## Stop conditions and authorization limits
 
-Stop immediately and return RED to the Sergeant on any of the following:
+Stop immediately and return RED to the Sergeant if any of the following is required:
 
-- Any need to read, print, transmit, create, reset, or mutate a secret, credential, token, or environment value.
-- Any remote mutation, deployment operation, database migration, RLS/storage-policy change, schema change, or incompatible service/API change.
-- Any new dependency or edit outside the authorized manifest.
-- Any requirement to implement M2-M6 behavior, onboarding, sign-up, recovery, profiles, invitations, settings, billing, teams, or notifications.
-- Any destructive or irreversible operation.
-- Any required check failure that cannot be corrected surgically inside the authorized manifest.
-- Any evidence that the configured path can silently render mock/fixture content as an authentication fallback.
+- Reading, printing, transmitting, creating, resetting, or mutating a secret, credential, token, environment value, or real-user data.
+- Any migration, schema change, RLS/storage-policy change, remote administrative mutation, deployment operation, or destructive/irreversible action.
+- Any new dependency, package/lockfile edit, environment-file edit, Auth expansion, or edit outside the authorized manifest.
+- Implementing event editing/deletion, recurrence, invitations, calendar sync, thread, media, reminders, notifications, memories, onboarding, settings, billing, teams, or another M3-M6 concern.
+- A need to weaken ADR 001 by adding fixture fallback in configured mode, mirroring server events/RSVPs in Zustand, or bypassing session resolution.
+- A service/schema incompatibility that cannot be corrected additively and surgically inside the authorized manifest.
+- A required check or acceptance failure that cannot be corrected inside the current wave's territory without changing approved scope.
+- A Git conflict, unrelated dirty-worktree overlap, or destructive Git operation.
 
-The Sergeant owns commits, integration, wave transitions, and final acceptance. Subordinate owners must not run Git mutations or broaden their territory.
-
-## Limits
-
-- Two ordered waves only; Wave 2 begins after the Sergeant accepts Wave 1.
-- Keep the Auth surface to email, password, submit/pending/error behavior, and the minimum logout proof.
-- Reuse installed Supabase, TanStack Query, Zustand, and React Native capabilities; add no package.
-- Do not claim remote backend, schema, RLS, or storage readiness from local session-gate evidence.
-- M1 establishes the gate but leaves feature screens fixture-backed by design; M2 owns data migration.
+The Sergeant alone may authorize an AMBER interpretation, return a wave for correction, transition between waves, or commit. Simpler in-scope interpretations must be chosen when ambiguity does not affect the mission outcome, and the interpretation must be logged in `evals/review-log.md` during Wave 3.
 
 ## Risks and follow-ups
 
-- Docker/local Supabase and remote deployment remain unverified, so live session behavior may remain conditionally untested.
-- The current auth contract centers on refresh rather than an explicit non-mutating session read; implementation must preserve API compatibility or stop for a Sergeant decision.
-- Mock mode intentionally bypasses credential UI, so tests must prove it cannot be selected after configured auth errors.
-- The product shell remains fixture-backed after M1; users authenticated against a configured service will not see persisted event data until M2.
-- Sign-up, recovery, invitations, and no-group onboarding remain separately authorized follow-ups.
+- Docker/local Supabase and remote deployment remain unverified; mock parity cannot prove live schema, policy, or storage behavior.
+- The mock adapter can prove Query/refetch durability but may be process-local; records must not imply full device-restart persistence unless directly observed.
+- The existing schema or Supabase adapter may not expose the authenticated profile fields needed for RSVP attribution; incompatible schema/RLS needs are RED, not permission to invent identity data or alter migrations.
+- Chronological ordering and time-zone conversion can diverge between adapters; focused contract evidence is required.
+- Create mutation success followed by refetch failure must remain a visible error, not be concealed by optimistic fixture state.
+- Event thread, media, reminders/notifications, and derived memories remain M3-M6 in that order and must build on the event IDs established here.
+- Invitations and no-group onboarding remain separately authorized work.
 
 ## Definition of done
 
-- [x] Both waves are accepted in order by the Sergeant.
-- [x] Every acceptance criterion has direct evidence or the permitted conditional live-auth result.
-- [x] All required commands and both phone smoke paths are recorded with results.
-- [x] Review log, architecture, task history, code rubric, UX rubric, and regression checklist are current and truthful.
-- [x] Risks and follow-ups are recorded without absorbing later missions.
-- [x] Sergeant committed the scoped, reviewable mission result (`68b8869`).
+- [ ] Waves 1, 2, and 3 are accepted and committed in order by the Sergeant.
+- [ ] Every acceptance criterion has direct current-state evidence or the explicitly permitted conditional live result.
+- [ ] The complete mock phone loop and configured-boundary smoke are recorded with exact results.
+- [ ] All required commands pass without weakening tests or omitting failures.
+- [ ] ADR 001 ownership rules hold for the migrated event/RSVP slice.
+- [ ] Review, architecture, task, rubric, and regression records are truthful and current.
+- [ ] Residual risks and later missions are recorded without expanding M2.
+- [ ] The worktree contains no uncommitted M2 changes after the Sergeant's final commit.
