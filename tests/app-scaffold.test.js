@@ -136,9 +136,9 @@ test('mock service is group-scoped, chronological, and instance-local', async ()
     description: 'Test description',
   };
 
-  await service.events.createEvent({ ...base, groupId: 'group-a', title: 'Later', startsAt: '2026-09-01T10:00:00Z' });
-  await service.events.createEvent({ ...base, groupId: 'group-b', title: 'Other group', startsAt: '2026-07-01T10:00:00Z' });
   await service.events.createEvent({ ...base, groupId: 'group-a', title: 'Sooner', startsAt: '2026-08-01T10:00:00Z' });
+  await service.events.createEvent({ ...base, groupId: 'group-b', title: 'Other group', startsAt: '2026-07-01T10:00:00Z' });
+  await service.events.createEvent({ ...base, groupId: 'group-a', title: 'Later', startsAt: '2026-09-01T10:00:00Z' });
 
   const groupA = await service.events.listEvents('group-a');
   assert.deepEqual(groupA.map((event) => event.title), ['Sooner', 'Later']);
@@ -154,10 +154,40 @@ test('zero-event selectors stay honest and unknown detail is explicit', () => {
   const calendar = selectors.selectCalendarViewModel([]);
 
   assert.equal(home.heroEvent, null);
+  assert.deepEqual(home.upcomingEvents, []);
   assert.deepEqual(home.activity, []);
   assert.deepEqual(home.memories, []);
   assert.deepEqual(calendar.agenda, []);
   assert.equal(selectors.selectEventDetailViewModel('event-does-not-exist', [], []), null);
+});
+
+test('Home selector keeps the next event prominent and orders every later event', () => {
+  const { selectors, mockData } = loadCompiledModules();
+  const template = mockData.createMockDatabase().events[0];
+  const events = [
+    { ...template, id: 'latest', title: 'Latest', startsAt: '2026-08-20T18:00:00Z', endsAt: '2026-08-20T19:00:00Z' },
+    { ...template, id: 'next', title: 'Next', startsAt: '2026-08-02T18:00:00Z', endsAt: '2026-08-02T19:00:00Z' },
+    { ...template, id: 'middle', title: 'Middle', startsAt: '2026-08-10T18:00:00Z', endsAt: '2026-08-10T19:00:00Z' },
+  ];
+
+  const home = selectors.selectHomeViewModel({ events, now: new Date('2026-08-01T00:00:00Z') });
+
+  assert.equal(home.heroEvent.id, 'next');
+  assert.deepEqual(home.upcomingEvents.map((event) => event.id), ['middle', 'latest']);
+});
+
+test('Home renders each additional upcoming event with its exact-ID open action', () => {
+  const home = read('src/screens/HomeScreen.tsx');
+
+  assert.match(home, /appSections\.upcomingEvents\.map\(\(event\) =>/);
+  assert.match(home, /key=\{event\.id\}/);
+  assert.match(home, /onOpenEvent\?\.\(event\.id\)/);
+});
+
+test('event draft weekday agrees with its August 3 date', () => {
+  const eventData = read('src/features/events/eventData.ts');
+  assert.match(eventData, /dateLabel: 'Mon · Aug 3'/);
+  assert.doesNotMatch(eventData, /dateLabel: 'Sun · Aug 3'/);
 });
 
 test('Query and screens expose truthful event states without configured fixture fallback', () => {

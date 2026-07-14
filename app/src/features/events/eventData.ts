@@ -141,7 +141,7 @@ export const calendarDays: readonly CalendarDay[] = Array.from({ length: 28 }, (
 
 export const draftEventTemplate = {
   title: 'Neighborhood potluck on the green',
-  dateLabel: 'Sun · Aug 3',
+  dateLabel: 'Mon · Aug 3',
   timeLabel: '4:30 PM',
   location: 'Maple Grove Commons',
   notes: 'Ask each household to claim one dish and bring lawn games for kids.',

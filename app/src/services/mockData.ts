@@ -17,7 +17,7 @@ export type MockDatabase = {
 };
 
 export function createMockDatabase(): MockDatabase {
-  const media = [heroEvent, eventDetail]
+  const media = [heroEvent]
     .filter((event) => event.coverUri)
     .map((event, index) => ({
       id: `media-${event.id}`,
@@ -30,7 +30,7 @@ export function createMockDatabase(): MockDatabase {
 
   return {
     groups: [...groupsOverview.groups],
-    events: [heroEvent, eventDetail],
+    events: [heroEvent],
     rsvps: [...eventRsvps],
     activity: [...homeActivity],
     messages: [...eventThread],

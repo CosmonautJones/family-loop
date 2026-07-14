@@ -49,6 +49,21 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
           </View>
         </SurfaceCard> : null}
 
+        {appSections.upcomingEvents.length > 0 ? <SurfaceCard>
+          <Text style={styles.cardTitle}>Also coming up</Text>
+          <View style={styles.upcomingList}>
+            {appSections.upcomingEvents.map((event) => (
+              <View key={event.id} style={styles.upcomingItem}>
+                <View style={styles.upcomingCopy}>
+                  <Text style={styles.listTitle}>{event.title}</Text>
+                  <Text style={styles.cardCopy}>{event.detail}</Text>
+                </View>
+                <Button label="Open" tone="secondary" onPress={() => onOpenEvent?.(event.id)} />
+              </View>
+            ))}
+          </View>
+        </SurfaceCard> : null}
+
         {appSections.activity.length > 0 ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
@@ -164,6 +179,18 @@ const styles = StyleSheet.create({
     color: palette.text,
     fontSize: 15,
     fontWeight: '800',
+  },
+  upcomingList: {
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  upcomingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  upcomingCopy: {
+    flex: 1,
   },
   memoryRow: {
     flexDirection: 'row',

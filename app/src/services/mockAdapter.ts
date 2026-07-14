@@ -50,7 +50,9 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       },
     },
     events: {
-      listEvents: (groupId) => wait(db.events.filter((event) => !groupId || event.groupId === groupId)),
+      listEvents: (groupId) => wait(db.events
+        .filter((event) => !groupId || event.groupId === groupId)
+        .sort((left, right) => left.startsAt.localeCompare(right.startsAt) || left.id.localeCompare(right.id))),
       getEvent: (eventId) => wait(db.events.find((event) => event.id === eventId) ?? null),
       createEvent: (payload: CreateEventPayload) => {
         const event = {

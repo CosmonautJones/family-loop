@@ -41,6 +41,11 @@ export function selectHomeViewModel(input: HomeViewModelInput = defaultHomeInput
       description: nextEvent.description,
       coverUri: nextEvent.coverUri ?? '',
     } : null,
+    upcomingEvents: upcomingEvents.slice(1).map((event) => ({
+      id: event.id,
+      title: event.title,
+      detail: `${formatEventDateRange(event.startsAt, event.endsAt)} · ${event.location}`,
+    })),
     weekSummary: nextEvent ? homeWeekSummary : 'No upcoming events yet',
     recentActivityTitle: homeActivityTitle,
     activity,
