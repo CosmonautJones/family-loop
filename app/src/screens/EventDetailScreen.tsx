@@ -33,7 +33,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const eventDetail = eventQuery.data?.groupId === activeGroupId ? selectEventDetailViewModel(eventQuery.data, rsvpsQuery.data ?? [], []) : null;
   const identity = auth.session;
-  const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status ?? 'maybe';
+  const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status;
   const stagedPhotoCount = useLoopedInStore((state) => state.stagedPhotoCounts[eventId ?? ''] ?? 0);
   const stageEventPhoto = useLoopedInStore((state) => state.stageEventPhoto);
   const reminderDrafted = useLoopedInStore((state) => Boolean(state.reminderDrafts[eventId ?? '']));
@@ -68,7 +68,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             <Text style={styles.heroLocation}>{eventDetail.location}</Text>
             <Text style={styles.heroCopy}>{eventDetail.description}</Text>
           </View>
-          <Chip label={`${eventDetail.rsvpSummary} / ${rsvpLabels[currentStatus]}`} tone="sage" />
+          <Chip label={`${eventDetail.rsvpSummary} / ${currentStatus ? rsvpLabels[currentStatus] : 'No response'}`} tone="sage" />
         </View>
         <View style={styles.actionRow}>
           {rsvpOptions.map((status) => (
@@ -76,13 +76,14 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               key={status}
               label={rsvpLabels[status]}
               tone={status === currentStatus ? 'primary' : 'secondary'}
+              disabled={upsertRsvp.isPending}
               onPress={() => setRsvpStatus(status)}
             />
           ))}
           <Button label={stagedPhotoCount > 0 ? 'Stage another' : 'Stage photo'} tone="ghost" onPress={() => stageEventPhoto(eventDetail.id)} />
         </View>
-        <Text style={styles.responseNote}>{rsvpNotes[currentStatus]}</Text>
-        {upsertRsvp.isError ? <Text style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
+        <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
+        {upsertRsvp.isError ? <Text accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
       </View>
 
       <SurfaceCard>

@@ -120,13 +120,13 @@ const styles = StyleSheet.create({
   },
   day: {
     width: '12.5%',
-    minWidth: 40,
-    height: 64,
-    borderRadius: 18,
+    minWidth: 30,
+    height: 56,
+    borderRadius: 14,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: 'rgba(32,22,28,0.08)',
-    padding: 10,
+    padding: 8,
   },
   dayActive: {
     backgroundColor: 'rgba(113,54,93,0.08)',

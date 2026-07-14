@@ -20,6 +20,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/services/mockAdapter.ts'),
     path.join(appRoot, 'src/services/mockData.ts'),
     path.join(appRoot, 'src/services/durableLocalAdapter.ts'),
+    path.join(appRoot, 'src/features/events/createEvent.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -32,6 +33,7 @@ function loadCompiledModules() {
     mockAdapter: require(path.join(outDir, 'services/mockAdapter.js')),
     mockData: require(path.join(outDir, 'services/mockData.js')),
     durableAdapter: require(path.join(outDir, 'services/durableLocalAdapter.js')),
+    createEvent: require(path.join(outDir, 'features/events/createEvent.js')),
   };
 }
 
@@ -425,6 +427,56 @@ test('mock service completes create, refetch, same-detail, and RSVP loop', async
   const rsvps = await service.rsvps.listRsvps(created.id);
   assert.equal(rsvps.length, 1);
   assert.equal(rsvps[0].status, 'maybe');
+});
+
+test('event form validates required family-plan details and accepts optional notes', () => {
+  const { createEvent } = loadCompiledModules();
+  assert.deepEqual(createEvent.validateEventForm({ title: '', date: 'July 31', time: 'morning', location: '', description: '' }), {
+    title: 'Add a name so your family can recognize the plan.',
+    location: 'Add the place everyone should use.',
+    date: 'Use a date in YYYY-MM-DD format.',
+    time: 'Use a time in HH:MM format.',
+  });
+  assert.deepEqual(createEvent.validateEventForm({ title: 'Door County weekend', date: '2026-07-31', time: '16:30', location: 'Fish Creek', description: '' }), {});
+  assert.deepEqual(createEvent.validateEventForm({ title: 'Impossible trip', date: '2026-02-30', time: '10:00', location: 'Nowhere', description: '' }), {
+    date: 'Choose a real calendar date and time.',
+  });
+
+  const screen = read('src/screens/CreateEventScreen.tsx');
+  assert.match(screen, /catch \{ \/\* The mutation exposes a retryable error below and keeps every field intact/);
+  assert.match(screen, /Try saving again/);
+  assert.match(screen, /accessibilityLiveRegion="assertive"/);
+  assert.match(screen, /disabled=\{createEvent\.isPending/);
+  const detail = read('src/screens/EventDetailScreen.tsx');
+  assert.match(detail, /No response/);
+  assert.match(detail, /Choose a response so your family can plan around you/);
+});
+
+test('created trip and RSVP survive durable reconstruction and feed all family plan views', async () => {
+  const { durableAdapter, selectors } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const first = durableAdapter.createDurableLocalLoopedInService(storage);
+  const created = await first.events.createEvent({
+    groupId: 'group-jones-family', title: 'Wave 2 family trip', startsAt: '2027-05-01T15:00:00Z',
+    endsAt: '2027-05-01T17:00:00Z', location: 'Lakefront', description: '',
+  });
+  await first.rsvps.upsertRsvp({ eventId: created.id, personId: 'person-you', personName: 'Alex Jones', status: 'declined' });
+
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  const events = await reconstructed.events.listEvents('group-jones-family');
+  const exact = await reconstructed.events.getEvent(created.id);
+  const family = selectors.selectFamilyViewModel((await reconstructed.groups.listGroups())[0], await reconstructed.groups.listGroupMembers('group-jones-family'), events, new Date('2027-04-01T00:00:00Z'));
+  assert.equal(exact.title, 'Wave 2 family trip');
+  assert.equal((await reconstructed.rsvps.listRsvps(created.id))[0].status, 'declined');
+  const home = selectors.selectHomeViewModel({ events, now: new Date('2027-04-01T00:00:00Z') });
+  assert.ok(home.heroEvent.id === created.id || home.upcomingEvents.some((event) => event.id === created.id));
+  assert.ok(selectors.selectCalendarViewModel(events).agenda.some((event) => event.id === created.id));
+  assert.match(family.upcomingLabel, /upcoming trip/);
 });
 
 test('mock service is group-scoped, chronological, and instance-local', async () => {

@@ -3,14 +3,17 @@ import { palette, radii } from '../theme/tokens';
 
 import type { ButtonTone } from '../types/ui';
 
-export function Button({ label, tone = 'primary', onPress }: { label: string; tone?: ButtonTone; onPress?: () => void }) {
+export function Button({ label, tone = 'primary', disabled = false, onPress }: { label: string; tone?: ButtonTone; disabled?: boolean; onPress?: () => void }) {
   return (
     <Pressable
       accessibilityLabel={label}
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
       style={[
         styles.base,
+        disabled && styles.disabled,
         tone === 'primary' ? styles.primary : tone === 'ghost' ? styles.ghost : styles.secondary,
       ]}
     >
@@ -34,6 +37,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     justifyContent: 'center',
   },
+  disabled: { opacity: 0.55 },
   primary: {
     backgroundColor: '#fff',
   },

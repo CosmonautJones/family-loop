@@ -10,6 +10,38 @@ export type CreateEventDraft = {
   coverTreatment: string;
 };
 
+export type EventForm = {
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  description: string;
+};
+
+export type RequiredEventField = 'title' | 'date' | 'time' | 'location';
+export type EventFormErrors = Partial<Record<RequiredEventField, string>>;
+
+export function validateEventForm(form: EventForm): EventFormErrors {
+  const errors: EventFormErrors = {};
+  if (!form.title.trim()) errors.title = 'Add a name so your family can recognize the plan.';
+  if (!form.location.trim()) errors.location = 'Add the place everyone should use.';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date)) errors.date = 'Use a date in YYYY-MM-DD format.';
+  if (!/^\d{2}:\d{2}$/.test(form.time)) errors.time = 'Use a time in HH:MM format.';
+  const startsAt = new Date(`${form.date}T${form.time}:00`);
+  if (!errors.date && !errors.time) {
+    const [year, month, day] = form.date.split('-').map(Number);
+    const [hour, minute] = form.time.split(':').map(Number);
+    const valid = !Number.isNaN(startsAt.getTime())
+      && startsAt.getFullYear() === year
+      && startsAt.getMonth() === month - 1
+      && startsAt.getDate() === day
+      && startsAt.getHours() === hour
+      && startsAt.getMinutes() === minute;
+    if (!valid) errors.date = 'Choose a real calendar date and time.';
+  }
+  return errors;
+}
+
 export type CreateEventField = {
   label: string;
   value: string;

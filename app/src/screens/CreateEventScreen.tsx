@@ -1,154 +1,137 @@
-import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useCreateEventMutation } from '../app/queries';
 import { Button } from '../components/Button';
-import { Chip } from '../components/Chip';
-import { SurfaceCard } from '../components/SurfaceCard';
-import { buildCreateEventFields, summarizeDraftEvent } from '../features/events';
+import { useAuthSession } from '../features/auth/AuthSessionProvider';
+import { validateEventForm, type EventForm, type EventFormErrors, type RequiredEventField } from '../features/events/createEvent';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
-import { useCreateEventMutation } from '../app/queries';
-import { useAuthSession } from '../features/auth/AuthSessionProvider';
+
+const fieldLabels: Record<RequiredEventField, string> = {
+  title: 'Trip or event name',
+  date: 'Start date',
+  time: 'Start time',
+  location: 'Location',
+};
+
+function initialForm(): EventForm {
+  const nextWeek = new Date();
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  return {
+    title: '',
+    date: `${nextWeek.getFullYear()}-${String(nextWeek.getMonth() + 1).padStart(2, '0')}-${String(nextWeek.getDate()).padStart(2, '0')}`,
+    time: '10:00',
+    location: '',
+    description: '',
+  };
+}
 
 export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string) => void }) {
-  const [draftStatus, setDraftStatus] = useState('Ready to save on this device.');
-  const [previewVisible, setPreviewVisible] = useState(false);
-  const draftEvent = useLoopedInStore((state) => state.draftEvent);
-  const updateDraftEvent = useLoopedInStore((state) => state.updateDraftEvent);
-  const resetDraftEvent = useLoopedInStore((state) => state.resetDraftEvent);
+  const [form, setForm] = useState<EventForm>(initialForm);
+  const [errors, setErrors] = useState<EventFormErrors>({});
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const createEvent = useCreateEventMutation();
   const auth = useAuthSession();
-  const draftFields = buildCreateEventFields(draftEvent).filter((field) => !['Invitees', 'Cover treatment'].includes(field.label));
-  const resetDraft = () => {
-    resetDraftEvent();
-    setDraftStatus('Draft reset to the starter plan.');
-    setPreviewVisible(false);
+  const fields = useMemo(() => ([
+    { key: 'title' as const, placeholder: 'Door County weekend', inputMode: 'text' as const },
+    { key: 'date' as const, placeholder: 'YYYY-MM-DD', inputMode: 'numeric' as const },
+    { key: 'time' as const, placeholder: 'HH:MM', inputMode: 'numeric' as const },
+    { key: 'location' as const, placeholder: 'City, address, or meeting place', inputMode: 'text' as const },
+  ]), []);
+
+  const updateField = (key: keyof EventForm, value: string) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    if (key !== 'description') setErrors((current) => ({ ...current, [key]: undefined }));
+    if (createEvent.isError) createEvent.reset();
   };
+
   const submitEvent = async () => {
     if (createEvent.isPending || !activeGroupId) return;
-    setDraftStatus('Saving event…');
+    const nextErrors = validateEventForm(form);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+    const startsAt = new Date(`${form.date}T${form.time}:00`);
     try {
-      const startsAt = nextDraftStart(draftEvent.dateLabel, draftEvent.timeLabel);
       const event = await createEvent.mutateAsync({
         groupId: activeGroupId,
-        title: draftEvent.title,
+        title: form.title.trim(),
         startsAt: startsAt.toISOString(),
         endsAt: new Date(startsAt.getTime() + 2 * 60 * 60 * 1000).toISOString(),
-        location: draftEvent.location,
-        description: draftEvent.notes,
+        location: form.location.trim(),
+        description: form.description.trim(),
       });
-      resetDraftEvent();
-      setDraftStatus('Event saved.');
+      setForm(initialForm());
       onCreated?.(event.id);
-    } catch (cause: unknown) {
-      setDraftStatus(cause instanceof Error ? cause.message : 'We couldn’t save this event. Try again.');
-    }
+    } catch { /* The mutation exposes a retryable error below and keeps every field intact. */ }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.eyebrow}>Create</Text>
-      <Text style={styles.title}>Plan the next event</Text>
-      <Text style={styles.subtitle}>
-        Capture the four details people need before they can reply.
-      </Text>
+      <Text style={styles.title}>Plan something together</Text>
+      <Text style={styles.subtitle}>Share the essentials now. Your family can sort out the rest on the event page.</Text>
 
-      <View style={styles.heroCard}>
-        <Text style={styles.heroMini}>{auth.session ? `Planning as ${auth.session.displayName}` : 'Mobile draft'}</Text>
-        <Text style={styles.heroTitle}>{draftEvent.title}</Text>
-        <Text style={styles.heroCopy}>{summarizeDraftEvent(draftEvent)}</Text>
-        <Text style={styles.statusText}>{draftStatus}</Text>
-        <View style={styles.heroActions}>
-          <Button label={createEvent.isPending ? 'Saving…' : 'Create event'} onPress={submitEvent} />
-          <Button label={previewVisible ? 'Hide preview' : 'Preview invite'} tone="secondary" onPress={() => setPreviewVisible((visible) => !visible)} />
-          <Button label="Reset" tone="ghost" onPress={resetDraft} />
-        </View>
-      </View>
-
-      {previewVisible ? (
-        <SurfaceCard>
-          <Text style={styles.cardTitle}>Invite preview</Text>
-          <Text style={styles.cardCopy}>{draftEvent.title}</Text>
-          <Text style={styles.previewCopy}>{summarizeDraftEvent(draftEvent)}</Text>
-        </SurfaceCard>
-      ) : null}
-
-      <SurfaceCard>
-        <View style={styles.rowBetween}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Phone-first details</Text>
-            <Text style={styles.cardCopy}>Keep the first pass short enough to finish while standing in the kitchen.</Text>
+      <View style={styles.formCard}>
+        <Text style={styles.formTitle}>New family plan</Text>
+        <Text style={styles.formCopy}>{auth.session ? `Planning as ${auth.session.displayName}` : 'Saved to this device'}</Text>
+        {fields.map((field) => (
+          <View key={field.key} style={styles.field}>
+            <Text style={styles.label}>{fieldLabels[field.key]}</Text>
+            <TextInput
+              accessibilityLabel={errors[field.key] ? `${fieldLabels[field.key]}, error: ${errors[field.key]}` : fieldLabels[field.key]}
+              autoCapitalize={field.key === 'date' || field.key === 'time' ? 'none' : 'sentences'}
+              inputMode={field.inputMode}
+              onChangeText={(value) => updateField(field.key, value)}
+              placeholder={field.placeholder}
+              placeholderTextColor={palette.muted}
+              style={[styles.input, errors[field.key] && styles.inputError]}
+              value={form[field.key]}
+            />
+            {errors[field.key] ? <Text accessibilityLiveRegion="polite" style={styles.errorText}>{errors[field.key]}</Text> : null}
           </View>
-          <Chip label="4 fields" tone="sky" />
+        ))}
+        <View style={styles.field}>
+          <Text style={styles.label}>Notes (optional)</Text>
+          <TextInput
+            accessibilityLabel="Notes, optional"
+            multiline
+            onChangeText={(value) => updateField('description', value)}
+            placeholder="What should everyone know?"
+            placeholderTextColor={palette.muted}
+            style={[styles.input, styles.notesInput]}
+            value={form.description}
+          />
         </View>
-        <View style={styles.fieldList}>
-          {draftFields.map((field) => (
-            <View key={field.label} style={styles.fieldCard}>
-              <Text style={styles.fieldLabel}>{field.label}</Text>
-              <Text style={styles.fieldValue}>{field.value}</Text>
-              <Text style={styles.fieldHelper}>{field.helper}</Text>
-            </View>
-          ))}
-        </View>
-      </SurfaceCard>
 
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>One-tap edits</Text>
-        <Text style={styles.cardCopy}>Quick changes keep the mobile draft moving without opening a long form.</Text>
-        <View style={styles.heroActions}>
-          <Button label="Make it brunch" onPress={() => updateDraftEvent({ title: 'Sunday brunch after the market' })} />
-          <Button label="Move later" tone="secondary" onPress={() => updateDraftEvent({ timeLabel: '6:00 PM' })} />
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Invitees</Text>
-        <Text style={styles.cardCopy}>Seed the draft with the people who need context first.</Text>
-        <View style={styles.chipRow}>
-          {draftEvent.invitees.map((invitee) => (
-            <Chip key={invitee} label={invitee} tone="sage" />
-          ))}
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Cover treatment</Text>
-        <Text style={styles.cardCopy}>{draftEvent.coverTreatment}</Text>
-        <Text style={styles.coverNote}>
-          Use a warm visual treatment now, then swap in a real photo after the event happens.
-        </Text>
-      </SurfaceCard>
+        {createEvent.isError ? (
+          <Text accessibilityLiveRegion="assertive" style={styles.submitError}>
+            {createEvent.error instanceof Error ? createEvent.error.message : 'We couldn’t save this plan. Your details are still here.'}
+          </Text>
+        ) : null}
+        {!activeGroupId ? <Text style={styles.submitError}>Choose a family before creating a plan.</Text> : null}
+        <Button
+          disabled={createEvent.isPending || !activeGroupId}
+          label={createEvent.isPending ? 'Saving plan…' : createEvent.isError ? 'Try saving again' : 'Create family plan'}
+          onPress={submitEvent}
+        />
+      </View>
     </ScrollView>
   );
 }
 
-function nextDraftStart(dateLabel: string, timeLabel: string) {
-  const parsed = new Date(`${dateLabel.replace(/^[A-Za-z]{3}\s*·\s*/, '')}, ${new Date().getFullYear()} ${timeLabel}`);
-  if (Number.isNaN(parsed.getTime())) throw new Error('The draft date or time could not be understood.');
-  if (parsed.getTime() < Date.now()) parsed.setFullYear(parsed.getFullYear() + 1);
-  return parsed;
-}
-
 const styles = StyleSheet.create({
-  container: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
+  container: { width: '100%', maxWidth: '100%', minWidth: 0, padding: spacing.lg, gap: spacing.md, paddingBottom: 40, boxSizing: 'border-box' },
   eyebrow: { marginTop: 18, color: palette.muted, textTransform: 'uppercase', letterSpacing: 1.8, fontSize: 11, fontWeight: '800' },
-  title: { color: palette.text, fontSize: 32, lineHeight: 34, fontWeight: '900', marginTop: 10 },
-  subtitle: { color: palette.muted, fontSize: 15, lineHeight: 24, marginTop: 10, marginBottom: 8 },
-  heroCard: { backgroundColor: palette.plum, borderRadius: 28, padding: spacing.lg, gap: spacing.sm },
-  heroMini: { color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', letterSpacing: 1.4, fontSize: 11, fontWeight: '700' },
-  heroTitle: { color: '#fff', fontSize: 28, lineHeight: 30, fontWeight: '900' },
-  heroCopy: { color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22 },
-  statusText: { color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 18, fontWeight: '800' },
-  heroActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 6 },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
-  cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
-  cardCopy: { color: palette.muted, fontSize: 14, lineHeight: 20, marginTop: 4 },
-  fieldList: { gap: spacing.sm, marginTop: spacing.md },
-  fieldCard: { borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)', padding: 14 },
-  fieldLabel: { color: palette.muted, textTransform: 'uppercase', letterSpacing: 1.2, fontSize: 11, fontWeight: '800' },
-  fieldValue: { color: palette.text, fontSize: 16, lineHeight: 22, fontWeight: '800', marginTop: 6 },
-  fieldHelper: { color: palette.muted, fontSize: 13, lineHeight: 18, marginTop: 6 },
-  previewCopy: { color: palette.text, fontSize: 15, lineHeight: 22, fontWeight: '800', marginTop: spacing.sm },
-  chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: spacing.md },
-  coverNote: { color: palette.text, fontSize: 14, lineHeight: 20, marginTop: spacing.sm },
+  title: { maxWidth: '100%', color: palette.text, fontSize: 32, lineHeight: 36, fontWeight: '900' },
+  subtitle: { maxWidth: '100%', color: palette.muted, fontSize: 15, lineHeight: 23 },
+  formCard: { width: '100%', maxWidth: 620, minWidth: 0, alignSelf: 'center', borderRadius: 28, backgroundColor: palette.plum, padding: spacing.lg, gap: spacing.md, boxSizing: 'border-box' },
+  formTitle: { color: '#fff', fontSize: 23, lineHeight: 28, fontWeight: '900' },
+  formCopy: { color: 'rgba(255,255,255,0.82)', fontSize: 14, lineHeight: 20 },
+  field: { width: '100%', minWidth: 0, gap: 6 },
+  label: { color: '#fff', fontSize: 14, lineHeight: 20, fontWeight: '800' },
+  input: { width: '100%', minWidth: 0, minHeight: 48, boxSizing: 'border-box', borderRadius: 14, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 22, paddingHorizontal: 14, paddingVertical: 11 },
+  inputError: { borderColor: palette.coral },
+  notesInput: { minHeight: 96, textAlignVertical: 'top' },
+  errorText: { color: '#fff', fontSize: 13, lineHeight: 18, fontWeight: '700' },
+  submitError: { borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.14)', color: '#fff', fontSize: 14, lineHeight: 20, padding: 12, fontWeight: '700' },
 });
