@@ -1,5 +1,12 @@
 # Review Log
 
+## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 3 external final gate
+
+- External review after records correction `a1e68a1`: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
+- Authoritative independent TAP summaries are root 39/39 and app-local 28/28. Each result comes from its own command summary; the no-count-mirroring closeout discipline remains in force.
+- Warnings are unchanged: lint is a placeholder, the React Native Web shadow-style advisory is pre-existing, and live Supabase/RLS/private storage/signed access, multi-user behavior, and real-device Safari/Chrome remain unverified.
+- Wave 3 remains **COMPLETE** only for the durable-local comment/browser-photo checkpoint; the broader campaign remains **IN PROGRESS**.
+
 ## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 3 final closeout
 
 - Accepted commits: `daf38d6`, `7eae2b5`, `630ad85`, and `e242761`.

@@ -268,4 +268,10 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Wave 3 is **COMPLETE**. This completes the authorized local event-comment/browser-photo checkpoint, not the broader campaign or its remote private-media objective.
 - Closeout discipline correction: the first Wave 3 record mirrored the root 39/39 count into the app result. Future records must capture each command's own TAP summary rather than copying a count across suites.
 
+### Wave 3 external final gate
+
+- External review after records correction `a1e68a1` accepted Wave 3 at **AMBER / PROCEED-WARN with zero blockers**.
+- The authoritative independent command summaries remain root tests PASS 39/39 and app-local tests PASS 28/28; counts are transcribed from each suite and are not mirrored.
+- Placeholder lint and the pre-existing React Native Web shadow-style warning remain advisories. Live Supabase, RLS, private object storage/signed access, multi-user behavior, and physical iOS Safari/Android Chrome remain unverified and are not inferred.
+
 Current truth: **Waves 0-3 are complete. Independent Wave 3 Run 2 accepted the corrected implementation at AMBER / PROCEED-WARN with zero blockers. No remote/live Supabase, RLS, private object storage, multi-user, or real-device capability is claimed complete.**

@@ -51,6 +51,7 @@
 - [x] Root tests 39/39 and app-local tests 28/28; TypeScript, harness, web export, and diff check pass.
 - [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers after Run 1 draft-retention and file-guard fixes.
 - [x] Closeout counts were read from each command's own TAP summary; the earlier mirrored app 39/39 claim is superseded.
+- [x] External final gate after `a1e68a1` — AMBER / PROCEED-WARN, zero blockers; authoritative root 39/39 and app-local 28/28 remain independently transcribed.
 - [ ] Placeholder lint, pre-existing React Native Web shadow warning, live Supabase/RLS/private storage/signed access, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
 
 ## OPORD campaign documentation
