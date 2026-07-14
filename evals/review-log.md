@@ -1,5 +1,14 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-DATA-002 Run 3 ordering correction
+
+- Implementation commit reviewed: `43c8567`.
+- Correctness repair: mock event results now sort by parsed epoch rather than lexical ISO text, so differing UTC offsets are ordered by their actual instants. Valid dates sort before invalid dates; invalid strings sort lexically for deterministic behavior; equal values use the stable event ID tie-break.
+- Executable regression: the mixed-offset counterexample inserts `2026-08-01T10:00:00-05:00` (15:00Z) before `2026-08-01T14:30:00Z` and proves the 14:30Z event is returned first.
+- Automated verification: root `npm test` PASS (16/16); app `npm test` PASS (10/10); app `npx tsc --noEmit` PASS; harness PASS; `git diff --check` PASS.
+- Scope: only the mock adapter, its focused executable test, and truthful mission records changed. No dependency, Auth, schema, migration, remote, environment, deployment, or later-mission work was absorbed.
+- Gate: PASS. Numeric instant ordering closes the mixed-offset chronology gap while preserving deterministic malformed-input behavior.
+
 ## 2026-07-13 — FAMILY-LOOP-DATA-002 targeted RED correction
 
 - Commit reviewed: `5d10bc1`, following the immutable closeout record `79a72bb`.
