@@ -1,6 +1,14 @@
 alter table public.loopedin_groups
   add column if not exists creation_key uuid;
 
+alter table public.loopedin_groups
+  drop constraint if exists loopedin_groups_created_by_fkey,
+  add constraint loopedin_groups_created_by_fkey foreign key (created_by) references auth.users(id) on delete restrict;
+
+alter table public.loopedin_events
+  drop constraint if exists loopedin_events_created_by_fkey,
+  add constraint loopedin_events_created_by_fkey foreign key (created_by) references auth.users(id) on delete restrict;
+
 create unique index if not exists loopedin_groups_creator_creation_key_idx
   on public.loopedin_groups (created_by, creation_key)
   where creation_key is not null;
@@ -11,7 +19,7 @@ create table if not exists public.loopedin_group_invitations (
   invited_by uuid not null references auth.users(id) on delete cascade,
   invitee_email text not null,
   token_hash bytea not null unique,
-  status text not null default 'pending' check (status in ('pending', 'accepted', 'declined', 'revoked')),
+  status text not null default 'pending' check (status in ('pending', 'accepted', 'declined', 'revoked', 'expired')),
   expires_at timestamptz not null,
   responded_by uuid references auth.users(id) on delete set null,
   responded_at timestamptz,
@@ -28,21 +36,25 @@ alter table public.loopedin_group_invitations enable row level security;
 
 revoke all on public.loopedin_group_invitations from anon, authenticated;
 
-drop policy if exists "invitations_select_owner" on public.loopedin_group_invitations;
-create policy "invitations_select_owner" on public.loopedin_group_invitations
-for select to authenticated
-using (
-  exists (
-    select 1
-    from public.loopedin_group_members member
-    where member.group_id = loopedin_group_invitations.group_id
-      and member.user_id = (select auth.uid())
-      and member.role = 'owner'
-  )
-);
-
 revoke insert, update, delete on public.loopedin_groups from authenticated;
 revoke insert, update, delete on public.loopedin_group_members from authenticated;
+
+do $$
+declare malformed record;
+begin
+  select grp.id, count(member.user_id) filter (where member.role = 'owner') as owner_count
+  into malformed
+  from public.loopedin_groups grp
+  left join public.loopedin_group_members member on member.group_id = grp.id
+  group by grp.id
+  having count(member.user_id) filter (where member.role = 'owner') <> 1
+  limit 1;
+  if found then
+    raise exception 'Cannot enforce one-owner invariant: group % has % owners.', malformed.id, malformed.owner_count
+      using errcode = '23514';
+  end if;
+end;
+$$;
 
 create or replace function loopedin_private.assert_one_group_owner()
 returns trigger
@@ -107,6 +119,11 @@ begin
     select * into strict created_group
     from public.loopedin_groups
     where created_by = actor_id and creation_key = target_creation_key;
+    if created_group.name <> btrim(target_name)
+       or created_group.description <> coalesce(btrim(target_description), '')
+       or created_group.kind <> target_kind then
+      raise exception 'The creation key was already used with different group details.' using errcode = '23505';
+    end if;
   end if;
 
   insert into public.loopedin_group_members (group_id, user_id, role)
@@ -117,7 +134,7 @@ begin
 end;
 $$;
 
-create or replace function public.loopedin_create_group_invite(target_group_id uuid, target_email text)
+create or replace function public.loopedin_create_group_invite(target_group_id uuid, target_email text, target_token text)
 returns jsonb
 language plpgsql
 security definer
@@ -126,42 +143,46 @@ as $$
 declare
   actor_id uuid := auth.uid();
   normalized_email text := lower(btrim(target_email));
-  raw_token text;
+  normalized_token text := lower(btrim(target_token));
+  requested_hash bytea;
   created_invite public.loopedin_group_invitations;
 begin
   if actor_id is null then raise exception 'Authentication required.' using errcode = '42501'; end if;
   if normalized_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$' then
     raise exception 'Enter a valid email address.' using errcode = '22023';
   end if;
+  if normalized_token !~ '^[0-9a-f]{64}$' then
+    raise exception 'Invitation token must contain 32 random bytes encoded as hexadecimal.' using errcode = '22023';
+  end if;
+  requested_hash := extensions.digest(decode(normalized_token, 'hex'), 'sha256');
   if not exists (
     select 1 from public.loopedin_group_members
     where group_id = target_group_id and user_id = actor_id and role = 'owner'
   ) then raise exception 'Only the group owner can invite members.' using errcode = '42501'; end if;
 
   update public.loopedin_group_invitations
-  set status = 'revoked'
+  set status = 'expired'
   where group_id = target_group_id and invitee_email = normalized_email
     and status = 'pending' and expires_at <= now();
 
-  if exists (
-    select 1 from public.loopedin_group_invitations
-    where group_id = target_group_id and invitee_email = normalized_email and status = 'pending'
-  ) then
-    return jsonb_build_object('ok', false, 'code', 'already_pending');
-  end if;
-
-  raw_token := encode(extensions.gen_random_bytes(32), 'hex');
-  insert into public.loopedin_group_invitations
-    (group_id, invited_by, invitee_email, token_hash, expires_at)
-  values
-    (target_group_id, actor_id, normalized_email, extensions.digest(raw_token, 'sha256'), now() + interval '7 days')
-  returning * into created_invite;
+  begin
+    insert into public.loopedin_group_invitations
+      (group_id, invited_by, invitee_email, token_hash, expires_at)
+    values
+      (target_group_id, actor_id, normalized_email, requested_hash, now() + interval '7 days')
+    returning * into created_invite;
+  exception when unique_violation then
+    select * into created_invite from public.loopedin_group_invitations
+    where group_id = target_group_id and invitee_email = normalized_email and token_hash = requested_hash and status = 'pending';
+    if created_invite.id is null then
+      return jsonb_build_object('ok', false, 'code', 'already_pending');
+    end if;
+  end;
 
   return jsonb_build_object(
     'ok', true,
-    'code', 'created',
+    'code', case when created_invite.created_at < now() - interval '1 millisecond' then 'existing' else 'created' end,
     'invitationId', created_invite.id,
-    'token', raw_token,
     'expiresAt', created_invite.expires_at
   );
 end;
@@ -174,15 +195,28 @@ security definer
 set search_path = pg_catalog, public, extensions
 as $$
 declare
-  actor_email text := lower(coalesce(auth.jwt()->>'email', ''));
   matching public.loopedin_group_invitations;
+  masked_email text;
 begin
+  update public.loopedin_group_invitations
+  set status = 'expired'
+  where token_hash = case when lower(btrim(coalesce(target_token, ''))) ~ '^[0-9a-f]{64}$'
+      then extensions.digest(decode(lower(btrim(target_token)), 'hex'), 'sha256') else null end
+    and status = 'pending' and expires_at <= now();
   select * into matching
   from public.loopedin_group_invitations
-  where token_hash = extensions.digest(coalesce(target_token, ''), 'sha256')
-    and status = 'pending' and expires_at > now() and invitee_email = actor_email;
+  where token_hash = case when lower(btrim(coalesce(target_token, ''))) ~ '^[0-9a-f]{64}$'
+    then extensions.digest(decode(lower(btrim(target_token)), 'hex'), 'sha256') else null end
+    and status = 'pending' and expires_at > now();
   if matching.id is null then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
-  return jsonb_build_object('ok', true, 'code', 'ready', 'groupId', matching.group_id, 'expiresAt', matching.expires_at);
+  masked_email := left(split_part(matching.invitee_email, '@', 1), 1) || '***@' || split_part(matching.invitee_email, '@', 2);
+  return (
+    select jsonb_build_object('ok', true, 'code', 'ready', 'groupId', grp.id, 'groupName', grp.name,
+      'inviterName', coalesce(profile.display_name, 'Family organizer'), 'maskedEmail', masked_email, 'expiresAt', matching.expires_at)
+    from public.loopedin_groups grp
+    left join public.loopedin_profiles profile on profile.id = matching.invited_by
+    where grp.id = matching.group_id
+  );
 end;
 $$;
 
@@ -200,10 +234,15 @@ begin
   if actor_id is null then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
   select * into matching
   from public.loopedin_group_invitations
-  where token_hash = extensions.digest(coalesce(target_token, ''), 'sha256')
+  where token_hash = case when lower(btrim(coalesce(target_token, ''))) ~ '^[0-9a-f]{64}$'
+      then extensions.digest(decode(lower(btrim(target_token)), 'hex'), 'sha256') else null end
     and invitee_email = actor_email and status in ('pending', 'accepted')
   for update;
-  if matching.id is null or matching.expires_at <= now() or (matching.status = 'accepted' and matching.responded_by <> actor_id) then
+  if matching.id is not null and matching.status = 'pending' and matching.expires_at <= now() then
+    update public.loopedin_group_invitations set status = 'expired' where id = matching.id;
+  end if;
+  if not exists (select 1 from auth.users where id = actor_id and email_confirmed_at is not null and lower(email) = actor_email)
+     or matching.id is null or matching.expires_at <= now() or (matching.status = 'accepted' and matching.responded_by <> actor_id) then
     return jsonb_build_object('ok', false, 'code', 'unavailable');
   end if;
   if matching.status = 'pending' then
@@ -232,13 +271,21 @@ begin
   if actor_id is null then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
   select * into matching
   from public.loopedin_group_invitations
-  where token_hash = extensions.digest(coalesce(target_token, ''), 'sha256')
-    and invitee_email = actor_email and status = 'pending' and expires_at > now()
+  where token_hash = case when lower(btrim(coalesce(target_token, ''))) ~ '^[0-9a-f]{64}$'
+      then extensions.digest(decode(lower(btrim(target_token)), 'hex'), 'sha256') else null end
+    and invitee_email = actor_email and status in ('pending', 'declined')
   for update;
-  if matching.id is null then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
-  update public.loopedin_group_invitations
-  set status = 'declined', responded_by = actor_id, responded_at = now()
-  where id = matching.id;
+  if matching.id is not null and matching.status = 'pending' and matching.expires_at <= now() then
+    update public.loopedin_group_invitations set status = 'expired' where id = matching.id;
+  end if;
+  if matching.id is null or matching.expires_at <= now() or (matching.status = 'declined' and matching.responded_by <> actor_id) then
+    return jsonb_build_object('ok', false, 'code', 'unavailable');
+  end if;
+  if matching.status = 'pending' then
+    update public.loopedin_group_invitations
+    set status = 'declined', responded_by = actor_id, responded_at = now()
+    where id = matching.id;
+  end if;
   return jsonb_build_object('ok', true, 'code', 'declined');
 end;
 $$;
@@ -274,8 +321,13 @@ begin
     select 1 from public.loopedin_group_members
     where group_id = matching.group_id and user_id = auth.uid() and role = 'owner'
   ) then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
-  if matching.status = 'pending' then
+  if matching.status = 'pending' and matching.expires_at <= now() then
+    update public.loopedin_group_invitations set status = 'expired' where id = matching.id;
+    return jsonb_build_object('ok', false, 'code', 'not_pending');
+  elsif matching.status = 'pending' then
     update public.loopedin_group_invitations set status = 'revoked' where id = matching.id;
+  elsif matching.status <> 'revoked' then
+    return jsonb_build_object('ok', false, 'code', 'not_pending');
   end if;
   return jsonb_build_object('ok', true, 'code', 'revoked');
 end;
@@ -372,12 +424,14 @@ with check (
 );
 
 revoke insert, delete on public.loopedin_notifications from authenticated;
+revoke update on public.loopedin_notifications from authenticated;
+grant update (read) on public.loopedin_notifications to authenticated;
 
 revoke all on function loopedin_private.assert_one_group_owner() from public;
 grant execute on function loopedin_private.assert_one_group_owner() to postgres;
 
 revoke all on function public.loopedin_create_group(text, text, text, uuid) from public;
-revoke all on function public.loopedin_create_group_invite(uuid, text) from public;
+revoke all on function public.loopedin_create_group_invite(uuid, text, text) from public;
 revoke all on function public.loopedin_validate_group_invite(text) from public;
 revoke all on function public.loopedin_accept_group_invite(text) from public;
 revoke all on function public.loopedin_decline_group_invite(text) from public;
@@ -388,8 +442,8 @@ revoke all on function public.loopedin_leave_group(uuid) from public;
 revoke all on function public.loopedin_transfer_group_ownership(uuid, uuid) from public;
 
 grant execute on function public.loopedin_create_group(text, text, text, uuid) to authenticated;
-grant execute on function public.loopedin_create_group_invite(uuid, text) to authenticated;
-grant execute on function public.loopedin_validate_group_invite(text) to authenticated;
+grant execute on function public.loopedin_create_group_invite(uuid, text, text) to authenticated;
+grant execute on function public.loopedin_validate_group_invite(text) to anon, authenticated;
 grant execute on function public.loopedin_accept_group_invite(text) to authenticated;
 grant execute on function public.loopedin_decline_group_invite(text) to authenticated;
 grant execute on function public.loopedin_list_group_invites(uuid) to authenticated;

@@ -281,6 +281,11 @@ await expectOk(await remove(owner.token, second.path), 'owner removes removed-us
 uploadedPaths.delete(second.path);
 await expectOk(await rpc('loopedin_finalize_media_deletion', owner.token, { target_media_id: second.id }), 'owner finalizes removed-user media');
 
+const deletedGroup = spawnSync('docker', ['exec', '-i', 'supabase_db_family-loop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
+  input: `delete from public.loopedin_groups where id = '${group.id}';`,
+  encoding: 'utf8',
+});
+assert.equal(deletedGroup.status, 0, `cleanup test group: ${deletedGroup.stderr}`);
 for (const user of users) {
   await expectOk(await request(`/auth/v1/admin/users/${user.id}`, { token: serviceKey, method: 'DELETE' }), 'cleanup test user');
 }
