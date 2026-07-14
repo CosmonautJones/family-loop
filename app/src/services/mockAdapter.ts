@@ -41,6 +41,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
     },
     groups: {
       listGroups: () => wait([...db.groups]),
+      listGroupMembers: (groupId) => wait([...(db.groups.find((group) => group.id === groupId)?.members ?? [])]),
       getGroup: (groupId) => wait(db.groups.find((group) => group.id === groupId) ?? null),
       createGroup: (payload: CreateGroupPayload) => {
         const group = { id: `group-created-${nextGroupId++}`, badge: 'New', tone: 'coral' as const, memberCount: 1, ...payload };

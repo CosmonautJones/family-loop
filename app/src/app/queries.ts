@@ -6,6 +6,7 @@ import { useLoopedInStore } from '../store/useLoopedInStore';
 export const queryKeys = {
   groups: ['groups'] as const,
   group: (groupId: string) => ['groups', groupId] as const,
+  groupMembers: (groupId: string) => ['groups', groupId, 'members'] as const,
   events: (groupId: string) => ['events', groupId] as const,
   event: (eventId: string) => ['event', eventId] as const,
   rsvps: (eventId: string) => ['rsvps', eventId] as const,
@@ -26,6 +27,15 @@ export function useGroupsQuery(enabled = true) {
     queryKey: queryKeys.groups,
     queryFn: () => loopedInService.groups.listGroups(),
     enabled,
+  });
+}
+
+export function useActiveGroupMembersQuery() {
+  const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
+  return useQuery({
+    queryKey: queryKeys.groupMembers(activeGroupId),
+    queryFn: () => loopedInService.groups.listGroupMembers(activeGroupId),
+    enabled: Boolean(activeGroupId),
   });
 }
 

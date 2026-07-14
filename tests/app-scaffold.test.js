@@ -80,6 +80,7 @@ test('durable local service persists the family loop across reconstruction and c
   const seedGroups = await first.groups.listGroups();
   assert.equal(seedGroups[0].name, 'Jones Family');
   assert.equal(seedGroups[0].members.length, 5);
+  assert.equal((await first.groups.listGroupMembers('group-jones-family')).length, 5);
   assert.equal((await first.events.listEvents('group-jones-family')).length, 4);
 
   const event = await first.events.createEvent({
@@ -103,6 +104,53 @@ test('durable local service persists the family loop across reconstruction and c
   await reconstructed.resetAndReseed();
   assert.equal(await reconstructed.events.getEvent(event.id), null);
   assert.equal((await reconstructed.events.listEvents('group-jones-family')).length, mockData.createMockDatabase().events.length);
+});
+
+test('group member reads return the five Jones members, stay group-isolated, and survive durable reconstruction', async () => {
+  const { durableAdapter, mockAdapter, mockData } = loadCompiledModules();
+  const seed = mockData.createMockDatabase();
+  const otherMember = { id: 'person-other', name: 'Other Person', initials: 'OP', avatarUri: '' };
+  seed.groups.push({
+    id: 'group-other', name: 'Other Family', description: 'Isolation fixture', kind: 'family',
+    badge: 'Family', tone: 'sage', memberCount: 1, members: [otherMember],
+  });
+
+  const mock = mockAdapter.createMockLoopedInService(seed);
+  const jonesMembers = await mock.groups.listGroupMembers('group-jones-family');
+  assert.deepEqual(jonesMembers.map((member) => member.id), [
+    'person-you', 'person-maya', 'person-emma', 'person-noah', 'person-ruth',
+  ]);
+  const session = await mock.auth.getSession();
+  assert.equal(session.userId, 'person-you');
+  assert.equal(jonesMembers.find((member) => member.id === session.userId).name, session.displayName);
+  assert.deepEqual(await mock.groups.listGroupMembers('group-other'), [otherMember]);
+  assert.deepEqual(await mock.groups.listGroupMembers('group-missing'), []);
+
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const first = durableAdapter.createDurableLocalLoopedInService(storage, () => seed);
+  assert.equal((await first.groups.listGroupMembers('group-jones-family')).length, 5);
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage, () => seed);
+  assert.deepEqual(
+    (await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.id),
+    jonesMembers.map((member) => member.id),
+  );
+  assert.deepEqual(await reconstructed.groups.listGroupMembers('group-other'), [otherMember]);
+});
+
+test('Supabase member adapter scopes memberships before resolving profiles', () => {
+  const api = read('src/services/api.ts');
+  const supabase = read('src/services/supabaseAdapter.ts');
+  const queries = read('src/app/queries.ts');
+  assert.match(api, /listGroupMembers\(groupId: string\): Promise<Person\[\]>/);
+  assert.match(supabase, /from\('loopedin_group_members'\)[\s\S]*?select\('user_id'\)[\s\S]*?eq\('group_id', groupId\)/);
+  assert.match(supabase, /const profiles = await getProfiles\(userIds\)/);
+  assert.match(queries, /groupMembers: \(groupId: string\)/);
+  assert.match(queries, /loopedInService\.groups\.listGroupMembers\(activeGroupId\)/);
 });
 
 test('durable local service surfaces corrupt storage and write errors without silently resetting', async () => {

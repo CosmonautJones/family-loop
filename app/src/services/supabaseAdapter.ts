@@ -1,4 +1,4 @@
-import type { Event, EventActivity, EventMessage, Group, MediaItem, RSVP } from '../types/domain';
+import type { Event, EventActivity, EventMessage, Group, MediaItem, Person, RSVP } from '../types/domain';
 import type {
   AuthSession,
   CreateEventPayload,
@@ -108,6 +108,15 @@ function mapGroup(row: GroupRow, memberCount = 1): Group {
     tone: row.kind === 'family' ? 'coral' : 'sky',
     memberCount,
     coverUri: row.cover_url ?? undefined,
+  };
+}
+
+function mapProfile(profile: ProfileRow): Person {
+  return {
+    id: profile.id,
+    name: profile.display_name,
+    avatarUri: profile.avatar_url ?? '',
+    initials: profile.display_name.slice(0, 2).toUpperCase(),
   };
 }
 
@@ -313,6 +322,20 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const groups = (data ?? []) as GroupRow[];
         const counts = await countMembers(groups.map((group) => group.id));
         return groups.map((group) => mapGroup(group, counts.get(group.id) ?? 1));
+      },
+      async listGroupMembers(groupId) {
+        const { data, error } = await supabase
+          .from('loopedin_group_members')
+          .select('user_id')
+          .eq('group_id', groupId);
+        throwIfError(error);
+
+        const userIds = (data ?? []).map((membership) => membership.user_id as string);
+        const profiles = await getProfiles(userIds);
+        return userIds.flatMap((userId) => {
+          const profile = profiles.get(userId);
+          return profile ? [mapProfile(profile)] : [];
+        });
       },
       async getGroup(groupId) {
         const { data, error } = await supabase

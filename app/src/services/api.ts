@@ -6,6 +6,7 @@ import type {
   EventMessage,
   MemoryItem,
   MediaItem,
+  Person,
 } from '../types/domain';
 
 export interface AuthSession {
@@ -31,6 +32,7 @@ export interface CreateGroupPayload {
 
 export interface GroupsApi {
   listGroups(): Promise<Group[]>;
+  listGroupMembers(groupId: string): Promise<Person[]>;
   getGroup(groupId: string): Promise<Group | null>;
   createGroup(payload: CreateGroupPayload): Promise<Group>;
   updateGroup(groupId: string, patch: Partial<Pick<Group, 'name' | 'description'>>): Promise<Group>;
