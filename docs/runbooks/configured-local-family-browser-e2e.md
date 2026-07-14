@@ -88,6 +88,16 @@ This journey was completed against the loopback Supabase stack with `EXPO_PUBLIC
 
 This proves the configured app against local Supabase Auth, Postgres/RLS, and private Storage with multiple real browser sessions. It does **not** prove a hosted deployment, hosted-project migration/backup/restore, production email delivery, physical iOS Safari or Android Chrome, VoiceOver/TalkBack, moderated older-adult use, or practical browser 200% zoom. Those checks remain `NOT RUN` pending the appropriate environment, authorization, devices, or participants.
 
+## Read-only integrity verification
+
+Before cleanup, verify the canonical populated scenario without changing it:
+
+```powershell
+./scripts/verify-local-supabase-browser-scenario.ps1 -RunMarker family-browser-v1
+```
+
+The verifier hard-refuses non-loopback Supabase and opens a read-only SQL transaction. It checks the four synthetic identities, three-member Jones Family, three trips, multi-user comments and RSVPs, three active photos, generated notifications, private Storage-object ownership/path parity, and zero outsider-associated family data. This proves database associations; the separate lifecycle and media E2E suites remain the authority for RLS denial behavior.
+
 ## Cleanup and zero-residue assertion
 
 Close browser sessions, then run:
