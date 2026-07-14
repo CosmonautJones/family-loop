@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useCreateEventMutation } from '../app/queries';
 import { Button } from '../components/Button';
@@ -29,14 +29,15 @@ function initialForm(): EventForm {
 export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string) => void }) {
   const [form, setForm] = useState<EventForm>(initialForm);
   const [errors, setErrors] = useState<EventFormErrors>({});
+  const inputRefs = useRef<Partial<Record<RequiredEventField, TextInput | null>>>({});
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const createEvent = useCreateEventMutation();
   const auth = useAuthSession();
   const fields = useMemo(() => ([
-    { key: 'title' as const, placeholder: 'Door County weekend', inputMode: 'text' as const },
-    { key: 'date' as const, placeholder: 'YYYY-MM-DD', inputMode: 'numeric' as const },
-    { key: 'time' as const, placeholder: 'HH:MM', inputMode: 'numeric' as const },
-    { key: 'location' as const, placeholder: 'City, address, or meeting place', inputMode: 'text' as const },
+    { key: 'title' as const, placeholder: 'Door County weekend', inputMode: 'text' as const, autoComplete: 'off' as const },
+    { key: 'date' as const, placeholder: 'YYYY-MM-DD', inputMode: 'numeric' as const, autoComplete: 'off' as const },
+    { key: 'time' as const, placeholder: 'HH:MM', inputMode: 'numeric' as const, autoComplete: 'off' as const },
+    { key: 'location' as const, placeholder: 'City, address, or meeting place', inputMode: 'text' as const, autoComplete: 'street-address' as const },
   ]), []);
 
   const updateField = (key: keyof EventForm, value: string) => {
@@ -49,7 +50,11 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
     if (createEvent.isPending || !activeGroupId) return;
     const nextErrors = validateEventForm(form);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      const firstInvalid = (['title', 'date', 'time', 'location'] as const).find((key) => nextErrors[key]);
+      if (firstInvalid) inputRefs.current[firstInvalid]?.focus();
+      return;
+    }
     const startsAt = new Date(`${form.date}T${form.time}:00`);
     try {
       const event = await createEvent.mutateAsync({
@@ -68,32 +73,39 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.eyebrow}>Create</Text>
-      <Text style={styles.title}>Plan something together</Text>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Plan something together</Text>
       <Text style={styles.subtitle}>Share the essentials now. Your family can sort out the rest on the event page.</Text>
 
       <View style={styles.formCard}>
-        <Text style={styles.formTitle}>New family plan</Text>
+        <Text role="heading" {...{ 'aria-level': 2 }} style={styles.formTitle}>New family plan</Text>
         <Text style={styles.formCopy}>{auth.session ? `Planning as ${auth.session.displayName}` : 'Saved to this device'}</Text>
         {fields.map((field) => (
           <View key={field.key} style={styles.field}>
-            <Text style={styles.label}>{fieldLabels[field.key]}</Text>
+            <Text nativeID={`${field.key}-label`} style={styles.label}>{fieldLabels[field.key]}</Text>
             <TextInput
-              accessibilityLabel={errors[field.key] ? `${fieldLabels[field.key]}, error: ${errors[field.key]}` : fieldLabels[field.key]}
+              {...(errors[field.key] ? { 'aria-describedby': `${field.key}-error`, 'aria-invalid': true } : { 'aria-invalid': false })}
+              ref={(node) => { inputRefs.current[field.key] = node; }}
+              accessibilityLabel={fieldLabels[field.key]}
+              accessibilityHint={errors[field.key]}
+              accessibilityLabelledBy={`${field.key}-label`}
+              autoComplete={field.autoComplete}
               autoCapitalize={field.key === 'date' || field.key === 'time' ? 'none' : 'sentences'}
               inputMode={field.inputMode}
+              returnKeyType={field.key === 'location' ? 'done' : 'next'}
               onChangeText={(value) => updateField(field.key, value)}
               placeholder={field.placeholder}
               placeholderTextColor={palette.muted}
               style={[styles.input, errors[field.key] && styles.inputError]}
               value={form[field.key]}
             />
-            {errors[field.key] ? <Text accessibilityLiveRegion="polite" style={styles.errorText}>{errors[field.key]}</Text> : null}
+            {errors[field.key] ? <Text nativeID={`${field.key}-error`} accessibilityRole="alert" style={styles.errorText}>{errors[field.key]}</Text> : null}
           </View>
         ))}
         <View style={styles.field}>
           <Text style={styles.label}>Notes (optional)</Text>
           <TextInput
             accessibilityLabel="Notes, optional"
+            autoComplete="off"
             multiline
             onChangeText={(value) => updateField('description', value)}
             placeholder="What should everyone know?"
@@ -104,11 +116,11 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
         </View>
 
         {createEvent.isError ? (
-          <Text accessibilityLiveRegion="assertive" style={styles.submitError}>
+          <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.submitError}>
             {createEvent.error instanceof Error ? createEvent.error.message : 'We couldn’t save this plan. Your details are still here.'}
           </Text>
         ) : null}
-        {!activeGroupId ? <Text style={styles.submitError}>Choose a family before creating a plan.</Text> : null}
+        {!activeGroupId ? <Text accessibilityRole="alert" style={styles.submitError}>Choose a family before creating a plan.</Text> : null}
         <Button
           disabled={createEvent.isPending || !activeGroupId}
           label={createEvent.isPending ? 'Saving plan…' : createEvent.isError ? 'Try saving again' : 'Create family plan'}

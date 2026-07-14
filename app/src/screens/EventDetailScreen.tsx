@@ -132,7 +132,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         <Text style={styles.heroMini}>{eventDetail.timeLabel}</Text>
         <View style={styles.heroHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>{eventDetail.title}</Text>
+            <Text role="heading" {...{ 'aria-level': 1 }} style={styles.heroTitle}>{eventDetail.title}</Text>
             <Text style={styles.heroLocation}>{eventDetail.location}</Text>
             <Text style={styles.heroCopy}>{eventDetail.description}</Text>
           </View>
@@ -151,11 +151,11 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           <Button label="Add photo" tone="ghost" disabled={uploadMedia.isPending} onPress={choosePhoto} />
         </View>
         <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
-        {upsertRsvp.isError ? <Text accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
+        {upsertRsvp.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
       </View>
 
       <SurfaceCard>
-        <Text style={styles.cardTitle}>Event details</Text>
+        <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event details</Text>
         <View style={styles.journey}>
           {eventDetail.sections.map((section, index) => (
             <View key={section.title} style={styles.journeyRow}>
@@ -172,13 +172,13 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       <SurfaceCard>
         <View style={styles.galleryHeader}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Event gallery</Text>
+            <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event gallery</Text>
             <Text style={styles.cardCopy}>Share a family photo here so it stays with the plan and conversation.</Text>
           </View>
           <Chip label={`${mediaQuery.data?.length ?? 0} shared`} tone={mediaQuery.data?.length ? 'coral' : 'sky'} />
         </View>
         {mediaQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading shared photos…</Text> : null}
-        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><Button label="Retry photos" tone="secondary" onPress={() => mediaQuery.refetch()} /></View> : null}
+        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><Button label="Retry photos" tone="secondary" onPress={() => mediaQuery.refetch()} /></View> : null}
         {mediaQuery.isSuccess && mediaQuery.data.length === 0 ? <Text style={styles.cardCopy}>No photos yet. Add the first family moment.</Text> : null}
         {mediaQuery.isSuccess && mediaQuery.data.length > 0 ? (
           <View style={styles.galleryGrid}>
@@ -193,7 +193,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                   </Pressable>
                 ) : <Text style={styles.photoMeta}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` via ${item.sourceName}` : ''}</Text> : null}
                 <Button
-                  label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? 'Removing…' : 'Remove photo'}
+                  label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? `Removing ${item.caption}…` : `Remove ${item.caption}`}
                   tone="ghost"
                   disabled={deleteMedia.isPending}
                   onPress={() => {
@@ -206,26 +206,26 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           </View>
         ) : null}
         <View style={styles.photoComposer}>
-          <Text style={styles.listTitle}>Add a photo</Text>
+          <Text role="heading" {...{ 'aria-level': 3 }} style={styles.listTitle}>Add a photo</Text>
           <Button label={photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'} tone="secondary" disabled={uploadMedia.isPending} onPress={choosePhoto} />
-          <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Or paste an HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri.startsWith('data:') ? 'Image file selected' : photoUri} editable={!photoUri.startsWith('data:') && !uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Or paste an HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri.startsWith('data:') ? 'Image file selected' : photoUri} editable={!photoUri.startsWith('data:') && !uploadMedia.isPending} />
           {photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
           <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} />
           <TextInput accessibilityLabel="Image description" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Describe the image for family members who cannot see it" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Photographer name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Photographer name (for Unsplash photos)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS Unsplash photo page (when applicable)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Photographer name (for Unsplash photos)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS Unsplash photo page (when applicable)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} />
           <Button label={uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'} disabled={uploadMedia.isPending} onPress={submitPhoto} />
-          {photoError || uploadMedia.isError ? <Text accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
+          {photoError || uploadMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
           {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
-          {deleteMedia.isError ? <Text accessibilityLiveRegion="assertive" style={styles.threadError}>{deleteMedia.error instanceof Error ? deleteMedia.error.message : 'We couldn’t remove that photo.'}</Text> : null}
+          {deleteMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{deleteMedia.error instanceof Error ? deleteMedia.error.message : 'We couldn’t remove that photo.'}</Text> : null}
         </View>
       </SurfaceCard>
 
       <SurfaceCard>
-        <Text style={styles.cardTitle}>Thread</Text>
+        <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Thread</Text>
         {messagesQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading the event conversation…</Text> : null}
         {messagesQuery.isError ? (
-          <View style={styles.feedback}><Text accessibilityLiveRegion="assertive" style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text><Button label="Retry conversation" tone="secondary" onPress={() => messagesQuery.refetch()} /></View>
+          <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text><Button label="Retry conversation" tone="secondary" onPress={() => messagesQuery.refetch()} /></View>
         ) : null}
         {messagesQuery.isSuccess && messagesQuery.data.length === 0 ? <Text style={styles.cardCopy}>No messages yet. Start the plan here.</Text> : null}
         {messagesQuery.isSuccess && messagesQuery.data.length > 0 ? (
@@ -242,6 +242,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         <View style={styles.composer}>
           <TextInput
             accessibilityLabel="Message"
+            autoComplete="off"
             multiline
             editable={!sendMessage.isPending}
             onChangeText={(value) => { setMessageDraft(value); sendMessage.reset(); }}
@@ -261,7 +262,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           </Pressable>
         </View>
         {sendMessage.isError ? (
-          <View style={styles.feedback}><Text accessibilityLiveRegion="assertive" style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text><Button label="Retry sending" tone="secondary" disabled={sendDisabled} onPress={submitMessage} /></View>
+          <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text><Button label="Retry sending" tone="secondary" disabled={sendDisabled} onPress={submitMessage} /></View>
         ) : null}
         {sendMessage.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Comment shared.</Text> : null}
       </SurfaceCard>
@@ -278,7 +279,7 @@ function isSafeHttpsUrl(value?: string): value is string {
 }
 
 function DetailState({ title, detail, backLabel, onBack }: { title: string; detail: string; backLabel: string; onBack?: () => void }) {
-  return <View style={styles.state}>{onBack ? <Button label={backLabel} onPress={onBack} /> : null}<SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+  return <View accessibilityLiveRegion="polite" style={styles.state}>{onBack ? <Button label={backLabel} onPress={onBack} /> : null}<SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({

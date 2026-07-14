@@ -16,7 +16,7 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Calendar</Text>
-      <Text style={styles.title}>Review upcoming family plans.</Text>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Review upcoming family plans.</Text>
       <Text style={styles.subtitle}>{viewModel.calendarSummary}</Text>
 
       <SurfaceCard>
@@ -63,7 +63,7 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
 }
 
 function CalendarState({ title, detail }: { title: string; detail: string }) {
-  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({

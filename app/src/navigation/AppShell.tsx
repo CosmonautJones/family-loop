@@ -46,14 +46,6 @@ export function AppShell() {
     <AppBackground>
       <View style={styles.root}>
         <ActiveFamilyLabel />
-        <View style={styles.content}>
-          {activeSurface === 'EventDetail' ? <EventDetailScreen eventId={activeEventId} backLabel={`Back to ${activeTab.toLowerCase()}`} onBack={closeEventDetail} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={(eventId) => openEventDetail('Home', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={(eventId) => openEventDetail('Calendar', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Create' ? <CreateEventScreen onCreated={(eventId) => openEventDetail('Create', eventId)} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Memories' ? <MemoriesScreen onOpenEvent={(eventId) => openEventDetail('Memories', eventId)} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Family' ? <GroupsScreen /> : null}
-        </View>
         <View style={[styles.navOuter, { width: Math.max(width - (2 * spacing.md), 0) }]}>
           {auth.configured ? (
             <Pressable accessibilityRole="button" disabled={auth.pending} onPress={auth.logout} style={styles.signOut}>
@@ -67,8 +59,10 @@ export function AppShell() {
                   key={tab.label}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: tab.active }}
+                  aria-selected={tab.active}
                   onPress={() => setActiveTab(tab.label)}
                   style={styles.navItem}
+                  tabIndex={tab.active ? 0 : -1}
                 >
                   {tab.active ? <LinearGradient colors={gradients.sunset} style={styles.activePill} /> : null}
                   <Ionicons
@@ -77,11 +71,18 @@ export function AppShell() {
                     color={tab.active ? palette.white : palette.muted}
                   />
                   <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
-                  {tab.active ? <Text style={styles.selectedText}>Selected</Text> : null}
                 </Pressable>
               ))}
             </View>
           </BlurView>
+        </View>
+        <View role="main" style={styles.content}>
+          {activeSurface === 'EventDetail' ? <EventDetailScreen eventId={activeEventId} backLabel={`Back to ${activeTab.toLowerCase()}`} onBack={closeEventDetail} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={(eventId) => openEventDetail('Home', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={(eventId) => openEventDetail('Calendar', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Create' ? <CreateEventScreen onCreated={(eventId) => openEventDetail('Create', eventId)} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Memories' ? <MemoriesScreen onOpenEvent={(eventId) => openEventDetail('Memories', eventId)} /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Family' ? <GroupsScreen /> : null}
         </View>
       </View>
     </AppBackground>
@@ -109,7 +110,7 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
     minWidth: 0,
     boxSizing: 'border-box',
-    paddingBottom: 150,
+    paddingBottom: 180,
   },
   familyLabel: { minHeight: 48, paddingHorizontal: spacing.lg, paddingTop: spacing.md, color: palette.plum, fontSize: 14, fontWeight: '800', textAlignVertical: 'center' },
   navOuter: {
@@ -160,16 +161,11 @@ const styles = StyleSheet.create({
   },
   navText: {
     color: palette.muted,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
     flexShrink: 1,
   },
   navTextActive: {
     color: palette.white,
-  },
-  selectedText: {
-    color: palette.white,
-    fontSize: 8,
-    fontWeight: '800',
   },
 });

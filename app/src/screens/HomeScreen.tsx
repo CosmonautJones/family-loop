@@ -25,7 +25,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
         <Text style={styles.eyebrow}>What’s next</Text>
         {heroEvent ? (
           <View>
-            <Text style={styles.title}>{heroEvent.title}</Text>
+            <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{heroEvent.title}</Text>
             <Text style={styles.subtitle}>{heroEvent.timeLabel} · {heroEvent.location}</Text>
             <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.description} height={260} />
             <View style={styles.heroActions}>
@@ -59,7 +59,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
                   <Text style={styles.listTitle}>{event.title}</Text>
                   <Text style={styles.cardCopy}>{event.detail}</Text>
                 </View>
-                <Button label="Open" tone="secondary" onPress={() => onOpenEvent?.(event.id)} />
+                <Button label={`Open ${event.title}`} tone="secondary" onPress={() => onOpenEvent?.(event.id)} />
               </View>
             ))}
           </View>
@@ -95,7 +95,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
           {appSections.memories.map((memory) => (
             <View key={memory.eventId} style={styles.memoryTile}>
               <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={`${memory.eyebrow} · ${memory.subtitle}`} height={172} />
-              <View style={styles.memoryAction}><Button label="Open event" tone="secondary" onPress={() => onOpenEvent?.(memory.eventId)} /></View>
+              <View style={styles.memoryAction}><Button label={`Open ${memory.title}`} tone="secondary" onPress={() => onOpenEvent?.(memory.eventId)} /></View>
             </View>
           ))}
         </View> : null}
@@ -105,7 +105,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
 }
 
 function ScreenState({ title, detail, onRetry }: { title: string; detail: string; onRetry?: () => void }) {
-  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <Button label="Retry" tone="secondary" onPress={onRetry} /> : null}</SurfaceCard></View>;
+  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <Button label="Retry" tone="secondary" onPress={onRetry} /> : null}</SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({

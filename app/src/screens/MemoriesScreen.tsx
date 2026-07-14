@@ -16,7 +16,7 @@ export function MemoriesScreen({ onOpenEvent }: { onOpenEvent?: (eventId: string
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Family memories</Text>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Family memories</Text>
       <Text style={styles.cardCopy}>Completed plans stay connected to the photos and conversation your family shared.</Text>
       {memories.length === 0 ? <SurfaceCard><Text style={styles.cardTitle}>No completed events yet</Text><Text style={styles.cardCopy}>Memories will appear after a family event ends.</Text></SurfaceCard> : null}
       {memories.map((memory) => (
@@ -25,7 +25,7 @@ export function MemoriesScreen({ onOpenEvent }: { onOpenEvent?: (eventId: string
           <Text style={styles.cardTitle}>{memory.title}</Text>
           <Text style={styles.cardCopy}>{memory.detail}</Text>
           <Text style={styles.cardCopy}>{memory.photoCount} {memory.photoCount === 1 ? 'photo' : 'photos'} · {memory.commentCount} {memory.commentCount === 1 ? 'comment' : 'comments'}</Text>
-          <View style={styles.actionRow}><Button label="Open event" onPress={() => onOpenEvent?.(memory.id)} /></View>
+          <View style={styles.actionRow}><Button label={`Open ${memory.title}`} onPress={() => onOpenEvent?.(memory.id)} /></View>
         </SurfaceCard>
       ))}
     </ScrollView>
@@ -33,7 +33,7 @@ export function MemoriesScreen({ onOpenEvent }: { onOpenEvent?: (eventId: string
 }
 
 function MemoryState({ title, detail, onRetry }: { title: string; detail: string; onRetry?: () => void }) {
-  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <View style={styles.actionRow}><Button label="Retry" onPress={onRetry} /></View> : null}</SurfaceCard></View>;
+  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <View style={styles.actionRow}><Button label="Retry" onPress={onRetry} /></View> : null}</SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({

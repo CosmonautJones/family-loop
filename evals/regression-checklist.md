@@ -72,6 +72,17 @@
 
 ## OPORD campaign documentation
 
+## Wave 5 mobile accessibility implementation
+
+- [x] Exactly one main landmark wraps the active screen and the fixed navigation appears before it in DOM order.
+- [x] Only the selected tab is in the sequential keyboard tab order; all tabs remain operable and expose selected state.
+- [x] Navigation labels are at least 11px, targets remain at least 48px, and main content clears the fixed navigation.
+- [x] Create validation focuses the first invalid field and exposes stable invalid/error relationships without changing submitted data.
+- [x] Screen/state headings, contextual action names, informative photos, decorative avatars, and live/error semantics have focused contract coverage.
+- [x] Root tests 44/44 and app-local tests 44/44; TypeScript, harness, and Expo web export pass.
+- [ ] Actual rendered AX tree, keyboard journey, zoom/reflow, and phone viewport review — pending independent gate.
+- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, and moderated older-adult testing — `NOT RUN`.
+
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.
 - [x] Exactly 17 OPORDs and 60 task rows preserved after platform correction.
 

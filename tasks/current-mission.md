@@ -292,3 +292,11 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Live Supabase/RLS/private storage, multi-user behavior, and physical iOS Safari/Android Chrome remain unverified and are not inferred from the accepted local gate.
 
 Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the corrected implementation at AMBER / PROCEED-WARN with zero blockers. The broader campaign remains IN PROGRESS; no remote/live Supabase, RLS, private object storage, multi-user, or physical-device capability is claimed complete.**
+
+## Wave 5 implementation status — mobile accessibility and older-adult clarity
+
+- The scoped implementation adds one main landmark, DOM-first fixed navigation with roving tab focus and explicit selected state, level-appropriate headings, contextual actions, informative photo labels, decorative avatars, and urgent/non-urgent state announcements.
+- Create validation focuses the first invalid field and exposes stable labels with invalid/described-by error relationships. Conservative autocomplete and keyboard hints were added without a dependency or API change.
+- Navigation targets remain at least 48px, labels are at least 11px, and main content has additional bottom clearance for long phone forms.
+- Fresh implementation evidence: root tests PASS 44/44; app-local tests PASS 44/44; TypeScript, harness, and Expo web export PASS. Lint exits 0 but remains a placeholder warning.
+- Wave 5 is **AWAITING INDEPENDENT REVIEW**. Rendered AX state, keyboard/zoom/reflow checks, physical iOS Safari/Android Chrome, VoiceOver/TalkBack, reduced motion, and moderated older-adult evidence are not self-certified and remain pending or `NOT RUN`.

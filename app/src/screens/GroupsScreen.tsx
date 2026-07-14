@@ -15,26 +15,26 @@ export function GroupsScreen() {
   const retry = () => Promise.all([groupQuery.refetch(), membersQuery.refetch(), eventsQuery.refetch()]);
 
   if (loading) {
-    return <View style={styles.state} accessibilityLiveRegion="polite"><ActivityIndicator color={palette.plum} /><Text style={styles.stateTitle}>Loading your family…</Text></View>;
+    return <View style={styles.state} accessibilityLiveRegion="polite"><ActivityIndicator color={palette.plum} /><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>Loading your family…</Text></View>;
   }
   if (error) {
     return (
       <View style={styles.state} accessibilityLiveRegion="polite">
-        <Text style={styles.stateTitle}>We couldn't load your family.</Text>
+        <Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>We couldn't load your family.</Text>
         <Text style={styles.cardCopy}>{error instanceof Error ? error.message : 'Please try again.'}</Text>
         <Button label="Try again" onPress={retry} />
       </View>
     );
   }
   if (!groupQuery.data) {
-    return <View style={styles.state}><Text style={styles.stateTitle}>No active family yet.</Text><Text style={styles.cardCopy}>Your family details will appear here when you join one.</Text></View>;
+    return <View style={styles.state}><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>No active family yet.</Text><Text style={styles.cardCopy}>Your family details will appear here when you join one.</Text></View>;
   }
 
   const family = selectFamilyViewModel(groupQuery.data, membersQuery.data ?? [], eventsQuery.data ?? []);
   return (
     <ScrollView contentContainerStyle={[styles.container, { width: Math.max(width - (2 * spacing.lg), 0) }]}>
       <Text style={styles.eyebrow}>Your family</Text>
-      <Text style={styles.title}>{family.name}</Text>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{family.name}</Text>
       <Text style={styles.subtitle}>{family.description}</Text>
       <SurfaceCard>
         <Text style={styles.cardTitle}>Family at a glance</Text>
@@ -49,7 +49,7 @@ export function GroupsScreen() {
           <View style={styles.list}>
             {family.members.map((member) => (
               <View key={member.id} style={styles.memberRow} accessibilityLabel={`${member.name}, ${member.role}`}>
-                <View style={styles.avatar} accessibilityLabel={`${member.name} avatar`}><Text style={styles.avatarText}>{member.initials}</Text></View>
+                <View accessible={false} style={styles.avatar}><Text style={styles.avatarText}>{member.initials}</Text></View>
                 <View style={styles.memberCopy}><Text style={styles.memberName}>{member.name}</Text><Text style={styles.role}>{member.role}</Text></View>
               </View>
             ))}

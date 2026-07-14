@@ -393,9 +393,11 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(family, /No family members are available yet/);
   assert.doesNotMatch(family, /features\/groups\/fixtures|Create group|friend-group/);
   assert.match(shell, /accessibilityState=\{\{ selected: tab\.active \}\}/);
+  assert.match(shell, /aria-selected=\{tab\.active\}/);
   assert.match(shell, /accessibilityRole="tablist"/);
   assert.match(shell, /accessibilityRole="tab"/);
-  assert.match(shell, /tab\.active \? <Text style=\{styles\.selectedText\}>Selected<\/Text> : null/);
+  assert.match(shell, /tabIndex=\{tab\.active \? 0 : -1\}/);
+  assert.doesNotMatch(shell, />Selected<\/Text>/);
   assert.doesNotMatch(shell, /accessibilityLabel=\{`\$\{tab\.label\}/);
   assert.match(shell, /function ActiveFamilyLabel\(\)/);
   assert.ok(shell.indexOf('<ActiveFamilyLabel />') > shell.indexOf("auth.groups?.length === 0"), 'family query child renders after auth gates');
@@ -404,6 +406,29 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(shellState, /pushState\(\{ loopedIn: true, canGoBack: true \}/);
   assert.match(shellState, /historyState\?\.loopedIn && historyState\.canGoBack/);
   assert.doesNotMatch(shellState, /history\.length/);
+});
+
+test('mobile shell and primary flows expose landmarks, headings, useful image names, and form errors', () => {
+  const shell = read('src/navigation/AppShell.tsx');
+  const create = read('src/screens/CreateEventScreen.tsx');
+  const detail = read('src/screens/EventDetailScreen.tsx');
+  const photoCard = read('src/components/PhotoCard.tsx');
+  const avatar = read('src/components/Avatar.tsx');
+  const mainIndex = shell.indexOf('<View role="main"');
+  const navIndex = shell.indexOf('accessibilityRole="tablist"');
+
+  assert.ok(navIndex >= 0 && navIndex < mainIndex, 'fixed navigation precedes the main landmark in DOM order');
+  assert.match(shell, /fontSize: 11/);
+  assert.match(shell, /paddingBottom: 180/);
+  assert.match(create, /inputRefs\.current\[firstInvalid\]\?\.focus\(\)/);
+  assert.match(create, /'aria-describedby': `\$\{field\.key\}-error`/);
+  assert.match(create, /'aria-invalid': true/);
+  assert.match(create, /nativeID=\{`\$\{field\.key\}-error`\}/);
+  assert.match(create, /role="heading"/);
+  assert.match(detail, /`Remove \$\{item\.caption\}`/);
+  assert.match(detail, /role="heading"/);
+  assert.match(photoCard, /accessibilityLabel=\{\[title, subtitle\]\.filter\(Boolean\)\.join\('\. '\)\}/);
+  assert.match(avatar, /accessible=\{false\}/);
 });
 
 test('Family roles come from membership data and decorative glows cannot widen the document', () => {
