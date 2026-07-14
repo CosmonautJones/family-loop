@@ -1,4 +1,5 @@
 import { draftEventTemplate } from './eventData';
+import type { Event, GroupMember } from '../../types/domain';
 
 export type CreateEventDraft = {
   title: string;
@@ -40,6 +41,35 @@ export function validateEventForm(form: EventForm): EventFormErrors {
     if (!valid) errors.date = 'Choose a real calendar date and time.';
   }
   return errors;
+}
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+export function eventToForm(event: Event): EventForm {
+  const startsAt = new Date(event.startsAt);
+  return {
+    title: event.title,
+    date: `${startsAt.getFullYear()}-${pad(startsAt.getMonth() + 1)}-${pad(startsAt.getDate())}`,
+    time: `${pad(startsAt.getHours())}:${pad(startsAt.getMinutes())}`,
+    location: event.location,
+    description: event.description,
+  };
+}
+
+export function buildEventUpdate(event: Event, form: EventForm) {
+  const startsAt = new Date(`${form.date}T${form.time}:00`);
+  const duration = Math.max(0, Date.parse(event.endsAt) - Date.parse(event.startsAt));
+  return {
+    title: form.title.trim(),
+    startsAt: startsAt.toISOString(),
+    endsAt: new Date(startsAt.getTime() + duration).toISOString(),
+    location: form.location.trim(),
+    description: form.description.trim(),
+  };
+}
+
+export function canManageEvent(event: Event, member?: GroupMember) {
+  return Boolean(member && (event.creatorId === member.id || member.role === 'owner' || member.role === 'admin'));
 }
 
 export type CreateEventField = {

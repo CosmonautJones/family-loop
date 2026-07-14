@@ -161,12 +161,21 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         if (!event) throw new Error(`Missing event ${eventId}`);
         if (event.creatorId !== profile.id && member.role !== 'owner' && member.role !== 'admin') throw new Error('Only the event creator or a family owner can update this event.');
         Object.assign(event, patch);
+        if (patch.location && event.timeline[0]?.title === 'Plan') {
+          event.timeline[0] = { ...event.timeline[0], detail: `${patch.location} · details shared with the family` };
+        }
         return changed(event);
       },
       deleteEvent: async (eventId) => {
         const { event, member, profile } = requireEventMembership(eventId);
         if (event.creatorId !== profile.id && member.role !== 'owner' && member.role !== 'admin') throw new Error('Only the event creator or a family owner can delete this event.');
         db.events = db.events.filter((event) => event.id !== eventId);
+        db.rsvps = db.rsvps.filter((rsvp) => rsvp.eventId !== eventId);
+        db.messages = db.messages.filter((message) => message.eventId !== eventId);
+        db.media = db.media.filter((media) => media.eventId !== eventId);
+        db.activity = db.activity.filter((activity) => activity.eventId !== eventId);
+        db.memories = db.memories.filter((memory) => memory.eventId !== eventId);
+        db.notifications = db.notifications.filter((notification) => notification.eventId !== eventId);
         return changed(undefined);
       },
     },

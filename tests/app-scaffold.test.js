@@ -613,7 +613,7 @@ test('mobile shell and primary flows expose landmarks, headings, useful image na
   const navIndex = shell.indexOf('accessibilityRole="tablist"');
 
   assert.ok(navIndex >= 0 && navIndex < mainIndex, 'fixed navigation precedes the main landmark in DOM order');
-  assert.match(shell, /fontSize: 11/);
+  assert.match(shell, /fontSize: 12/);
   assert.match(shell, /paddingBottom: 180/);
   assert.match(create, /inputRefs\.current\[firstInvalid\]\?\.focus\(\)/);
   assert.match(create, /'aria-describedby': `\$\{field\.key\}-error`/);
@@ -717,6 +717,84 @@ test('event form validates required family-plan details and accepts optional not
   const detail = read('src/screens/EventDetailScreen.tsx');
   assert.match(detail, /No response/);
   assert.match(detail, /Choose a response so your family can plan around you/);
+});
+
+test('event plan permissions, edits, and cancellation are durable and event-scoped', async () => {
+  const { createEvent, durableAdapter, mockData } = loadCompiledModules();
+  const seed = mockData.createMockDatabase();
+  const alex = seed.groups[0].members.find((member) => member.id === 'person-you');
+  const maya = seed.groups[0].members.find((member) => member.id === 'person-maya');
+  const noah = seed.groups[0].members.find((member) => member.id === 'person-noah');
+  const alexEvent = seed.events.find((event) => event.creatorId === 'person-you');
+  const mayaEvent = seed.events.find((event) => event.creatorId === 'person-maya');
+  assert.equal(createEvent.canManageEvent(alexEvent, alex), true, 'family owner can manage another creator’s plan');
+  assert.equal(createEvent.canManageEvent(alexEvent, maya), false, 'member cannot manage someone else’s plan');
+  assert.equal(createEvent.canManageEvent(mayaEvent, maya), true, 'creator can manage their own plan');
+  assert.equal(createEvent.canManageEvent(mayaEvent, noah), false);
+
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const service = durableAdapter.createDurableLocalLoopedInService(storage);
+  const created = await service.events.createEvent({ groupId: 'group-jones-family', title: 'Editable plan', startsAt: '2027-04-02T15:00:00Z', endsAt: '2027-04-02T18:00:00Z', location: 'Old place', description: 'Old notes' });
+  await service.rsvps.upsertRsvp({ eventId: created.id, status: 'going' });
+  await service.thread.sendMessage(created.id, 'Scoped comment');
+  await service.media.uploadMedia({ eventId: created.id, fileUri: 'data:image/png;base64,iVBORw0KGgo=', caption: 'Scoped photo', altText: 'A small test image' });
+  const updated = await service.events.updateEvent(created.id, { title: 'Updated family plan', location: 'New place', description: 'Bring lunch' });
+  assert.equal(updated.title, 'Updated family plan');
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  assert.equal((await reconstructed.events.getEvent(created.id)).location, 'New place');
+
+  await reconstructed.events.deleteEvent(created.id);
+  const envelope = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
+  assert.equal(envelope.database.events.some((item) => item.id === created.id), false);
+  assert.equal(envelope.database.rsvps.some((item) => item.eventId === created.id), false);
+  assert.equal(envelope.database.messages.some((item) => item.eventId === created.id), false);
+  assert.equal(envelope.database.media.some((item) => item.eventId === created.id), false);
+  assert.equal(await durableAdapter.createDurableLocalLoopedInService(storage).events.getEvent(created.id), null);
+});
+
+test('Event Detail keeps its 320px hierarchy simple and progressively discloses photo fields', () => {
+  const detail = read('src/screens/EventDetailScreen.tsx');
+  const queries = read('src/app/queries.ts');
+  const shell = read('src/navigation/AppShell.tsx');
+  assert.match(detail, /width <= 360 && styles\.heroHeaderNarrow/);
+  assert.match(detail, /heroHeaderNarrow: \{ flexDirection: 'column' \}/);
+  assert.ok(detail.indexOf('>Thread<') < detail.indexOf('!photoComposerOpen'), 'Thread should appear before the collapsed photo composer');
+  assert.match(detail, /!photoComposerOpen/);
+  assert.match(detail, /photoMode === 'file'/);
+  assert.match(detail, /photoMode === 'link'/);
+  assert.match(detail, /Add the photographer and Unsplash photo page/);
+  assert.match(detail, /canManageEvent\(eventQuery\.data, currentMember\)/);
+  assert.match(detail, /window\.confirm\(`Cancel/);
+  assert.match(queries, /useUpdateEventMutation/);
+  assert.match(queries, /useDeleteEventMutation/);
+  assert.match(shell, /fontSize: 12/);
+});
+
+test('failed durable plan updates and cancellations do not publish partial state', async () => {
+  const { durableAdapter } = loadCompiledModules();
+  const values = new Map();
+  let failWrites = false;
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => {
+      if (failWrites) throw new Error('simulated plan write failure');
+      values.set(key, value);
+    },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const service = durableAdapter.createDurableLocalLoopedInService(storage);
+  const before = await service.events.getEvent('event-charleston');
+  failWrites = true;
+  await assert.rejects(service.events.updateEvent(before.id, { title: 'Must not publish' }), /simulated plan write failure/);
+  await assert.rejects(service.events.deleteEvent(before.id), /simulated plan write failure/);
+  failWrites = false;
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  assert.equal((await reconstructed.events.getEvent(before.id)).title, before.title);
 });
 
 test('created trip and RSVP survive durable reconstruction and feed all family plan views', async () => {

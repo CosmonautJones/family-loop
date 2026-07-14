@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
@@ -7,8 +7,9 @@ import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
-import { useActiveGroupMembersQuery, useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
+import { useActiveGroupMembersQuery, useDeleteEventMutation, useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUpdateEventMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
+import { buildEventUpdate, canManageEvent, eventToForm, validateEventForm, type EventForm, type EventFormErrors, type RequiredEventField } from '../features/events/createEvent';
 
 const rsvpOptions: RSVPStatus[] = ['going', 'maybe', 'declined'];
 const rsvpLabels: Record<RSVPStatus, string> = {
@@ -23,6 +24,7 @@ const rsvpNotes: Record<RSVPStatus, string> = {
 };
 
 export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eventId?: string; backLabel?: string; onBack?: () => void }) {
+  const { width } = useWindowDimensions();
   const eventQuery = useEventQuery(eventId ?? '');
   const rsvpsQuery = useEventRsvpsQuery(eventId ?? '');
   const messagesQuery = useEventMessagesQuery(eventId ?? '');
@@ -31,6 +33,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const sendMessage = useSendMessageMutation();
   const uploadMedia = useUploadMediaMutation();
   const deleteMedia = useDeleteMediaMutation();
+  const updateEvent = useUpdateEventMutation();
+  const deleteEvent = useDeleteEventMutation();
   const [messageDraft, setMessageDraft] = useState('');
   const [photoUri, setPhotoUri] = useState('');
   const [photoCaption, setPhotoCaption] = useState('');
@@ -38,6 +42,11 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const [creatorName, setCreatorName] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
   const [photoError, setPhotoError] = useState('');
+  const [photoComposerOpen, setPhotoComposerOpen] = useState(false);
+  const [photoMode, setPhotoMode] = useState<'file' | 'link' | null>(null);
+  const [editForm, setEditForm] = useState<EventForm | null>(null);
+  const [editErrors, setEditErrors] = useState<EventFormErrors>({});
+  const editInputRefs = useRef<Partial<Record<RequiredEventField, TextInput | null>>>({});
   const upsertRsvp = useUpsertRsvpMutation();
   const auth = useAuthSession();
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
@@ -76,11 +85,15 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       return;
     }
     const submittedSourceUrl = sourceUrl.trim();
-    if (submittedSourceUrl && !/^https:\/\/(?:www\.)?unsplash\.com\//i.test(submittedSourceUrl)) {
+    const submittedCreatorName = creatorName.trim();
+    if (photoMode === 'link' && (!submittedCreatorName || !submittedSourceUrl)) {
+      setPhotoError('Add the photographer and Unsplash photo page.');
+      return;
+    }
+    if (photoMode === 'link' && !/^https:\/\/(?:www\.)?unsplash\.com\//i.test(submittedSourceUrl)) {
       setPhotoError('Use the HTTPS Unsplash photo page for attribution.');
       return;
     }
-    const submittedCreatorName = creatorName.trim();
     setPhotoError('');
     uploadMedia.mutate({
       eventId: eventDetail.id,
@@ -88,8 +101,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       caption,
       altText,
       creatorName: submittedCreatorName || undefined,
-      sourceName: submittedSourceUrl ? 'Unsplash' : undefined,
-      sourceUrl: submittedSourceUrl || undefined,
+      sourceName: photoMode === 'link' ? 'Unsplash' : undefined,
+      sourceUrl: photoMode === 'link' ? submittedSourceUrl : undefined,
     }, {
       onSuccess: () => {
         setPhotoUri((current) => current.trim() === fileUri ? '' : current);
@@ -97,10 +110,13 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         setPhotoAltText((current) => current.trim() === altText ? '' : current);
         setCreatorName((current) => current.trim() === submittedCreatorName ? '' : current);
         setSourceUrl((current) => current.trim() === submittedSourceUrl ? '' : current);
+        setPhotoMode(null);
+        setPhotoComposerOpen(false);
       },
     });
   };
   const choosePhoto = () => {
+    setPhotoMode('file');
     if (Platform.OS !== 'web' || typeof document === 'undefined') {
       setPhotoError('File selection is available in the web app. You can paste an HTTPS image address instead.');
       return;
@@ -127,13 +143,49 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     input.click();
   };
 
+  const beginEditing = () => {
+    if (!eventQuery.data) return;
+    setEditForm(eventToForm(eventQuery.data));
+    setEditErrors({});
+    updateEvent.reset();
+  };
+  const changeEditField = (key: keyof EventForm, value: string) => {
+    setEditForm((current) => current ? { ...current, [key]: value } : current);
+    if (key !== 'description') setEditErrors((current) => ({ ...current, [key]: undefined }));
+    updateEvent.reset();
+  };
+  const savePlan = async () => {
+    if (!eventQuery.data || !editForm || updateEvent.isPending) return;
+    const errors = validateEventForm(editForm);
+    setEditErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      const firstInvalid = (['title', 'date', 'time', 'location'] as const).find((key) => errors[key]);
+      if (firstInvalid) editInputRefs.current[firstInvalid]?.focus();
+      return;
+    }
+    try {
+      await updateEvent.mutateAsync({ eventId: eventQuery.data.id, patch: buildEventUpdate(eventQuery.data, editForm) });
+      setEditForm(null);
+    } catch { /* The mutation keeps the form open and exposes a retryable error below. */ }
+  };
+  const cancelPlan = async () => {
+    if (!eventQuery.data || deleteEvent.isPending) return;
+    const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm(`Cancel “${eventQuery.data.title}”? This removes the plan for everyone.`);
+    if (!approved) return;
+    try {
+      await deleteEvent.mutateAsync({ eventId: eventQuery.data.id, groupId: eventQuery.data.groupId });
+      onBack?.();
+    } catch { /* The mutation exposes a retry action below. */ }
+  };
+  const canManagePlan = Boolean(eventQuery.data && canManageEvent(eventQuery.data, currentMember));
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {onBack ? <Button label={backLabel} onPress={onBack} /> : null}
       <View style={styles.heroCard}>
         <Text style={styles.heroMini}>{eventDetail.timeLabel}</Text>
-        <View style={styles.heroHeader}>
-          <View style={{ flex: 1 }}>
+        <View style={[styles.heroHeader, width <= 360 && styles.heroHeaderNarrow]}>
+          <View style={styles.heroContent}>
             <Text role="heading" {...{ 'aria-level': 1 }} style={styles.heroTitle}>{eventDetail.title}</Text>
             <Text style={styles.heroLocation}>{eventDetail.location}</Text>
             <Text style={styles.heroCopy}>{eventDetail.description}</Text>
@@ -150,11 +202,59 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               onPress={() => setRsvpStatus(status)}
             />
           ))}
-          <Button label="Add photo" tone="ghost" disabled={uploadMedia.isPending} onPress={choosePhoto} />
         </View>
         <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
         {upsertRsvp.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
+        {canManagePlan ? (
+          <View style={styles.planOptions}>
+            <Text style={styles.planOptionsLabel}>Plan options</Text>
+            <View style={styles.actionRow}>
+              <Button label="Edit plan" tone="ghost" disabled={deleteEvent.isPending} onPress={beginEditing} />
+              <Button label={deleteEvent.isPending ? 'Canceling plan…' : deleteEvent.isError ? 'Try canceling again' : 'Cancel plan'} tone="ghost" disabled={deleteEvent.isPending} onPress={cancelPlan} />
+            </View>
+            {deleteEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.responseNote}>{deleteEvent.error instanceof Error ? deleteEvent.error.message : 'We couldn’t cancel this plan. Try again.'}</Text> : null}
+          </View>
+        ) : null}
       </View>
+
+      {editForm ? (
+        <SurfaceCard>
+          <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Edit plan</Text>
+          <Text style={styles.cardCopy}>Update the shared essentials. The original plan length stays the same.</Text>
+          {([
+            { key: 'title' as const, label: 'Trip or event name', placeholder: 'Family weekend' },
+            { key: 'date' as const, label: 'Start date', placeholder: 'YYYY-MM-DD' },
+            { key: 'time' as const, label: 'Start time', placeholder: 'HH:MM' },
+            { key: 'location' as const, label: 'Location', placeholder: 'City, address, or meeting place' },
+          ]).map((field) => (
+            <View key={field.key} style={styles.editField}>
+              <Text nativeID={`edit-${field.key}-label`} style={styles.editLabel}>{field.label}</Text>
+              <TextInput
+                {...(editErrors[field.key] ? { 'aria-describedby': `edit-${field.key}-error`, 'aria-invalid': true } : { 'aria-invalid': false })}
+                ref={(node) => { editInputRefs.current[field.key] = node; }}
+                accessibilityLabel={field.label}
+                accessibilityLabelledBy={`edit-${field.key}-label`}
+                editable={!updateEvent.isPending}
+                onChangeText={(value) => changeEditField(field.key, value)}
+                placeholder={field.placeholder}
+                placeholderTextColor={palette.muted}
+                style={[styles.input, editErrors[field.key] && styles.inputError]}
+                value={editForm[field.key]}
+              />
+              {editErrors[field.key] ? <Text nativeID={`edit-${field.key}-error`} accessibilityRole="alert" style={styles.editError}>{editErrors[field.key]}</Text> : null}
+            </View>
+          ))}
+          <View style={styles.editField}>
+            <Text style={styles.editLabel}>Notes (optional)</Text>
+            <TextInput accessibilityLabel="Notes, optional" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.muted} style={[styles.input, styles.notesInput]} value={editForm.description} />
+          </View>
+          {updateEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.editError}>{updateEvent.error instanceof Error ? updateEvent.error.message : 'We couldn’t update this plan. Your changes are still here.'}</Text> : null}
+          <View style={styles.lightActionRow}>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending }} disabled={updateEvent.isPending} onPress={savePlan} style={styles.planButton}><Text style={styles.planButtonText}>{updateEvent.isPending ? 'Saving changes…' : updateEvent.isError ? 'Try saving again' : 'Save changes'}</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending }} disabled={updateEvent.isPending} onPress={() => setEditForm(null)} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Keep current plan</Text></Pressable>
+          </View>
+        </SurfaceCard>
+      ) : null}
 
       <SurfaceCard>
         <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event details</Text>
@@ -168,58 +268,6 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               </View>
             </View>
           ))}
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <View style={styles.galleryHeader}>
-          <View style={{ flex: 1 }}>
-            <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event gallery</Text>
-            <Text style={styles.cardCopy}>Share a family photo here so it stays with the plan and conversation.</Text>
-          </View>
-          <Chip label={`${mediaQuery.data?.length ?? 0} shared`} tone={mediaQuery.data?.length ? 'coral' : 'sky'} />
-        </View>
-        {mediaQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading shared photos…</Text> : null}
-        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><Button label="Retry photos" tone="secondary" onPress={() => mediaQuery.refetch()} /></View> : null}
-        {mediaQuery.isSuccess && mediaQuery.data.length === 0 ? <Text style={styles.cardCopy}>No photos yet. Add the first family moment.</Text> : null}
-        {mediaQuery.isSuccess && mediaQuery.data.length > 0 ? (
-          <View style={styles.galleryGrid}>
-            {mediaQuery.data.map((item) => (
-              <View key={item.id} style={styles.photoCard}>
-                <Image accessibilityLabel={item.altText} source={{ uri: item.uri }} style={styles.photo} />
-                <Text style={styles.photoCaption}>{item.caption}</Text>
-                <Text style={styles.photoMeta}>Shared {formatMessageTime(item.uploadedAt)}</Text>
-                {item.creatorName || item.sourceName ? isSafeHttpsUrl(item.sourceUrl) ? (
-                  <Pressable accessibilityRole="link" onPress={() => Linking.openURL(item.sourceUrl!)} style={styles.attributionLink}>
-                    <Text style={styles.attributionText}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` on ${item.sourceName}` : ''}</Text>
-                  </Pressable>
-                ) : <Text style={styles.photoMeta}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` via ${item.sourceName}` : ''}</Text> : null}
-                {item.uploadedBy === identity?.userId || currentMember?.role === 'owner' || currentMember?.role === 'admin' ? <Button
-                  label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? `Removing ${item.caption}…` : `Remove ${item.caption}`}
-                  tone="ghost"
-                  disabled={deleteMedia.isPending}
-                  onPress={() => {
-                    const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm('Remove this photo from the family event?');
-                    if (approved) deleteMedia.mutate({ mediaId: item.id, eventId: eventDetail.id });
-                  }}
-                /> : null}
-              </View>
-            ))}
-          </View>
-        ) : null}
-        <View style={styles.photoComposer}>
-          <Text role="heading" {...{ 'aria-level': 3 }} style={styles.listTitle}>Add a photo</Text>
-          <Button label={photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'} tone="secondary" disabled={uploadMedia.isPending} onPress={choosePhoto} />
-          <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Or paste an HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri.startsWith('data:') ? 'Image file selected' : photoUri} editable={!photoUri.startsWith('data:') && !uploadMedia.isPending} />
-          {photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
-          <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Image description" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Describe the image for family members who cannot see it" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Photographer name (for Unsplash photos)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} />
-          <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS Unsplash photo page (when applicable)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} />
-          <Button label={uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'} disabled={uploadMedia.isPending} onPress={submitPhoto} />
-          {photoError || uploadMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
-          {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
-          {deleteMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{deleteMedia.error instanceof Error ? deleteMedia.error.message : 'We couldn’t remove that photo.'}</Text> : null}
         </View>
       </SurfaceCard>
 
@@ -268,6 +316,74 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         ) : null}
         {sendMessage.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Comment shared.</Text> : null}
       </SurfaceCard>
+
+      <SurfaceCard>
+        <View style={styles.galleryHeader}>
+          <View style={{ flex: 1 }}>
+            <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Event gallery</Text>
+            <Text style={styles.cardCopy}>Family photos stay with this plan.</Text>
+          </View>
+          <Chip label={`${mediaQuery.data?.length ?? 0} shared`} tone={mediaQuery.data?.length ? 'coral' : 'sky'} />
+        </View>
+        {mediaQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading shared photos…</Text> : null}
+        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><Button label="Retry photos" tone="secondary" onPress={() => mediaQuery.refetch()} /></View> : null}
+        {mediaQuery.isSuccess && mediaQuery.data.length === 0 ? <Text style={styles.cardCopy}>No photos yet.</Text> : null}
+        {mediaQuery.isSuccess && mediaQuery.data.length > 0 ? (
+          <View style={styles.galleryGrid}>
+            {mediaQuery.data.map((item) => (
+              <View key={item.id} style={styles.photoCard}>
+                <Image accessibilityLabel={item.altText} source={{ uri: item.uri }} style={styles.photo} />
+                <Text style={styles.photoCaption}>{item.caption}</Text>
+                <Text style={styles.photoMeta}>Shared {formatMessageTime(item.uploadedAt)}</Text>
+                {item.creatorName || item.sourceName ? isSafeHttpsUrl(item.sourceUrl) ? (
+                  <Pressable accessibilityRole="link" onPress={() => Linking.openURL(item.sourceUrl!)} style={styles.attributionLink}>
+                    <Text style={styles.attributionText}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` on ${item.sourceName}` : ''}</Text>
+                  </Pressable>
+                ) : <Text style={styles.photoMeta}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` via ${item.sourceName}` : ''}</Text> : null}
+                {item.uploadedBy === identity?.userId || currentMember?.role === 'owner' || currentMember?.role === 'admin' ? <Button
+                  label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? `Removing ${item.caption}…` : `Remove ${item.caption}`}
+                  tone="ghost"
+                  disabled={deleteMedia.isPending}
+                  onPress={() => {
+                    const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm('Remove this photo from the family event?');
+                    if (approved) deleteMedia.mutate({ mediaId: item.id, eventId: eventDetail.id });
+                  }}
+                /> : null}
+              </View>
+            ))}
+          </View>
+        ) : null}
+        {deleteMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{deleteMedia.error instanceof Error ? deleteMedia.error.message : 'We couldn’t remove that photo.'}</Text> : null}
+      </SurfaceCard>
+
+      <SurfaceCard>
+        {!photoComposerOpen ? (
+          <Pressable accessibilityRole="button" onPress={() => { setPhotoComposerOpen(true); setPhotoError(''); }} style={styles.planButton}>
+            <Text style={styles.planButtonText}>Add photo</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.photoComposer}>
+            <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Add a photo</Text>
+            {!photoMode ? (
+              <View style={styles.lightActionRow}>
+                <Pressable accessibilityRole="button" onPress={choosePhoto} style={styles.planButton}><Text style={styles.planButtonText}>Choose image file</Text></Pressable>
+                <Pressable accessibilityRole="button" onPress={() => { setPhotoMode('link'); setPhotoUri(''); setPhotoError(''); uploadMedia.reset(); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Add Unsplash link</Text></Pressable>
+              </View>
+            ) : null}
+            {photoMode === 'file' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>{photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'}</Text></Pressable> : null}
+            {photoMode === 'link' ? <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
+            {photoMode && photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
+            {photoMode ? <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
+            {photoMode ? <TextInput accessibilityLabel="Image description" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Image description (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Unsplash photo page (required)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} /> : null}
+            {photoMode ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={submitPhoto} style={styles.planButton}><Text style={styles.planButtonText}>{uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'}</Text></Pressable> : null}
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={() => { setPhotoComposerOpen(false); setPhotoMode(null); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Close photo form</Text></Pressable>
+            {photoError || uploadMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
+            {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
+          </View>
+        )}
+      </SurfaceCard>
     </ScrollView>
   );
 }
@@ -286,15 +402,19 @@ function DetailState({ title, detail, backLabel, onBack }: { title: string; deta
 
 const styles = StyleSheet.create({
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
-  container: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
+  container: { width: '100%', maxWidth: '100%', minWidth: 0, padding: spacing.lg, gap: spacing.md, paddingBottom: 40, boxSizing: 'border-box' },
   heroCard: { backgroundColor: palette.plum, borderRadius: 28, padding: spacing.lg, gap: spacing.sm },
   heroMini: { color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', letterSpacing: 1.4, fontSize: 11, fontWeight: '700' },
   heroHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  heroHeaderNarrow: { flexDirection: 'column' },
+  heroContent: { width: '100%', minWidth: 0, flex: 1 },
   heroTitle: { color: '#fff', fontSize: 32, lineHeight: 32, fontWeight: '900' },
   heroLocation: { color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 18, marginTop: 6, fontWeight: '800' },
   heroCopy: { color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, marginTop: 8 },
   actionRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 6 },
   responseNote: { color: 'rgba(255,255,255,0.86)', fontSize: 13, lineHeight: 19 },
+  planOptions: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.18)', marginTop: spacing.sm, paddingTop: spacing.sm, gap: spacing.xs },
+  planOptionsLabel: { color: 'rgba(255,255,255,0.82)', fontSize: 12, lineHeight: 18, fontWeight: '800' },
   cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
   cardCopy: { color: palette.muted, fontSize: 14, lineHeight: 20, marginTop: 4 },
   journey: { marginTop: spacing.md, gap: spacing.sm },
@@ -312,6 +432,16 @@ const styles = StyleSheet.create({
   attributionText: { color: palette.plum, fontSize: 13, lineHeight: 18, fontWeight: '800', textDecorationLine: 'underline' },
   photoComposer: { marginTop: spacing.lg, gap: spacing.sm },
   input: { minHeight: 48, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(32,22,28,0.14)', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
+  inputError: { borderColor: palette.coral, borderWidth: 2 },
+  notesInput: { minHeight: 96, textAlignVertical: 'top' },
+  editField: { gap: 6, marginTop: spacing.sm },
+  editLabel: { color: palette.text, fontSize: 14, lineHeight: 20, fontWeight: '800' },
+  editError: { color: palette.coral, fontSize: 13, lineHeight: 19, fontWeight: '700' },
+  lightActionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
+  planButton: { minHeight: 48, borderRadius: 999, backgroundColor: palette.plum, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
+  planButtonText: { color: '#fff', fontSize: 15, lineHeight: 20, fontWeight: '900' },
+  secondaryPlanButton: { minHeight: 48, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(113,54,93,0.24)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
+  secondaryPlanButtonText: { color: palette.plum, fontSize: 15, lineHeight: 20, fontWeight: '900' },
   preview: { width: '100%', height: 200, borderRadius: 16, backgroundColor: 'rgba(32,22,28,0.06)' },
   thread: { marginTop: spacing.md, gap: spacing.sm },
   bubble: { maxWidth: '84%', borderRadius: 18, padding: 13, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)' },

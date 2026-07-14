@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   navText: {
     color: palette.muted,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     flexShrink: 1,
   },

@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
 import { loopedInService } from '../services';
-import type { CreateEventPayload, CreateRsvpPayload, MediaUploadPayload } from '../services/api';
+import type { CreateEventPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 
 export const queryKeys = {
@@ -148,6 +148,33 @@ export function useCreateEventMutation() {
     onSuccess: (event) => {
       queryClient.setQueryData(queryKeys.event(event.id), event);
       return queryClient.invalidateQueries({ queryKey: queryKeys.events(event.groupId) });
+    },
+  });
+}
+
+export function useUpdateEventMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventId, patch }: { eventId: string; patch: UpdateEventPayload }) => loopedInService.events.updateEvent(eventId, patch),
+    onSuccess: (event) => {
+      queryClient.setQueryData(queryKeys.event(event.id), event);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.events(event.groupId) });
+    },
+  });
+}
+
+export function useDeleteEventMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventId }: { eventId: string; groupId: string }) => loopedInService.events.deleteEvent(eventId),
+    onSuccess: (_result, { eventId, groupId }) => {
+      queryClient.removeQueries({ queryKey: queryKeys.event(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: queryKeys.rsvps(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: queryKeys.messages(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: queryKeys.media(eventId), exact: true });
+      return queryClient.invalidateQueries({ queryKey: queryKeys.events(groupId) });
     },
   });
 }
