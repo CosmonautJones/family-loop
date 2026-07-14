@@ -12,7 +12,7 @@ LoopedIn is currently a responsive web app built with Expo and React Native Web.
 
 ## Shell and navigation
 
-`app/src/navigation/AppShell.tsx` is the current application shell. It renders one of five tab surfaces: Home, Calendar, Create, Memories, or Groups. `useAppShellState.ts` is a small local navigation bridge that also opens Event Detail, carries the selected event ID, and remembers the tab to return to. This is not a general router and should remain small until a navigation-library migration is explicitly required.
+`app/src/navigation/AppShell.tsx` is the current application shell. It renders one of five tab surfaces: Home, Calendar, Create, Memories, or Family. `useAppShellState.ts` remains a small navigation bridge, now backed by browser hash/history routes for tabs and exact event IDs. Pure parser/formatter tests cover route round trips and unknown-route fallback; interactive Back and reload behavior still requires valid browser evidence.
 
 ## Data flow and state
 
@@ -44,6 +44,8 @@ Event messages are scoped by stable event ID. The mock and Supabase adapters tri
 - The Supabase adapter is selected only by `EXPO_PUBLIC_DATA_MODE=supabase`. Missing Supabase URL/key configuration produces a visible unavailable-service error; it never falls back to local Jones Family data.
 
 The durable seed contains one stable Jones Family group with five members, exactly three future trips and one completed trip relative to 2026-07-13, plus consistent RSVPs, event-scoped messages, memories, and media metadata. Seed images are Unsplash URLs with local captions. Formal attribution/domain treatment remains follow-up work for the private-media wave; these URLs are demonstration metadata, not proof of uploaded private media.
+
+Group membership is exposed through `listGroupMembers(groupId)` across mock, durable-local, and Supabase adapters. The Family screen reads the active group, its scoped members, and its events through Query; it does not use group fixtures or invitation/admin mutations. Supabase membership/profile query code exists, but no remote membership or RLS behavior has been exercised.
 
 The Supabase client uses AsyncStorage for auth-session persistence. Local browser durability is not remote persistence, multi-user synchronization, authenticated authorization, deployed database/RLS, or private-storage proof. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions remain intended infrastructure rather than live proof.
 

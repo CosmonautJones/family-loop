@@ -215,4 +215,12 @@ This mission is complete only when all authorized waves pass their acceptance an
 - every ADR/OPORD is completed with cited evidence or explicitly superseded by an approved record;
 - required checks pass, the review log is current, risks/follow-ups are listed, and the worktree is scoped and reviewable.
 
-Current truth: **External Run 2 accepted Wave 0 as COMPLETE at AMBER / PROCEED-WARN with zero blockers. Wave 1 is pending authorization and the broader campaign remains in progress. No later wave or remote/live capability is claimed complete.**
+## Wave 1 execution status — family membership and responsive-web navigation
+
+- Commits `500ea77` and `e2f34f6` add group-scoped member service reads, the service-backed Family surface, and browser hash/history route contracts without invitation/admin CRUD or remote mutation.
+- Executable coverage proves five Jones members, group isolation, durable reconstruction, session/member consistency, route parser/formatter round trips, exact encoded event IDs, and safe unknown-route fallback.
+- Verification: root tests PASS 33/33; app tests PASS 22/22; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder AMBER.
+- Chrome DOM at `#/family` showed Jones Family, five members, and selected Family-route semantics. Headless `--window-size` retained a minimum/intrinsic desktop layout, so it is not accepted as 320/390/430 mobile viewport evidence. Interactive Back/reload is also unproven; pure route tests do not establish browser-history behavior.
+- Wave 1 is **COMPLETE**. Wave 2 is pending. No remote Supabase, RLS, real-phone, private-media, or multi-user capability is claimed.
+
+Current truth: **Wave 0 and Wave 1 are complete with their recorded AMBER limitations. Wave 2 is pending and the broader campaign remains in progress. No remote/live capability is claimed complete.**

@@ -1,5 +1,13 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 closeout
+
+- Accepted implementation checkpoints: `500ea77` and `e2f34f6`.
+- Added group-scoped member reads across the service adapters, executable five-member/isolation/reconstruction coverage, a Query-backed Family screen with honest loading/error/empty states, and hash/history route parsing for tabs and exact event IDs.
+- Automated evidence: root tests PASS 33/33; app tests PASS 22/22; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder and is AMBER, not substantive lint evidence.
+- Chrome DOM at `#/family` contained Jones Family, five members, and selected Family-route semantics. Headless `--window-size` retained a minimum/intrinsic desktop layout, so it is not valid proof of 320/390/430 mobile viewport behavior. Interactive Back/reload was not proven; parser/formatter round-trip tests are narrower evidence only.
+- Wave 1 is **COMPLETE** and Wave 2 is pending. Remote Supabase, RLS, real-phone browsers, private media, and multi-user behavior remain `NOT RUN` and are not inferred.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 0 Run 2 closeout
 
 - External Run 2 accepted the corrected Wave 0 checkpoint: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
