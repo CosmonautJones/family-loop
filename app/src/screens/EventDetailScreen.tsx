@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
@@ -7,7 +7,7 @@ import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
-import { useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUpsertRsvpMutation } from '../app/queries';
+import { useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 
 const rsvpOptions: RSVPStatus[] = ['going', 'maybe', 'declined'];
@@ -26,16 +26,23 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const eventQuery = useEventQuery(eventId ?? '');
   const rsvpsQuery = useEventRsvpsQuery(eventId ?? '');
   const messagesQuery = useEventMessagesQuery(eventId ?? '');
+  const mediaQuery = useEventMediaQuery(eventId ?? '');
   const sendMessage = useSendMessageMutation();
+  const uploadMedia = useUploadMediaMutation();
+  const deleteMedia = useDeleteMediaMutation();
   const [messageDraft, setMessageDraft] = useState('');
+  const [photoUri, setPhotoUri] = useState('');
+  const [photoCaption, setPhotoCaption] = useState('');
+  const [photoAltText, setPhotoAltText] = useState('');
+  const [creatorName, setCreatorName] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [photoError, setPhotoError] = useState('');
   const upsertRsvp = useUpsertRsvpMutation();
   const auth = useAuthSession();
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const eventDetail = eventQuery.data?.groupId === activeGroupId ? selectEventDetailViewModel(eventQuery.data, rsvpsQuery.data ?? [], []) : null;
   const identity = auth.session;
   const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status;
-  const stagedPhotoCount = useLoopedInStore((state) => state.stagedPhotoCounts[eventId ?? ''] ?? 0);
-  const stageEventPhoto = useLoopedInStore((state) => state.stageEventPhoto);
   const reminderDrafted = useLoopedInStore((state) => Boolean(state.reminderDrafts[eventId ?? '']));
   const toggleReminderDraft = useLoopedInStore((state) => state.toggleReminderDraft);
 
@@ -56,6 +63,62 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     sendMessage.mutate({ eventId: eventDetail.id, body }, { onSuccess: () => setMessageDraft('') });
   };
   const sendDisabled = !messageDraft.trim() || sendMessage.isPending;
+  const submitPhoto = () => {
+    const fileUri = photoUri.trim();
+    const caption = photoCaption.trim();
+    const altText = photoAltText.trim();
+    if (!fileUri || !caption || !altText) {
+      setPhotoError('Add a photo, caption, and image description.');
+      return;
+    }
+    if (!fileUri.startsWith('data:image/') && !/^https:\/\//i.test(fileUri)) {
+      setPhotoError('Use an HTTPS image address or choose an image file.');
+      return;
+    }
+    setPhotoError('');
+    uploadMedia.mutate({
+      eventId: eventDetail.id,
+      fileUri,
+      caption,
+      altText,
+      creatorName: creatorName.trim() || undefined,
+      sourceName: sourceUrl.trim() ? 'Unsplash' : undefined,
+      sourceUrl: sourceUrl.trim() || undefined,
+    }, {
+      onSuccess: () => {
+        setPhotoUri('');
+        setPhotoCaption('');
+        setPhotoAltText('');
+        setCreatorName('');
+        setSourceUrl('');
+      },
+    });
+  };
+  const choosePhoto = () => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') {
+      setPhotoError('File selection is available in the web app. You can paste an HTTPS image address instead.');
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        setPhotoError('Choose an image smaller than 5 MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => setPhotoError('We couldn’t read that image. Try another file.');
+      reader.onload = () => {
+        setPhotoUri(String(reader.result ?? ''));
+        setPhotoError('');
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -80,7 +143,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               onPress={() => setRsvpStatus(status)}
             />
           ))}
-          <Button label={stagedPhotoCount > 0 ? 'Stage another' : 'Stage photo'} tone="ghost" onPress={() => stageEventPhoto(eventDetail.id)} />
+          <Button label="Add photo" tone="ghost" onPress={choosePhoto} />
         </View>
         <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
         {upsertRsvp.isError ? <Text accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
@@ -120,27 +183,59 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         <View style={styles.galleryHeader}>
           <View style={{ flex: 1 }}>
             <Text style={styles.cardTitle}>Event gallery</Text>
-            <Text style={styles.cardCopy}>
-              {stagedPhotoCount > 0
-                ? `${stagedPhotoCount} photo${stagedPhotoCount === 1 ? '' : 's'} staged locally for the event recap.`
-                : 'No photos yet. Stage the first one when the event starts.'}
-            </Text>
+            <Text style={styles.cardCopy}>Share a family photo here so it stays with the plan and conversation.</Text>
           </View>
-          <Chip label={stagedPhotoCount > 0 ? 'Draft' : 'Empty'} tone={stagedPhotoCount > 0 ? 'coral' : 'sky'} />
+          <Chip label={`${mediaQuery.data?.length ?? 0} shared`} tone={mediaQuery.data?.length ? 'coral' : 'sky'} />
         </View>
-        {stagedPhotoCount > 0 ? (
-          <View style={styles.photoDraft}>
-            <Text style={styles.photoDraftIcon}>+</Text>
-            <Text style={styles.photoDraftText}>Ready to attach after media upload is wired.</Text>
+        {mediaQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading shared photos…</Text> : null}
+        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><Button label="Retry photos" tone="secondary" onPress={() => mediaQuery.refetch()} /></View> : null}
+        {mediaQuery.isSuccess && mediaQuery.data.length === 0 ? <Text style={styles.cardCopy}>No photos yet. Add the first family moment.</Text> : null}
+        {mediaQuery.isSuccess && mediaQuery.data.length > 0 ? (
+          <View style={styles.galleryGrid}>
+            {mediaQuery.data.map((item) => (
+              <View key={item.id} style={styles.photoCard}>
+                <Image accessibilityLabel={item.altText} source={{ uri: item.uri }} style={styles.photo} />
+                <Text style={styles.photoCaption}>{item.caption}</Text>
+                <Text style={styles.photoMeta}>Shared {formatMessageTime(item.uploadedAt)}</Text>
+                {item.creatorName || item.sourceName ? (
+                  <Pressable accessibilityRole="link" disabled={!item.sourceUrl} onPress={() => item.sourceUrl ? Linking.openURL(item.sourceUrl) : undefined} style={styles.attributionLink}>
+                    <Text style={styles.attributionText}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` on ${item.sourceName}` : ''}</Text>
+                  </Pressable>
+                ) : null}
+                <Button
+                  label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? 'Removing…' : 'Remove photo'}
+                  tone="ghost"
+                  disabled={deleteMedia.isPending}
+                  onPress={() => {
+                    const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm('Remove this photo from the family event?');
+                    if (approved) deleteMedia.mutate({ mediaId: item.id, eventId: eventDetail.id });
+                  }}
+                />
+              </View>
+            ))}
           </View>
         ) : null}
+        <View style={styles.photoComposer}>
+          <Text style={styles.listTitle}>Add a photo</Text>
+          <Button label={photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'} tone="secondary" disabled={uploadMedia.isPending} onPress={choosePhoto} />
+          <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" keyboardType="url" onChangeText={setPhotoUri} placeholder="Or paste an HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri.startsWith('data:') ? 'Image file selected' : photoUri} editable={!photoUri.startsWith('data:') && !uploadMedia.isPending} />
+          {photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
+          <TextInput accessibilityLabel="Photo caption" onChangeText={setPhotoCaption} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Image description" onChangeText={setPhotoAltText} placeholder="Describe the image for family members who cannot see it" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Photographer name" onChangeText={setCreatorName} placeholder="Photographer name (for Unsplash photos)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} />
+          <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" keyboardType="url" onChangeText={setSourceUrl} placeholder="Unsplash source page (when applicable)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} />
+          <Button label={uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'} disabled={uploadMedia.isPending} onPress={submitPhoto} />
+          {photoError || uploadMedia.isError ? <Text accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
+          {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
+          {deleteMedia.isError ? <Text accessibilityLiveRegion="assertive" style={styles.threadError}>{deleteMedia.error instanceof Error ? deleteMedia.error.message : 'We couldn’t remove that photo.'}</Text> : null}
+        </View>
       </SurfaceCard>
 
       <SurfaceCard>
         <Text style={styles.cardTitle}>Thread</Text>
-        {messagesQuery.isPending ? <Text style={styles.cardCopy}>Loading the event conversation…</Text> : null}
+        {messagesQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading the event conversation…</Text> : null}
         {messagesQuery.isError ? (
-          <Text style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text>
+          <View style={styles.feedback}><Text accessibilityLiveRegion="assertive" style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text><Button label="Retry conversation" tone="secondary" onPress={() => messagesQuery.refetch()} /></View>
         ) : null}
         {messagesQuery.isSuccess && messagesQuery.data.length === 0 ? <Text style={styles.cardCopy}>No messages yet. Start the plan here.</Text> : null}
         {messagesQuery.isSuccess && messagesQuery.data.length > 0 ? (
@@ -149,6 +244,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               <View key={item.id} style={[styles.bubble, item.self && styles.selfBubble]}>
                 <Text style={[styles.bubbleAuthor, item.self && styles.selfBubbleText]}>{item.authorName}</Text>
                 <Text style={[styles.bubbleText, item.self && styles.selfBubbleText]}>{item.body}</Text>
+                <Text style={[styles.bubbleTime, item.self && styles.selfBubbleTime]}>{formatMessageTime(item.createdAt)}</Text>
               </View>
             ))}
           </View>
@@ -174,11 +270,16 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           </Pressable>
         </View>
         {sendMessage.isError ? (
-          <Text style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text>
+          <View style={styles.feedback}><Text accessibilityLiveRegion="assertive" style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text><Button label="Retry sending" tone="secondary" disabled={sendDisabled} onPress={submitMessage} /></View>
         ) : null}
+        {sendMessage.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Comment shared.</Text> : null}
       </SurfaceCard>
     </ScrollView>
   );
+}
+
+function formatMessageTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
 }
 
 function DetailState({ title, detail, backLabel, onBack }: { title: string; detail: string; backLabel: string; onBack?: () => void }) {
@@ -204,19 +305,30 @@ const styles = StyleSheet.create({
   stepText: { color: palette.plum, fontWeight: '800', fontSize: 13 },
   listTitle: { color: palette.text, fontSize: 15, fontWeight: '800' },
   galleryHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  photoDraft: { borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)', padding: 14, gap: 6 },
-  photoDraftIcon: { color: palette.plum, fontSize: 22, lineHeight: 24, fontWeight: '900' },
-  photoDraftText: { color: palette.text, fontSize: 14, lineHeight: 20, fontWeight: '700' },
+  galleryGrid: { marginTop: spacing.md, gap: spacing.md },
+  photoCard: { overflow: 'hidden', borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)', padding: 12, gap: 8 },
+  photo: { width: '100%', height: 220, borderRadius: 12, backgroundColor: 'rgba(32,22,28,0.06)' },
+  photoCaption: { color: palette.text, fontSize: 15, lineHeight: 21, fontWeight: '800' },
+  photoMeta: { color: palette.muted, fontSize: 12, lineHeight: 18 },
+  attributionLink: { minHeight: 48, justifyContent: 'center', alignSelf: 'flex-start' },
+  attributionText: { color: palette.plum, fontSize: 13, lineHeight: 18, fontWeight: '800', textDecorationLine: 'underline' },
+  photoComposer: { marginTop: spacing.lg, gap: spacing.sm },
+  input: { minHeight: 48, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(32,22,28,0.14)', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
+  preview: { width: '100%', height: 200, borderRadius: 16, backgroundColor: 'rgba(32,22,28,0.06)' },
   thread: { marginTop: spacing.md, gap: spacing.sm },
   bubble: { maxWidth: '84%', borderRadius: 18, padding: 13, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)' },
   selfBubble: { alignSelf: 'flex-end', backgroundColor: palette.plum, borderColor: palette.plum },
   bubbleText: { color: palette.text, fontSize: 14, lineHeight: 20 },
   bubbleAuthor: { color: palette.muted, fontSize: 12, fontWeight: '800', marginBottom: 3 },
+  bubbleTime: { color: palette.muted, fontSize: 11, lineHeight: 16, marginTop: 6 },
   selfBubbleText: { color: '#fff' },
+  selfBubbleTime: { color: 'rgba(255,255,255,0.78)' },
   composer: { marginTop: spacing.md, gap: spacing.sm },
   composerInput: { minHeight: 48, maxHeight: 120, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(32,22,28,0.14)', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
   sendButton: { minHeight: 48, borderRadius: 16, backgroundColor: palette.plum, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
   sendButtonDisabled: { opacity: 0.45 },
   sendButtonText: { color: '#fff', fontSize: 15, fontWeight: '900' },
   threadError: { color: palette.coral, fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
+  feedback: { gap: spacing.sm, alignItems: 'flex-start' },
+  successNote: { color: palette.sage, fontSize: 13, lineHeight: 19, marginTop: spacing.sm, fontWeight: '800' },
 });
