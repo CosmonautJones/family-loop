@@ -1,5 +1,15 @@
 # Regression Checklist
 
+## M3 event thread
+
+- [x] Messages remain isolated by exact event ID.
+- [x] Blank sends are rejected and successful sends refetch only the selected event thread.
+- [x] Event Detail has loading/error/empty/populated thread states without fixture fallback.
+- [x] Pending send is disabled; failure retains the draft; success clears it.
+- [x] Existing Event Detail RSVP/logistics remain available when only the thread fails.
+- [x] Configured signed-out mode exposes no protected event/thread content.
+- [ ] Live two-user RLS — NOT RUN; safe environment unavailable.
+
 Use this before considering a mission complete.
 
 ## Core flow

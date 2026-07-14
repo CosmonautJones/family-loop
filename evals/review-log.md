@@ -1,5 +1,17 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-DATA-003 final review
+
+- Commits reviewed: `ad6ae77` (runnable Query/adapter contract) and `28f9ba4` (runnable Event Detail thread UI).
+- Contract evidence: executable tests prove event A/B isolation, whitespace rejection, trimmed persistence/refetch, session-derived `You`/self identity, mixed-offset parsed-instant ordering, and stable ID ties. Supabase parity was corrected non-breakingly; schema/RLS and remote state were untouched.
+- UI evidence: Thread owns explicit loading, error, empty, and populated states. Send is disabled for empty/pending drafts; visible failures retain text; success clears only after event-key invalidation/refetch. No fixture fallback remains.
+- Automated verification: root `npm test` PASS (19/19); app `npm test` PASS (13/13); app `npx tsc --noEmit` PASS; harness PASS; `git diff --check` PASS. App lint command PASS but remains a placeholder.
+- Phone smoke: PASS at 390x844 in Chrome DevTools mock mode. `Bringing fruit salad` appeared as `You`, cleared from the composer after success, and remained visible after Back -> Open event. Event B isolation is direct adapter-test evidence. Console had only the pre-existing React Native Web shadow-style deprecation warning.
+- Configured signed-out regression: PASS at 390x844 with non-secret placeholders; only the sign-in gate rendered and no credentials were submitted.
+- Live RLS/two-user: `NOT RUN — safe environment unavailable`.
+- AMBER decision: exact-key invalidation/refetch was chosen over optimistic insertion; message errors remain local to the Thread card. This avoids duplicates and preserves the rest of Event Detail.
+- Gate: GREEN with the known placeholder-lint and unavailable-live-environment limitations. No RED boundary was crossed.
+
 ## 2026-07-13 — FAMILY-LOOP-DATA-002 Run 3 ordering correction
 
 - Implementation commit reviewed: `43c8567`.

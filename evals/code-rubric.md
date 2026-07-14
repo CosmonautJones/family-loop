@@ -1,5 +1,11 @@
 # Code Rubric
 
+## M3 event-thread evidence
+
+- Event message server state is Query-owned and keyed by event ID.
+- Adapter contract tests cover isolation, validation, persistence/refetch, identity, and deterministic instant ordering.
+- Send invalidation targets only the affected event; no fixture or Zustand message mirror exists.
+
 ## Scope control
 
 - Did the implementation stay inside the mission?

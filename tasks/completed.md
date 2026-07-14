@@ -2,6 +2,17 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - Persistent data M3 event thread
+
+### Summary
+Moved Event Detail history and sending onto event-keyed TanStack Query state. Both adapters reject blank messages, trim bodies, preserve authenticated self identity, isolate by event ID, and order by parsed instant with a stable ID tie-break. Event Detail has local thread states plus a pending-safe composer that retains failed drafts and clears only after success/refetch.
+
+### Result
+Root tests pass 19/19, app tests pass 13/13, TypeScript, harness, and diff checks pass; lint remains a placeholder. Chrome DevTools at 390x844 proved send -> visible -> Back/Open -> still visible in the running mock service, and the configured placeholder path remained signed out. Executable tests prove two-event isolation. Live RLS/two-user verification is `NOT RUN — safe environment unavailable`.
+
+### Links / commits
+Wave 1 contract: `ad6ae77`; Wave 2 Event Detail: `28f9ba4`.
+
 ## 2026-07-13 - Persistent data M2 event loop
 
 ### Summary

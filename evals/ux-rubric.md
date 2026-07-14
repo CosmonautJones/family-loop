@@ -1,5 +1,11 @@
 # UX Rubric
 
+## M3 event-thread evidence
+
+- Event Detail exposes local loading, error, empty, and populated conversation states.
+- The composer has a 48px minimum action, disables blank/pending sends, preserves failed drafts, and clears successful drafts.
+- A 390x844 smoke proved the sent message remains visible after leaving and reopening the event.
+
 ## First impression
 
 - Is the purpose obvious?

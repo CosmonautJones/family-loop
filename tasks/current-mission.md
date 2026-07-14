@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-DATA-003`
 
-Status: In progress — Wave 1.
+Status: Complete — Wave 1 `ad6ae77`; Wave 2 implementation `28f9ba4`.
 
 ## Objective
 
@@ -85,3 +85,12 @@ Stop and escalate before any RED action: editing outside the manifest, changing 
 - Supabase parity can be inspected locally, but live RLS/two-user behavior cannot be claimed without a safe configured environment.
 - Message timestamps can represent identical instants with different offsets; ordering must use parsed instants and a stable ID tie-break.
 - The existing lint command may remain a placeholder and must not be reported as substantive lint coverage.
+
+## Completion evidence
+
+- Root `npm test`: PASS (19/19); app `npm test`: PASS (13/13); app `npx tsc --noEmit`: PASS; harness: PASS; `git diff --check`: PASS.
+- App `npm run lint`: command PASS, but it remains the pre-existing placeholder and provides no substantive lint coverage.
+- Mock phone smoke: PASS in Chrome DevTools at 390x844. Emma's event loaded three scoped messages; `Bringing fruit salad` sent as `You`, cleared after success, and remained visible after Back -> Open event/refetch. Event B isolation is proven by the executable adapter test because the seeded phone UI exposes only event A.
+- Configured signed-out regression: PASS at 390x844 with non-secret placeholder configuration. Only the sign-in gate rendered; protected event/thread content was absent and no credentials were submitted.
+- Live RLS/two-user: `NOT RUN — safe environment unavailable`.
+- AMBER rationale: successful sends use exact event-key invalidation rather than optimistic insertion, and thread failures remain local so RSVP/logistics stay usable. This is the simplest truthful behavior and avoids duplicate messages.
