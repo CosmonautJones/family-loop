@@ -36,13 +36,17 @@ test('release build contract pins one runtime-configured artifact and disables d
   assert.doesNotMatch(build, /Get-Date|generatedAt/);
   assert.doesNotMatch(build, /environmentId=\$EnvironmentId|releaseId = .*EnvironmentId/);
   assert.match(build, /dataMode = 'runtime'/);
+  assert.match(promote, /schemaVersion -notin @\(1, 2\)/);
+  assert.match(promote, /schemaVersion -eq 2[\s\S]*dataMode -ne 'runtime'/);
 });
 
-test('web bootstrap validates external configuration before importing application services', () => {
+test('web bootstrap validates external configuration before creating application services', () => {
   const entry = readFileSync(join(repositoryRoot, 'app/index.ts'), 'utf8');
   const runtime = readFileSync(join(repositoryRoot, 'app/src/config/runtimeConfig.ts'), 'utf8');
-  assert.match(entry, /initializeRuntimeConfig\(\)[\s\S]*import\('\.\/App'\)/);
+  assert.match(entry, /initializeRuntimeConfig\(\)[\s\S]*setReady\(true\)/);
   assert.match(entry, /accessibilityRole: 'alert'/);
+  const services = readFileSync(join(repositoryRoot, 'app/src/services/index.ts'), 'utf8');
+  assert.match(services, /new Proxy\([\s\S]*getService\(\)\[property\]/);
   assert.match(runtime, /fetch\('\/runtime-config\.json', \{ cache: 'no-store', credentials: 'same-origin' \}\)/);
   assert.match(runtime, /Object\.keys\(value\).*unsupported field/);
   assert.match(runtime, /url\.protocol === 'https:'[\s\S]*loopback/);

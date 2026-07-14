@@ -127,11 +127,12 @@ try {
     if ($secondaryResponse.Headers['Content-Security-Policy'] -notmatch [regex]::Escape($backendOrigin)) { throw 'CSP does not allow the configured backend origin.' }
     & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/event/runtime-config-proof" $secondaryConfig.environmentId 'Welcome back'
   } else {
-    & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/home" $secondaryConfig.environmentId 'Who’s using LoopedIn?'
+    & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/home" $secondaryConfig.environmentId 'using LoopedIn?'
   }
   if ($LASTEXITCODE -ne 0) { throw 'Secondary runtime browser smoke failed.' }
 
-  [IO.File]::WriteAllText($liveConfigPath, '{"schemaVersion":1,"environmentId":"invalid-proof","dataMode":"supabase","supabaseUrl":"https://example.invalid","supabasePublishableKey":"sb_secret_rejected"}', [Text.UTF8Encoding]::new($false))
+  $invalidConfig = [ordered]@{ schemaVersion = 1; environmentId = 'invalid-proof'; dataMode = 'supabase'; supabaseUrl = 'https://example.invalid'; supabasePublishableKey = 'sb_secret_rejected' } | ConvertTo-Json -Compress
+  [IO.File]::WriteAllText($liveConfigPath, $invalidConfig, [Text.UTF8Encoding]::new($false))
   $invalidRuntimeResponse = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/runtime-config.json" -UseBasicParsing -TimeoutSec 10 -SkipHttpErrorCheck
   if ($invalidRuntimeResponse.StatusCode -ne 503 -or $invalidRuntimeResponse.Headers['Cache-Control'] -ne 'no-store') { throw 'Invalid runtime config did not fail closed.' }
   $invalidShellResponse = Get-ReleaseResponse '/event/runtime-config-proof'

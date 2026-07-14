@@ -24,8 +24,11 @@ if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
   throw 'Artifact is missing release-manifest.json.'
 }
 $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json
-if ($manifest.schemaVersion -ne 1 -or $manifest.artifactSha256 -notmatch '^[0-9a-f]{64}$') {
+if ($manifest.schemaVersion -notin @(1, 2) -or $manifest.artifactSha256 -notmatch '^[0-9a-f]{64}$') {
   throw 'Artifact manifest is invalid or unsupported.'
+}
+if ($manifest.schemaVersion -eq 2 -and ($manifest.dataMode -ne 'runtime' -or $null -ne $manifest.environmentId)) {
+  throw 'Runtime artifact manifest contains environment-specific configuration.'
 }
 
 $actualFiles = @(
@@ -51,7 +54,11 @@ for ($index = 0; $index -lt $actualFiles.Count; $index += 1) {
   }
 }
 $canonicalFiles = ($actualFiles | ForEach-Object { "$($_.path)`t$($_.bytes)`t$($_.sha256)" }) -join "`n"
-$canonicalArtifact = "schemaVersion=$($manifest.schemaVersion)`nappVersion=$($manifest.appVersion)`nenvironmentId=$($manifest.environmentId)`ndataMode=$($manifest.dataMode)`nsourceCommit=$($manifest.sourceCommit)`nsourceDateEpoch=$($manifest.sourceDateEpoch)`n$canonicalFiles`n"
+$canonicalArtifact = if ($manifest.schemaVersion -eq 1) {
+  "schemaVersion=1`nappVersion=$($manifest.appVersion)`nenvironmentId=$($manifest.environmentId)`ndataMode=$($manifest.dataMode)`nsourceCommit=$($manifest.sourceCommit)`nsourceDateEpoch=$($manifest.sourceDateEpoch)`n$canonicalFiles`n"
+} else {
+  "schemaVersion=2`nappVersion=$($manifest.appVersion)`ndataMode=runtime`nsourceCommit=$($manifest.sourceCommit)`nsourceDateEpoch=$($manifest.sourceDateEpoch)`n$canonicalFiles`n"
+}
 $bytes = [Text.Encoding]::UTF8.GetBytes($canonicalArtifact)
 $sha = [Security.Cryptography.SHA256]::Create()
 try {

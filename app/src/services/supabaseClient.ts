@@ -3,17 +3,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getRuntimeConfig } from '../config/runtimeConfig';
 
-const { supabaseUrl, supabasePublishableKey: supabaseKey } = getRuntimeConfig();
-
 const callbackFragment = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.hash.slice(1));
 export const hasPasswordRecoveryCallback = callbackFragment.get('type') === 'recovery'
   || (callbackFragment.has('error_code') && /email link|recover|expired/i.test(callbackFragment.get('error_description') ?? ''));
 
-export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
-
 let client: SupabaseClient | null = null;
 
 export function getSupabaseClient() {
+  const { supabaseUrl, supabasePublishableKey: supabaseKey } = getRuntimeConfig();
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing Supabase URL or publishable key.');
   }

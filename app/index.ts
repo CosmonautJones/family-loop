@@ -2,16 +2,16 @@ import { registerRootComponent } from 'expo';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { createElement, type ComponentType, useEffect, useState } from 'react';
 import { initializeRuntimeConfig } from './src/config/runtimeConfig';
+import App from './App';
 
 function Root() {
-  const [App, setApp] = useState<ComponentType | null>(null);
+  const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let active = true;
     initializeRuntimeConfig()
-      .then(() => import('./App'))
-      .then(({ default: LoadedApp }) => { if (active) setApp(() => LoadedApp); })
+      .then(() => { if (active) setReady(true); })
       .catch(() => { if (active) setFailed(true); });
     return () => { active = false; };
   }, []);
@@ -21,12 +21,12 @@ function Root() {
       createElement(Text, { accessibilityRole: 'header', style: styles.title }, 'LoopedIn is unavailable'),
       createElement(Text, { style: styles.detail }, 'This environment is not configured safely. Ask the release owner to check it, then reload.'));
   }
-  if (!App) {
+  if (!ready) {
     return createElement(View, { accessibilityLabel: 'Loading LoopedIn', style: styles.state },
       createElement(ActivityIndicator, { accessibilityRole: 'progressbar', size: 'large' }),
       createElement(Text, { style: styles.detail }, 'Opening your family plans…'));
   }
-  return createElement(App);
+  return createElement(App as ComponentType);
 }
 
 const styles = StyleSheet.create({

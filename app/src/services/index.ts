@@ -1,14 +1,14 @@
 import { createMockLoopedInService } from './mockAdapter';
 import { createSupabaseLoopedInService } from './supabaseAdapter';
-import { hasSupabaseConfig } from './supabaseClient';
 import { createDurableLocalLoopedInService } from './durableLocalAdapter';
 import { durableStorage } from '../lib/storage';
 import type { LoopedInService } from './api';
 import { browserActorSessionStore } from './localActorSession';
 import { getRuntimeConfig } from '../config/runtimeConfig';
 
-const dataMode = getRuntimeConfig().dataMode;
-export const isServiceConfigured = dataMode === 'supabase';
+export function isServiceConfigured() {
+  return getRuntimeConfig().dataMode === 'supabase';
+}
 
 function createUnavailableSupabaseService(): LoopedInService {
   const error = new Error('Supabase data mode requires a valid URL and publishable key.');
@@ -33,8 +33,19 @@ function createUnavailableSupabaseService(): LoopedInService {
   };
 }
 
-export const loopedInService = dataMode === 'supabase'
-  ? hasSupabaseConfig ? createSupabaseLoopedInService() : createUnavailableSupabaseService()
-  : dataMode === 'memory'
-    ? createMockLoopedInService(undefined, { actorSession: browserActorSessionStore })
-    : createDurableLocalLoopedInService(durableStorage, undefined, browserActorSessionStore);
+let service: LoopedInService | null = null;
+
+function getService() {
+  if (service) return service;
+  const config = getRuntimeConfig();
+  service = config.dataMode === 'supabase'
+    ? config.supabaseUrl && config.supabasePublishableKey ? createSupabaseLoopedInService() : createUnavailableSupabaseService()
+    : config.dataMode === 'memory'
+      ? createMockLoopedInService(undefined, { actorSession: browserActorSessionStore })
+      : createDurableLocalLoopedInService(durableStorage, undefined, browserActorSessionStore);
+  return service;
+}
+
+export const loopedInService = new Proxy({} as LoopedInService, {
+  get: (_, property: keyof LoopedInService) => getService()[property],
+});

@@ -115,7 +115,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   }, [applySession]);
 
   useEffect(() => {
-    if (isServiceConfigured) return;
+    if (isServiceConfigured()) return;
     loopedInService.auth.listLocalProfiles()
       .then(setLocalProfiles)
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Unable to load local profiles.'));
@@ -257,7 +257,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthSessionContext.Provider value={{
-      configured: isServiceConfigured,
+      configured: isServiceConfigured(),
       confirmationRequired,
       invitationToken,
       setInvitationToken,
