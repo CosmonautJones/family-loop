@@ -731,6 +731,16 @@ test('event plan permissions, edits, and cancellation are durable and event-scop
   assert.equal(createEvent.canManageEvent(alexEvent, maya), false, 'member cannot manage someone else’s plan');
   assert.equal(createEvent.canManageEvent(mayaEvent, maya), true, 'creator can manage their own plan');
   assert.equal(createEvent.canManageEvent(mayaEvent, noah), false);
+  const mappedTimeline = createEvent.updateEventLocationTimeline([
+    { title: 'Plan', detail: 'Old place · details shared' },
+    { title: 'Logistics', detail: 'Old place details are ready' },
+    { title: 'Conversation', detail: 'Keep this detail' },
+  ], 'New place');
+  assert.deepEqual(mappedTimeline.map((item) => item.detail), [
+    'New place · details shared with the family',
+    'New place · details shared with the family',
+    'Keep this detail',
+  ]);
 
   const values = new Map();
   const storage = {
@@ -790,6 +800,7 @@ test('Event Detail keeps its 320px hierarchy simple and progressively discloses 
   assert.match(detail, /Add the photographer and Unsplash photo page/);
   assert.match(detail, /setCreatorName\(''\)/);
   assert.match(detail, /setSourceUrl\(''\)/);
+  assert.match(detail, /const choosePhoto = \(\) => \{[\s\S]*?setPhotoUri\(''\)[\s\S]*?input\.click\(\)/);
   assert.match(detail, /\.\.\.\(photoMode === 'link' \? \{/);
   assert.match(detail, /Use image file instead/);
   assert.match(detail, /canManageEvent\(eventQuery\.data, currentMember\)/);
@@ -810,6 +821,13 @@ test('Supabase event cancellation fails closed for media and zero-row deletes', 
   assert.match(adapter, /delete\(\)\.eq\('id', eventId\)\.select\('id'\)/);
   assert.match(adapter, /data\?\.some\(\(row\) => row\.id === eventId\)/);
   assert.match(adapter, /The plan was not deleted/);
+});
+
+test('Supabase location updates read and rewrite authoritative Plan and Logistics timeline details', () => {
+  const adapter = read('src/services/supabaseAdapter.ts');
+  assert.match(adapter, /if \(patch\.location\) \{[\s\S]*?\.select\('timeline'\)[\s\S]*?\.eq\('id', eventId\)[\s\S]*?\.single\(\)/);
+  assert.match(adapter, /updateEventLocationTimeline\(getTimeline\(current\?\.timeline\), patch\.location\)/);
+  assert.match(adapter, /\.update\(eventPatch\(patch, timeline\)\)/);
 });
 
 test('failed durable plan updates and cancellations do not publish partial state', async () => {

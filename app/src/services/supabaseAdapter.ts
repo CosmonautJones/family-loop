@@ -12,6 +12,7 @@ import type {
 import { getSupabaseClient } from './supabaseClient';
 import { validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
+import { updateEventLocationTimeline } from '../features/events/createEvent';
 
 type GroupRow = {
   id: string;
@@ -264,7 +265,7 @@ function eventInsert(payload: CreateEventPayload, userId: string) {
   };
 }
 
-function eventPatch(patch: UpdateEventPayload) {
+function eventPatch(patch: UpdateEventPayload, timeline?: Event['timeline']) {
   return {
     title: patch.title,
     starts_at: patch.startsAt,
@@ -272,6 +273,7 @@ function eventPatch(patch: UpdateEventPayload) {
     location: patch.location,
     description: patch.description,
     cover_url: patch.coverUri,
+    ...(timeline ? { timeline } : {}),
   };
 }
 
@@ -436,9 +438,19 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return mapEvent(data as EventRow);
       },
       async updateEvent(eventId, patch) {
+        let timeline: Event['timeline'] | undefined;
+        if (patch.location) {
+          const { data: current, error: currentError } = await supabase
+            .from('loopedin_events')
+            .select('timeline')
+            .eq('id', eventId)
+            .single();
+          throwIfError(currentError);
+          timeline = updateEventLocationTimeline(getTimeline(current?.timeline), patch.location);
+        }
         const { data, error } = await supabase
           .from('loopedin_events')
-          .update(eventPatch(patch))
+          .update(eventPatch(patch, timeline))
           .eq('id', eventId)
           .select('id, group_id, created_by, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
           .single();

@@ -74,6 +74,14 @@ export function canManageEvent(event: Event, member?: GroupMember) {
   return Boolean(member && (event.creatorId === member.id || member.role === 'owner' || member.role === 'admin'));
 }
 
+export function updateEventLocationTimeline(timeline: Event['timeline'], location: string) {
+  return timeline.map((item) => (
+    item.title === 'Plan' || item.title === 'Logistics'
+      ? { ...item, detail: `${location} · details shared with the family` }
+      : item
+  ));
+}
+
 export type CreateEventField = {
   label: string;
   value: string;

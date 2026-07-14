@@ -119,6 +119,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   };
   const choosePhoto = () => {
     setPhotoMode('file');
+    setPhotoUri('');
     setCreatorName('');
     setSourceUrl('');
     setPhotoError('');

@@ -2,6 +2,7 @@ import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, LoopedI
 import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData';
 import { validateMediaUpload } from './mediaValidation';
 import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
+import { updateEventLocationTimeline } from '../features/events/createEvent';
 
 const wait = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 120));
 
@@ -161,11 +162,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         if (!event) throw new Error(`Missing event ${eventId}`);
         if (event.creatorId !== profile.id && member.role !== 'owner' && member.role !== 'admin') throw new Error('Only the event creator or a family owner can update this event.');
         Object.assign(event, patch);
-        if (patch.location) event.timeline = event.timeline.map((item) => (
-          item.title === 'Plan' || item.title === 'Logistics'
-            ? { ...item, detail: `${patch.location} · details shared with the family` }
-            : item
-        ));
+        if (patch.location) event.timeline = updateEventLocationTimeline(event.timeline, patch.location);
         return changed(event);
       },
       deleteEvent: async (eventId) => {
