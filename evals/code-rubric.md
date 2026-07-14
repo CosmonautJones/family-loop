@@ -30,4 +30,4 @@
 
 ## Code verdict
 
-PASS (M1 implementation) — The change uses one React session context, additive adapter methods, the existing Query client, and explicit configured/unconfigured branches. Query cache resets on session identity changes and configured group resolution is Query-owned. No dependency, schema, polling, or fallback framework was added. Structural tests and TypeScript pass; phone smoke remains an explicit final gate.
+PASS (M2) — The event slice uses the existing service and Query boundary with stable keys, scoped invalidation, same-ID retrieval, explicit failure states, and no durable event/RSVP mirror in Zustand. Root tests pass 12/12, app tests pass 6/6, TypeScript and harness pass, and phone smoke passed after fixing and regression-testing a hidden mounted Create screen. No dependency, schema, policy, environment, deployment, or Auth expansion was added. Advisory: Wave 1 was not independently runnable until the selector/caller boundary was repaired after Wave 2; per-wave runnable verification must be enforced in later missions.

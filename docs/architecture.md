@@ -6,7 +6,7 @@ LoopedIn is currently an Expo and React Native mobile prototype. The event is th
 
 - `app/index.ts` registers the root component with Expo.
 - `app/App.tsx` composes `AppProviders` around `AppShell`.
-- `app/src/app/AppProviders.tsx` owns the TanStack Query client. Query hooks exist, but current screens still render fixture-backed view models.
+- `app/src/app/AppProviders.tsx` owns the TanStack Query client. The authenticated group and the Home, Calendar, Create Event, Event Detail, and RSVP event slice now use that Query boundary.
 
 ## Shell and navigation
 
@@ -14,18 +14,18 @@ LoopedIn is currently an Expo and React Native mobile prototype. The event is th
 
 ## Data flow and state
 
-- `app/src/features/**/fixtures.ts` contains deterministic prototype data.
-- `app/src/app/selectors.ts` converts those fixtures into screen-ready view models. Home's selector accepts explicit event/activity/memory input so an existing group with zero events produces an honest empty state; its default remains fixture-backed. Home, Calendar, Event Detail, Memories, and Groups currently read these selectors directly.
-- `app/src/store/useLoopedInStore.ts` is a Zustand store for active-group selection and local interaction state: event drafts, RSVP overrides, staged-photo counts, and reminder drafts.
-- Draft event and active-group values use the storage helpers in `app/src/lib/storage.ts`; the other interaction state is in-memory.
+- `app/src/features/**/fixtures.ts` still supplies deterministic prototype content for non-migrated surfaces such as memories and groups.
+- `app/src/app/selectors.ts` converts supplied domain records into screen-ready view models. Home and Calendar receive Query-owned events; Event Detail receives the event and RSVPs loaded for its stable ID. Honest empty and not-found states do not substitute fixture events.
+- `app/src/app/queries.ts` defines stable group, event-list, event-detail, and RSVP keys plus event-create and RSVP-upsert mutations. Successful creation seeds the detail cache and invalidates the affected group's event list; RSVP success invalidates that event's RSVP list.
+- `app/src/store/useLoopedInStore.ts` owns active-group selection and transient interaction state such as staged-photo counts and reminder drafts. It no longer mirrors RSVP state or durable event drafts.
 
-The current UI is therefore fixture-first. Service-backed query hooks in `app/src/app/queries.ts` are foundation code and are not yet the source of truth for rendered screen content.
+The event coordination loop is Query-owned in both configured and unconfigured modes. The unconfigured adapter remains deterministic and mutable for the life of its process; that is not evidence of device- or process-restart durability.
 
 ## Adopted data and session boundary
 
 ADR 001 governs upcoming migrations: configured and authenticated service data accessed through TanStack Query is authoritative; deterministic mocks are limited to unconfigured/test use; configured backend failures remain visible; Query owns server state; Zustand owns transient UI state only; and migrated screens explicitly render loading, error, empty, and populated states. This is an adopted boundary, not a claim that current screens already comply.
 
-`AuthSessionProvider` now implements the session side of that boundary. Unconfigured builds enter the deterministic prototype without credentials. Configured builds restore a persisted Supabase session and gate the shell behind explicit restoring, signed-out, authentication-error, group-loading, group-error, and no-group states. The authenticated group list is Query-owned and resolves the active group; configured failures never select fixtures. Feature screens remain fixture-backed until M2.
+`AuthSessionProvider` now implements the session side of that boundary. Unconfigured builds enter the deterministic prototype without credentials. Configured builds restore a persisted Supabase session and gate the shell behind explicit restoring, signed-out, authentication-error, group-loading, group-error, and no-group states. The authenticated group list is Query-owned and resolves the active group; configured failures never select fixtures. The M2 event screens comply with this boundary; other product slices remain fixture-backed until their separately authorized missions.
 
 ## Service boundary
 
@@ -34,7 +34,7 @@ ADR 001 governs upcoming migrations: configured and authenticated service data a
 - The in-memory mock adapter is used when Expo Supabase environment variables are absent.
 - The Supabase adapter is used when `EXPO_PUBLIC_SUPABASE_URL` and a publishable or anonymous key are present.
 
-The Supabase client persists auth sessions through AsyncStorage. Adapter availability does not imply that auth or backend flows are complete in the current UI. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions are intended infrastructure rather than live proof.
+The Supabase client persists auth sessions through AsyncStorage. Adapter availability does not imply that remote backend flows are deployed or verified. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions are intended infrastructure rather than live proof. Live Supabase event/RSVP CRUD for M2 is `NOT RUN — ENV unavailable`.
 
 ## Product and implementation constraints
 

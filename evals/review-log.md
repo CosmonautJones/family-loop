@@ -1,5 +1,20 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-DATA-002 Wave 3 final review
+
+- Architecture: Home and Calendar read active-group events through Query; Create uses the event mutation; Event Detail loads the exact event ID and its RSVPs; RSVP changes use the service mutation. Zustand no longer mirrors durable RSVP or event records.
+- Configured-boundary rule: migrated screens expose loading/error/empty/not-found states and do not fall back to event fixtures.
+- Automated verification: root `npm test` PASS (12/12); app `npm test` PASS (6/6); app `npx tsc --noEmit` PASS; app `npm run lint` PASS but remains a placeholder; harness PASS; `git diff --check` PASS.
+- Commit sequence reviewed: `d003aa9` (Query/data contract), `78923ae` (event UI), `c31397d` (runnable-boundary repair).
+- Execution-discipline advisory: Wave 1 was committed before its changed selector interface had a compatible caller, so that commit was not independently runnable. Wave 2 exposed the interface mismatch and `c31397d` repaired it. Future wave gates must run the declared checks against each commit before transition.
+- Mock contract durability is process-local. It proves mutation plus refetch behavior, not persistence across a full app-process restart.
+- Mock phone smoke: PASS in Chrome DevTools at emulated 390x844 with Supabase variables explicitly blank. Home loaded; Create produced `event-created-1` and opened the exact `Neighborhood potluck on the green` detail. The first pass exposed Create still mounted behind detail; the shell now guards every tab screen and a regression test covers it. The clean rerun showed only exact Event Detail, changed RSVP Maybe -> Going, showed `1 going / Going`, and Calendar showed `3 shared plans` plus the exact created-event button.
+- Mock reload boundary: a hard reload reset the process-local adapter and returned seeded Home. Mutation/refetch durability passed within the running adapter; persistence across a full reload/process restart is intentionally not claimed.
+- Configured-boundary phone smoke: PASS in Chrome DevTools at emulated 390x844 with a non-secret placeholder URL/key. Only `Welcome back`, email, password, and disabled `Sign in` appeared; no product shell or mock/fixture event content was reachable and no credentials were submitted or mutated.
+- Live Supabase event/RSVP CRUD: `NOT RUN — ENV unavailable`. No remote setup, credential discovery, migration, policy, or deployment operation was authorized.
+- Scope: no migration/RLS, dependency, environment, deployment, Auth expansion, thread, media, notification, or memory work was absorbed.
+- Gate: PASS. M2 acceptance is complete with the explicit process-local mock limitation and permitted live result.
+
 ## 2026-07-13 — FAMILY-LOOP-DATA-001 Wave 2 implementation review
 
 - Added configured session/auth/group gates and preserved direct unconfigured mock entry.

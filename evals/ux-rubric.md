@@ -32,4 +32,4 @@
 
 ## UX verdict
 
-PASS — M1 adds calm, narrow phone-first restoring, sign-in, group-loading, group-error, and no-group surfaces. At 390x844, the configured signed-out branch showed only the expected email/password gate with disabled submit and no protected content, while unconfigured mock mode opened the existing Home-to-Event Detail loop with the same event identity. Live auth remains `NOT RUN — ENV unavailable`.
+PASS (M2) — At 390x844, the clean mock rerun moved from Create to only the exact created Event Detail, persisted Maybe -> Going through refetch, and showed the created event in Calendar. The configured placeholder branch showed only the signed-out gate with no protected or fixture content. Loading, error, empty, not-found, pending-submit, and inline mutation-failure states remain explicit. A hard reload resets the process-local mock, so no full-restart durability is claimed. Live Supabase CRUD remains `NOT RUN — ENV unavailable`.

@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-DATA-002`
 
-Status: Authorized for execution. Complete only after all three waves are committed in order and final acceptance is proven.
+Status: Complete. Final Wave 3 commit SHA to be recorded by the Sergeant.
 
 ## Mission
 
@@ -116,21 +116,21 @@ Wave 3 success criterion: every acceptance item has direct evidence, required ch
 
 ## Acceptance criteria
 
-- [ ] Changes are confined to the authorized manifest; no dependency, migration, policy, environment, deployment, or Auth-surface file changes occur.
-- [ ] Home and Calendar obtain active-group events through TanStack Query and explicitly render loading, error, empty, and populated states.
-- [ ] Configured/authenticated event data is authoritative; a configured request or auth failure never renders mock or fixture events as fallback.
-- [ ] Unconfigured operation uses the deterministic mock service through the same Query/mutation path, not screen fixtures.
-- [ ] Create Event persists through the service contract, is group-scoped, prevents duplicate submission, reports failure, invalidates/refetches affected queries, and appears on Home and Calendar after success.
-- [ ] Selecting an event opens Event Detail for that exact stable ID; an unknown or missing ID cannot silently open another event.
-- [ ] Event Detail loads its event and RSVPs through Query and explicitly handles loading, error, not-found/empty, and populated states.
-- [ ] The current user's RSVP mutation persists through the service contract and remains correct after refetch/reload at the strongest available local boundary.
-- [ ] Query is the sole owner of durable events and RSVPs; Zustand contains no durable event draft, persisted event record, or RSVP override that competes with server state.
-- [ ] Existing group resolution, M1 session gate, zero-event Create path, Home-to-same-event behavior, and unrelated tab surfaces remain intact.
-- [ ] Focused tests cover adapter parity, group scoping, chronological results, mutation invalidation, create-to-detail identity, unknown IDs, duplicate submission, RSVP persistence, explicit screen states, and configured no-fallback behavior.
-- [ ] Mock phone smoke passes at 390x844 for the complete create -> Home/Calendar -> same-ID detail -> RSVP -> reload/refetch loop.
-- [ ] Configured-boundary phone smoke passes at 390x844 without credentials or remote mutation and proves protected content does not fall back to mock/fixtures.
-- [ ] Conditional live Supabase verification is either directly evidenced under the permitted rule or recorded exactly as `NOT RUN — ENV unavailable`.
-- [ ] All required automated commands pass; architecture, task history, review log, rubrics, and regression checklist accurately describe the implemented behavior and remaining limitations.
+- [x] Changes are confined to the authorized manifest; no dependency, migration, policy, environment, deployment, or Auth-surface file changes occur.
+- [x] Home and Calendar obtain active-group events through TanStack Query and explicitly render loading, error, empty, and populated states.
+- [x] Configured/authenticated event data is authoritative; a configured request or auth failure never renders mock or fixture events as fallback.
+- [x] Unconfigured operation uses the deterministic mock service through the same Query/mutation path, not screen fixtures.
+- [x] Create Event persists through the service contract, is group-scoped, prevents duplicate submission, reports failure, invalidates/refetches affected queries, and appears on Home and Calendar after success.
+- [x] Selecting an event opens Event Detail for that exact stable ID; an unknown or missing ID cannot silently open another event.
+- [x] Event Detail loads its event and RSVPs through Query and explicitly handles loading, error, not-found/empty, and populated states.
+- [x] The current user's RSVP mutation persists through the service contract and remains correct after refetch/reload at the strongest available local boundary (process-local mock; hard reload resets it).
+- [x] Query is the sole owner of durable events and RSVPs; Zustand contains no durable event draft, persisted event record, or RSVP override that competes with server state.
+- [x] Existing group resolution, M1 session gate, zero-event Create path, Home-to-same-event behavior, and unrelated tab surfaces remain intact.
+- [x] Focused tests cover adapter parity, group scoping, chronological results, mutation invalidation, create-to-detail identity, unknown IDs, duplicate submission, RSVP persistence, explicit screen states, and configured no-fallback behavior.
+- [x] Mock phone smoke passes at 390x844 for create -> Home/Calendar -> same-ID detail -> RSVP -> refetch; hard reload reset behavior is explicitly recorded.
+- [x] Configured-boundary phone smoke passes at 390x844 without credentials or remote mutation and proves protected content does not fall back to mock/fixtures.
+- [x] Conditional live Supabase verification is recorded exactly as `NOT RUN — ENV unavailable`.
+- [x] All required automated commands pass; architecture, task history, review log, rubrics, and regression checklist accurately describe the implemented behavior and remaining limitations.
 - [ ] All three waves are reviewed and committed sequentially by the Sergeant, with no later mission silently absorbed.
 
 ## Verification commands
@@ -198,10 +198,10 @@ The Sergeant alone may authorize an AMBER interpretation, return a wave for corr
 ## Definition of done
 
 - [ ] Waves 1, 2, and 3 are accepted and committed in order by the Sergeant.
-- [ ] Every acceptance criterion has direct current-state evidence or the explicitly permitted conditional live result.
-- [ ] The complete mock phone loop and configured-boundary smoke are recorded with exact results.
-- [ ] All required commands pass without weakening tests or omitting failures.
-- [ ] ADR 001 ownership rules hold for the migrated event/RSVP slice.
-- [ ] Review, architecture, task, rubric, and regression records are truthful and current.
-- [ ] Residual risks and later missions are recorded without expanding M2.
+- [x] Every behavioral acceptance criterion has direct current-state evidence or the explicitly permitted conditional live result.
+- [x] The complete mock phone loop and configured-boundary smoke are recorded with exact results and the process-local reload limitation.
+- [x] All required commands pass without weakening tests or omitting failures.
+- [x] ADR 001 ownership rules hold for the migrated event/RSVP slice.
+- [x] Review, architecture, task, rubric, and regression records are truthful and current.
+- [x] Residual risks and later missions are recorded without expanding M2.
 - [ ] The worktree contains no uncommitted M2 changes after the Sergeant's final commit.

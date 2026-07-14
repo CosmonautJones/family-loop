@@ -184,6 +184,9 @@ test('Query and screens expose truthful event states without configured fixture 
   assert.match(create, /error/i);
   assert.match(shell, /auth\.configured && auth\.status === 'restoring'/);
   assert.match(shell, /auth\.configured && auth\.groups\?\.length === 0/);
+  for (const tab of ['Home', 'Calendar', 'Create', 'Memories', 'Groups']) {
+    assert.match(shell, new RegExp(`activeSurface !== 'EventDetail' && activeTab === '${tab}'`));
+  }
   assert.doesNotMatch(home, /features\/home\/fixtures|home\/fixtures/);
   assert.doesNotMatch(calendar, /features\/calendar\/fixtures|calendar\/fixtures/);
   assert.doesNotMatch(detail, /features\/events\/fixtures|events\/fixtures/);

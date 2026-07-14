@@ -2,6 +2,17 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - Persistent data M2 event loop
+
+### Summary
+Moved Home and Calendar event lists, Create Event, same-ID Event Detail, and RSVP state onto the existing service and TanStack Query boundary. Unconfigured development uses the same path through a deterministic process-local mock adapter; configured failures do not fall back to fixtures.
+
+### Result
+Root tests pass 12/12, app tests pass 6/6, TypeScript and harness pass, the lint command passes but remains a placeholder, and `git diff --check` passes. Chrome DevTools at 390x844 proved Create -> exact-ID detail -> RSVP -> Calendar in unconfigured mock mode. The smoke exposed a hidden mounted Create screen; a scoped shell guard and regression test fixed it, and the clean rerun showed only Event Detail. A hard reload reset the process-local mock to seeded Home, as designed; no device-restart durability is claimed. The configured placeholder smoke showed only the signed-out gate with protected content absent. Live Supabase CRUD is `NOT RUN — ENV unavailable`.
+
+### Links / commits
+Wave 1 contract: `d003aa9`; Wave 2 UI: `78923ae`; runnable-boundary repair: `c31397d`; final Wave 3 commit SHA to be inserted by the Sergeant.
+
 ## 2026-07-13 - Persistent data M1 session gate
 
 ### Summary
