@@ -247,6 +247,12 @@ test('configured transport rejection becomes calm copy while safe validation cop
   await assert.rejects(service.thread.validate(), /Write a message before sending\./);
 });
 
+test('Supabase retryable auth transport failures retain the network recovery category', () => {
+  const { serviceErrors } = loadCompiledModules();
+  const retryable = Object.assign(new Error('request failed'), { name: 'AuthRetryableFetchError', status: 0 });
+  assert.equal(serviceErrors.sanitizeServiceError(retryable).message, 'We couldn’t reach LoopedIn. Check your connection and try again.');
+});
+
 test('local actor sessions isolate family identities while sharing authorized durable records', async () => {
   const { durableAdapter, localActorSession, mockData } = loadCompiledModules();
   const seed = mockData.createMockDatabase();
@@ -850,13 +856,44 @@ test('signed-out invitation UI defaults to sign in and reveals accessible accoun
   assert.match(auth, /Create the invited account/);
   assert.match(auth, /Display name/);
   assert.match(auth, /Confirm password/);
-  assert.match(auth, /autoComplete=\{mode === 'signUp' \? 'new-password' : 'current-password'\}/);
+  assert.match(auth, /autoComplete=\{mode === 'signUp' \|\| auth\.recoveryStatus === 'ready' \? 'new-password' : 'current-password'\}/);
   assert.match(auth, /aria-invalid=\{invalid\}/);
   assert.match(auth, /aria-describedby=/);
   assert.match(auth, /nameInput\.current\?\.focus\(\)/);
   assert.match(auth, /emailInput\.current\?\.focus\(\)/);
   assert.match(auth, /maskedEmail/);
   assert.doesNotMatch(auth.slice(0, auth.indexOf("if (!auth.configured)")), /Create invitation/);
+});
+
+test('password recovery is enumeration-safe, same-origin, accessible, and provider-event driven', () => {
+  const api = read('src/services/api.ts');
+  const adapter = read('src/services/supabaseAdapter.ts');
+  const client = read('src/services/supabaseClient.ts');
+  const provider = read('src/features/auth/AuthSessionProvider.tsx');
+  const auth = read('src/screens/AuthScreen.tsx');
+  const shell = read('src/navigation/AppShell.tsx');
+
+  assert.match(api, /requestPasswordReset\(email: string, redirectTo: string\): Promise<void>/);
+  assert.match(api, /updatePassword\(password: string\): Promise<void>/);
+  assert.match(adapter, /resetPasswordForEmail\(email\.trim\(\), \{ redirectTo \}\)/);
+  assert.match(adapter, /event === 'PASSWORD_RECOVERY'/);
+  assert.match(adapter, /updateUser\(\{ password \}\)/);
+  assert.match(client, /detectSessionInUrl: typeof window !== 'undefined'/);
+  assert.match(provider, /redirect\.hash = ''/);
+  assert.match(client, /hasPasswordRecoveryCallback = callbackFragment\.get\('type'\) === 'recovery'/);
+  assert.match(provider, /passwordRecovery\) setRecoveryStatus\('ready'\)/);
+  assert.match(provider, /recoveryCallback\.current && !nextSession\) setRecoveryStatus\('invalid'\)/);
+  assert.match(provider, /recoveryCallback\.current\) setRecoveryStatus\(nextSession \? 'ready' : 'invalid'\)/);
+  assert.match(provider, /if \(recoveryCallback\.current\) \{[\s\S]*?setRecoveryStatus\('invalid'\)/);
+  assert.match(shell, /auth\.recoveryStatus !== 'idle'[^\n]*<AuthScreen/);
+  assert.match(auth, /Forgot password\?/);
+  assert.match(auth, /The same message appears for every address/);
+  assert.match(auth, /Use at least 8 characters/);
+  assert.match(auth, /Passwords do not match/);
+  assert.match(auth, /autoComplete="email"/);
+  assert.match(auth, /autoComplete="new-password"/);
+  assert.match(auth, /This reset link can’t be used/);
+  assert.match(auth, /Return to sign in/);
 });
 
 test('authenticated family onboarding handles invite decisions and honest zero-family choices', () => {

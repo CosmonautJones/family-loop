@@ -448,6 +448,20 @@ export function createSupabaseLoopedInService(): LoopedInService {
         if (!data.session) return { status: 'confirmationRequired' };
         return { status: 'authenticated', session: sessionWithoutProfile(data.session, name) };
       },
+      async requestPasswordReset(email, redirectTo) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+        if (error?.status === 429) throw backendServiceError(error);
+        if (error && (error.status === 0 || error.name === 'AuthRetryableFetchError' || /failed to fetch|network request failed|load failed|networkerror|fetch failed/i.test(error.message))) {
+          throw backendServiceError(new TypeError('Network request failed'));
+        }
+      },
+      async updatePassword(password) {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error?.status === 429 || (error && (error.status === 0 || error.name === 'AuthRetryableFetchError' || /failed to fetch|network request failed|load failed|networkerror|fetch failed/i.test(error.message)))) {
+          throw error?.status === 429 ? backendServiceError(error) : backendServiceError(new TypeError('Network request failed'));
+        }
+        if (error) throw userServiceError('This reset link is no longer valid. Request a new one.');
+      },
       async logout() {
         const { error } = await supabase.auth.signOut();
         if (error) throw userServiceError('Unable to sign out. Try again.');
@@ -459,11 +473,11 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       onAuthStateChange(listener) {
         let generation = 0;
-        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data } = supabase.auth.onAuthStateChange((event, session) => {
           const current = ++generation;
-          if (!session) listener(null);
+          if (!session) listener(null, false);
           else void resolveWithFallback(mapSession(session), sessionWithoutProfile(session)).then((mapped) => {
-            if (current === generation) listener(mapped);
+            if (current === generation) listener(mapped, event === 'PASSWORD_RECOVERY');
           });
         });
         return () => data.subscription.unsubscribe();

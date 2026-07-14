@@ -69,6 +69,12 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       signUp: async () => {
         throw new Error('Account creation is unavailable in the local family demo.');
       },
+      requestPasswordReset: async () => {
+        throw new Error('Password recovery is unavailable in the local family demo.');
+      },
+      updatePassword: async () => {
+        throw new Error('Password recovery is unavailable in the local family demo.');
+      },
       logout: async () => {
         actorSession.setActorId(null);
         authListeners.forEach((listener) => listener(null));

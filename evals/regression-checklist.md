@@ -1,5 +1,17 @@
 # Regression Checklist
 
+## OPORD 003 password recovery
+
+- [x] Known and unknown addresses receive identical HTTP and visible request responses; only the known disposable account receives local mail.
+- [x] Recovery uses an exact approved same-origin callback and snapshots only recovery/error presence before Supabase consumes the token-bearing fragment.
+- [x] Valid local reset replaces the password; old sign-in fails, new sign-in passes, authenticated reload succeeds, and the disposable session can sign out.
+- [x] Replayed/malformed reset links return no session and render explicit request-new/return-to-sign-in actions.
+- [x] Offline recovery retains the email and renders connection-specific safe copy; retry remains available.
+- [x] Configured 390×844 Chrome has one primary heading, no horizontal overflow, 52px inputs/actions, email/current-password/new-password autocomplete, and accessible alert/live regions.
+- [x] Invite-first signup and unconfigured local-profile semantics remain intact; no open registration, settings, schema, dependency, or production-mail work was added.
+- [x] Dedicated synthetic Auth user, email, token-bearing browser profile, and static server are removed after proof; retained family-browser-v1 users remain untouched.
+- [ ] Hosted redirect allowlist, production email delivery/templates/rate limits, physical iOS Safari/Android Chrome, and assistive technology — `NOT RUN`.
+
 ## Local multi-user and KISS gate
 
 - [x] Two same-origin tabs independently choose Alex/Maya via explicitly demo-only `sessionStorage`; one-tab sign-out and reload do not overwrite the other identity.

@@ -15,6 +15,7 @@ function createUnavailableSupabaseService(): LoopedInService {
   return {
     auth: {
       login: () => Promise.reject(error), signUp: () => Promise.reject(error), logout: () => Promise.reject(error),
+      requestPasswordReset: () => Promise.reject(error), updatePassword: () => Promise.reject(error),
       getSession: () => Promise.reject(error), refreshSession: () => Promise.reject(error),
       onAuthStateChange: () => () => undefined,
       listLocalProfiles: () => Promise.reject(error), chooseLocalProfile: () => Promise.reject(error),

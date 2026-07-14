@@ -3,11 +3,13 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 import { evictGroupScopedQueries, useGroupsQuery } from '../../app/queries';
 import { isServiceConfigured, loopedInService } from '../../services';
 import type { AuthSession } from '../../services/api';
+import { hasPasswordRecoveryCallback } from '../../services/supabaseClient';
 import type { GroupMember } from '../../types/domain';
 import { useLoopedInStore } from '../../store/useLoopedInStore';
 import { createLatestResolutionGuard, formatInvitationRoute, parseInvitationToken, withoutInvitationRoute } from './invitationRoute';
 
 type SessionStatus = 'restoring' | 'signedOut' | 'authenticated' | 'error';
+type RecoveryStatus = 'idle' | 'loading' | 'requested' | 'ready' | 'complete' | 'invalid';
 
 type AuthSessionContextValue = {
   configured: boolean;
@@ -17,6 +19,10 @@ type AuthSessionContextValue = {
   groupsPending: boolean;
   login: (email: string, password: string) => Promise<void>;
   signUpWithInvitation: (displayName: string, email: string, password: string) => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  updatePassword: (password: string) => Promise<void>;
+  clearRecovery: () => void;
+  recoveryStatus: RecoveryStatus;
   confirmationRequired: boolean;
   invitationToken: string | null;
   setInvitationToken: (token: string) => void;
@@ -41,6 +47,8 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   const [pending, setPending] = useState(false);
   const [localProfiles, setLocalProfiles] = useState<GroupMember[]>([]);
   const [confirmationRequired, setConfirmationRequired] = useState(false);
+  const recoveryCallback = useRef(hasPasswordRecoveryCallback);
+  const [recoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>(recoveryCallback.current ? 'loading' : 'idle');
   const [invitationToken, setInvitationTokenState] = useState(() => typeof window === 'undefined' ? null : parseInvitationToken(window.location.hash));
   const previousUserId = useRef<string | null | undefined>(undefined);
   const sessionResolution = useRef(createLatestResolutionGuard());
@@ -61,20 +69,33 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let active = true;
     const restoreIsCurrent = sessionResolution.current.begin();
-    const unsubscribe = loopedInService.auth.onAuthStateChange((nextSession) => {
+    const unsubscribe = loopedInService.auth.onAuthStateChange((nextSession, passwordRecovery) => {
       const eventIsCurrent = sessionResolution.current.begin();
-      if (active && eventIsCurrent()) applySession(nextSession);
+      if (active && eventIsCurrent()) {
+        if (passwordRecovery) setRecoveryStatus('ready');
+        else if (recoveryCallback.current && !nextSession) setRecoveryStatus('invalid');
+        applySession(nextSession);
+      }
     });
 
     loopedInService.auth.getSession()
       .then((nextSession) => {
-        if (active && restoreIsCurrent()) applySession(nextSession);
+        if (active && restoreIsCurrent()) {
+          if (recoveryCallback.current) setRecoveryStatus(nextSession ? 'ready' : 'invalid');
+          applySession(nextSession);
+        }
       })
       .catch((cause: unknown) => {
         if (!active || !restoreIsCurrent()) return;
         setSession(null);
-        setError(cause instanceof Error ? cause.message : 'Unable to restore your session.');
-        setStatus('error');
+        if (recoveryCallback.current) {
+          setRecoveryStatus('invalid');
+          setError(null);
+          setStatus('signedOut');
+        } else {
+          setError(cause instanceof Error ? cause.message : 'Unable to restore your session.');
+          setStatus('error');
+        }
       });
 
     return () => {
@@ -139,6 +160,44 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
   }, [applySession, invitationToken]);
 
+  const requestPasswordReset = useCallback(async (email: string) => {
+    const operationIsCurrent = operationResolution.current.begin();
+    setPending(true);
+    setError(null);
+    try {
+      const redirect = new URL(window.location.href);
+      redirect.search = '';
+      redirect.hash = '';
+      await loopedInService.auth.requestPasswordReset(email, redirect.toString());
+      setRecoveryStatus('requested');
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'We couldn’t request a reset link. Try again.');
+    } finally {
+      if (operationIsCurrent()) setPending(false);
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    const operationIsCurrent = operationResolution.current.begin();
+    setPending(true);
+    setError(null);
+    try {
+      await loopedInService.auth.updatePassword(password);
+      setRecoveryStatus('complete');
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'We couldn’t replace your password. Try again.');
+    } finally {
+      if (operationIsCurrent()) setPending(false);
+    }
+  }, []);
+
+  const clearRecovery = useCallback(() => {
+    recoveryCallback.current = false;
+    setRecoveryStatus('idle');
+    setError(null);
+    if (typeof window !== 'undefined') window.history.replaceState(window.history.state, '', `${window.location.pathname}#/home`);
+  }, []);
+
   const setInvitationToken = useCallback((token: string) => {
     const route = formatInvitationRoute(token);
     setInvitationTokenState(token);
@@ -201,6 +260,10 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       chooseLocalProfile,
       login,
       signUpWithInvitation,
+      requestPasswordReset,
+      updatePassword,
+      clearRecovery,
+      recoveryStatus,
       logout,
       pending,
       session,

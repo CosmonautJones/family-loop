@@ -5,7 +5,7 @@ import { AppBackground } from '../components/AppBackground';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { palette, radii, shadow, spacing } from '../theme/tokens';
 
-type Mode = 'signIn' | 'signUp';
+type Mode = 'signIn' | 'signUp' | 'forgot';
 
 export function AuthScreen() {
   const auth = useAuthSession();
@@ -39,8 +39,64 @@ export function AuthScreen() {
     );
   }
 
+  if (auth.recoveryStatus === 'loading') {
+    return <SessionStatusScreen loading title="Opening your reset link" detail="Checking this private password link…" />;
+  }
+
+  if (auth.recoveryStatus === 'requested') {
+    return (
+      <AppBackground><View style={styles.centered}><View style={styles.card}>
+        <Text style={styles.eyebrow}>LOOPEDIN</Text>
+        <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Check your email</Text>
+        <Text accessibilityLiveRegion="polite" style={styles.body}>If an account can use that address, we sent a password reset link. The same message appears for every address.</Text>
+        <Pressable accessibilityRole="button" onPress={auth.clearRecovery} style={styles.button}><Text style={styles.buttonText}>Return to sign in</Text></Pressable>
+      </View></View></AppBackground>
+    );
+  }
+
+  if (auth.recoveryStatus === 'invalid') {
+    return (
+      <AppBackground><View style={styles.centered}><View style={styles.card}>
+        <Text style={styles.eyebrow}>LOOPEDIN</Text>
+        <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>This reset link can’t be used</Text>
+        <Text accessibilityRole="alert" style={styles.body}>It may have expired or already been used. Request a new link to continue.</Text>
+        <Pressable accessibilityRole="button" onPress={() => { auth.clearRecovery(); setMode('forgot'); }} style={styles.button}><Text style={styles.buttonText}>Request a new link</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={auth.clearRecovery} style={styles.textButton}><Text style={styles.textButtonLabel}>Return to sign in</Text></Pressable>
+      </View></View></AppBackground>
+    );
+  }
+
+  if (auth.recoveryStatus === 'complete') {
+    return (
+      <AppBackground><View style={styles.centered}><View style={styles.card}>
+        <Text style={styles.eyebrow}>LOOPEDIN</Text>
+        <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Password replaced</Text>
+        <Text accessibilityLiveRegion="polite" style={styles.body}>Your new password is ready. Continue to your family plans.</Text>
+        <Pressable accessibilityRole="button" onPress={auth.clearRecovery} style={styles.button}><Text style={styles.buttonText}>Continue to LoopedIn</Text></Pressable>
+      </View></View></AppBackground>
+    );
+  }
+
   const submit = async () => {
     setFormError(null);
+    if (auth.recoveryStatus === 'ready') {
+      if (password.length < 8 || password !== confirmPassword) {
+        setFormError(password !== confirmPassword ? 'Passwords do not match.' : 'Use at least 8 characters.');
+        (password.length < 8 ? passwordInput : confirmInput).current?.focus();
+        return;
+      }
+      await auth.updatePassword(password);
+      return;
+    }
+    if (mode === 'forgot') {
+      if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+        setFormError('Enter a valid email address.');
+        emailInput.current?.focus();
+        return;
+      }
+      await auth.requestPasswordReset(email.trim());
+      return;
+    }
     if (mode === 'signIn') {
       if (!email.trim() || !password) { setFormError('Enter your email and password.'); (!email.trim() ? emailInput : passwordInput).current?.focus(); return; }
       await auth.login(email.trim(), password);
@@ -60,8 +116,8 @@ export function AuthScreen() {
   return (
     <AppBackground><ScrollView contentContainerStyle={styles.centered} keyboardShouldPersistTaps="handled"><View style={styles.card}>
       <Text style={styles.eyebrow}>LOOPEDIN</Text>
-      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{mode === 'signUp' ? 'Create your account' : 'Welcome back'}</Text>
-      {auth.invitationToken ? (
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{auth.recoveryStatus === 'ready' ? 'Choose a new password' : mode === 'signUp' ? 'Create your account' : mode === 'forgot' ? 'Reset your password' : 'Welcome back'}</Text>
+      {auth.recoveryStatus === 'ready' ? <Text style={styles.body}>Use a new password with at least 8 characters.</Text> : mode === 'forgot' ? <Text style={styles.body}>Enter your email. We’ll send the same confirmation whether or not an account exists.</Text> : auth.invitationToken ? (
         <View accessibilityLiveRegion="polite" style={styles.inviteCard}>
           {invitation.isPending ? <><ActivityIndicator color={palette.coral} /><Text style={styles.body}>Checking this family invitation…</Text></> : null}
           {invitation.isError || invitation.data?.status === 'unavailable' ? <Text accessibilityRole="alert" style={styles.error}>This invitation isn’t available. Ask the person who invited you for a new link.</Text> : null}
@@ -69,15 +125,17 @@ export function AuthScreen() {
         </View>
       ) : <Text style={styles.body}>Sign in to see your family’s shared plans.</Text>}
 
-      {mode === 'signUp' ? <LabeledInput nativeID="auth-display-name" label="Display name" inputRef={nameInput} editable={!auth.pending} value={displayName} onChangeText={setDisplayName} autoComplete="name" invalid={Boolean(formError || auth.error)} /> : null}
-      <LabeledInput nativeID="auth-email" label="Email" inputRef={emailInput} editable={!auth.pending} value={email} onChangeText={setEmail} autoComplete="email" inputMode="email" autoCapitalize="none" invalid={Boolean(formError || auth.error)} />
-      <LabeledInput nativeID="auth-password" label="Password" inputRef={passwordInput} editable={!auth.pending} value={password} onChangeText={setPassword} autoComplete={mode === 'signUp' ? 'new-password' : 'current-password'} autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} />
-      {mode === 'signUp' ? <LabeledInput nativeID="auth-confirm-password" label="Confirm password" inputRef={confirmInput} editable={!auth.pending} value={confirmPassword} onChangeText={setConfirmPassword} autoComplete="new-password" autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
+      {mode === 'signUp' && auth.recoveryStatus !== 'ready' ? <LabeledInput nativeID="auth-display-name" label="Display name" inputRef={nameInput} editable={!auth.pending} value={displayName} onChangeText={setDisplayName} autoComplete="name" invalid={Boolean(formError || auth.error)} /> : null}
+      {auth.recoveryStatus !== 'ready' ? <LabeledInput nativeID="auth-email" label="Email" inputRef={emailInput} editable={!auth.pending} value={email} onChangeText={setEmail} autoComplete="email" inputMode="email" autoCapitalize="none" invalid={Boolean(formError || auth.error)} /> : null}
+      {mode !== 'forgot' ? <LabeledInput nativeID="auth-password" label={auth.recoveryStatus === 'ready' ? 'New password' : 'Password'} inputRef={passwordInput} editable={!auth.pending} value={password} onChangeText={setPassword} autoComplete={mode === 'signUp' || auth.recoveryStatus === 'ready' ? 'new-password' : 'current-password'} autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
+      {mode === 'signUp' || auth.recoveryStatus === 'ready' ? <LabeledInput nativeID="auth-confirm-password" label="Confirm password" inputRef={confirmInput} editable={!auth.pending} value={confirmPassword} onChangeText={setConfirmPassword} autoComplete="new-password" autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
       {formError || auth.error ? <Text nativeID="auth-error" accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{formError ?? auth.error}</Text> : null}
       {auth.confirmationRequired ? <Text accessibilityLiveRegion="polite" style={styles.success}>Check your email to confirm your account, then return to this invitation and sign in.</Text> : null}
       <Pressable accessibilityRole="button" disabled={auth.pending || (mode === 'signUp' && !inviteReady)} onPress={submit} style={[styles.button, (auth.pending || (mode === 'signUp' && !inviteReady)) && styles.buttonDisabled]}>
-        {auth.pending ? <ActivityIndicator color={palette.white} /> : <Text style={styles.buttonText}>{mode === 'signUp' ? 'Create account' : 'Sign in'}</Text>}
+        {auth.pending ? <ActivityIndicator color={palette.white} /> : <Text style={styles.buttonText}>{auth.recoveryStatus === 'ready' ? 'Replace password' : mode === 'signUp' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : 'Sign in'}</Text>}
       </Pressable>
+      {mode === 'signIn' && auth.recoveryStatus !== 'ready' ? <Pressable accessibilityRole="button" onPress={() => { setMode('forgot'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>Forgot password?</Text></Pressable> : null}
+      {mode === 'forgot' ? <Pressable accessibilityRole="button" onPress={() => { setMode('signIn'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>Return to sign in</Text></Pressable> : null}
       {inviteReady ? <Pressable accessibilityRole="button" onPress={() => { setMode(mode === 'signIn' ? 'signUp' : 'signIn'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>{mode === 'signIn' ? 'Create the invited account' : 'Already have an account? Sign in'}</Text></Pressable> : null}
     </View></ScrollView></AppBackground>
   );

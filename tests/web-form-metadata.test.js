@@ -18,7 +18,7 @@ test('web form fields expose stable identifiers and intentional autocomplete met
   }
   assert.match(auth, /autoComplete="name"/);
   assert.match(auth, /autoComplete="email"/);
-  assert.match(auth, /autoComplete=\{mode === 'signUp' \? 'new-password' : 'current-password'\}/);
+  assert.match(auth, /autoComplete=\{mode === 'signUp' \|\| auth\.recoveryStatus === 'ready' \? 'new-password' : 'current-password'\}/);
 
   for (const source of [create, detail, onboarding, family]) {
     const inputs = source.match(/<TextInput(?:\s|\/)[\s\S]*?\/>/g) ?? [];

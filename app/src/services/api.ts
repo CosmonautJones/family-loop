@@ -22,9 +22,11 @@ export type AuthSignUpResult =
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>;
   signUp(invitationToken: string, displayName: string, email: string, password: string): Promise<AuthSignUpResult>;
+  requestPasswordReset(email: string, redirectTo: string): Promise<void>;
+  updatePassword(password: string): Promise<void>;
   logout(): Promise<void>;
   getSession(): Promise<AuthSession | null>;
-  onAuthStateChange(listener: (session: AuthSession | null) => void): () => void;
+  onAuthStateChange(listener: (session: AuthSession | null, passwordRecovery?: boolean) => void): () => void;
   refreshSession(): Promise<AuthSession>;
   listLocalProfiles(): Promise<GroupMember[]>;
   chooseLocalProfile(personId: string): Promise<AuthSession>;

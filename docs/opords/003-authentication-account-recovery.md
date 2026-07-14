@@ -2,14 +2,14 @@
 
 ## Status
 
-PARTIAL/CONDITIONAL — invite-first signup/sign-in, session restore/logout, and protected-content gating are implemented and locally proven; password recovery/reset and production email delivery are not implemented or tested.
+LOCAL COMPLETE / EXTERNAL CONDITIONAL — invite-first signup/sign-in, session restore/logout, protected-content gating, and enumeration-safe password recovery are implemented and proven against loopback Supabase Auth and Mailpit. Hosted redirects, production email delivery/rate limits, and physical-browser checks remain `NOT RUN`.
 
 ## Situation and evidence
 
 - Configured builds restore Supabase sessions and gate protected content; unconfigured builds enter deterministic prototype mode (`docs/architecture.md:31-40`).
 - The shell explicitly handles restoring, signed-out/error, group loading/error, and no-group states (`app/src/navigation/AppShell.tsx:29-41`).
 - Loopback Supabase browser sessions proved invite-bound signup for Maya and Jordan, owner and outsider sign-in, session restoration, reload persistence, and protected direct-route denial.
-- Account recovery/reset, production email delivery, hosted redirect origins, and provider rate limits remain unimplemented or unverified.
+- A disposable loopback account proved neutral known/unknown requests, local email receipt, valid reset, old/new password behavior, replay/invalid denial, reload, and cleanup. Production email delivery, hosted redirect origins, and provider rate limits remain unverified.
 
 ## Mission/objective
 
@@ -70,12 +70,12 @@ Use explicit “Accept invitation,” “Create account,” “Sign in,” and �
 | Criterion | Disposition | Evidence |
 |---|---|---|
 | Valid intended invitation gates signup and preserves context | COMPLETE LOCALLY | `3ebb0a0`, `f04fa77`, `e68d615`; two invitees completed browser signup/acceptance. |
-| Enumeration-safe signup/sign-in/recovery responses | PARTIAL | Invite matching uses neutral responses; recovery flow does not exist. |
-| Approved reset link replaces password | NOT IMPLEMENTED / NOT RUN | Requires product/security and email-provider configuration. |
-| Invalid/expired links and network failures recover clearly | COMPLETE for invites / NOT RUN for reset | Invite lifecycle tests cover invalid, wrong-email, expiry, decline/revoke/replay; reset links are absent. |
+| Enumeration-safe signup/sign-in/recovery responses | COMPLETE LOCALLY | Known and unknown loopback recovery requests return the same status/body and visible confirmation; only the known address receives local mail. |
+| Approved reset link replaces password | COMPLETE LOCALLY | Local Auth verification token replaced the password; old login failed and new login passed in both service and configured-browser proofs. |
+| Invalid/expired links and network failures recover clearly | COMPLETE LOCALLY | Replayed/malformed links return no session and render a new-link path; browser offline injection renders connection-specific safe copy. |
 | Session restore/logout and minimal profile bootstrap | COMPLETE LOCALLY | Four-session browser reload and invite-signup display-name flow; monotonic auth guards in `3ebb0a0`. |
 | Protected content denied before authentication | COMPLETE | Configured signed-out and outsider direct-route browser evidence. |
-| Existing auth/group/mock regressions | COMPLETE | Root/app suites and configured browser proof at `88d0ed9`. |
+| Existing auth/group/mock regressions | COMPLETE | Root/app suites, configured family verifier, and recovery-specific service/browser harnesses pass. |
 
 ## Validation commands/evidence
 
@@ -89,13 +89,13 @@ git diff --check
 git status --short
 ```
 
-- Report lint as placeholder unless changed.
-- 390x844 configured signed-out and recovery UI smoke.
+- Substantive lint is enabled and must pass with zero warnings.
+- `tests/supabase-password-recovery-e2e.mjs` and `tests/browser-password-recovery-smoke.mjs` are the token-redacting loopback proofs documented in `docs/runbooks/password-recovery-local-proof.md`.
 
 ### Conditional-staging/mobile-web/human
 
 - Safe-environment matrix: valid/invalid/expired/wrong-account invite; new/existing account; known/unknown email neutral recovery; expired/reused reset; offline failure; bootstrap retry; session restore/sign-out.
-- Live recovery: `NOT RUN — safe environment unavailable` until prerequisites exist.
+- Hosted recovery: `NOT RUN — named safe hosted environment unavailable` until prerequisites exist.
 - HTTPS browser-link tests: report iOS Safari and Android Chrome results honestly, including existing/new tab, Back/history, deep-link, and reload behavior.
 
 ## Stop conditions/authorization limits

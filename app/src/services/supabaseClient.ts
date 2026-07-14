@@ -5,6 +5,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
+const callbackFragment = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.hash.slice(1));
+export const hasPasswordRecoveryCallback = callbackFragment.get('type') === 'recovery'
+  || (callbackFragment.has('error_code') && /email link|recover|expired/i.test(callbackFragment.get('error_description') ?? ''));
+
 export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
 
 let client: SupabaseClient | null = null;
@@ -19,7 +23,7 @@ export function getSupabaseClient() {
       storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: typeof window !== 'undefined',
     },
   });
 

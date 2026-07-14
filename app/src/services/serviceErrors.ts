@@ -32,9 +32,11 @@ function categoryForError(error: unknown): ServiceErrorCategory | null {
   const details = errorDetails(error);
   const code = String(details.code ?? '').toLowerCase();
   const status = Number(details.status ?? details.statusCode ?? 0);
+  const hasStatus = details.status !== undefined || details.statusCode !== undefined;
+  const name = error instanceof Error ? error.name.toLowerCase() : '';
   const message = String(details.message ?? (error instanceof Error ? error.message : error) ?? '').toLowerCase();
 
-  if (error instanceof TypeError || /failed to fetch|network request failed|load failed|networkerror|fetch failed/.test(message)) return 'network';
+  if (error instanceof TypeError || name === 'authretryablefetcherror' || (hasStatus && status === 0) || /failed to fetch|network request failed|load failed|networkerror|fetch failed/.test(message)) return 'network';
   if (status === 401 || /jwt|token.*expired|session.*expired|pgrst301/.test(`${code} ${message}`)) return 'session';
   if (status === 403 || code === '42501' || /row-level security|permission denied|not authorized|forbidden/.test(message)) return 'access';
   if (status === 409 || ['23503', '23505', '409'].includes(code)) return 'conflict';

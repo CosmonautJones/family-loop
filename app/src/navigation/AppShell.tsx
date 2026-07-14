@@ -29,6 +29,7 @@ export function AppShell() {
   const auth = useAuthSession();
   const { tabItems, activeTab, activeSurface, activeEventId, setActiveTab, openEventDetail, closeEventDetail } = useAppShellState();
 
+  if (auth.recoveryStatus !== 'idle') return <AuthScreen />;
   if (auth.status === 'restoring') {
     return <SessionStatusScreen loading title="Restoring your plans" detail="Connecting to your private family space…" />;
   }
