@@ -188,7 +188,7 @@ test('OPORD evidence dispositions stay reconciled with the configured local proo
   const index = fs.readFileSync(path.join(opordDir, 'README.md'), 'utf8');
 
   assert.match(index, /## 2026-07-14 evidence disposition/);
-  assert.match(index, /substantive lint[\s\S]*Hosted CI remains unobserved/i);
+  assert.match(index, /substantive lint[\s\S]*29376063946[\s\S]*12f760d[\s\S]*administrator-required checks `NOT RUN`/i);
   assert.match(index, /Physical iOS\/Android.+NOT RUN/i);
   assert.doesNotMatch(index, /Docker is unavailable|local Supabase stack has not been exercised/i);
 

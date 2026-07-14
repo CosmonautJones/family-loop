@@ -493,3 +493,11 @@
 - KISS/industry review required effective 320/390/430 rather than only 390; the added owner matrices close that P2 evidence gap. Physical phone browsers, assistive technology, physical software keyboards, and moderated older-adult sessions remain conditional and are not inferred.
 - Targeted post-fix UX re-review was **GREEN, zero P0-P2**. It confirmed the 320/390/430 evidence closure and requested only the wording precision that glyph containment applies to interactive controls, not universal body-text measurement.
 - Final gates: root PASS 100/100; app-local PASS 75/75; TypeScript, ESLint, harness, 208-file secret scan, five-migration validation, local database lint, real Chrome zoom replay, and diff check PASS.
+
+## 2026-07-14 — OPORD 015 first GitHub-hosted clean CI run
+
+- Draft PR #1 baseline run `29375486597` reproduced two portability defects without touching deployment or hosted Supabase: `tests/app-scaffold.test.js` used a Windows-only absolute workspace path, and the disposable Supabase stack collided with an occupied runner port `54322`.
+- Commit `12f760d` derives the repository root from `import.meta.url`. The migration job rewrites only its ephemeral checkout to a run-specific Supabase project ID and isolated `6542x` ports; checked-in local defaults, migration integrity, pinned tools, least permissions, and cleanup remain unchanged.
+- Independent CI/security review was **GREEN, zero blockers**. Local proof passed root 100/100, app 75/75, zero-warning ESLint, TypeScript, five ordered/checksummed migrations, 208-file secret scan, harness, local database lint, and diff check.
+- Replacement run `29376063946` completed **GREEN** on exact commit `12f760d`: `Application quality` job `87229668121` passed in 4m19s; `Security and dependencies` job `87229668152` passed in 13s; `Migration integrity` job `87229668163` passed in 4m14s, including disposable reset/apply/lint and cleanup.
+- GitHub emitted one non-failing supply-chain maintenance advisory: the pinned checkout/setup-node/setup-cli actions target deprecated Node 20 action runtimes and were force-run on Node 24. Application Node remains pinned to 22. Hosted seeded-failure proof, administrator-required checks, hosted artifact build/promotion, deployment, and hosted Supabase remain `NOT RUN`.

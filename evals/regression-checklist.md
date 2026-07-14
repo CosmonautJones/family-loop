@@ -139,7 +139,8 @@
 - [x] Secret scan reports only file/rule metadata; high/critical dependency findings block; exceptions require owner and expiry.
 - [x] Migration filenames, strict order, SHA-256 inventory, base-ref immutability, disposable apply, and database lint are gated.
 - [x] Local clean gates pass; seeded lint, test, fake-secret, historical-edit, and out-of-order failures each exit nonzero and all seeds are removed.
-- [ ] GitHub-hosted pass/failure runs and administrator-required branch checks remain `NOT RUN`; no push, PR, or repository setting was authorized.
+- [x] GitHub-hosted clean run `29376063946` passed `Application quality`, `Security and dependencies`, and `Migration integrity` on commit `12f760d`, including disposable migration reset/apply/lint.
+- [ ] Hosted seeded-failure runs and administrator-required branch checks remain `NOT RUN`; no repository setting was changed.
 
 ## OPORD 012 resilience and capacity
 
@@ -175,7 +176,8 @@
 - [x] Exact artifact `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d` ran unchanged under distinct local-demo and loopback-Supabase IDs; config was external/no-store and exact backend origin drove CSP.
 - [x] Runtime-config rehearsal restored artifact plus overlay after invalid-config proof; final performance budgets remained green at 3,252/2,712/2,668 ms LCP and 178/115/94 ms longest task.
 - [ ] Identical artifact promotion and compatibility across distinct hosted backends remains `NOT RUN`; the loopback overlay used the same local Supabase stack as existing configured proof.
-- [ ] GitHub-hosted green commit, named host/environments/operators, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
+- [x] Branch head `12f760d` has a green GitHub-hosted CI run (`29376063946`); that run did not build or promote the historical release artifact.
+- [ ] Named host/environments/operators, artifact-from-CI linkage, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
 
 ## OPORD 017 local backup, restore, and data lifecycle
 

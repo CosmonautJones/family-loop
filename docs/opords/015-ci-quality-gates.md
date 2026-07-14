@@ -1,10 +1,10 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-PARTIAL/CONDITIONAL — substantive lint, repository CI definitions, local clean gates, and seeded-failure proofs are implemented. A GitHub-hosted run and administrator-required branch checks remain `NOT RUN` because no push, PR, or repository-setting mutation was authorized.
+PARTIAL/CONDITIONAL — substantive lint, repository CI definitions, local clean/seeded-failure proofs, and one clean GitHub-hosted pull-request run are complete. Hosted seeded-failure proofs and administrator-required branch checks remain `NOT RUN`.
 
 ## Situation and evidence
-Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. `.github/workflows/ci.yml` defines three stable checks, but repository-hosted execution and branch enforcement are not inferred from the local workflow file.
+Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. Draft PR #1 run `29376063946` proves the three stable checks on commit `12f760d`, including a disposable runner migration reset/apply/lint. Branch enforcement is not configured or inferred from that run.
 
 ## Mission/objective
 Implement a required pull-request CI workflow with substantive lint, root/app tests, TypeScript, harness, secret/dependency checks, and deterministic migration validation before code can merge.
@@ -46,10 +46,10 @@ CI must preserve the accessibility and large-text regressions defined by OPORD 0
 | Criterion | Disposition | Evidence |
 |---|---|---|
 | Substantive reproducible lint | COMPLETE LOCALLY | Exact `eslint@9.39.5` and `eslint-config-expo@9.2.0`; flat config; zero-warning command; clean pass plus seeded unused-value exit 1. User explicitly approved the dependencies. |
-| CI install/test/type/lint/harness/secret/dependency/migration jobs | IMPLEMENTED / HOSTED RUN NOT RUN | Three stable jobs cover the requested gates. App install uses its lockfile; root tests correctly run without nonexistent root lock/install. Fresh-runner migration apply/lint remains unobserved until an authorized GitHub run. |
+| CI install/test/type/lint/harness/secret/dependency/migration jobs | HOSTED PASS | Draft PR #1 run `29376063946` passed `Application quality` (`87229668121`), `Security and dependencies` (`87229668152`), and `Migration integrity` (`87229668163`) on commit `12f760d`; the latter completed disposable reset/apply/lint. |
 | Least permissions/pinned tools/deterministic caches/no secrets | COMPLETE BY STATIC/LOCAL REVIEW | `contents: read`, concurrency cancellation, Node 22, exact Supabase CLI 2.109.0, immutable action SHAs, app-lock cache key, no secret references, and bounded timeouts. |
-| Seeded violations fail stable required checks | COMPLETE LOCALLY / HOSTED NOT RUN | Lint, test, synthetic secret assignment, historical migration edit, and out-of-order migration each exited 1; every seed was removed and clean reruns passed. |
-| No unauthorized release/remote/branch mutation | COMPLETE | Campaign remained local; this is a safety result, not CI completion. |
+| Seeded violations fail stable required checks | COMPLETE LOCALLY / HOSTED NOT RUN | Lint, test, synthetic secret assignment, historical migration edit, and out-of-order migration each exited 1; every seed was removed and clean reruns passed. No disposable hosted failure branch was created. |
+| No unauthorized release/remote/branch mutation | COMPLETE | The authorized branch push and draft PR changed repository source/metadata only. No release, deploy, branch-protection, hosted Supabase, or repository-setting mutation occurred. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -68,13 +68,13 @@ git diff --check
 The current populated loopback browser scenario must not be reset for this mission. CI performs reset/apply/lint only inside its fresh disposable runner. Local intentional-failure evidence and removal details are recorded in `docs/runbooks/ci-quality-gates.md`.
 
 ### Conditional-staging/mobile-web/human
-Trigger the workflow on an approved draft PR and have an administrator enable required checks only after stable names pass. Mobile-web browser/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
+The approved draft PR clean run is complete. A repository administrator may enable the three stable required checks only after separately authorizing any hosted seeded-failure proof and reviewing the recorded run. Mobile-web browser/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
 
 ## Stop conditions/authorization limits
-Stop before adding lint dependencies without approval, using secrets, editing runtime code outside focused lint corrections, mutating branch protection, opening/pushing a PR, or running remote migration/deploy commands.
+Stop before adding lint dependencies without approval, using secrets, editing runtime code outside focused lint corrections, mutating branch protection, opening/pushing a PR without explicit authorization, or running remote migration/deploy commands.
 
 ## Risks/follow-ups
 Supply-chain risk, noisy audit findings, platform-specific scripts, workflow permission excess, and false confidence from structural migration checks. Release work belongs to OPORD 016.
 
 ## Definition of done
-Local implementation is complete when substantive lint and every critical gate has observed clean/failure evidence, workflow permissions are reviewed, required-check instructions and exceptions are documented, and the review log is updated. Full OPORD completion additionally requires one authorized GitHub-hosted pass, seeded disposable-PR failures, and administrator enforcement of the three stable required checks.
+Local implementation and one authorized GitHub-hosted clean pass are complete. Full OPORD completion additionally requires hosted seeded disposable-PR failures and administrator enforcement of the three stable required checks.

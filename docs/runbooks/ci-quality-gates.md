@@ -2,11 +2,11 @@
 
 ## Current boundary
 
-The workflow and all local equivalents are implemented. No branch was pushed, no pull request was opened, and no GitHub repository setting was changed. Therefore the workflow is locally reviewed but not yet observed on a GitHub-hosted runner, and required-check enforcement remains `NOT RUN`.
+The workflow, local equivalents, and one clean GitHub-hosted pull-request run are implemented and observed. Draft PR #1 run `29376063946` passed all three stable checks on commit `12f760d`. No GitHub repository setting, deployment, or hosted Supabase resource was changed, so required-check enforcement and hosted seeded-failure proofs remain `NOT RUN`.
 
 ## Stable checks
 
-Require these exact check names after their first successful authorized pull-request run:
+The first authorized pull-request run passed these exact check names; require them only after separate administrator approval:
 
 - `Application quality`
 - `Security and dependencies`
@@ -61,6 +61,20 @@ Each synthetic violation was added alone, the production-equivalent command was 
 
 The final clean secret and migration checks pass, and none of the seed filenames remains in the repository.
 
+## GitHub-hosted clean proof recorded on 2026-07-14
+
+Baseline run `29375486597` exposed two portability defects: the root scaffold test contained a Windows-only absolute path, and the disposable Supabase stack attempted to bind an occupied runner port. Commit `12f760d` derives the repository from `import.meta.url` and gives only the ephemeral CI checkout a unique project ID plus isolated `6542x` ports; checked-in local Supabase defaults are unchanged.
+
+Replacement run `29376063946` completed successfully:
+
+| Stable check | Job ID | Result | Direct evidence |
+|---|---:|---|---|
+| `Application quality` | `87229668121` | PASS, 4m19s | Install, zero-warning lint, root/app tests, TypeScript, and harness passed. |
+| `Security and dependencies` | `87229668152` | PASS, 13s | Secret scan and high/critical dependency audit passed. |
+| `Migration integrity` | `87229668163` | PASS, 4m14s | Order/checksum/history checks and disposable reset/apply/database lint passed. |
+
+GitHub emitted a non-failing platform advisory: the pinned `actions/checkout@v4`, `actions/setup-node@v4`, and `supabase/setup-cli@v1` action runtimes target deprecated Node 20 and were force-run on Node 24. Application Node remains explicitly pinned to 22. Action-major upgrades require a separate reviewed maintenance change.
+
 ## Dependency policy
 
 `npm audit --package-lock-only --audit-level=high` blocks high and critical findings without requiring a second dependency installation. Any exception at those severities requires a tracked record naming the affected package/path, rationale, mitigating control, repository-maintainer owner, and an expiry date; an expired or ownerless exception fails release review. There are currently no high/critical exceptions.
@@ -69,10 +83,10 @@ The current Expo SDK 53 tree reports 11 moderate transitive advisories in build/
 
 ## Administrator activation
 
-1. Authorize a push and draft pull request without deployment credentials.
-2. Observe all three exact checks pass on GitHub-hosted runners.
-3. On a disposable follow-up branch, reproduce the lint, test, secret, and migration failures without using a real secret; close or delete the branch afterward.
+1. COMPLETE — authorized draft PR #1 contains no deployment credentials.
+2. COMPLETE — all three exact checks passed in run `29376063946`.
+3. On a separately authorized disposable follow-up branch, reproduce the lint, test, secret, and migration failures without using a real secret; close or delete the branch afterward.
 4. In the repository ruleset or branch-protection settings for the protected default branch, require a pull request and the three exact checks above. Require branches to be current before merge if that matches the repository’s merge policy.
-5. Record the workflow URLs, commit SHA, administrator, activation time, and any exception owner/expiry in the review log.
+5. Record the administrator, activation time, and any exception owner/expiry in the review log when enforcement is enabled.
 
 Stop if a check name differs, a job requests secrets or write permission, a migration job reaches a non-loopback database, a dependency exception lacks owner/expiry, or a workflow change introduces deployment behavior.
