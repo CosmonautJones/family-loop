@@ -252,12 +252,14 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         const allowedGroups = new Set(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)).map((group) => group.id));
         return wait(db.notifications.filter((notification) => {
           const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
-          return Boolean(groupId && allowedGroups.has(groupId));
+          return notification.userId === profile.id && Boolean(groupId && allowedGroups.has(groupId));
         }));
       },
       markRead: async (notificationId) => {
+        const profile = actor();
         const notification = db.notifications.find((item) => item.id === notificationId);
         if (!notification) throw new Error(`Missing notification ${notificationId}`);
+        if (notification.userId !== profile.id) throw new Error('You can only update notifications addressed to you.');
         const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
         if (!groupId) throw new Error('This notification is not attached to an accessible group.');
         groupMembership(groupId);
@@ -269,7 +271,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         const allowedGroups = new Set(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)).map((group) => group.id));
         db.notifications = db.notifications.map((notification) => {
           const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
-          return groupId && allowedGroups.has(groupId) ? { ...notification, read: true } : notification;
+          return notification.userId === profile.id && groupId && allowedGroups.has(groupId) ? { ...notification, read: true } : notification;
         });
         return changed(undefined);
       },

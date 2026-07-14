@@ -63,6 +63,7 @@ type MediaRow = {
 
 type NotificationRow = {
   id: string;
+  user_id: string;
   kind: NotificationItem['kind'];
   title: string;
   body: string;
@@ -158,6 +159,7 @@ function mapRsvp(row: RsvpRow): RSVP {
 function mapNotification(row: NotificationRow): NotificationItem {
   return {
     id: row.id,
+    userId: row.user_id,
     kind: row.kind,
     title: row.title,
     body: row.body,
@@ -500,9 +502,11 @@ export function createSupabaseLoopedInService(): LoopedInService {
     },
     activity: {
       async listRecentActivity(): Promise<EventActivity[]> {
+        const userId = await getCurrentUserId();
         const { data, error } = await supabase
           .from('loopedin_notifications')
-          .select('id, kind, title, body, event_id, read, created_at')
+          .select('id, user_id, kind, title, body, event_id, read, created_at')
+          .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(12);
         throwIfError(error);
@@ -604,19 +608,23 @@ export function createSupabaseLoopedInService(): LoopedInService {
     },
     notifications: {
       async listNotifications() {
+        const userId = await getCurrentUserId();
         const { data, error } = await supabase
           .from('loopedin_notifications')
-          .select('id, kind, title, body, event_id, group_id, read, created_at')
+          .select('id, user_id, kind, title, body, event_id, group_id, read, created_at')
+          .eq('user_id', userId)
           .order('created_at', { ascending: false });
         throwIfError(error);
         return ((data ?? []) as NotificationRow[]).map(mapNotification);
       },
       async markRead(notificationId) {
-        const { error } = await supabase.from('loopedin_notifications').update({ read: true }).eq('id', notificationId);
+        const userId = await getCurrentUserId();
+        const { error } = await supabase.from('loopedin_notifications').update({ read: true }).eq('id', notificationId).eq('user_id', userId);
         throwIfError(error);
       },
       async clearAll() {
-        const { error } = await supabase.from('loopedin_notifications').update({ read: true }).eq('read', false);
+        const userId = await getCurrentUserId();
+        const { error } = await supabase.from('loopedin_notifications').update({ read: true }).eq('user_id', userId).eq('read', false);
         throwIfError(error);
       },
     },

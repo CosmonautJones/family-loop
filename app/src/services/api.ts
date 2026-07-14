@@ -111,6 +111,7 @@ export interface MediaApi {
 
 export interface NotificationItem {
   id: string;
+  userId: string;
   kind: 'rsvp' | 'message' | 'media' | 'reminder' | 'event_update';
   title: string;
   body: string;

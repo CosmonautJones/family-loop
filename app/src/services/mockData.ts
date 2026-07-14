@@ -71,7 +71,7 @@ export function createMockDatabase(): MockDatabase {
     media,
     activity: [{ id: 'activity-lake-photos', eventId: 'event-lake-geneva', actor: members[1], title: 'Maya shared 3 reunion photos', detail: 'The Lake Geneva memory is ready', badge: 'Photos', tone: 'coral', createdAt: '2026-06-15T10:05:00-05:00' }],
     memories: [{ id: 'memory-lake-geneva', eventId: 'event-lake-geneva', title: 'Lake Geneva Reunion', description: 'A sunny family weekend by the water.', capturedOn: '2026-06-14T17:00:00-05:00', photoCount: 3, peopleCount: 5, commentCount: 1, tags: ['Lake', 'Reunion', 'Family'], resurfacedLabel: 'Last month', coverUri: media[0].uri, photoUris: media.map((item) => item.uri) }],
-    notifications: [{ id: 'notification-door-county', kind: 'message', title: 'New Door County note', body: 'Maya reserved the cabin and saved the first-floor room.', eventId: 'event-door-county', groupId: 'group-jones-family', read: false, createdAt: '2026-07-10T18:10:00-05:00' }],
+    notifications: members.map((member) => ({ id: member.id === 'person-you' ? 'notification-door-county' : `notification-door-county-${member.id}`, userId: member.id, kind: 'message' as const, title: 'New Door County note', body: 'Maya reserved the cabin and saved the first-floor room.', eventId: 'event-door-county', groupId: 'group-jones-family', read: false, createdAt: '2026-07-10T18:10:00-05:00' })),
   });
 }
 

@@ -4,7 +4,7 @@ import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData
 import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 5;
+export const durableDatabaseVersion = 6;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -43,7 +43,7 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
 
 function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
   const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
-  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== 5 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
@@ -77,6 +77,17 @@ function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrat
     const group = database.groups.find((item) => item.id === event.groupId);
     const defaultCreator = group?.members?.find((member) => member.role === 'owner') ?? group?.members?.[0];
     return { ...event, creatorId: event.creatorId || defaultCreator?.id || 'legacy-creator' };
+  });
+  database.notifications = database.notifications.flatMap((notification) => {
+    if (notification.userId) return [notification];
+    const groupId = notification.groupId ?? database.events.find((event) => event.id === notification.eventId)?.groupId;
+    const members = database.groups.find((group) => group.id === groupId)?.members ?? [];
+    if (!members.length) return [{ ...notification, userId: 'legacy-recipient' }];
+    return members.map((member, index) => ({
+      ...notification,
+      id: index === 0 ? notification.id : `${notification.id}:${member.id}`,
+      userId: member.id,
+    }));
   });
   return {
     envelope: { version: durableDatabaseVersion, revision: parsed.revision ?? 0, database },
