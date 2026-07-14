@@ -22,6 +22,8 @@ export interface AuthApi {
   getSession(): Promise<AuthSession | null>;
   onAuthStateChange(listener: (session: AuthSession | null) => void): () => void;
   refreshSession(): Promise<AuthSession>;
+  listLocalProfiles(): Promise<GroupMember[]>;
+  chooseLocalProfile(personId: string): Promise<AuthSession>;
 }
 
 export interface CreateGroupPayload {
@@ -68,8 +70,8 @@ export interface EventsApi {
 
 export interface CreateRsvpPayload {
   eventId: string;
-  personId: string;
-  personName: string;
+  personId?: string;
+  personName?: string;
   status: RSVP['status'];
   note?: string;
 }

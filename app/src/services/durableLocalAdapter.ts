@@ -1,9 +1,10 @@
 import type { LoopedInService } from './api';
 import { createMockLoopedInService } from './mockAdapter';
 import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData';
+import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 3;
+export const durableDatabaseVersion = 4;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -42,7 +43,7 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
 
 function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
   const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
-  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
@@ -65,6 +66,13 @@ function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrat
     ...item,
     altText: item.altText?.trim() || item.caption?.trim() || 'Shared family photo',
   }));
+  database.messages = database.messages.map((message) => {
+    const knownAuthor = database.groups.flatMap((group) => group.members ?? []).find((member) => member.id === message.author?.id || member.name === message.authorName);
+    return {
+      ...message,
+      authorId: message.authorId || knownAuthor?.id || `legacy-author:${message.authorName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+    };
+  });
   return {
     envelope: { version: durableDatabaseVersion, revision: parsed.revision ?? 0, database },
     migrated: parsed.version !== durableDatabaseVersion,
@@ -74,13 +82,14 @@ function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrat
 export function createDurableLocalLoopedInService(
   storage: AsyncKeyValueStorage,
   seedFactory: () => MockDatabase = createMockDatabase,
+  actorSession: LocalActorSessionStore = createMemoryActorSessionStore(),
 ): DurableLocalService {
   let service: LoopedInService;
   let committed: DurableDatabaseEnvelope | null = null;
 
   const build = (envelope: DurableDatabaseEnvelope) => {
     committed = { ...envelope, database: cloneDatabase(envelope.database) };
-    service = createMockLoopedInService(envelope.database);
+    service = createMockLoopedInService(envelope.database, { actorSession });
   };
 
   const load = async () => {
@@ -116,6 +125,7 @@ export function createDurableLocalLoopedInService(
       const latest = await load();
       let nextDatabase: MockDatabase | null = null;
       const latestService = createMockLoopedInService(latest.database, {
+        actorSession,
         onChange: async (database) => { nextDatabase = database; },
       });
       const method = latestService[name][property as keyof LoopedInService[K]] as (...values: unknown[]) => Promise<unknown>;
@@ -139,10 +149,12 @@ export function createDurableLocalLoopedInService(
       return (...args: unknown[]) => {
         const propertyName = String(property);
         if (mutations[name]?.has(propertyName)) return mutate(name, propertyName, args);
-        return ready.then(() => {
+        return ready.then(() => withStorageLock(async () => {
+          const latest = await load();
+          if (!committed || latest.revision !== committed.revision) build(latest);
           const method = service[name][property as keyof LoopedInService[K]] as (...values: unknown[]) => unknown;
           return method(...args);
-        });
+        }));
       };
     },
   });

@@ -1,11 +1,13 @@
 import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, LoopedInService, MediaUploadPayload, UpdateEventPayload } from './api';
 import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData';
 import { validateMediaUpload } from './mediaValidation';
+import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
 
 const wait = <T>(value: T) => new Promise<T>((resolve) => setTimeout(() => resolve(value), 120));
 
 export type MockServiceOptions = {
   onChange?: (database: MockDatabase) => Promise<void>;
+  actorSession?: LocalActorSessionStore;
 };
 
 export function createMockLoopedInService(seed: MockDatabase = createMockDatabase(), options: MockServiceOptions = {}): LoopedInService {
@@ -15,11 +17,38 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
   let nextEventId = nextId('event-created-', db.events.map((item) => item.id));
   let nextMessageId = nextId('message-created-', db.messages.map((item) => item.id));
   let nextMediaId = nextId('media-created-', db.media.map((item) => item.id));
-  const mockSession = {
-    userId: 'person-you',
-    displayName: 'Alex Jones',
-    token: 'mock-loopedin-token',
-    expiresAt: '2026-12-31T23:59:59Z',
+  const actorSession = options.actorSession ?? createMemoryActorSessionStore();
+  const authListeners = new Set<(session: Awaited<ReturnType<typeof currentSession>>) => void>();
+  const allProfiles = () => [...new Map(db.groups.flatMap((group) => group.members ?? []).map((member) => [member.id, member])).values()];
+  const actor = () => {
+    const actorId = actorSession.getActorId();
+    if (!actorId) throw new Error('Choose a family profile to continue.');
+    const profile = allProfiles().find((member) => member.id === actorId);
+    if (!profile) throw new Error('This local profile is no longer available.');
+    return profile;
+  };
+  const currentSession = async () => {
+    const actorId = actorSession.getActorId();
+    const profile = actorId ? allProfiles().find((member) => member.id === actorId) : undefined;
+    return profile ? { userId: profile.id, displayName: profile.name, token: 'local-profile-session', expiresAt: '9999-12-31T23:59:59Z' } : null;
+  };
+  const groupMembership = (groupId: string) => {
+    const profile = actor();
+    const group = db.groups.find((item) => item.id === groupId);
+    if (!group) throw new Error(`You do not have access to group ${groupId}.`);
+    const member = group.members?.find((item) => item.id === profile.id) ?? null;
+    if (!member) throw new Error(`You do not have access to group ${groupId}.`);
+    return { group, member, profile };
+  };
+  const eventMembership = (eventId: string) => {
+    const event = db.events.find((item) => item.id === eventId);
+    if (!event) return { event: null, group: null, member: null, profile: actor() };
+    return { event, ...groupMembership(event.groupId) };
+  };
+  const requireEventMembership = (eventId: string) => {
+    const access = eventMembership(eventId);
+    if (!access.event || !access.group || !access.member) throw new Error(`Missing event ${eventId}`);
+    return { ...access, event: access.event, group: access.group, member: access.member };
   };
   const changed = async <T>(value: T) => {
     await options.onChange?.(cloneDatabase(db));
@@ -28,41 +57,73 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
 
   return {
     auth: {
-      login: (email) => wait({
-        ...mockSession,
-        displayName: email.split('@')[0] || 'You',
-      }),
-      logout: () => wait(undefined),
-      getSession: () => wait(mockSession),
-      onAuthStateChange: () => () => undefined,
-      refreshSession: () => wait({
-        ...mockSession,
-        token: 'mock-loopedin-token-refreshed',
-      }),
+      login: async () => {
+        const profile = allProfiles()[0];
+        if (!profile) throw new Error('No local profiles are available.');
+        actorSession.setActorId(profile.id);
+        const session = await currentSession();
+        authListeners.forEach((listener) => listener(session));
+        return session!;
+      },
+      logout: async () => {
+        actorSession.setActorId(null);
+        authListeners.forEach((listener) => listener(null));
+        return wait(undefined);
+      },
+      getSession: () => currentSession().then(wait),
+      onAuthStateChange: (listener) => {
+        authListeners.add(listener);
+        return () => authListeners.delete(listener);
+      },
+      refreshSession: async () => {
+        const session = await currentSession();
+        if (!session) throw new Error('Choose a family profile to continue.');
+        return wait(session);
+      },
+      listLocalProfiles: () => wait(allProfiles()),
+      chooseLocalProfile: async (personId) => {
+        if (!allProfiles().some((profile) => profile.id === personId)) throw new Error('That local profile is unavailable.');
+        actorSession.setActorId(personId);
+        const session = await currentSession();
+        authListeners.forEach((listener) => listener(session));
+        return wait(session!);
+      },
     },
     groups: {
-      listGroups: () => wait([...db.groups]),
-      listGroupMembers: (groupId) => wait([...(db.groups.find((group) => group.id === groupId)?.members ?? [])]),
-      getGroup: (groupId) => wait(db.groups.find((group) => group.id === groupId) ?? null),
-      createGroup: (payload: CreateGroupPayload) => {
-        const group = { id: `group-created-${nextGroupId++}`, badge: 'New', tone: 'coral' as const, memberCount: 1, ...payload };
+      listGroups: async () => {
+        const profile = actor();
+        return wait(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)));
+      },
+      listGroupMembers: async (groupId) => {
+        const { group } = groupMembership(groupId);
+        return wait([...(group?.members ?? [])]);
+      },
+      getGroup: async (groupId) => wait(groupMembership(groupId).group),
+      createGroup: async (payload: CreateGroupPayload) => {
+        const profile = actor();
+        const group = { id: `group-created-${nextGroupId++}`, badge: 'New', tone: 'coral' as const, memberCount: 1, members: [{ ...profile, role: 'owner' as const }], ...payload };
         db.groups.push(group);
         return changed(group);
       },
-      updateGroup: (groupId, patch) => {
-        const group = db.groups.find((item) => item.id === groupId);
+      updateGroup: async (groupId, patch) => {
+        const { group } = groupMembership(groupId);
         if (!group) throw new Error(`Missing group ${groupId}`);
         Object.assign(group, patch);
         return changed(group);
       },
-      deleteGroup: (groupId) => {
+      deleteGroup: async (groupId) => {
+        groupMembership(groupId);
         db.groups = db.groups.filter((group) => group.id !== groupId);
         return changed(undefined);
       },
     },
     events: {
-      listEvents: (groupId) => wait(db.events
-        .filter((event) => !groupId || event.groupId === groupId)
+      listEvents: async (groupId) => {
+        const profile = actor();
+        if (groupId) groupMembership(groupId);
+        const allowedGroups = new Set(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)).map((group) => group.id));
+        return wait(db.events
+        .filter((event) => allowedGroups.has(event.groupId) && (!groupId || event.groupId === groupId))
         .sort((left, right) => {
           const leftTime = Date.parse(left.startsAt);
           const rightTime = Date.parse(right.startsAt);
@@ -74,9 +135,11 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
               ? left.startsAt.localeCompare(right.startsAt)
               : leftTime - rightTime;
           return timeOrder || left.id.localeCompare(right.id);
-        })),
-      getEvent: (eventId) => wait(db.events.find((event) => event.id === eventId) ?? null),
-      createEvent: (payload: CreateEventPayload) => {
+        }));
+      },
+      getEvent: async (eventId) => wait(eventMembership(eventId).event),
+      createEvent: async (payload: CreateEventPayload) => {
+        groupMembership(payload.groupId);
         const event = {
           id: `event-created-${nextEventId++}`,
           statusLabel: 'Draft',
@@ -90,50 +153,69 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         db.events.unshift(event);
         return changed(event);
       },
-      updateEvent: (eventId, patch: UpdateEventPayload) => {
-        const event = db.events.find((item) => item.id === eventId);
+      updateEvent: async (eventId, patch: UpdateEventPayload) => {
+        const { event } = eventMembership(eventId);
         if (!event) throw new Error(`Missing event ${eventId}`);
         Object.assign(event, patch);
         return changed(event);
       },
-      deleteEvent: (eventId) => {
+      deleteEvent: async (eventId) => {
+        requireEventMembership(eventId);
         db.events = db.events.filter((event) => event.id !== eventId);
         return changed(undefined);
       },
     },
     rsvps: {
-      listRsvps: (eventId) => wait(db.rsvps.filter((rsvp) => rsvp.eventId === eventId)),
-      upsertRsvp: (payload: CreateRsvpPayload) => {
-        const existing = db.rsvps.find((rsvp) => rsvp.eventId === payload.eventId && rsvp.personId === payload.personId);
-        if (existing) Object.assign(existing, payload);
-        else db.rsvps.push(payload);
-        return changed(existing ?? payload);
+      listRsvps: async (eventId) => {
+        requireEventMembership(eventId);
+        return wait(db.rsvps.filter((rsvp) => rsvp.eventId === eventId));
       },
-      updateRsvp: (eventId, personId, patch) => {
+      upsertRsvp: async (payload: CreateRsvpPayload) => {
+        const { profile } = requireEventMembership(payload.eventId);
+        const next = { eventId: payload.eventId, personId: profile.id, personName: profile.name, status: payload.status, note: payload.note };
+        const existing = db.rsvps.find((rsvp) => rsvp.eventId === payload.eventId && rsvp.personId === profile.id);
+        if (existing) Object.assign(existing, next);
+        else db.rsvps.push(next);
+        return changed(existing ?? next);
+      },
+      updateRsvp: async (eventId, personId, patch) => {
+        const { profile } = requireEventMembership(eventId);
+        if (personId !== profile.id) throw new Error('You can only change your own RSVP.');
         const rsvp = db.rsvps.find((item) => item.eventId === eventId && item.personId === personId);
         if (!rsvp) throw new Error(`Missing RSVP for ${personId}`);
         Object.assign(rsvp, patch);
         return changed(rsvp);
       },
-      deleteRsvp: (eventId, personId) => {
+      deleteRsvp: async (eventId, personId) => {
+        const { profile } = requireEventMembership(eventId);
+        if (personId !== profile.id) throw new Error('You can only remove your own RSVP.');
         db.rsvps = db.rsvps.filter((rsvp) => rsvp.eventId !== eventId || rsvp.personId !== personId);
         return changed(undefined);
       },
     },
     activity: {
-      listRecentActivity: () => wait([...db.activity]),
+      listRecentActivity: async () => {
+        const profile = actor();
+        const allowedGroups = new Set(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)).map((group) => group.id));
+        const allowedEvents = new Set(db.events.filter((event) => allowedGroups.has(event.groupId)).map((event) => event.id));
+        return wait(db.activity.filter((item) => allowedEvents.has(item.eventId)));
+      },
     },
     thread: {
-      listMessages: (eventId) => wait(db.messages
+      listMessages: async (eventId) => {
+        const { profile } = requireEventMembership(eventId);
+        return wait(db.messages
         .filter((message) => message.eventId === eventId)
         .sort((left, right) => {
           const timeOrder = Date.parse(left.createdAt) - Date.parse(right.createdAt);
           return timeOrder || left.id.localeCompare(right.id);
-        })),
-      sendMessage: (eventId, body) => {
+        }).map((message) => ({ ...message, self: message.authorId === profile.id })));
+      },
+      sendMessage: async (eventId, body) => {
         const trimmedBody = body.trim();
         if (!trimmedBody) return Promise.reject(new Error('Write a message before sending.'));
-        const message = { id: `message-created-${nextMessageId++}`, eventId, body: trimmedBody, authorName: mockSession.displayName, self: true, createdAt: new Date().toISOString() };
+        const { profile } = requireEventMembership(eventId);
+        const message = { id: `message-created-${nextMessageId++}`, eventId, body: trimmedBody, authorId: profile.id, authorName: profile.name, author: profile, self: true, createdAt: new Date().toISOString() };
         db.messages.push(message);
         return changed(message);
       },
@@ -141,14 +223,20 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
     media: {
       uploadMedia: async (payload: MediaUploadPayload) => {
         validateMediaUpload(payload);
-        if (!db.events.some((event) => event.id === payload.eventId)) return Promise.reject(new Error(`Missing event ${payload.eventId}`));
-        const item = { id: `media-created-${nextMediaId++}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption?.trim() || 'New shared moment', altText: payload.altText.trim(), uploadedBy: 'person-you', uploadedAt: new Date().toISOString(), sourceName: payload.sourceName?.trim() || undefined, sourceUrl: payload.sourceUrl?.trim() || undefined, creatorName: payload.creatorName?.trim() || undefined, creatorUrl: payload.creatorUrl?.trim() || undefined };
+        const { profile } = requireEventMembership(payload.eventId);
+        const item = { id: `media-created-${nextMediaId++}`, eventId: payload.eventId, uri: payload.fileUri, caption: payload.caption?.trim() || 'New shared moment', altText: payload.altText.trim(), uploadedBy: profile.id, uploadedAt: new Date().toISOString(), sourceName: payload.sourceName?.trim() || undefined, sourceUrl: payload.sourceUrl?.trim() || undefined, creatorName: payload.creatorName?.trim() || undefined, creatorUrl: payload.creatorUrl?.trim() || undefined };
         db.media.push(item);
         return changed(item);
       },
-      listMedia: (eventId) => wait(db.media.filter((item) => item.eventId === eventId)),
-      deleteMedia: (mediaId) => {
-        if (!db.media.some((item) => item.id === mediaId)) return Promise.reject(new Error(`Missing media ${mediaId}`));
+      listMedia: async (eventId) => {
+        requireEventMembership(eventId);
+        return wait(db.media.filter((item) => item.eventId === eventId));
+      },
+      deleteMedia: async (mediaId) => {
+        const item = db.media.find((candidate) => candidate.id === mediaId);
+        if (!item) return Promise.reject(new Error(`Missing media ${mediaId}`));
+        const { member, profile } = requireEventMembership(item.eventId);
+        if (item.uploadedBy !== profile.id && member?.role !== 'owner' && member?.role !== 'admin') return Promise.reject(new Error('Only the person who shared this photo or a family owner can remove it.'));
         db.media = db.media.filter((item) => item.id !== mediaId);
         return changed(undefined);
       },

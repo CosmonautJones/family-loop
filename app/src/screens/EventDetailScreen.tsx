@@ -7,7 +7,7 @@ import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
-import { useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
+import { useActiveGroupMembersQuery, useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 
 const rsvpOptions: RSVPStatus[] = ['going', 'maybe', 'declined'];
@@ -27,6 +27,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const rsvpsQuery = useEventRsvpsQuery(eventId ?? '');
   const messagesQuery = useEventMessagesQuery(eventId ?? '');
   const mediaQuery = useEventMediaQuery(eventId ?? '');
+  const membersQuery = useActiveGroupMembersQuery();
   const sendMessage = useSendMessageMutation();
   const uploadMedia = useUploadMediaMutation();
   const deleteMedia = useDeleteMediaMutation();
@@ -42,6 +43,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const eventDetail = eventQuery.data?.groupId === activeGroupId ? selectEventDetailViewModel(eventQuery.data, rsvpsQuery.data ?? [], []) : null;
   const identity = auth.session;
+  const currentMember = membersQuery.data?.find((member) => member.id === identity?.userId);
   const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status;
 
   if (!eventId) return <DetailState title="Event not found" detail="No event was selected." backLabel={backLabel} onBack={onBack} />;
@@ -53,7 +55,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   if (!eventDetail) return <DetailState title="Event not found" detail="This event may have been removed or is unavailable to this group." backLabel={backLabel} onBack={onBack} />;
   const setRsvpStatus = (status: RSVPStatus) => {
     if (!identity || upsertRsvp.isPending) return;
-    upsertRsvp.mutate({ eventId: eventDetail.id, personId: identity.userId, personName: identity.displayName, status });
+    upsertRsvp.mutate({ eventId: eventDetail.id, status });
   };
   const submitMessage = () => {
     const body = messageDraft.trim();
@@ -192,7 +194,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                     <Text style={styles.attributionText}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` on ${item.sourceName}` : ''}</Text>
                   </Pressable>
                 ) : <Text style={styles.photoMeta}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` via ${item.sourceName}` : ''}</Text> : null}
-                <Button
+                {item.uploadedBy === identity?.userId || currentMember?.role === 'owner' || currentMember?.role === 'admin' ? <Button
                   label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? `Removing ${item.caption}…` : `Remove ${item.caption}`}
                   tone="ghost"
                   disabled={deleteMedia.isPending}
@@ -200,7 +202,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                     const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm('Remove this photo from the family event?');
                     if (approved) deleteMedia.mutate({ mediaId: item.id, eventId: eventDetail.id });
                   }}
-                />
+                /> : null}
               </View>
             ))}
           </View>

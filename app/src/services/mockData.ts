@@ -47,11 +47,11 @@ const rsvps: RSVP[] = events.flatMap((event) => members.map((person, index) => (
 })));
 
 const messages: EventMessage[] = [
-  { id: 'message-door-1', eventId: 'event-door-county', body: 'I reserved the cabin. The first-floor room is for Grandma Ruth.', authorName: 'Maya Jones', author: members[1], self: false, createdAt: '2026-07-10T18:10:00-05:00' },
-  { id: 'message-door-2', eventId: 'event-door-county', body: 'Great. I’ll bring cards and pick up breakfast on the way.', authorName: 'Alex Jones', author: members[0], self: true, createdAt: '2026-07-10T18:14:00-05:00' },
-  { id: 'message-yellowstone-1', eventId: 'event-yellowstone', body: 'Can we keep Tuesday light after the long drive?', authorName: 'Grandma Ruth', author: members[4], self: false, createdAt: '2026-07-11T09:30:00-05:00' },
-  { id: 'message-yellowstone-2', eventId: 'event-yellowstone', body: 'Absolutely — just Old Faithful and an early dinner.', authorName: 'Emma Jones', author: members[2], self: false, createdAt: '2026-07-11T09:42:00-05:00' },
-  { id: 'message-lake-1', eventId: 'event-lake-geneva', body: 'These dock photos turned out beautifully!', authorName: 'Grandma Ruth', author: members[4], self: false, createdAt: '2026-06-15T10:00:00-05:00' },
+  { id: 'message-door-1', eventId: 'event-door-county', body: 'I reserved the cabin. The first-floor room is for Grandma Ruth.', authorId: 'person-maya', authorName: 'Maya Jones', author: members[1], self: false, createdAt: '2026-07-10T18:10:00-05:00' },
+  { id: 'message-door-2', eventId: 'event-door-county', body: 'Great. I’ll bring cards and pick up breakfast on the way.', authorId: 'person-you', authorName: 'Alex Jones', author: members[0], self: true, createdAt: '2026-07-10T18:14:00-05:00' },
+  { id: 'message-yellowstone-1', eventId: 'event-yellowstone', body: 'Can we keep Tuesday light after the long drive?', authorId: 'person-ruth', authorName: 'Grandma Ruth', author: members[4], self: false, createdAt: '2026-07-11T09:30:00-05:00' },
+  { id: 'message-yellowstone-2', eventId: 'event-yellowstone', body: 'Absolutely — just Old Faithful and an early dinner.', authorId: 'person-emma', authorName: 'Emma Jones', author: members[2], self: false, createdAt: '2026-07-11T09:42:00-05:00' },
+  { id: 'message-lake-1', eventId: 'event-lake-geneva', body: 'These dock photos turned out beautifully!', authorId: 'person-ruth', authorName: 'Grandma Ruth', author: members[4], self: false, createdAt: '2026-06-15T10:00:00-05:00' },
 ];
 
 const media: MediaItem[] = [

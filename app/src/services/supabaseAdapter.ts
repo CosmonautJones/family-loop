@@ -84,10 +84,11 @@ type GroupMemberRow = {
 
 const mediaBucket = 'loopedin-event-media';
 
-function mapSession(session: Session): AuthSession {
+async function mapSession(session: Session): Promise<AuthSession> {
+  const profiles = await getProfiles([session.user.id]);
   return {
     userId: session.user.id,
-    displayName: session.user.email?.split('@')[0] ?? 'You',
+    displayName: profiles.get(session.user.id)?.display_name ?? session.user.email?.split('@')[0] ?? 'You',
     token: session.access_token,
     expiresAt: new Date((session.expires_at ?? 0) * 1000).toISOString(),
   };
@@ -171,6 +172,7 @@ function mapMessage(row: MessageRow, profile?: ProfileRow, self = false): EventM
     eventId: row.event_id,
     body: row.body,
     authorName: profile?.display_name ?? 'Family member',
+    authorId: row.author_id,
     author: profile
       ? {
           id: profile.id,
@@ -295,11 +297,12 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async getSession() {
         const { data, error } = await supabase.auth.getSession();
         throwIfError(error);
-        return data.session ? mapSession(data.session) : null;
+        return data.session ? await mapSession(data.session) : null;
       },
       onAuthStateChange(listener) {
         const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-          listener(session ? mapSession(session) : null);
+          if (!session) listener(null);
+          else void mapSession(session).then(listener).catch(() => listener(null));
         });
         return () => data.subscription.unsubscribe();
       },
@@ -316,6 +319,12 @@ export function createSupabaseLoopedInService(): LoopedInService {
           token: data.session.access_token,
           expiresAt: new Date((data.session.expires_at ?? 0) * 1000).toISOString(),
         };
+      },
+      async listLocalProfiles() {
+        return [];
+      },
+      async chooseLocalProfile() {
+        throw new Error('Local profile selection is unavailable in Supabase mode.');
       },
     },
     groups: {
@@ -447,12 +456,18 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return ((data ?? []) as RsvpRow[]).map(mapRsvp);
       },
       async upsertRsvp(payload: CreateRsvpPayload) {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        throwIfError(userError);
+        if (!userData.user) throw new Error('You must be signed in.');
+        const userId = userData.user.id;
+        const profiles = await getProfiles([userId]);
+        const personName = profiles.get(userId)?.display_name ?? userData.user.email?.split('@')[0] ?? 'You';
         const { data, error } = await supabase
           .from('loopedin_rsvps')
           .upsert({
             event_id: payload.eventId,
-            user_id: payload.personId,
-            person_name: payload.personName,
+            user_id: userId,
+            person_name: personName,
             status: payload.status,
             note: payload.note ?? null,
           })
@@ -462,18 +477,22 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return mapRsvp(data as RsvpRow);
       },
       async updateRsvp(eventId, personId, patch) {
+        const userId = await getCurrentUserId();
+        if (personId !== userId) throw new Error('You can only change your own RSVP.');
         const { data, error } = await supabase
           .from('loopedin_rsvps')
           .update({ status: patch.status, note: patch.note ?? null })
           .eq('event_id', eventId)
-          .eq('user_id', personId)
+          .eq('user_id', userId)
           .select('event_id, user_id, person_name, status, note')
           .single();
         throwIfError(error);
         return mapRsvp(data as RsvpRow);
       },
       async deleteRsvp(eventId, personId) {
-        const { error } = await supabase.from('loopedin_rsvps').delete().eq('event_id', eventId).eq('user_id', personId);
+        const userId = await getCurrentUserId();
+        if (personId !== userId) throw new Error('You can only remove your own RSVP.');
+        const { error } = await supabase.from('loopedin_rsvps').delete().eq('event_id', eventId).eq('user_id', userId);
         throwIfError(error);
       },
     },

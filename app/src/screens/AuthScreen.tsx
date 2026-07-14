@@ -5,10 +5,36 @@ import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { palette, radii, shadow, spacing } from '../theme/tokens';
 
 export function AuthScreen() {
-  const { error, login, pending } = useAuthSession();
+  const { configured, error, login, pending, localProfiles, chooseLocalProfile } = useAuthSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const invalid = !email.trim() || !password;
+
+  if (!configured) {
+    return (
+      <AppBackground>
+        <View style={styles.centered}>
+          <View style={styles.card}>
+            <Text style={styles.eyebrow}>JONES FAMILY · LOCAL DEMO</Text>
+            <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Who’s using LoopedIn?</Text>
+            <Text style={styles.body}>Choose your family profile. This only changes who you are in this browser tab.</Text>
+            <View style={styles.profileList}>
+              {localProfiles.map((profile) => (
+                <Pressable key={profile.id} accessibilityRole="button" disabled={pending} onPress={() => chooseLocalProfile(profile.id)} style={styles.profileButton}>
+                  <Text style={styles.profileInitials}>{profile.initials}</Text>
+                  <View style={styles.profileCopy}>
+                    <Text style={styles.profileName}>{profile.name}</Text>
+                    <Text style={styles.profileRole}>{profile.role === 'owner' ? 'Family owner' : 'Family member'}</Text>
+                  </View>
+                </Pressable>
+              ))}
+            </View>
+            {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
+          </View>
+        </View>
+      </AppBackground>
+    );
+  }
 
   return (
     <AppBackground>
@@ -80,4 +106,10 @@ const styles = StyleSheet.create({
   button: { alignItems: 'center', backgroundColor: palette.coral, borderRadius: radii.card, justifyContent: 'center', minHeight: 52 },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: palette.white, fontSize: 16, fontWeight: '900' },
+  profileList: { gap: spacing.sm },
+  profileButton: { alignItems: 'center', backgroundColor: palette.white, borderColor: palette.inkSoft, borderRadius: radii.card, borderWidth: 1, flexDirection: 'row', gap: spacing.md, minHeight: 60, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  profileInitials: { color: palette.coral, fontSize: 16, fontWeight: '900', width: 32 },
+  profileCopy: { flex: 1 },
+  profileName: { color: palette.text, fontSize: 16, fontWeight: '900' },
+  profileRole: { color: palette.muted, fontSize: 13, marginTop: 2 },
 });

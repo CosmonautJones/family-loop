@@ -28,17 +28,17 @@ export function AppShell() {
   const auth = useAuthSession();
   const { tabItems, activeTab, activeSurface, activeEventId, setActiveTab, openEventDetail, closeEventDetail } = useAppShellState();
 
-  if (auth.configured && auth.status === 'restoring') {
+  if (auth.status === 'restoring') {
     return <SessionStatusScreen loading title="Restoring your plans" detail="Connecting to your private family space…" />;
   }
-  if (auth.configured && (auth.status === 'signedOut' || auth.status === 'error')) return <AuthScreen />;
-  if (auth.configured && auth.groupsPending) {
+  if (auth.status === 'signedOut' || auth.status === 'error') return <AuthScreen />;
+  if (auth.groupsPending) {
     return <SessionStatusScreen loading title="Loading your groups" detail="Finding the plans shared with you…" />;
   }
-  if (auth.configured && auth.groupError) {
+  if (auth.groupError) {
     return <SessionStatusScreen title="We couldn't load your groups" detail={auth.groupError} />;
   }
-  if (auth.configured && auth.groups?.length === 0) {
+  if (auth.groups?.length === 0) {
     return <SessionStatusScreen title="No groups yet" detail="You aren't part of a LoopedIn group yet." />;
   }
 
@@ -47,7 +47,7 @@ export function AppShell() {
       <View style={styles.root}>
         <ActiveFamilyLabel />
         <View style={[styles.navOuter, { width: Math.max(width - (2 * spacing.md), 0) }]}>
-          {auth.configured ? (
+          {auth.session ? (
             <Pressable accessibilityRole="button" disabled={auth.pending} onPress={auth.logout} style={styles.signOut}>
               <Text style={styles.signOutText}>Sign out</Text>
             </Pressable>
@@ -91,8 +91,9 @@ export function AppShell() {
 
 function ActiveFamilyLabel() {
   const activeGroup = useActiveGroupQuery();
+  const auth = useAuthSession();
   if (!activeGroup.data) return null;
-  return <Text style={styles.familyLabel} accessibilityLabel={`Active family: ${activeGroup.data.name}`}>{activeGroup.data.name}</Text>;
+  return <Text style={styles.familyLabel} accessibilityLabel={`Current person: ${auth.session?.displayName}. Active family: ${activeGroup.data.name}`}>{auth.session?.displayName} · {activeGroup.data.name}</Text>;
 }
 
 const styles = StyleSheet.create({

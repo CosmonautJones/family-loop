@@ -34,6 +34,7 @@ function loadCompiledModules() {
     mockAdapter: require(path.join(outDir, 'services/mockAdapter.js')),
     mockData: require(path.join(outDir, 'services/mockData.js')),
     durableAdapter: require(path.join(outDir, 'services/durableLocalAdapter.js')),
+    localActorSession: require(path.join(outDir, 'services/localActorSession.js')),
     createEvent: require(path.join(outDir, 'features/events/createEvent.js')),
     derivedHistory: require(path.join(outDir, 'features/memories/derivedHistory.js')),
   };
@@ -95,7 +96,7 @@ test('durable local service persists the family loop across reconstruction and c
   await first.rsvps.upsertRsvp({ eventId: event.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' });
   await first.thread.sendMessage(event.id, 'The hotel is booked.');
   await first.media.uploadMedia({ eventId: event.id, fileUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80', caption: 'Test photo', altText: 'Family beside a lake', sourceName: 'Unsplash', sourceUrl: 'https://unsplash.com', creatorName: 'Unsplash contributor', creatorUrl: 'https://unsplash.com' });
-  await first.events.createEvent({ groupId: 'group-private', title: 'Other group event', startsAt: '2027-02-01T10:00:00Z', endsAt: '2027-02-01T11:00:00Z', location: 'Elsewhere', description: 'Must stay isolated' });
+  await assert.rejects(first.events.createEvent({ groupId: 'group-private', title: 'Other group event', startsAt: '2027-02-01T10:00:00Z', endsAt: '2027-02-01T11:00:00Z', location: 'Elsewhere', description: 'Must stay isolated' }), /access/i);
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.equal((await reconstructed.events.getEvent(event.id)).title, 'Family test trip');
@@ -103,7 +104,7 @@ test('durable local service persists the family loop across reconstruction and c
   assert.equal((await reconstructed.thread.listMessages(event.id))[0].body, 'The hotel is booked.');
   assert.equal((await reconstructed.media.listMedia(event.id))[0].caption, 'Test photo');
   assert.ok((await reconstructed.events.listEvents('group-jones-family')).every((item) => item.groupId === 'group-jones-family'));
-  assert.equal((await reconstructed.events.listEvents('group-private')).length, 1);
+  await assert.rejects(reconstructed.events.listEvents('group-private'), /access/i);
 
   await reconstructed.resetAndReseed();
   assert.equal(await reconstructed.events.getEvent(event.id), null);
@@ -131,8 +132,8 @@ test('group member reads return the five Jones members, stay group-isolated, and
   const session = await mock.auth.getSession();
   assert.equal(session.userId, 'person-you');
   assert.equal(jonesMembers.find((member) => member.id === session.userId).name, session.displayName);
-  assert.deepEqual(await mock.groups.listGroupMembers('group-other'), [otherMember]);
-  assert.deepEqual(await mock.groups.listGroupMembers('group-missing'), []);
+  await assert.rejects(mock.groups.listGroupMembers('group-other'), /access/i);
+  await assert.rejects(mock.groups.listGroupMembers('group-missing'), /access/i);
 
   const values = new Map();
   const storage = {
@@ -147,7 +148,7 @@ test('group member reads return the five Jones members, stay group-isolated, and
     (await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.id),
     jonesMembers.map((member) => member.id),
   );
-  assert.deepEqual(await reconstructed.groups.listGroupMembers('group-other'), [otherMember]);
+  await assert.rejects(reconstructed.groups.listGroupMembers('group-other'), /access/i);
 });
 
 test('Supabase member adapter scopes memberships before resolving profiles', () => {
@@ -159,6 +160,107 @@ test('Supabase member adapter scopes memberships before resolving profiles', () 
   assert.match(supabase, /const profiles = await getProfiles\(userIds\)/);
   assert.match(queries, /groupMembers: \(groupId: string\)/);
   assert.match(queries, /loopedInService\.groups\.listGroupMembers\(activeGroupId\)/);
+});
+
+test('Supabase RSVP identity comes from auth and local profile UI is explicitly a per-tab demo', () => {
+  const supabase = read('src/services/supabaseAdapter.ts');
+  const authScreen = read('src/screens/AuthScreen.tsx');
+  const actorSession = read('src/services/localActorSession.ts');
+  const provider = read('src/features/auth/AuthSessionProvider.tsx');
+  const detail = read('src/screens/EventDetailScreen.tsx');
+  assert.match(supabase, /upsertRsvp[\s\S]*?supabase\.auth\.getUser\(\)[\s\S]*?user_id: userId/);
+  assert.doesNotMatch(supabase, /user_id: payload\.personId/);
+  assert.match(supabase, /person_name: personName/);
+  assert.match(authScreen, /JONES FAMILY · LOCAL DEMO/);
+  assert.match(authScreen, /only changes who you are in this browser tab/);
+  assert.match(actorSession, /sessionStorage\.getItem\(localActorSessionKey\)/);
+  assert.match(actorSession, /sessionStorage\.setItem\(localActorSessionKey, actorId\)/);
+  assert.match(provider, /queryClient\.clear\(\)/);
+  assert.match(provider, /setActiveGroupId\(''\)/);
+  assert.match(detail, /item\.uploadedBy === identity\?\.userId/);
+  assert.match(detail, /currentMember\?\.role === 'owner'/);
+});
+
+test('local actor sessions isolate family identities while sharing authorized durable records', async () => {
+  const { durableAdapter, localActorSession, mockData } = loadCompiledModules();
+  const seed = mockData.createMockDatabase();
+  const outsider = { id: 'person-outsider', name: 'Outside Person', initials: 'OP', avatarUri: '', role: 'owner' };
+  seed.groups.push({ id: 'group-outsider', name: 'Outside Family', description: '', kind: 'family', badge: 'Family', tone: 'sky', memberCount: 1, members: [outsider] });
+  seed.events.push({ id: 'event-outsider', groupId: 'group-outsider', title: 'Private outside plan', startsAt: '2027-01-01T10:00:00Z', endsAt: '2027-01-01T11:00:00Z', location: 'Elsewhere', description: '', statusLabel: 'Plan', visibility: 'group', timeline: [] });
+
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const alexActor = localActorSession.createMemoryActorSessionStore('person-you');
+  const mayaActor = localActorSession.createMemoryActorSessionStore('person-maya');
+  const noahActor = localActorSession.createMemoryActorSessionStore('person-noah');
+  const outsiderActor = localActorSession.createMemoryActorSessionStore('person-outsider');
+  const alex = durableAdapter.createDurableLocalLoopedInService(storage, () => seed, alexActor);
+  const maya = durableAdapter.createDurableLocalLoopedInService(storage, () => seed, mayaActor);
+  const noah = durableAdapter.createDurableLocalLoopedInService(storage, () => seed, noahActor);
+  const outside = durableAdapter.createDurableLocalLoopedInService(storage, () => seed, outsiderActor);
+
+  assert.equal((await alex.auth.getSession()).displayName, 'Alex Jones');
+  assert.equal((await maya.auth.getSession()).displayName, 'Maya Jones');
+  assert.deepEqual((await maya.auth.listLocalProfiles()).slice(0, 5).map((profile) => profile.id), ['person-you', 'person-maya', 'person-emma', 'person-noah', 'person-ruth']);
+  assert.deepEqual((await outside.groups.listGroups()).map((group) => group.id), ['group-outsider']);
+  await assert.rejects(outside.groups.getGroup('group-jones-family'), /access/i);
+  await assert.rejects(outside.events.getEvent('event-door-county'), /access/i);
+  await assert.rejects(outside.rsvps.listRsvps('event-door-county'), /access/i);
+  await assert.rejects(outside.thread.listMessages('event-door-county'), /access/i);
+  await assert.rejects(outside.media.listMedia('event-door-county'), /access/i);
+
+  const mayaRsvp = await maya.rsvps.upsertRsvp({ eventId: 'event-door-county', personId: 'person-you', personName: 'Alex Jones', status: 'declined' });
+  assert.equal(mayaRsvp.personId, 'person-maya', 'caller-supplied identity must be ignored');
+  assert.equal(mayaRsvp.personName, 'Maya Jones');
+  await assert.rejects(maya.rsvps.updateRsvp('event-door-county', 'person-you', { status: 'going' }), /own RSVP/i);
+
+  const [alexMessage, mayaMessage] = await Promise.all([
+    alex.thread.sendMessage('event-door-county', 'Alex can bring breakfast.'),
+    maya.thread.sendMessage('event-door-county', 'Maya confirmed the cabin.'),
+  ]);
+  assert.equal(alexMessage.authorId, 'person-you');
+  assert.equal(mayaMessage.authorId, 'person-maya');
+  const alexView = await alex.thread.listMessages('event-door-county');
+  const mayaView = await maya.thread.listMessages('event-door-county');
+  assert.equal(alexView.find((message) => message.id === alexMessage.id).self, true);
+  assert.equal(alexView.find((message) => message.id === mayaMessage.id).self, false);
+  assert.equal(mayaView.find((message) => message.id === mayaMessage.id).self, true);
+
+  const photo = await maya.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'data:image/png;base64,iVBORw0KGgo=', caption: 'Maya cabin photo', altText: 'Cabin porch' });
+  assert.equal(photo.uploadedBy, 'person-maya');
+  await assert.rejects(noah.media.deleteMedia(photo.id), /person who shared|owner/i);
+  await alex.media.deleteMedia(photo.id);
+  assert.equal((await maya.media.listMedia('event-door-county')).some((item) => item.id === photo.id), false);
+
+  await alex.auth.logout();
+  assert.equal(await alex.auth.getSession(), null);
+  assert.equal((await maya.auth.getSession()).userId, 'person-maya', 'one tab signing out must not change another tab');
+  await assert.rejects(alex.events.listEvents('group-jones-family'), /choose a family profile/i);
+  const reloadedMaya = durableAdapter.createDurableLocalLoopedInService(storage, () => seed, mayaActor);
+  assert.equal((await reloadedMaya.auth.getSession()).userId, 'person-maya');
+  assert.ok((await reloadedMaya.thread.listMessages('event-door-county')).some((message) => message.id === alexMessage.id));
+});
+
+test('v3 durable messages migrate to actor-owned v4 records without changing revision', async () => {
+  const { durableAdapter, mockData } = loadCompiledModules();
+  const legacy = mockData.createMockDatabase();
+  for (const message of legacy.messages) delete message.authorId;
+  const values = new Map([[durableAdapter.durableDatabaseKey, JSON.stringify({ version: 3, revision: 19, database: legacy })]]);
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const service = durableAdapter.createDurableLocalLoopedInService(storage);
+  const messages = await service.thread.listMessages('event-door-county');
+  assert.deepEqual(messages.map((message) => message.authorId), ['person-maya', 'person-you']);
+  const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
+  assert.equal(stored.version, 4);
+  assert.equal(stored.revision, 19);
 });
 
 test('durable local service surfaces corrupt storage and write errors without silently resetting', async () => {
@@ -178,7 +280,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   assert.equal(corruptWrites, 1, 'explicit reset is allowed to overwrite corrupt storage');
 
   const writeFailure = new Error('storage is full');
-  let persisted = JSON.stringify({ version: 3, database: { groups: [], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
+  let persisted = JSON.stringify({ version: 4, database: { groups: [{ id: 'group-a', name: 'A', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }] }], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
   const failing = {
     getItem: async () => persisted,
     setItem: async () => { throw writeFailure; },
@@ -190,7 +292,7 @@ test('durable local service surfaces corrupt storage and write errors without si
 
   let unsupportedWrites = 0;
   const unsupported = {
-    getItem: async () => JSON.stringify({ version: 4, database: {} }),
+    getItem: async () => JSON.stringify({ version: 5, database: {} }),
     setItem: async () => { unsupportedWrites += 1; },
     removeItem: async () => undefined,
   };
@@ -214,7 +316,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
 });
 
-test('durable local service migrates pre-role v1 members to v3 without losing user data or revision', async () => {
+test('durable local service migrates pre-role v1 members to v4 without losing user data or revision', async () => {
   const { durableAdapter, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   for (const member of legacy.groups[0].members) delete member.role;
@@ -240,14 +342,15 @@ test('durable local service migrates pre-role v1 members to v3 without losing us
   assert.equal((await migrated.thread.listMessages('event-legacy-custom'))[0].body, 'Keep this note.');
   assert.ok((await migrated.notifications.listNotifications()).some((item) => item.id === 'notification-legacy-custom'));
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 3);
+  assert.equal(stored.version, 4);
+  assert.equal(stored.database.messages.find((message) => message.id === 'message-legacy-custom').authorId, 'person-you');
   assert.equal(stored.revision, 7);
   assert.equal(writes, 1);
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.deepEqual((await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.role), members.map((member) => member.role));
   assert.equal((await reconstructed.events.getEvent('event-legacy-custom')).title, 'Retained custom plan');
-  assert.equal(writes, 1, 'a migrated v3 envelope must remain stable on later reconstruction');
+  assert.equal(writes, 1, 'a migrated v4 envelope must remain stable on later reconstruction');
 
   const legacyRaw = JSON.stringify({ version: 1, revision: 7, database: legacy });
   const failedMigration = durableAdapter.createDurableLocalLoopedInService({
@@ -290,7 +393,7 @@ test('media uploads are event-scoped, accessible, attributed when remote, remova
   const migrated = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.equal((await migrated.media.listMedia('event-lake-geneva'))[0].altText, legacy.media[0].caption);
   const envelope = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(envelope.version, 3);
+  assert.equal(envelope.version, 4);
   assert.equal(envelope.revision, 12);
 });
 
@@ -458,6 +561,7 @@ test('mock service completes create, refetch, same-detail, and RSVP loop', async
     badge: 'Family',
     tone: 'coral',
     memberCount: 1,
+    members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }],
   });
   const service = mockAdapter.createMockLoopedInService(seed);
   const payload = {
@@ -557,6 +661,11 @@ test('created trip and RSVP survive durable reconstruction and feed all family p
 test('mock service is group-scoped, chronological, and instance-local', async () => {
   const { mockAdapter, mockData } = loadCompiledModules();
   const seed = mockData.createEmptyMockDatabase();
+  const alex = { id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' };
+  seed.groups.push(
+    { id: 'group-a', name: 'A', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [alex] },
+    { id: 'group-b', name: 'B', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [alex] },
+  );
   const service = mockAdapter.createMockLoopedInService(seed);
   const base = {
     endsAt: '2026-09-01T11:00:00Z',
@@ -578,7 +687,9 @@ test('mock service is group-scoped, chronological, and instance-local', async ()
 
 test('mock service orders mixed-offset events by instant regardless of insertion order', async () => {
   const { mockAdapter, mockData } = loadCompiledModules();
-  const service = mockAdapter.createMockLoopedInService(mockData.createEmptyMockDatabase());
+  const seed = mockData.createEmptyMockDatabase();
+  seed.groups.push({ id: 'group-offsets', name: 'Offsets', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }] });
+  const service = mockAdapter.createMockLoopedInService(seed);
   const base = {
     groupId: 'group-offsets',
     endsAt: '2026-08-01T16:00:00Z',
@@ -596,11 +707,17 @@ test('mock service orders mixed-offset events by instant regardless of insertion
 test('mock thread is event-scoped, rejects blank sends, persists identity, and orders by instant with stable ties', async () => {
   const { mockAdapter, mockData } = loadCompiledModules();
   const seed = mockData.createEmptyMockDatabase();
+  const alex = { id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' };
+  seed.groups.push({ id: 'group-thread', name: 'Thread', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [alex] });
+  seed.events.push(
+    { id: 'event-a', groupId: 'group-thread', title: 'A', startsAt: '2026-08-01T10:00:00Z', endsAt: '2026-08-01T11:00:00Z', location: '', description: '', statusLabel: 'Plan', visibility: 'group', timeline: [] },
+    { id: 'event-b', groupId: 'group-thread', title: 'B', startsAt: '2026-08-02T10:00:00Z', endsAt: '2026-08-02T11:00:00Z', location: '', description: '', statusLabel: 'Plan', visibility: 'group', timeline: [] },
+  );
   seed.messages.push(
-    { id: 'message-z', eventId: 'event-a', body: 'Same instant z', authorName: 'Maya', self: false, createdAt: '2026-08-01T10:00:00-05:00' },
-    { id: 'message-b', eventId: 'event-b', body: 'Other event', authorName: 'Mia', self: false, createdAt: '2026-08-01T14:00:00Z' },
-    { id: 'message-a', eventId: 'event-a', body: 'Earlier', authorName: 'Mia', self: false, createdAt: '2026-08-01T14:30:00Z' },
-    { id: 'message-y', eventId: 'event-a', body: 'Same instant y', authorName: 'Maya', self: false, createdAt: '2026-08-01T15:00:00Z' },
+    { id: 'message-z', eventId: 'event-a', body: 'Same instant z', authorId: 'person-maya', authorName: 'Maya', self: false, createdAt: '2026-08-01T10:00:00-05:00' },
+    { id: 'message-b', eventId: 'event-b', body: 'Other event', authorId: 'person-mia', authorName: 'Mia', self: false, createdAt: '2026-08-01T14:00:00Z' },
+    { id: 'message-a', eventId: 'event-a', body: 'Earlier', authorId: 'person-mia', authorName: 'Mia', self: false, createdAt: '2026-08-01T14:30:00Z' },
+    { id: 'message-y', eventId: 'event-a', body: 'Same instant y', authorId: 'person-maya', authorName: 'Maya', self: false, createdAt: '2026-08-01T15:00:00Z' },
   );
   const service = mockAdapter.createMockLoopedInService(seed);
 
@@ -830,8 +947,8 @@ test('Query and screens expose truthful event states without configured fixture 
   assert.match(detail, /not found|couldn['’]t find|missing event/i);
   assert.match(create, /isPending|pending/i);
   assert.match(create, /error/i);
-  assert.match(shell, /auth\.configured && auth\.status === 'restoring'/);
-  assert.match(shell, /auth\.configured && auth\.groups\?\.length === 0/);
+  assert.match(shell, /auth\.status === 'restoring'/);
+  assert.match(shell, /auth\.groups\?\.length === 0/);
   for (const tab of ['Home', 'Calendar', 'Create', 'Memories', 'Family']) {
     assert.match(shell, new RegExp(`activeSurface !== 'EventDetail' && activeTab === '${tab}'`));
   }

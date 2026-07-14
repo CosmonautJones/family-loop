@@ -4,6 +4,7 @@ import { hasSupabaseConfig } from './supabaseClient';
 import { createDurableLocalLoopedInService } from './durableLocalAdapter';
 import { durableStorage } from '../lib/storage';
 import type { LoopedInService } from './api';
+import { browserActorSessionStore } from './localActorSession';
 
 const dataMode = process.env.EXPO_PUBLIC_DATA_MODE;
 export const isServiceConfigured = dataMode === 'supabase';
@@ -16,6 +17,7 @@ function createUnavailableSupabaseService(): LoopedInService {
       login: () => Promise.reject(error), logout: () => Promise.reject(error),
       getSession: () => Promise.reject(error), refreshSession: () => Promise.reject(error),
       onAuthStateChange: () => () => undefined,
+      listLocalProfiles: () => Promise.reject(error), chooseLocalProfile: () => Promise.reject(error),
     },
     groups: unavailable as LoopedInService['groups'], events: unavailable as LoopedInService['events'],
     rsvps: unavailable as LoopedInService['rsvps'], activity: unavailable as LoopedInService['activity'],
@@ -27,5 +29,5 @@ function createUnavailableSupabaseService(): LoopedInService {
 export const loopedInService = dataMode === 'supabase'
   ? hasSupabaseConfig ? createSupabaseLoopedInService() : createUnavailableSupabaseService()
   : dataMode === 'memory'
-    ? createMockLoopedInService()
-    : createDurableLocalLoopedInService(durableStorage);
+    ? createMockLoopedInService(undefined, { actorSession: browserActorSessionStore })
+    : createDurableLocalLoopedInService(durableStorage, undefined, browserActorSessionStore);

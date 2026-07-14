@@ -3,6 +3,7 @@ import { createContext, PropsWithChildren, useCallback, useContext, useEffect, u
 import { useGroupsQuery } from '../../app/queries';
 import { isServiceConfigured, loopedInService } from '../../services';
 import type { AuthSession } from '../../services/api';
+import type { GroupMember } from '../../types/domain';
 import { useLoopedInStore } from '../../store/useLoopedInStore';
 
 type SessionStatus = 'restoring' | 'signedOut' | 'authenticated' | 'error';
@@ -14,6 +15,8 @@ type AuthSessionContextValue = {
   groups: { id: string }[] | undefined;
   groupsPending: boolean;
   login: (email: string, password: string) => Promise<void>;
+  localProfiles: GroupMember[];
+  chooseLocalProfile: (personId: string) => Promise<void>;
   logout: () => Promise<void>;
   pending: boolean;
   session: AuthSession | null;
@@ -29,18 +32,20 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   const [status, setStatus] = useState<SessionStatus>('restoring');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [localProfiles, setLocalProfiles] = useState<GroupMember[]>([]);
   const previousUserId = useRef<string | null | undefined>(undefined);
-  const groupsQuery = useGroupsQuery(isServiceConfigured && status === 'authenticated');
+  const groupsQuery = useGroupsQuery(status === 'authenticated');
 
   const applySession = useCallback((nextSession: AuthSession | null) => {
     if (previousUserId.current !== undefined && previousUserId.current !== nextSession?.userId) {
       queryClient.clear();
+      setActiveGroupId('');
     }
     previousUserId.current = nextSession?.userId ?? null;
     setSession(nextSession);
     setError(null);
     setStatus(nextSession ? 'authenticated' : 'signedOut');
-  }, [queryClient]);
+  }, [queryClient, setActiveGroupId]);
 
   useEffect(() => {
     let active = true;
@@ -66,7 +71,14 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   }, [applySession]);
 
   useEffect(() => {
-    if (!isServiceConfigured || groupsQuery.data === undefined) return;
+    if (isServiceConfigured) return;
+    loopedInService.auth.listLocalProfiles()
+      .then(setLocalProfiles)
+      .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Unable to load local profiles.'));
+  }, []);
+
+  useEffect(() => {
+    if (groupsQuery.data === undefined) return;
     setActiveGroupId(groupsQuery.data[0]?.id ?? '');
   }, [groupsQuery.data, setActiveGroupId]);
 
@@ -97,6 +109,18 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
   }, [applySession]);
 
+  const chooseLocalProfile = useCallback(async (personId: string) => {
+    setPending(true);
+    setError(null);
+    try {
+      applySession(await loopedInService.auth.chooseLocalProfile(personId));
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'Unable to open that local profile.');
+    } finally {
+      setPending(false);
+    }
+  }, [applySession]);
+
   return (
     <AuthSessionContext.Provider value={{
       configured: isServiceConfigured,
@@ -104,6 +128,8 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       groupError: groupsQuery.error instanceof Error ? groupsQuery.error.message : null,
       groups: groupsQuery.data,
       groupsPending: groupsQuery.isPending,
+      localProfiles,
+      chooseLocalProfile,
       login,
       logout,
       pending,

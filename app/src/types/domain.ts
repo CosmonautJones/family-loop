@@ -60,6 +60,7 @@ export type EventMessage = {
   eventId: EventId;
   body: string;
   authorName: string;
+  authorId: PersonId;
   author?: Person;
   self: boolean;
   createdAt: string;
