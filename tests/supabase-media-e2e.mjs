@@ -87,6 +87,7 @@ outsider = await signUp('outsider'); users.push(outsider);
 group = { id: crypto.randomUUID() };
 event = { id: crypto.randomUUID() };
 const seedSql = `
+  begin;
   insert into public.loopedin_groups (id, name, description, kind, created_by)
   values ('${group.id}', 'Local media RLS test', '', 'family', '${owner.id}');
   insert into public.loopedin_group_members (group_id, user_id, role) values
@@ -97,6 +98,7 @@ const seedSql = `
     (id, group_id, created_by, title, starts_at, ends_at, location, description)
   values
     ('${event.id}', '${group.id}', '${uploader.id}', 'Local media RLS test', now() + interval '1 day', now() + interval '2 days', 'Local', '');
+  commit;
 `;
 const seeded = spawnSync('docker', ['exec', '-i', 'supabase_db_family-loop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'], {
   input: seedSql,
@@ -254,9 +256,9 @@ const blockedEventDelete = await request(`/rest/v1/loopedin_events?id=eq.${event
   method: 'DELETE',
 });
 assert.equal(blockedEventDelete.response.ok, false, 'event deletion ignored unfinished media');
-await expectOk(await request(`/rest/v1/loopedin_group_members?group_id=eq.${group.id}&user_id=eq.${uploader.id}`, {
-  token: owner.token,
-  method: 'DELETE',
+await expectOk(await rpc('loopedin_remove_group_member', owner.token, {
+  target_group_id: group.id,
+  target_user_id: uploader.id,
 }), 'remove uploader membership');
 const removedClaim = await rpc('loopedin_claim_media_deletion', uploader.token, { target_media_id: second.id });
 assert.equal(removedClaim.response.ok, false, 'removed uploader retained delete authority');
@@ -279,10 +281,6 @@ await expectOk(await remove(owner.token, second.path), 'owner removes removed-us
 uploadedPaths.delete(second.path);
 await expectOk(await rpc('loopedin_finalize_media_deletion', owner.token, { target_media_id: second.id }), 'owner finalizes removed-user media');
 
-await expectOk(await request(`/rest/v1/loopedin_groups?id=eq.${group.id}`, {
-  token: owner.token,
-  method: 'DELETE',
-}), 'cleanup test group');
 for (const user of users) {
   await expectOk(await request(`/auth/v1/admin/users/${user.id}`, { token: serviceKey, method: 'DELETE' }), 'cleanup test user');
 }

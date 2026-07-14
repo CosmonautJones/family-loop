@@ -1,0 +1,202 @@
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+
+const url = process.env.SUPABASE_URL;
+const anonKey = process.env.SUPABASE_ANON_KEY;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+assert.ok(url && anonKey && serviceKey, 'local Supabase URL and keys are required');
+assert.ok(['127.0.0.1', 'localhost', '::1'].includes(new URL(url).hostname), 'this destructive test only runs against loopback Supabase');
+
+const run = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const password = 'Local-only-family-test-42!';
+const bucket = 'loopedin-event-media';
+const users = [];
+const groups = [];
+const paths = new Set();
+
+async function request(path, { token = anonKey, headers = {}, ...options } = {}) {
+  const response = await fetch(`${url}${path}`, { ...options, headers: { apikey: anonKey, Authorization: `Bearer ${token}`, ...headers } });
+  const text = await response.text();
+  let body = text;
+  try { body = text ? JSON.parse(text) : null; } catch {}
+  return { response, body };
+}
+
+async function ok(promise, label) {
+  const result = await promise;
+  assert.ok(result.response.ok, `${label}: ${result.response.status} ${JSON.stringify(result.body)}`);
+  return result.body;
+}
+
+async function signup(name) {
+  const email = `${name}-${run}@loopedin.test`;
+  const created = await ok(request('/auth/v1/signup', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, data: { display_name: name } }),
+  }), `signup ${name}`);
+  const login = await ok(request('/auth/v1/token?grant_type=password', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
+  }), `login ${name}`);
+  assert.equal(login.user.id, created.user.id);
+  const user = { id: login.user.id, email, token: login.access_token };
+  users.push(user);
+  return user;
+}
+
+function rpc(name, token, body) {
+  return request(`/rest/v1/rpc/${name}`, { token, method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+}
+
+function table(name, token, suffix = '', options = {}) {
+  return request(`/rest/v1/${name}${suffix}`, { token, ...options });
+}
+
+function sql(statement) {
+  const result = spawnSync('docker', ['exec', '-i', 'supabase_db_family-loop', 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-At'], { input: statement, encoding: 'utf8' });
+  assert.equal(result.status, 0, `local SQL failed: ${result.stderr}`);
+  return result.stdout.trim();
+}
+
+async function createGroup(actor, name, key = crypto.randomUUID()) {
+  const group = await ok(rpc('loopedin_create_group', actor.token, {
+    target_name: name, target_description: 'Private family plans', target_kind: 'family', target_creation_key: key,
+  }), `create ${name}`);
+  groups.push(group.id);
+  return { ...group, key };
+}
+
+async function createInvite(owner, groupId, email) {
+  return ok(rpc('loopedin_create_group_invite', owner.token, { target_group_id: groupId, target_email: email }), 'create invite');
+}
+
+async function upload(token, path) {
+  return request(`/storage/v1/object/${bucket}/${path}`, {
+    token, method: 'POST', headers: { 'Content-Type': 'image/png', 'x-upsert': 'false' },
+    body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl5kAAAAASUVORK5CYII=', 'base64'),
+  });
+}
+
+async function removeObject(token, path) {
+  return request(`/storage/v1/object/${bucket}`, { token, method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [path] }) });
+}
+
+let alex; let maya; let jordan; let outsider; let family; let privateGroup; let photo;
+try {
+  alex = await signup('Alex'); maya = await signup('Maya'); jordan = await signup('Jordan'); outsider = await signup('Outsider');
+  const wrongPassword = await request('/auth/v1/token?grant_type=password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: alex.email, password: 'wrong-password' }) });
+  assert.equal(wrongPassword.response.ok, false);
+
+  const key = crypto.randomUUID();
+  family = await createGroup(alex, 'Jones Family', key);
+  const replayed = await ok(rpc('loopedin_create_group', alex.token, { target_name: 'Changed name ignored', target_description: '', target_kind: 'friends', target_creation_key: key }), 'idempotent group replay');
+  assert.equal(replayed.id, family.id);
+  assert.equal((await ok(table('loopedin_group_members', alex.token, `?group_id=eq.${family.id}&select=user_id,role`), 'sole owner')).length, 1);
+  const beforeInvalid = Number(sql(`select count(*) from public.loopedin_groups where created_by='${alex.id}';`));
+  const invalidCreate = await rpc('loopedin_create_group', alex.token, { target_name: 'Broken', target_description: '', target_kind: 'invalid', target_creation_key: crypto.randomUUID() });
+  assert.equal(invalidCreate.response.ok, false);
+  assert.equal(Number(sql(`select count(*) from public.loopedin_groups where created_by='${alex.id}';`)), beforeInvalid);
+
+  const mayaInvite = await createInvite(alex, family.id, maya.email.toUpperCase());
+  assert.equal(mayaInvite.ok, true);
+  assert.equal((await ok(rpc('loopedin_validate_group_invite', maya.token, { target_token: mayaInvite.token }), 'valid invite')).code, 'ready');
+  assert.deepEqual(await ok(rpc('loopedin_validate_group_invite', outsider.token, { target_token: mayaInvite.token }), 'wrong account validate'), { code: 'unavailable', ok: false });
+  assert.equal((await ok(rpc('loopedin_accept_group_invite', maya.token, { target_token: mayaInvite.token }), 'Maya accepts')).code, 'joined');
+  assert.equal((await ok(rpc('loopedin_accept_group_invite', maya.token, { target_token: mayaInvite.token }), 'Maya replay accepts')).code, 'joined');
+
+  const revoked = await createInvite(alex, family.id, jordan.email);
+  const duplicate = await createInvite(alex, family.id, jordan.email);
+  assert.equal(duplicate.code, 'already_pending');
+  await ok(rpc('loopedin_revoke_group_invite', alex.token, { target_invitation_id: revoked.invitationId }), 'revoke invite');
+  assert.equal((await ok(rpc('loopedin_accept_group_invite', jordan.token, { target_token: revoked.token }), 'revoked unavailable')).code, 'unavailable');
+  const declined = await createInvite(alex, family.id, jordan.email);
+  assert.equal((await ok(rpc('loopedin_decline_group_invite', jordan.token, { target_token: declined.token }), 'decline invite')).code, 'declined');
+  const expired = await createInvite(alex, family.id, jordan.email);
+  sql(`update public.loopedin_group_invitations set created_at=now()-interval '8 days', expires_at=now()-interval '1 second' where id='${expired.invitationId}';`);
+  assert.equal((await ok(rpc('loopedin_validate_group_invite', jordan.token, { target_token: expired.token }), 'expired unavailable')).code, 'unavailable');
+  const accepted = await createInvite(alex, family.id, jordan.email);
+  await ok(rpc('loopedin_accept_group_invite', jordan.token, { target_token: accepted.token }), 'Jordan accepts');
+  const listedInvites = await ok(rpc('loopedin_list_group_invites', alex.token, { target_group_id: family.id }), 'owner lists invites');
+  assert.equal(listedInvites.length, 5);
+  assert.ok(listedInvites.some((invite) => invite.status === 'accepted'));
+  assert.ok(listedInvites.some((invite) => invite.status === 'declined'));
+  assert.ok(listedInvites.some((invite) => invite.status === 'revoked'));
+  assert.equal((await rpc('loopedin_list_group_invites', maya.token, { target_group_id: family.id })).body.length, 0);
+
+  const leavingInvite = await createInvite(alex, family.id, outsider.email);
+  assert.equal((await ok(rpc('loopedin_revoke_group_invite', maya.token, { target_invitation_id: leavingInvite.invitationId }), 'member cannot revoke')).code, 'unavailable');
+  await ok(rpc('loopedin_accept_group_invite', outsider.token, { target_token: leavingInvite.token }), 'temporary member accepts');
+  assert.equal((await ok(rpc('loopedin_leave_group', outsider.token, { target_group_id: family.id }), 'member leaves')).code, 'left');
+  assert.equal((await ok(table('loopedin_groups', outsider.token, `?id=eq.${family.id}&select=id`), 'leave revokes access')).length, 0);
+
+  const genericMemberWrite = await table('loopedin_group_members', alex.token, '', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ group_id: family.id, user_id: outsider.id, role: 'member' }) });
+  assert.equal(genericMemberWrite.response.ok, false);
+  privateGroup = await createGroup(outsider, 'Outsider Family');
+
+  const eventRows = [];
+  for (const [actor, title, offset] of [[alex, 'Door County', 2], [maya, 'Yellowstone', 5], [jordan, 'Lake Geneva', -5]]) {
+    const starts = new Date(Date.now() + offset * 86400000);
+    const event = await ok(table('loopedin_events', actor.token, '?select=*', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ group_id: family.id, created_by: actor.id, title, starts_at: starts.toISOString(), ends_at: new Date(starts.getTime() + 7200000).toISOString(), location: 'Wisconsin', description: `${title} family trip` }),
+    }), `create ${title}`);
+    eventRows.push(event[0]);
+  }
+  const privateEvent = (await ok(table('loopedin_events', outsider.token, '?select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ group_id: privateGroup.id, created_by: outsider.id, title: 'Private', starts_at: new Date(Date.now() + 86400000).toISOString(), ends_at: new Date(Date.now() + 90000000).toISOString(), location: '', description: '' }) }), 'create isolated event'))[0];
+  for (const actor of [alex, maya, jordan]) assert.equal((await ok(table('loopedin_events', actor.token, `?group_id=eq.${family.id}&select=id`), 'family event list')).length, 3);
+  assert.equal((await ok(table('loopedin_events', alex.token, `?id=eq.${privateEvent.id}&select=id`), 'cross-family event isolation')).length, 0);
+
+  const lake = eventRows[2];
+  for (const [actor, status] of [[alex, 'going'], [maya, 'maybe'], [jordan, 'declined']]) {
+    await ok(table('loopedin_rsvps', actor.token, '?on_conflict=event_id,user_id&select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify({ event_id: lake.id, user_id: actor.id, person_name: actor.email.split('@')[0], status }) }), 'upsert RSVP');
+    await ok(table('loopedin_event_messages', actor.token, '?select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ event_id: lake.id, author_id: actor.id, body: `${actor.email.split('@')[0]} is ready` }) }), 'send comment');
+  }
+  assert.equal((await ok(table('loopedin_rsvps', maya.token, `?event_id=eq.${lake.id}&select=*`), 'shared RSVPs')).length, 3);
+  assert.equal((await ok(table('loopedin_event_messages', jordan.token, `?event_id=eq.${lake.id}&select=*`), 'shared comments')).length, 3);
+  const spoof = await table('loopedin_rsvps', maya.token, '', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event_id: lake.id, user_id: outsider.id, person_name: 'Spoof', status: 'going' }) });
+  assert.equal(spoof.response.ok, false);
+
+  const path = `${lake.id}/${jordan.id}/${crypto.randomUUID()}.png`;
+  const pending = await ok(rpc('loopedin_begin_media_upload', jordan.token, { target_event_id: lake.id, target_storage_path: path, target_caption: 'Lake day', target_alt_text: 'Family at the lake', target_source_name: null, target_source_url: null, target_creator_name: null, target_creator_url: null }), 'begin photo');
+  await ok(upload(jordan.token, path), 'upload photo'); paths.add(path);
+  photo = await ok(rpc('loopedin_activate_media', jordan.token, { target_media_id: pending.id }), 'activate photo');
+  await ok(request(`/storage/v1/object/authenticated/${bucket}/${path}`, { token: maya.token }), 'member reads photo');
+  assert.equal((await request(`/storage/v1/object/authenticated/${bucket}/${path}`, { token: outsider.token })).response.ok, false);
+  assert.equal((await rpc('loopedin_claim_media_deletion', maya.token, { target_media_id: photo.id })).response.ok, false);
+
+  sql(`insert into public.loopedin_notifications(user_id,kind,title,body,event_id,group_id) values ('${alex.id}','message','Lake update','Jordan commented','${lake.id}','${family.id}'),('${maya.id}','media','New photo','Jordan shared a photo','${lake.id}','${family.id}'),('${jordan.id}','event_update','Trip update','The plan changed','${lake.id}','${family.id}');`);
+  for (const actor of [alex, maya, jordan]) assert.equal((await ok(table('loopedin_notifications', actor.token, '?select=*'), 'own notification')).length, 1);
+  assert.equal((await ok(table('loopedin_notifications', outsider.token, '?select=*'), 'outsider notifications')).length, 0);
+  const mayaNotification = (await ok(table('loopedin_notifications', maya.token, '?select=id,read'), 'Maya notification'))[0];
+  await ok(table('loopedin_notifications', maya.token, `?id=eq.${mayaNotification.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ read: true }) }), 'mark own notification read');
+  assert.equal((await ok(table('loopedin_notifications', maya.token, `?id=eq.${mayaNotification.id}&select=read`), 'read state'))[0].read, true);
+
+  await assert.rejects(async () => ok(rpc('loopedin_leave_group', alex.token, { target_group_id: family.id }), 'owner cannot leave'), /Transfer ownership/);
+  await ok(rpc('loopedin_transfer_group_ownership', alex.token, { target_group_id: family.id, target_user_id: maya.id }), 'transfer to Maya');
+  assert.equal(sql(`select count(*) from public.loopedin_group_members where group_id='${family.id}' and role='owner';`), '1');
+  assert.equal((await rpc('loopedin_remove_group_member', alex.token, { target_group_id: family.id, target_user_id: jordan.id })).response.ok, false);
+  await ok(rpc('loopedin_transfer_group_ownership', maya.token, { target_group_id: family.id, target_user_id: alex.id }), 'transfer back to Alex');
+  await assert.rejects(async () => ok(rpc('loopedin_remove_group_member', alex.token, { target_group_id: family.id, target_user_id: alex.id }), 'cannot remove owner'), /Transfer ownership/);
+
+  await ok(rpc('loopedin_claim_media_deletion', alex.token, { target_media_id: photo.id }), 'owner claims photo');
+  await ok(removeObject(alex.token, path), 'owner removes photo'); paths.delete(path);
+  await ok(rpc('loopedin_finalize_media_deletion', alex.token, { target_media_id: photo.id }), 'owner finalizes photo');
+  await ok(rpc('loopedin_remove_group_member', alex.token, { target_group_id: family.id, target_user_id: jordan.id }), 'remove Jordan');
+  assert.equal((await ok(table('loopedin_events', jordan.token, `?group_id=eq.${family.id}&select=id`), 'removed event access')).length, 0);
+  assert.equal((await ok(table('loopedin_notifications', jordan.token, '?select=id'), 'removed notification access')).length, 0);
+  assert.equal((await ok(table('loopedin_events', jordan.token, `?group_id=eq.${privateGroup.id}&select=id`), 'unrelated group remains isolated')).length, 0);
+
+  const directOwnerDelete = await table('loopedin_group_members', alex.token, `?group_id=eq.${family.id}&user_id=eq.${alex.id}`, { method: 'DELETE' });
+  assert.equal(directOwnerDelete.response.ok, false);
+  assert.equal(sql(`select count(*) from public.loopedin_group_members where group_id='${family.id}' and role='owner';`), '1');
+
+  console.log('local Supabase family lifecycle: 4 sessions, invites, events, RSVP, comments, media, notifications, and isolation passed');
+} finally {
+  for (const path of paths) await removeObject(serviceKey, path).catch(() => undefined);
+  if (groups.length || users.length) {
+    const groupIds = groups.map((id) => `'${id}'`).join(',');
+    const userIds = users.map((user) => `'${user.id}'`).join(',');
+    sql(`${groupIds ? `delete from public.loopedin_groups where id in (${groupIds});` : ''}${userIds ? `delete from auth.users where id in (${userIds});` : ''}`);
+    const residue = sql(`select (select count(*) from auth.users where email like '%-${run}@loopedin.test') || ',' || (select count(*) from public.loopedin_groups where id in (${groupIds || "'00000000-0000-0000-0000-000000000000'"})) || ',' || (select count(*) from storage.objects where name like '%${run}%');`);
+    assert.equal(residue, '0,0,0', `test residue remained: ${residue}`);
+  }
+}
