@@ -57,7 +57,7 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
             </Pressable>
           ))}
         </View>
-      </SurfaceCard> : <SurfaceCard><Text style={styles.cardTitle}>No events planned yet</Text><Text style={styles.cardCopy}>Create the first event to put this group on the calendar.</Text><Button label="Create event" onPress={onCreateEvent} /></SurfaceCard>}
+      </SurfaceCard> : <SurfaceCard><Text style={styles.cardTitle}>No upcoming events planned</Text><Text style={styles.cardCopy}>Create an event to put a new plan on this group’s calendar.</Text><Button label="Create event" onPress={onCreateEvent} /></SurfaceCard>}
     </ScrollView>
   );
 }

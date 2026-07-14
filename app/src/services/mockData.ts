@@ -17,7 +17,7 @@ const members: GroupMember[] = [
   { id: 'person-maya', name: 'Maya Jones', initials: 'MJ', avatarUri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80', role: 'member' },
   { id: 'person-emma', name: 'Emma Jones', initials: 'EJ', avatarUri: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80', role: 'member' },
   { id: 'person-noah', name: 'Noah Jones', initials: 'NJ', avatarUri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80', role: 'member' },
-  { id: 'person-ruth', name: 'Grandma Ruth', initials: 'GR', avatarUri: 'https://images.unsplash.com/photo-1581579185169-7f13455d3a94?auto=format&fit=crop&w=200&q=80', role: 'member' },
+  { id: 'person-ruth', name: 'Grandma Ruth', initials: 'GR', avatarUri: '', role: 'member' },
 ];
 
 const trip = (event: Partial<Event> & Pick<Event, 'id' | 'title' | 'startsAt' | 'endsAt' | 'location' | 'description' | 'coverUri'>): Event => ({

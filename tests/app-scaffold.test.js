@@ -125,6 +125,9 @@ test('group member reads return the five Jones members, stay group-isolated, and
     'person-you', 'person-maya', 'person-emma', 'person-noah', 'person-ruth',
   ]);
   assert.deepEqual(jonesMembers.map((member) => member.role), ['owner', 'member', 'member', 'member', 'member']);
+  const grandmaRuth = jonesMembers.find((member) => member.id === 'person-ruth');
+  assert.equal(grandmaRuth.name, 'Grandma Ruth');
+  assert.equal(grandmaRuth.avatarUri, '');
   const session = await mock.auth.getSession();
   assert.equal(session.userId, 'person-you');
   assert.equal(jonesMembers.find((member) => member.id === session.userId).name, session.displayName);
@@ -648,6 +651,32 @@ test('zero-event selectors stay honest and unknown detail is explicit', () => {
   assert.deepEqual(home.memories, []);
   assert.deepEqual(calendar.agenda, []);
   assert.equal(selectors.selectEventDetailViewModel('event-does-not-exist', [], []), null);
+});
+
+test('Calendar excludes completed events before deriving its upcoming month and agenda', () => {
+  const { selectors, mockData } = loadCompiledModules();
+  const events = mockData.createMockDatabase().events;
+  const now = new Date('2026-07-13T12:00:00Z');
+  const calendar = selectors.selectCalendarViewModel(events, now);
+
+  assert.deepEqual(calendar.agenda.map((event) => event.id), [
+    'event-door-county',
+    'event-yellowstone',
+    'event-charleston',
+  ]);
+  assert.equal(calendar.month, 'July');
+  assert.equal(calendar.calendarSummary, '3 shared plans');
+  assert.equal(calendar.calendarEvents.find((day) => day.day === 24).highlight, true);
+  assert.equal(calendar.agenda.some((event) => event.id === 'event-lake-geneva'), false);
+
+  const completedOnly = selectors.selectCalendarViewModel(
+    events.filter((event) => event.id === 'event-lake-geneva'),
+    now,
+  );
+  assert.deepEqual(completedOnly.agenda, []);
+  assert.equal(completedOnly.month, 'July');
+  assert.equal(completedOnly.calendarSummary, '0 shared plans');
+  assert.equal(completedOnly.calendarEvents.some((day) => day.highlight), false);
 });
 
 test('completed-event history is derived chronologically and keeps exact event comments and photos isolated', () => {

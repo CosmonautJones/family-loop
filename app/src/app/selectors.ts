@@ -107,9 +107,11 @@ export function selectHomeViewModel(input: HomeViewModelInput = {}) {
   };
 }
 
-export function selectCalendarViewModel(events: Event[] = []) {
-  const sortedEvents = [...events].sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
-  const monthDate = sortedEvents[0] ? new Date(sortedEvents[0].startsAt) : new Date();
+export function selectCalendarViewModel(events: Event[] = [], now = new Date()) {
+  const sortedEvents = events
+    .filter((event) => new Date(event.endsAt).getTime() >= now.getTime())
+    .sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
+  const monthDate = sortedEvents[0] ? new Date(sortedEvents[0].startsAt) : now;
   const month = monthDate.toLocaleDateString('en-US', { month: 'long' });
   const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
   const eventDays = new Set(sortedEvents
