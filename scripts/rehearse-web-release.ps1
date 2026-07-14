@@ -5,6 +5,10 @@ param(
   [string]$CandidateArtifact,
   [Parameter(Mandatory = $true)]
   [string]$WorkPath,
+  [Parameter(Mandatory = $true)]
+  [string]$PrimaryRuntimeConfig,
+  [Parameter(Mandatory = $true)]
+  [string]$SecondaryRuntimeConfig,
   [int]$Port = 8087
 )
 
@@ -21,6 +25,12 @@ if ($work -eq $repositoryRoot -or $work -eq $driveRoot -or $repositoryRoot.Start
 }
 $baseline = (Resolve-Path -LiteralPath $BaselineArtifact).Path
 $candidate = (Resolve-Path -LiteralPath $CandidateArtifact).Path
+$primaryConfigPath = (Resolve-Path -LiteralPath $PrimaryRuntimeConfig).Path
+$secondaryConfigPath = (Resolve-Path -LiteralPath $SecondaryRuntimeConfig).Path
+$primaryConfig = Get-Content -Raw -LiteralPath $primaryConfigPath | ConvertFrom-Json
+$secondaryConfig = Get-Content -Raw -LiteralPath $secondaryConfigPath | ConvertFrom-Json
+if ($primaryConfig.dataMode -ne 'local') { throw 'PrimaryRuntimeConfig must use local mode for the full mobile-web smoke.' }
+if ($primaryConfig.environmentId -eq $secondaryConfig.environmentId) { throw 'Runtime config environments must have distinct identifiers.' }
 $baselineManifest = Get-Content -Raw -LiteralPath (Join-Path $baseline 'release-manifest.json') | ConvertFrom-Json
 $candidateManifest = Get-Content -Raw -LiteralPath (Join-Path $candidate 'release-manifest.json') | ConvertFrom-Json
 if ($baselineManifest.artifactSha256 -eq $candidateManifest.artifactSha256) {
@@ -44,6 +54,7 @@ New-Item -ItemType Directory -Path $work -Force | Out-Null
 $store = Join-Path $work 'store'
 $stdoutPath = Join-Path $work 'server.stdout.log'
 $stderrPath = Join-Path $work 'server.stderr.log'
+$liveConfigPath = Join-Path $work 'runtime-config.json'
 $server = $null
 
 function Promote([string]$Artifact) {
@@ -55,10 +66,12 @@ function Get-ReleaseResponse([string]$Path) {
 }
 
 try {
+  Copy-Item -LiteralPath $primaryConfigPath -Destination $liveConfigPath
   Promote $baseline
   $server = Start-Process -FilePath 'node' -ArgumentList @(
     (Join-Path $PSScriptRoot 'serve-web-release.mjs'),
     '--store', $store,
+    '--runtime-config', $liveConfigPath,
     '--alias', 'stable',
     '--port', $Port
   ) -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -WindowStyle Hidden -PassThru
@@ -73,6 +86,7 @@ try {
   }
   if (-not $baselineResponse) { throw 'Release server did not become ready.' }
   if ($baselineResponse.Headers['X-LoopedIn-Release'] -ne $baselineManifest.releaseId) { throw 'Baseline alias served the wrong release.' }
+  if ($baselineResponse.Headers['X-LoopedIn-Environment'] -ne $primaryConfig.environmentId) { throw 'Primary runtime environment identity is wrong.' }
   if ($baselineResponse.Headers['Content-Security-Policy'] -notmatch "frame-ancestors 'none'") { throw 'CSP header is missing the frame restriction.' }
   if ($baselineResponse.Headers['Cache-Control'] -ne 'no-cache') { throw 'SPA fallback must revalidate instead of using an immutable cache.' }
   $securityHeaders = @(
@@ -86,6 +100,9 @@ try {
   foreach ($header in $securityHeaders) {
     if (-not $baselineResponse.Headers[$header]) { throw "Baseline response is missing $header." }
   }
+  $primaryRuntimeResponse = Get-ReleaseResponse '/runtime-config.json'
+  if ($primaryRuntimeResponse.Headers['Cache-Control'] -ne 'no-store') { throw 'Runtime config must never be cached.' }
+  if (($primaryRuntimeResponse.Content | ConvertFrom-Json).environmentId -ne $primaryConfig.environmentId) { throw 'Primary runtime config response is wrong.' }
 
   Promote $candidate
   $candidateResponse = Get-ReleaseResponse '/event/event-door-county'
@@ -101,16 +118,39 @@ try {
   & node (Join-Path $PSScriptRoot 'check-opord14-mobile-accessibility.mjs') "http://127.0.0.1:$Port"
   if ($LASTEXITCODE -ne 0) { throw 'Candidate mobile-web smoke failed.' }
 
+  Copy-Item -LiteralPath $secondaryConfigPath -Destination $liveConfigPath -Force
+  $secondaryResponse = Get-ReleaseResponse '/event/runtime-config-proof'
+  if ($secondaryResponse.Headers['X-LoopedIn-Release'] -ne $candidateManifest.releaseId) { throw 'Runtime overlay changed the immutable artifact identity.' }
+  if ($secondaryResponse.Headers['X-LoopedIn-Environment'] -ne $secondaryConfig.environmentId) { throw 'Secondary runtime environment identity is wrong.' }
+  if ($secondaryConfig.dataMode -eq 'supabase') {
+    $backendOrigin = ([Uri]$secondaryConfig.supabaseUrl).GetLeftPart([UriPartial]::Authority)
+    if ($secondaryResponse.Headers['Content-Security-Policy'] -notmatch [regex]::Escape($backendOrigin)) { throw 'CSP does not allow the configured backend origin.' }
+    & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/event/runtime-config-proof" $secondaryConfig.environmentId 'Welcome back'
+  } else {
+    & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/home" $secondaryConfig.environmentId 'Who’s using LoopedIn?'
+  }
+  if ($LASTEXITCODE -ne 0) { throw 'Secondary runtime browser smoke failed.' }
+
+  [IO.File]::WriteAllText($liveConfigPath, '{"schemaVersion":1,"environmentId":"invalid-proof","dataMode":"supabase","supabaseUrl":"https://example.invalid","supabasePublishableKey":"sb_secret_rejected"}', [Text.UTF8Encoding]::new($false))
+  $invalidRuntimeResponse = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/runtime-config.json" -UseBasicParsing -TimeoutSec 10 -SkipHttpErrorCheck
+  if ($invalidRuntimeResponse.StatusCode -ne 503 -or $invalidRuntimeResponse.Headers['Cache-Control'] -ne 'no-store') { throw 'Invalid runtime config did not fail closed.' }
+  $invalidShellResponse = Get-ReleaseResponse '/event/runtime-config-proof'
+  if ($invalidShellResponse.Headers['X-LoopedIn-Environment'] -ne 'unavailable') { throw 'Invalid runtime config leaked an environment identity.' }
+  & node (Join-Path $PSScriptRoot 'check-runtime-config-browser.mjs') "http://127.0.0.1:$Port/#/event/runtime-config-proof" invalid-proof 'LoopedIn is unavailable'
+  if ($LASTEXITCODE -ne 0) { throw 'Invalid runtime browser state did not fail closed.' }
+
+  Copy-Item -LiteralPath $primaryConfigPath -Destination $liveConfigPath -Force
   Promote $baseline
   $rollbackResponse = Get-ReleaseResponse '/event/event-door-county'
   if ($rollbackResponse.Headers['X-LoopedIn-Release'] -ne $baselineManifest.releaseId) { throw 'Rollback did not restore the baseline release.' }
+  if ($rollbackResponse.Headers['X-LoopedIn-Environment'] -ne $primaryConfig.environmentId) { throw 'Rollback did not restore the primary runtime environment.' }
   foreach ($header in $securityHeaders) {
     if ($rollbackResponse.Headers[$header] -ne $candidateResponse.Headers[$header]) { throw "$header changed after rollback." }
   }
 
   Write-Output "Baseline release: $($baselineManifest.releaseId)"
   Write-Output "Candidate release: $($candidateManifest.releaseId)"
-  Write-Output "Promotion, mobile smoke, deep-link fallback, immutable asset cache, and rollback: PASS"
+  Write-Output "One candidate artifact across two runtime environments, invalid-config fail-closed, mobile smoke, deep-link fallback, immutable asset cache, and artifact/config rollback: PASS"
 } finally {
   if ($server -and -not $server.HasExited) {
     Stop-Process -Id $server.Id -Force

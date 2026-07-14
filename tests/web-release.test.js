@@ -18,12 +18,12 @@ function reservePort() {
   });
 }
 
-test('release build contract pins source and disables dotenv/backend inheritance', () => {
+test('release build contract pins one runtime-configured artifact and disables dotenv/backend inheritance', () => {
   const build = readFileSync(join(repositoryRoot, 'scripts/build-web-release.ps1'), 'utf8');
   const promote = readFileSync(join(repositoryRoot, 'scripts/promote-web-release.ps1'), 'utf8');
   assert.match(build, /git -C \$repositoryRoot archive[\s\S]*\$sourceCommit/);
   assert.match(build, /EXPO_NO_DOTENV', '1'/);
-  assert.match(build, /EXPO_PUBLIC_DATA_MODE', 'local'/);
+  assert.match(build, /EXPO_PUBLIC_DATA_MODE', 'runtime'/);
   for (const name of ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY']) {
     assert.match(build, new RegExp(`Remove-Item Env:${name}`));
   }
@@ -34,6 +34,20 @@ test('release build contract pins source and disables dotenv/backend inheritance
   assert.match(build, /WaitForExit\(\$TimeoutSeconds \* 1000\)/);
   assert.match(build, /Invoke-BoundedProcess[\s\S]*300 'npm-ci'[\s\S]*300 'expo-export'/);
   assert.doesNotMatch(build, /Get-Date|generatedAt/);
+  assert.doesNotMatch(build, /environmentId=\$EnvironmentId|releaseId = .*EnvironmentId/);
+  assert.match(build, /dataMode = 'runtime'/);
+});
+
+test('web bootstrap validates external configuration before importing application services', () => {
+  const entry = readFileSync(join(repositoryRoot, 'app/index.ts'), 'utf8');
+  const runtime = readFileSync(join(repositoryRoot, 'app/src/config/runtimeConfig.ts'), 'utf8');
+  assert.match(entry, /initializeRuntimeConfig\(\)[\s\S]*import\('\.\/App'\)/);
+  assert.match(entry, /accessibilityRole: 'alert'/);
+  assert.match(runtime, /fetch\('\/runtime-config\.json', \{ cache: 'no-store', credentials: 'same-origin' \}\)/);
+  assert.match(runtime, /Object\.keys\(value\).*unsupported field/);
+  assert.match(runtime, /url\.protocol === 'https:'[\s\S]*loopback/);
+  assert.match(runtime, /sb_secret_[\s\S]*service\[_-\]\?role/);
+  assert.doesNotMatch(runtime, /console\.|JSON\.stringify\(runtimeConfig/);
 });
 
 test('release preview swaps aliases while retaining SPA, security, and cache contracts', async (t) => {
@@ -44,6 +58,7 @@ test('release preview swaps aliases while retaining SPA, security, and cache con
   const store = join(temporary, 'store');
   const releases = join(store, 'releases');
   const aliases = join(store, 'aliases');
+  const runtimeConfig = join(temporary, 'runtime-config.json');
   mkdirSync(aliases, { recursive: true });
   for (const [digest, release] of [['a'.repeat(64), 'baseline'], ['b'.repeat(64), 'candidate']]) {
     const root = join(releases, digest);
@@ -53,9 +68,10 @@ test('release preview swaps aliases while retaining SPA, security, and cache con
   }
   const pointTo = (digest, releaseId) => writeFileSync(join(aliases, 'stable.json'), JSON.stringify({ artifactSha256: digest, releaseId }));
   pointTo('a'.repeat(64), 'baseline');
+  writeFileSync(runtimeConfig, JSON.stringify({ schemaVersion: 1, environmentId: 'rehearsal-local', dataMode: 'local' }));
 
   const port = await reservePort();
-  const child = spawn(process.execPath, [join(repositoryRoot, 'scripts/serve-web-release.mjs'), '--store', store, '--alias', 'stable', '--port', String(port)], {
+  const child = spawn(process.execPath, [join(repositoryRoot, 'scripts/serve-web-release.mjs'), '--store', store, '--runtime-config', runtimeConfig, '--alias', 'stable', '--port', String(port)], {
     stdio: 'ignore',
     windowsHide: true,
   });
@@ -75,6 +91,7 @@ test('release preview swaps aliases while retaining SPA, security, and cache con
   assert.equal(await baseline.text(), '<main>baseline</main>');
   assert.equal(baseline.headers.get('x-loopedin-release'), 'baseline');
   assert.equal(baseline.headers.get('cache-control'), 'no-cache');
+  assert.equal(baseline.headers.get('x-loopedin-environment'), 'rehearsal-local');
   assert.match(baseline.headers.get('content-security-policy'), /frame-ancestors 'none'/);
   assert.equal(baseline.headers.get('x-content-type-options'), 'nosniff');
 
@@ -83,8 +100,32 @@ test('release preview swaps aliases while retaining SPA, security, and cache con
   const rejected = await fetch(`http://127.0.0.1:${port}/event/exact-id`, { method: 'POST' });
   assert.equal(rejected.status, 405);
 
+  const configResponse = await fetch(`http://127.0.0.1:${port}/runtime-config.json`);
+  assert.equal(configResponse.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await configResponse.json(), { schemaVersion: 1, environmentId: 'rehearsal-local', dataMode: 'local' });
+
+  writeFileSync(runtimeConfig, JSON.stringify({
+    schemaVersion: 1,
+    environmentId: 'rehearsal-supabase',
+    dataMode: 'supabase',
+    supabaseUrl: 'http://127.0.0.1:54321',
+    supabasePublishableKey: `sb_publishable_${'a'.repeat(24)}`,
+  }));
+  const configured = await fetch(`http://127.0.0.1:${port}/event/exact-id`);
+  assert.equal(configured.headers.get('x-loopedin-environment'), 'rehearsal-supabase');
+  assert.match(configured.headers.get('content-security-policy'), /connect-src 'self' http:\/\/127\.0\.0\.1:54321 ws:\/\/127\.0\.0\.1:54321/);
+
   pointTo('b'.repeat(64), 'candidate');
   const candidate = await fetch(`http://127.0.0.1:${port}/event/exact-id`);
   assert.equal(await candidate.text(), '<main>candidate</main>');
   assert.equal(candidate.headers.get('x-loopedin-release'), 'candidate');
+
+  writeFileSync(runtimeConfig, JSON.stringify({ schemaVersion: 1, environmentId: 'bad', dataMode: 'supabase', supabaseUrl: 'https://example.test', supabasePublishableKey: 'sb_secret_do-not-use' }));
+  const invalidConfig = await fetch(`http://127.0.0.1:${port}/runtime-config.json`);
+  assert.equal(invalidConfig.status, 503);
+  assert.equal(invalidConfig.headers.get('cache-control'), 'no-store');
+  const failClosedShell = await fetch(`http://127.0.0.1:${port}/`);
+  assert.equal(failClosedShell.status, 200);
+  assert.equal(failClosedShell.headers.get('x-loopedin-environment'), 'unavailable');
+  assert.doesNotMatch(failClosedShell.headers.get('content-security-policy'), /example\.test/);
 });

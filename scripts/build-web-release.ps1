@@ -1,17 +1,11 @@
 param(
   [Parameter(Mandatory = $true)]
-  [string]$EnvironmentId,
-  [Parameter(Mandatory = $true)]
   [string]$OutputPath,
   [string]$SourceRevision = 'HEAD'
 )
 
 $ErrorActionPreference = 'Stop'
 $onWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
-
-if ($EnvironmentId -notmatch '^[a-z0-9][a-z0-9-]{0,62}$') {
-  throw 'EnvironmentId must contain only lowercase letters, digits, and hyphens.'
-}
 
 $repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $outputFullPath = if ([IO.Path]::IsPathRooted($OutputPath)) {
@@ -105,7 +99,7 @@ try {
   if ($LASTEXITCODE -ne 0) { throw 'Source archive extraction failed.' }
 
   [Environment]::SetEnvironmentVariable('EXPO_NO_DOTENV', '1', 'Process')
-  [Environment]::SetEnvironmentVariable('EXPO_PUBLIC_DATA_MODE', 'local', 'Process')
+  [Environment]::SetEnvironmentVariable('EXPO_PUBLIC_DATA_MODE', 'runtime', 'Process')
   Remove-Item Env:EXPO_PUBLIC_SUPABASE_URL -ErrorAction SilentlyContinue
   Remove-Item Env:EXPO_PUBLIC_SUPABASE_ANON_KEY -ErrorAction SilentlyContinue
   Remove-Item Env:EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY -ErrorAction SilentlyContinue
@@ -140,14 +134,13 @@ try {
   )
   $package = Get-Content -Raw -LiteralPath (Join-Path $sourcePath 'app/package.json') | ConvertFrom-Json
   $canonicalFiles = ($files | ForEach-Object { "$($_.path)`t$($_.bytes)`t$($_.sha256)" }) -join "`n"
-  $canonicalArtifact = "schemaVersion=1`nappVersion=$($package.version)`nenvironmentId=$EnvironmentId`ndataMode=local`nsourceCommit=$sourceCommit`nsourceDateEpoch=$sourceEpoch`n$canonicalFiles`n"
+  $canonicalArtifact = "schemaVersion=2`nappVersion=$($package.version)`ndataMode=runtime`nsourceCommit=$sourceCommit`nsourceDateEpoch=$sourceEpoch`n$canonicalFiles`n"
   $artifactDigest = Get-TextSha256 $canonicalArtifact
   $manifest = [ordered]@{
-    schemaVersion = 1
-    releaseId = "$($package.version)-$($sourceCommit.Substring(0, 12))-$EnvironmentId"
+    schemaVersion = 2
+    releaseId = "$($package.version)-$($sourceCommit.Substring(0, 12))"
     appVersion = $package.version
-    environmentId = $EnvironmentId
-    dataMode = 'local'
+    dataMode = 'runtime'
     sourceCommit = $sourceCommit
     sourceDateEpoch = [long]$sourceEpoch
     artifactSha256 = $artifactDigest
