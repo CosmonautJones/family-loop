@@ -13,6 +13,7 @@ import { gradients, palette, radii, shadow, spacing } from '../theme/tokens';
 import { useAppShellState } from './useAppShellState';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { AuthScreen, SessionStatusScreen } from '../screens/AuthScreen';
+import { FamilyOnboardingScreen } from '../screens/FamilyOnboardingScreen';
 import { useActiveGroupQuery } from '../app/queries';
 
 const tabIcons = {
@@ -32,6 +33,7 @@ export function AppShell() {
     return <SessionStatusScreen loading title="Restoring your plans" detail="Connecting to your private family space…" />;
   }
   if (auth.status === 'signedOut' || auth.status === 'error') return <AuthScreen />;
+  if (auth.invitationToken) return <AppBackground><FamilyOnboardingScreen /></AppBackground>;
   if (auth.groupsPending) {
     return <SessionStatusScreen loading title="Loading your groups" detail="Finding the plans shared with you…" />;
   }
@@ -39,7 +41,7 @@ export function AppShell() {
     return <SessionStatusScreen title="We couldn't load your groups" detail={auth.groupError} />;
   }
   if (auth.groups?.length === 0) {
-    return <SessionStatusScreen title="No groups yet" detail="You aren't part of a LoopedIn group yet." />;
+    return <AppBackground><FamilyOnboardingScreen /></AppBackground>;
   }
 
   return (

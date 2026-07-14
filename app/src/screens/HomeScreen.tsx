@@ -6,12 +6,15 @@ import { Chip } from '../components/Chip';
 import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
-import { useActiveEventsQuery, useActiveGroupHistoryQuery } from '../app/queries';
+import { useActiveEventsQuery, useActiveGroupHistoryQuery, useMarkAllNotificationsReadMutation, useMarkNotificationReadMutation, useNotificationsQuery } from '../app/queries';
 import { palette, spacing } from '../theme/tokens';
 
 export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
   const eventsQuery = useActiveEventsQuery();
   const historyQuery = useActiveGroupHistoryQuery();
+  const notificationsQuery = useNotificationsQuery();
+  const markRead = useMarkNotificationReadMutation();
+  const markAllRead = useMarkAllNotificationsReadMutation();
   const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], history: historyQuery.data ?? [] });
   const heroEvent = appSections.heroEvent;
 
@@ -39,6 +42,24 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
             <Button label="Create event" onPress={onCreateEvent} />
           </SurfaceCard>
         )}
+
+        <SurfaceCard>
+          <View style={styles.rowBetween}>
+            <View style={styles.flexCopy}><Text style={styles.cardTitle}>Updates</Text><Text style={styles.cardCopy}>The latest changes across your family.</Text></View>
+            {notificationsQuery.data?.some((item) => !item.read) ? <Chip label={`${notificationsQuery.data.filter((item) => !item.read).length} unread`} tone="coral" /> : null}
+          </View>
+          {notificationsQuery.isPending ? <View accessibilityLiveRegion="polite"><Text style={styles.cardCopy}>Loading family updates…</Text></View> : null}
+          {notificationsQuery.isError ? <View accessibilityLiveRegion="polite"><Text accessibilityRole="alert" style={styles.errorCopy}>Updates are unavailable right now.</Text><Button label="Retry updates" tone="secondary" onPress={() => notificationsQuery.refetch()} /></View> : null}
+          {notificationsQuery.isSuccess && notificationsQuery.data.length === 0 ? <Text style={styles.cardCopy}>No updates yet. New comments, photos, and plan changes will appear here.</Text> : null}
+          {notificationsQuery.isSuccess ? [...notificationsQuery.data].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 3).map((item) => (
+            <View key={item.id} style={[styles.updateItem, !item.read && styles.updateUnread]}>
+              <View style={styles.flexCopy}><Text style={styles.listTitle}>{item.title}</Text><Text style={styles.cardCopy}>{item.body}</Text><Text style={styles.updateTime}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>
+              {item.eventId ? <Button label={`Open update: ${item.title}`} tone="secondary" disabled={markRead.isPending} onPress={async () => { if (!item.read) await markRead.mutateAsync(item.id); onOpenEvent?.(item.eventId!); }} /> : !item.read ? <Button label={`Mark ${item.title} read`} tone="secondary" disabled={markRead.isPending} onPress={() => markRead.mutate(item.id)} /> : null}
+            </View>
+          )) : null}
+          {notificationsQuery.isSuccess && notificationsQuery.data.some((item) => !item.read) ? <Button label={markAllRead.isPending ? 'Marking updates read…' : 'Mark all read'} tone="secondary" disabled={markAllRead.isPending} onPress={() => markAllRead.mutate()} /> : null}
+          {markRead.isError || markAllRead.isError ? <Text accessibilityRole="alert" style={styles.errorCopy}>We couldn’t update read status. Try again.</Text> : null}
+        </SurfaceCard>
 
         {heroEvent ? <SurfaceCard>
           <View style={styles.rowBetween}>
@@ -147,6 +168,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
+  flexCopy: { flex: 1, minWidth: 0 },
+  errorCopy: { color: palette.coral, fontSize: 14, lineHeight: 20 },
+  updateItem: { borderColor: palette.inkSoft, borderRadius: 12, borderWidth: 1, gap: 10, padding: 12 },
+  updateUnread: { backgroundColor: 'rgba(247,211,200,0.18)', borderColor: palette.coral },
+  updateTime: { color: palette.muted, fontSize: 12, marginTop: 5 },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',

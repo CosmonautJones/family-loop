@@ -683,7 +683,7 @@ test('local demo keeps stable family creation retries and honestly declines remo
   await assert.rejects(service.auth.signUp('A'.repeat(43), 'New Person', 'new@example.com', 'password'), /local family demo/i);
 });
 
-test('Family screen is service-backed with truthful states and no fixture onboarding controls', () => {
+test('Family screen is service-backed with owner and member controls', () => {
   const family = read('src/screens/GroupsScreen.tsx');
   const shell = read('src/navigation/AppShell.tsx');
   assert.match(family, /useActiveGroupQuery/);
@@ -691,7 +691,13 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(family, /useActiveEventsQuery/);
   assert.match(family, /Loading your family/);
   assert.match(family, /Try again/);
-  assert.match(family, /No family members are available yet/);
+  assert.match(family, /useCreateGroupInvitationMutation/);
+  assert.match(family, /crypto\.getRandomValues\(bytes\)/);
+  assert.match(family, /new Uint8Array\(32\)/);
+  assert.match(family, /Pending invitations/);
+  assert.match(family, /Transfer ownership to/);
+  assert.match(family, /immediately lose access/);
+  assert.match(family, /Leave family/);
   assert.doesNotMatch(family, /features\/groups\/fixtures|Create group|friend-group/);
   assert.match(shell, /accessibilityState=\{\{ selected: tab\.active \}\}/);
   assert.match(shell, /aria-selected=\{tab\.active\}/);
@@ -708,6 +714,55 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(shellState, /pushState\(\{ loopedIn: true, canGoBack: true \}/);
   assert.match(shellState, /historyState\?\.loopedIn && historyState\.canGoBack/);
   assert.doesNotMatch(shellState, /history\.length/);
+});
+
+test('signed-out invitation UI defaults to sign in and reveals accessible account creation only for a ready preview', () => {
+  const auth = read('src/screens/AuthScreen.tsx');
+  assert.match(auth, /useState<Mode>\('signIn'\)/);
+  assert.match(auth, /useInvitationQuery/);
+  assert.match(auth, /invitationData\?\.status === 'ready'/);
+  assert.match(auth, /Create the invited account/);
+  assert.match(auth, /Display name/);
+  assert.match(auth, /Confirm password/);
+  assert.match(auth, /autoComplete=\{mode === 'signUp' \? 'new-password' : 'current-password'\}/);
+  assert.match(auth, /aria-invalid=\{invalid\}/);
+  assert.match(auth, /aria-describedby=/);
+  assert.match(auth, /nameInput\.current\?\.focus\(\)/);
+  assert.match(auth, /emailInput\.current\?\.focus\(\)/);
+  assert.match(auth, /maskedEmail/);
+  assert.doesNotMatch(auth.slice(0, auth.indexOf("if (!auth.configured)")), /Create invitation/);
+});
+
+test('authenticated family onboarding handles invite decisions and honest zero-family choices', () => {
+  const onboarding = read('src/screens/FamilyOnboardingScreen.tsx');
+  const shell = read('src/navigation/AppShell.tsx');
+  assert.match(shell, /auth\.invitationToken[\s\S]*?<FamilyOnboardingScreen/);
+  assert.match(shell, /auth\.groups\?\.length === 0[\s\S]*?<FamilyOnboardingScreen/);
+  assert.doesNotMatch(shell, /title="No groups yet"/);
+  assert.match(onboarding, /useAcceptInvitationMutation/);
+  assert.match(onboarding, /useDeclineInvitationMutation/);
+  assert.match(onboarding, /auth\.clearInvitationToken\(\)/);
+  assert.match(onboarding, /useCanCreateGroupQuery/);
+  assert.match(onboarding, /entitlement\.data === true/);
+  assert.match(onboarding, /entitlement\.data === false/);
+  assert.match(onboarding, /Invitation link or code/);
+  assert.match(onboarding, /creationKey = useRef\(crypto\.randomUUID\(\)\)/);
+  assert.match(onboarding, /creationKey: creationKey\.current/);
+  assert.match(onboarding, /catch \{ setMessage\('This invitation isn’t available/);
+});
+
+test('Home Updates card is compact, truthful, and marks opened or all updates read', () => {
+  const home = read('src/screens/HomeScreen.tsx');
+  assert.match(home, /useNotificationsQuery/);
+  assert.match(home, /useMarkNotificationReadMutation/);
+  assert.match(home, /useMarkAllNotificationsReadMutation/);
+  assert.match(home, /Loading family updates/);
+  assert.match(home, /Updates are unavailable/);
+  assert.match(home, /No updates yet/);
+  assert.match(home, /\.slice\(0, 3\)/);
+  assert.match(home, /!item\.read/);
+  assert.match(home, /await markRead\.mutateAsync\(item\.id\)[\s\S]*?onOpenEvent/);
+  assert.match(home, /Mark all read/);
 });
 
 test('mobile shell and primary flows expose landmarks, headings, useful image names, and form errors', () => {
