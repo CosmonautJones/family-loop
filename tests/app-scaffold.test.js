@@ -92,7 +92,7 @@ test('durable local service persists the family loop across reconstruction and c
   });
   await first.rsvps.upsertRsvp({ eventId: event.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' });
   await first.thread.sendMessage(event.id, 'The hotel is booked.');
-  await first.media.uploadMedia({ eventId: event.id, fileUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80', caption: 'Test photo', altText: 'Family beside a lake', sourceUrl: 'https://unsplash.com', creatorName: 'Unsplash contributor' });
+  await first.media.uploadMedia({ eventId: event.id, fileUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80', caption: 'Test photo', altText: 'Family beside a lake', sourceName: 'Unsplash', sourceUrl: 'https://unsplash.com', creatorName: 'Unsplash contributor', creatorUrl: 'https://unsplash.com' });
   await first.events.createEvent({ groupId: 'group-private', title: 'Other group event', startsAt: '2027-02-01T10:00:00Z', endsAt: '2027-02-01T11:00:00Z', location: 'Elsewhere', description: 'Must stay isolated' });
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
@@ -269,7 +269,9 @@ test('media uploads are event-scoped, accessible, attributed when remote, remova
   assert.deepEqual(await service.media.listMedia('event-door-county'), []);
   await assert.rejects(service.media.deleteMedia(local.id), /missing media/i);
   await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'data:text/plain;base64,aGk=', altText: 'Text' }), /JPEG, PNG, or WebP/i);
-  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'https://example.com/photo.jpg', altText: 'Remote photo' }), /source link and creator name/i);
+  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: `data:image/jpeg;base64,${'A'.repeat(1398108)}`, altText: 'Large photo' }), /no larger than 1 MB/i);
+  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'https://example.com/photo.jpg', altText: 'Remote photo' }), /source name, source link, and creator name/i);
+  await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'https://example.com/photo.jpg', altText: 'Remote photo', sourceName: 'Unsplash', sourceUrl: 'https://example.com', creatorName: 'Someone', creatorUrl: 'https://unsplash.com/@someone' }), /must link to unsplash\.com/i);
   await assert.rejects(service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'data:image/png;base64,aGk=', altText: '   ' }), /describe the photo/i);
 
   const legacy = mockData.createMockDatabase();
@@ -315,7 +317,7 @@ test('durable local services serialize stale-instance mutations and advance revi
   await Promise.all([
     first.rsvps.upsertRsvp({ eventId: eventA.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' }),
     second.thread.sendMessage(eventB.id, 'I saved both dates.'),
-    first.media.uploadMedia({ eventId: eventA.id, fileUri: 'https://example.com/photo.jpg', caption: 'Shared photo', altText: 'Family sharing a trip photo', sourceUrl: 'https://example.com/photo', creatorName: 'Example photographer' }),
+    first.media.uploadMedia({ eventId: eventA.id, fileUri: 'https://example.com/photo.jpg', caption: 'Shared photo', altText: 'Family sharing a trip photo', sourceName: 'Example', sourceUrl: 'https://example.com/photo', creatorName: 'Example photographer', creatorUrl: 'https://example.com/photographer' }),
   ]);
 
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
@@ -602,7 +604,7 @@ test('Event Detail renders truthful thread states and a recoverable composer wit
   assert.match(detail, /key=\{item\.id\}/);
   assert.match(detail, /disabled=\{sendDisabled\}/);
   assert.match(detail, /sendMessage\.isPending/);
-  assert.match(detail, /onSuccess: \(\) => setMessageDraft\(''\)/);
+  assert.match(detail, /onSuccess: \(\) => setMessageDraft\(\(current\) => current\.trim\(\) === body \? '' : current\)/);
   assert.match(detail, /sendMessage\.isError/);
   assert.doesNotMatch(detail, /eventThread|features\/events\/fixtures/);
 });
