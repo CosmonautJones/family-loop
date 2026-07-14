@@ -7,9 +7,10 @@
 - Baseline honesty: M1-M3 exist; remote Supabase remains unverified, Docker unavailable, lint a placeholder, and native/human validation not run. Future OPORDs require fresh authorization.
 - Run 1 review result: RED — validation sections were not explicitly split and UI targets used a 44-point floor. The documentation was corrected before re-review.
 - Run 2 review result: RED — combined delivery/recovery scope, abstract task model tiers, ambiguous numeric execution order, OPORD-005 runtime authority, and insufficient parser-level tests remained. The campaign was expanded to 17 and received bounded task tables, then entered this targeted Run 3 correction.
-- Run 3 internal checks: explicit rank/model tiers, canonical topological execution order, activated OPORD-005 runtime territory, and parser-level task/dependency/order checks are being verified. External review gate: PENDING; this log does not self-certify GREEN.
+- Run 3 external review: G1 TEST PASS; G2 LINT WARN because `app/package.json` remains a placeholder, with remediation assigned to OPORD 015; G3 REVIEW PASS; G4 INTEGRATION PASS; G5 KNOWLEDGE PASS. Blocking findings: 0. Overall: AMBER / PROCEED-WARN.
+- Accepted artifacts: commits `6c612ce`, `0291b3f`, and `fd6061d`; exactly 17 OPORDs and 60 bounded task rows.
 - Conditional evidence: remote Supabase, Docker-backed database, iOS/Android native, screen reader, reduced motion, moderated older-adult, deployment, backup, and restore checks were `NOT RUN` because this was a documentation-only mission without a safe authorized environment or participants.
-- Gate: Run 3 PENDING external review. No planned runtime capability is certified.
+- Gate: Run 3 AMBER / PROCEED-WARN, zero blockers. Documentation mission complete; no planned runtime capability is certified.
 
 ## 2026-07-13 — FAMILY-LOOP-DATA-003 final review
 

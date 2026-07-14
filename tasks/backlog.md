@@ -4,7 +4,7 @@
 
 The canonical 17-mission dependency graph is indexed in `docs/opords/README.md`. Each order remains `Planned` and requires separate authorization. The index does not delete the persistent-data M4-M6 missions below: M4 maps primarily to OPORD 009, M5 to 010, and M6 to 011 plus closeout gates in 014-017.
 
-Execute numerically unless a review gate records a safe, file-disjoint exception. This planning mission is not evidence that runtime, remote Supabase, native, release, backup, or human-usability work is complete.
+Execute in the canonical dependency-safe order in `docs/opords/README.md`; numeric IDs are stable identifiers, not execution positions. The documentation mission is complete, but it is not evidence that runtime, remote Supabase, native, release, backup, or human-usability work is complete. The external gate's placeholder-lint warning is assigned to OPORD 015.
 
 ## Persistent data campaign
 

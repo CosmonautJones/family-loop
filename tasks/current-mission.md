@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-OPORD-001`
 
-Status: Run 3 internal verification — external review gate pending; runtime execution remains separately authorized per OPORD.
+Status: Complete — external Run 3 review accepted AMBER / PROCEED-WARN; runtime execution remains separately authorized per OPORD.
 
 ## Objective
 
@@ -38,4 +38,15 @@ Future mission documents can name files and systems but do not authorize executi
 
 ## Completion evidence
 
-See `evals/review-log.md` for the independently reviewed inventory and command results. No live backend, native-device, human-usability, deployment, backup, or restore proof is claimed.
+Campaign commits: `6c612ce` (initial 15-order campaign), `0291b3f` (17 executable orders), and `fd6061d` (Run 3 authority/parser correction). The external gate found zero blockers: G1 PASS, G2 WARN for placeholder lint assigned to OPORD 015, and G3/G4/G5 PASS; overall AMBER / PROCEED-WARN.
+
+Definition of done:
+
+- [x] Exactly 17 OPORDs and 60 bounded tasks are indexed and parser-validated.
+- [x] Dependencies resolve, are acyclic, and precede dependents in the canonical execution order.
+- [x] Required engineering and older-adult usability domains are covered.
+- [x] Relevant local tests, TypeScript, harness, and diff checks pass.
+- [x] Independent review has zero blockers; the sole warning has a named remediation order.
+- [x] Conditional evidence remains explicit rather than inferred.
+
+No live backend, native-device, human-usability, deployment, backup, or restore proof is claimed.

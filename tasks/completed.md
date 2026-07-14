@@ -4,7 +4,7 @@ Move finished missions here with a short summary.
 
 ## 2026-07-13 - FAMILY-LOOP-OPORD-001 engineering campaign plan
 
-Authored `docs/opords/README.md` and exactly 17 dependency-resolvable operations orders covering the full frontend, backend, server/database, security, quality, accessibility, release, and operations surface. A targeted review fix split CI, release, and data recovery into independently executable orders, added machine-readable acyclic dependencies and bounded task tables, and closed service and first-user lifecycle gaps. Added executable documentation-contract tests and linked the campaign from architecture and mission records. Product behavior changed: no. Remote Supabase, native-device, human-usability, deployment, backup, and restore validation were not run and are not claimed.
+Authored `docs/opords/README.md` and exactly 17 dependency-resolvable operations orders with 60 bounded tasks covering the full frontend, backend, server/database, security, quality, accessibility, release, and operations surface. Campaign commits: `6c612ce`, `0291b3f`, and `fd6061d`. External Run 3 gate: G1 PASS; G2 WARN because lint remains a placeholder assigned to OPORD 015; G3/G4/G5 PASS; zero blockers; overall AMBER / PROCEED-WARN. Product behavior changed: no. Remote Supabase, native-device, human-usability, deployment, backup, and restore validation were not run and are not claimed.
 
 ## 2026-07-13 - Persistent data M3 event thread
 
