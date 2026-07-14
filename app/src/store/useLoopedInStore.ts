@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { CreateEventDraft } from '../features/events/createEvent';
 import { createEventDraft } from '../features/events/createEvent';
-import { loadDraftEvent, saveDraftEvent, saveString, storageKeys } from '../lib/storage';
+import { loadActiveGroupId, loadDraftEvent, saveDraftEvent, saveString, storageKeys } from '../lib/storage';
 
 export type LoopedInStore = {
   activeGroupId: string;
@@ -12,7 +12,7 @@ export type LoopedInStore = {
 };
 
 export const useLoopedInStore = create<LoopedInStore>((set) => ({
-  activeGroupId: 'group-jones-family',
+  activeGroupId: loadActiveGroupId(),
   setActiveGroupId: (groupId) => {
     saveString(storageKeys.activeGroupId, groupId);
     set({ activeGroupId: groupId });

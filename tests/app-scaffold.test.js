@@ -13,6 +13,15 @@ function read(rel) {
   return fs.readFileSync(path.join(appRoot, rel), 'utf8');
 }
 
+function loadStorageModule() {
+  const appRequire = createRequire(path.join(appRoot, 'package.json'));
+  const ts = appRequire('typescript');
+  const output = ts.transpileModule(read('src/lib/storage.ts'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText;
+  const module = { exports: {} };
+  Function('require', 'module', 'exports', output)((id) => id === '@react-native-async-storage/async-storage' ? {} : appRequire(id), module, module.exports);
+  return module.exports;
+}
+
 function loadCompiledModules() {
   const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loopedin-integration-'));
   const tsc = path.join(appRoot, 'node_modules', 'typescript', 'bin', 'tsc');
@@ -674,6 +683,33 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.match(queries, /invitationFlowId\(token\)/);
   assert.doesNotMatch(queries, /queryKeys\.invitation\(token\)/);
   assert.match(queries, /evictGroupScopedQueries\(queryClient\)/);
+});
+
+test('active group initialization is persisted-or-empty and transition eviction precedes observation', () => {
+  const storage = loadStorageModule();
+  const store = read('src/store/useLoopedInStore.ts');
+  const provider = read('src/features/auth/AuthSessionProvider.tsx');
+  const queries = read('src/app/queries.ts');
+
+  assert.equal(storage.loadActiveGroupId(), '');
+  assert.equal(Boolean(storage.loadActiveGroupId()), false, 'empty initialization cannot enable an active-group request');
+  const configuredGroupId = '5fe4e9b4-4238-4f3a-bcc1-1dcbd79149f1';
+  storage.saveString(storage.storageKeys.activeGroupId, configuredGroupId);
+  assert.equal(storage.loadActiveGroupId(), configuredGroupId);
+  storage.saveString(storage.storageKeys.activeGroupId, ' invalid/group ');
+  assert.equal(storage.loadActiveGroupId(), '');
+
+  assert.match(store, /activeGroupId: loadActiveGroupId\(\)/);
+  assert.doesNotMatch(store, /activeGroupId: 'group-jones-family'/);
+  assert.match(queries, /enabled: Boolean\(activeGroupId\)/);
+  assert.doesNotMatch(provider, /previousActiveGroupId/);
+  const transition = provider.slice(provider.indexOf('const nextActiveGroupId'), provider.indexOf('const login'));
+  const evictIndex = transition.indexOf('evictGroupScopedQueries(queryClient)');
+  const setIndex = transition.indexOf('setActiveGroupId(nextActiveGroupId)');
+  assert.ok(evictIndex >= 0 && evictIndex < setIndex, 'old protected queries are evicted before the new group becomes observable');
+  assert.equal(transition.indexOf('evictGroupScopedQueries(queryClient)', setIndex), -1, 'no post-transition effect can remove newly observed queries');
+  const createSuccess = queries.slice(queries.indexOf('export function useCreateGroupMutation'), queries.indexOf('export function useAcceptInvitationMutation'));
+  assert.ok(createSuccess.indexOf('evictGroupScopedQueries(queryClient)') < createSuccess.indexOf('setActiveGroupId(group.id)'));
 });
 
 test('latest-resolution guard deterministically rejects stale restore and auth-event results', async () => {

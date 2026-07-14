@@ -78,6 +78,7 @@ export function useCreateGroupMutation() {
   return useMutation({
     mutationFn: (payload: CreateGroupPayload) => loopedInService.groups.createGroup(payload),
     onSuccess: (group) => {
+      evictGroupScopedQueries(queryClient);
       queryClient.setQueryData(queryKeys.group(group.id), group);
       queryClient.setQueryData(queryKeys.groups, (current: Array<typeof group> | undefined) => current
         ? [...current.filter((item) => item.id !== group.id), group]

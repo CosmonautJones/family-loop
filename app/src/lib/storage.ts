@@ -16,6 +16,11 @@ export function getString(key: string) {
   return memoryStorage.get(key) ?? null;
 }
 
+export function loadActiveGroupId() {
+  const stored = getString(storageKeys.activeGroupId);
+  return stored && /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(stored) ? stored : '';
+}
+
 export function saveDraftEvent(draft: CreateEventDraft) {
   saveString(storageKeys.draftEvent, JSON.stringify(draft));
 }

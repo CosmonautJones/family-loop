@@ -45,15 +45,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   const previousUserId = useRef<string | null | undefined>(undefined);
   const sessionResolution = useRef(createLatestResolutionGuard());
   const operationResolution = useRef(createLatestResolutionGuard());
-  const previousActiveGroupId = useRef(activeGroupId);
   const groupsQuery = useGroupsQuery(status === 'authenticated');
-
-  useEffect(() => {
-    if (previousActiveGroupId.current !== activeGroupId) {
-      evictGroupScopedQueries(queryClient);
-      previousActiveGroupId.current = activeGroupId;
-    }
-  }, [activeGroupId, queryClient]);
 
   const applySession = useCallback((nextSession: AuthSession | null) => {
     if (previousUserId.current !== undefined && previousUserId.current !== nextSession?.userId) {
@@ -100,8 +92,11 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (groupsQuery.data === undefined) return;
-    setActiveGroupId(groupsQuery.data.some((group) => group.id === activeGroupId) ? activeGroupId : groupsQuery.data[0]?.id ?? '');
-  }, [activeGroupId, groupsQuery.data, setActiveGroupId]);
+    const nextActiveGroupId = groupsQuery.data.some((group) => group.id === activeGroupId) ? activeGroupId : groupsQuery.data[0]?.id ?? '';
+    if (nextActiveGroupId === activeGroupId) return;
+    evictGroupScopedQueries(queryClient);
+    setActiveGroupId(nextActiveGroupId);
+  }, [activeGroupId, groupsQuery.data, queryClient, setActiveGroupId]);
 
   const login = useCallback(async (email: string, password: string) => {
     const operationIsCurrent = operationResolution.current.begin();
