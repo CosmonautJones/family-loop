@@ -80,7 +80,7 @@ export function useCreateGroupMutation() {
     onSuccess: (group) => {
       evictGroupScopedQueries(queryClient);
       queryClient.setQueryData(queryKeys.group(group.id), group);
-      queryClient.setQueryData(queryKeys.groups, (current: Array<typeof group> | undefined) => current
+      queryClient.setQueryData(queryKeys.groups, (current: (typeof group)[] | undefined) => current
         ? [...current.filter((item) => item.id !== group.id), group]
         : [group]);
       setActiveGroupId(group.id);

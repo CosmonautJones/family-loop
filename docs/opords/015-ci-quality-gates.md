@@ -1,10 +1,10 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-NOT RUN — local commands pass, but substantive lint, repository CI, seeded-failure proof, and required branch checks are not implemented.
+PARTIAL/CONDITIONAL — substantive lint, repository CI definitions, local clean gates, and seeded-failure proofs are implemented. A GitHub-hosted run and administrator-required branch checks remain `NOT RUN` because no push, PR, or repository-setting mutation was authorized.
 
 ## Situation and evidence
-Root/app tests, TypeScript, harness, Expo export, loopback database lint, and integration scripts pass locally. `app/package.json` still runs only `echo 'lint placeholder'`, and no `.github/workflows/ci.yml` exists. Loopback migration checks do not substitute for CI observed-pass/failure evidence.
+Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. `.github/workflows/ci.yml` defines three stable checks, but repository-hosted execution and branch enforcement are not inferred from the local workflow file.
 
 ## Mission/objective
 Implement a required pull-request CI workflow with substantive lint, root/app tests, TypeScript, harness, secret/dependency checks, and deterministic migration validation before code can merge.
@@ -45,25 +45,27 @@ CI must preserve the accessibility and large-text regressions defined by OPORD 0
 
 | Criterion | Disposition | Evidence |
 |---|---|---|
-| Substantive reproducible lint | NOT IMPLEMENTED | Script remains `lint placeholder`. |
-| CI install/test/type/lint/harness/secret/dependency/migration jobs | NOT IMPLEMENTED | No workflow exists. |
-| Least permissions/pinned tools/deterministic caches/no secrets | NOT RUN | Requires workflow implementation/review. |
-| Seeded violations fail stable required checks | NOT RUN | No CI or disposable-branch failure matrix. |
+| Substantive reproducible lint | COMPLETE LOCALLY | Exact `eslint@9.39.5` and `eslint-config-expo@9.2.0`; flat config; zero-warning command; clean pass plus seeded unused-value exit 1. User explicitly approved the dependencies. |
+| CI install/test/type/lint/harness/secret/dependency/migration jobs | IMPLEMENTED / HOSTED RUN NOT RUN | Three stable jobs cover the requested gates. App install uses its lockfile; root tests correctly run without nonexistent root lock/install. Fresh-runner migration apply/lint remains unobserved until an authorized GitHub run. |
+| Least permissions/pinned tools/deterministic caches/no secrets | COMPLETE BY STATIC/LOCAL REVIEW | `contents: read`, concurrency cancellation, Node 22, exact Supabase CLI 2.109.0, immutable action SHAs, app-lock cache key, no secret references, and bounded timeouts. |
+| Seeded violations fail stable required checks | COMPLETE LOCALLY / HOSTED NOT RUN | Lint, test, synthetic secret assignment, historical migration edit, and out-of-order migration each exited 1; every seed was removed and clean reruns passed. |
 | No unauthorized release/remote/branch mutation | COMPLETE | Campaign remained local; this is a safety result, not CI completion. |
 
 ## Validation commands/evidence
 ### Always-local
 ```powershell
-npm ci
 npm test
 Push-Location app; npm ci; npm run lint; npm test; npx tsc --noEmit; Pop-Location
 powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+npm run check:secrets
+npm run check:migrations
+node scripts/check-migrations.mjs --base-ref HEAD
+Push-Location app; npm audit --package-lock-only --audit-level=high; Pop-Location
+npx supabase db lint --local --level error
 git diff --check
-rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" .github scripts app/src tests
-Get-ChildItem supabase/migrations -File | Sort-Object Name | ForEach-Object Name
 ```
 
-Capture intentional-failure evidence on a disposable branch for lint, tests, secret scanning, and migration immutability; remove seeded violations before completion.
+The current populated loopback browser scenario must not be reset for this mission. CI performs reset/apply/lint only inside its fresh disposable runner. Local intentional-failure evidence and removal details are recorded in `docs/runbooks/ci-quality-gates.md`.
 
 ### Conditional-staging/mobile-web/human
 Trigger the workflow on an approved draft PR and have an administrator enable required checks only after stable names pass. Mobile-web browser/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
@@ -75,4 +77,4 @@ Stop before adding lint dependencies without approval, using secrets, editing ru
 Supply-chain risk, noisy audit findings, platform-specific scripts, workflow permission excess, and false confidence from structural migration checks. Release work belongs to OPORD 016.
 
 ## Definition of done
-Substantive lint and all CI gates have observed pass/fail evidence, workflow permissions are reviewed, required-check instructions and exceptions are documented, and the review log is updated.
+Local implementation is complete when substantive lint and every critical gate has observed clean/failure evidence, workflow permissions are reviewed, required-check instructions and exceptions are documented, and the review log is updated. Full OPORD completion additionally requires one authorized GitHub-hosted pass, seeded disposable-PR failures, and administrator enforcement of the three stable required checks.

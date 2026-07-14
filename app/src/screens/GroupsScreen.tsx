@@ -43,7 +43,7 @@ export function GroupsScreen() {
   const retry = () => Promise.all([groupQuery.refetch(), membersQuery.refetch(), eventsQuery.refetch()]);
 
   if (loading) return <View style={styles.state} accessibilityLiveRegion="polite"><ActivityIndicator color={palette.plum} /><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>Loading your family…</Text></View>;
-  if (error) return <View style={styles.state} accessibilityLiveRegion="polite"><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>We couldn't load your family.</Text><Text style={styles.cardCopy}>{error instanceof Error ? error.message : 'Please try again.'}</Text><CardAction label="Try again" onPress={retry} /></View>;
+  if (error) return <View style={styles.state} accessibilityLiveRegion="polite"><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>We couldn’t load your family.</Text><Text style={styles.cardCopy}>{error instanceof Error ? error.message : 'Please try again.'}</Text><CardAction label="Try again" onPress={retry} /></View>;
   if (!groupQuery.data) return <View style={styles.state}><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>No active family yet.</Text><Text style={styles.cardCopy}>Create or join a family to manage people and invitations.</Text></View>;
 
   const family = selectFamilyViewModel(groupQuery.data, membersQuery.data ?? [], eventsQuery.data ?? []);

@@ -9,7 +9,7 @@
 - [x] Blank edit focus/recovery, valid location edit, collapsed link/file modes, and cancellation dismiss/confirm pass the rendered KISS gate.
 - [x] Current final gates: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo web export, and diff check pass.
 - [ ] Multi-user PNG attachment — chooser opened for an 847-byte file, but extension file injection failed. Prior Wave 3 real 609-byte PNG evidence remains valid; service tests cover actor ownership.
-- [ ] Substantive lint — command remains a placeholder WARN.
+- [x] Substantive lint — pinned Expo/TypeScript flat config passes with zero warnings and fails on a seeded known violation.
 - [x] Repository remote-media contract — forward migration preserves caption/alt/attribution separately and persists pending/active/deleting cross-system operations behind narrow RPCs.
 - [x] Local Supabase media lifecycle — migration, schema lint, signup sessions, uploader/member/owner/outsider RLS, private real-PNG read/delete, manager reconciliation, abort/upload race, quota/path/direct-mutation attacks, event FK, and removed-member denial pass.
 - [ ] Hosted metadata/Storage lifecycle — remote migration, full failure injection, retry/reconciliation, content scanning, and orphan scans remain `NOT RUN` against a dedicated project.
@@ -36,7 +36,7 @@
 - [x] Supabase mode is explicit and cannot silently fall back when configuration is absent or the backend fails.
 - [x] Unsplash demonstration URLs retain captions; private upload and formal attribution/domain handling remain later media work.
 - [x] External Run 2 Wave 0 gate — AMBER / PROCEED-WARN, zero blockers; 40 adversarial mutations accepted as same-runtime coordinated-durability evidence (exact mix not supplied); fresh fix evidence root 29/29, app 18/18, TypeScript, harness, web export, and diff check pass.
-- [ ] Substantive lint — placeholder command only.
+- [x] Substantive lint now covers the retained Wave 0 source under OPORD 015; the historical Wave 0 review used the earlier placeholder.
 - [ ] Actual browser hard-reload — NOT RUN; adapter reconstruction passed, but it is limited evidence.
 - [ ] Browser durability does not prove remote/multi-user/RLS/private-media behavior; Safari/no-Web-Locks cross-tab atomicity is also unproven.
 - [x] Wave 3 URL-photo records require source URL, photographer credit, caption, and alt text; this is local attribution metadata, not proof of remote private-media handling or hotlink permanence.
@@ -50,7 +50,7 @@
 - [ ] Interactive browser Back and hard reload — NOT PROVEN; pure route tests do not establish browser-history behavior.
 - [x] Exact CDP viewport proof at 320/390/430/1280: HTML/body `scrollWidth === clientWidth`; Family and Owner were present and all five tabs remained reachable.
 - [ ] Remote Supabase membership/RLS and real-phone Safari/Chrome — NOT RUN.
-- [ ] Substantive lint — placeholder command only; AMBER.
+- [x] Substantive lint now covers the retained Wave 1 source under OPORD 015; the historical Wave 1 gate’s placeholder warning remains part of its record.
 - [x] Independent Run 2 gate — RED on retained-v1 role migration; the blocker is addressed by `483e55e` below.
 - [x] Retained pre-role v1 envelope migrates once to v2 on the same key; data/revision and valid roles survive, missing Jones roles receive deterministic owner/member values, and unsupported versions stay visible.
 - [x] CDP 320 hard reload from retained v1: width 320, Alex Owner, custom trip visible, stored v2 revision 11, custom event/message/notification and owner + four members preserved.
@@ -79,7 +79,7 @@
 - [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers after Run 1 draft-retention and file-guard fixes.
 - [x] Closeout counts were read from each command's own TAP summary; the earlier mirrored app 39/39 claim is superseded.
 - [x] External final gate after `a1e68a1` — AMBER / PROCEED-WARN, zero blockers; authoritative root 39/39 and app-local 28/28 remain independently transcribed.
-- [ ] Placeholder lint, pre-existing React Native Web shadow warning, live Supabase/RLS/private storage/signed access, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
+- [x] Substantive lint supersedes the historical placeholder under OPORD 015; the pre-existing React Native Web shadow warning, live Supabase/RLS/private storage/signed access, physical devices, and multi-user behavior remained warnings or `NOT RUN` for this historical wave.
 
 ## Wave 4 completed-event history and product truth
 
@@ -95,9 +95,19 @@
 - [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers.
 - [x] External final gate after `3d80a62` — AMBER / PROCEED-WARN, zero blockers; authoritative root 43/43 and app-local 32/32 remain independently transcribed.
 - [x] Legacy Home/memory fixture exports are unconsumed by production Home and Memories; removal remains advisory cleanup rather than a runtime-truth blocker.
-- [ ] Placeholder lint, remote Supabase/RLS/private object storage, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
+- [x] Substantive lint supersedes the historical placeholder under OPORD 015; remote Supabase/RLS/private object storage, physical devices, and multi-user behavior remained warnings or `NOT RUN` for this historical wave.
 
 ## OPORD campaign documentation
+
+## OPORD 015 CI quality gates
+
+- [x] Exact ESLint/Expo config performs substantive TypeScript/React lint with zero allowed warnings.
+- [x] CI defines stable Application quality, Security and dependencies, and Migration integrity checks with `contents: read`, concurrency cancellation, bounded timeouts, Node 22, immutable action pins, and exact Supabase CLI version.
+- [x] App `npm ci` and cache use the deterministic app lockfile; root tests do not pretend a root lockfile exists.
+- [x] Secret scan reports only file/rule metadata; high/critical dependency findings block; exceptions require owner and expiry.
+- [x] Migration filenames, strict order, SHA-256 inventory, base-ref immutability, disposable apply, and database lint are gated.
+- [x] Local clean gates pass; seeded lint, test, fake-secret, historical-edit, and out-of-order failures each exit nonzero and all seeds are removed.
+- [ ] GitHub-hosted pass/failure runs and administrator-required branch checks remain `NOT RUN`; no push, PR, or repository setting was authorized.
 
 ## OPORD 012 resilience and capacity
 
@@ -107,7 +117,7 @@
 - [x] Warm durable-local support is explicit; configured writes are not queued offline.
 - [ ] Cold disconnected reload — intentionally unsupported; no service worker/PWA shell exists.
 - [ ] Offline write queue/background sync — intentionally not implemented.
-- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, practical 200% zoom, and hosted load/reconnect — `NOT RUN`.
+- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, practical 200% zoom, and hosted load/reconnect — `NOT RUN`; local reduced-motion handling/emulation passes.
 
 ## OPORD 013 security and incident response
 

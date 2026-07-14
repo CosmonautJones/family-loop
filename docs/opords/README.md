@@ -15,9 +15,9 @@ This index is planning authority only. It does not prove that a feature is deplo
 | Database definition | Four forward migrations define the baseline, hardened private-media lifecycle, family invitation lifecycle, and recipient-scoped update generation. |
 | Remote backend | Unverified; no production project, migration deployment, credentials, or live two-user RLS result is claimed. |
 | Local backend | Loopback Supabase migrations, database lint, Auth, four-session RLS, private Storage, and cleanup-safe lifecycle scripts pass. This is not hosted proof. |
-| Automated checks | At commit `88d0ed9`: root 70/70, app 58/58, TypeScript, Expo export, harness, local family/media E2E, database lint, scenario verification, and diff checks pass. |
-| Lint | `app/package.json` still defines a placeholder lint command; it is not substantive lint evidence. |
-| Browser/usability evidence | Configured Chrome at 320/390/430 CSS pixels passed no-overflow and >=48px visible-control checks; Back/deep-link/reload and a full four-session scenario passed. Lighthouse Accessibility and Best Practices scored 100. Physical iOS/Android, screen readers, reduced motion, practical 200% zoom, and moderated older-adult sessions remain `NOT RUN`. |
+| Automated checks | Root/app tests, substantive lint, TypeScript, Expo export, harness, local family/media E2E, database lint, scenario verification, secret scanning, dependency policy, migration validation, and diff checks pass locally. Hosted CI remains unobserved. |
+| Lint | Exact ESLint 9 and Expo flat config run with zero warnings; clean and seeded-failure evidence is recorded under OPORD 015. |
+| Browser/usability evidence | Configured Chrome at 320/390/430 CSS pixels passed no-overflow and >=48px visible-control checks; Back/deep-link/reload, reduced-motion emulation, and a full four-session scenario passed. Lighthouse Accessibility and Best Practices scored 100. Physical iOS/Android, screen readers, practical 200% zoom, and moderated older-adult sessions remain `NOT RUN`. |
 
 ## Standard OPORD template
 
@@ -79,7 +79,7 @@ Canonical execution order: OPORD-001 -> OPORD-002 -> OPORD-005 -> OPORD-006 -> O
 | OPORD | Disposition | Direct evidence | Open acceptance/release gates |
 |---|---|---|---|
 | 001 | LOCAL COMPLETE / CONDITIONAL | Five-tab event-centered IA, exact-ID routes, Back and reload; `1bc3421`, `89d8720`, configured browser proof | Ten-second first-time comprehension and moderated older-adult use `NOT RUN` |
-| 002 | PARTIAL/CONDITIONAL | 320/390/430 no-overflow, >=48px controls, keyboard/landmark fixes, Lighthouse Accessibility 100; `1bc3421`, `8703582` | Measured full contrast worksheet, practical 200% zoom, reduced motion, VoiceOver/TalkBack `NOT RUN` |
+| 002 | PARTIAL/CONDITIONAL | 320/390/430 no-overflow, >=48px controls, keyboard/landmark/reduced-motion fixes, Lighthouse Accessibility 100; `1bc3421`, `8703582`, `74e7e2b` | Measured full contrast worksheet, practical 200% zoom, VoiceOver/TalkBack `NOT RUN` |
 | 003 | PARTIAL/CONDITIONAL | Invite-bound signup/sign-in, neutral invite errors, session restore/logout, protected-content gate; `3ebb0a0`..`e68d615` | Password recovery/reset and production email delivery `NOT IMPLEMENTED/NOT RUN`; physical-browser autofill/deep-link checks `NOT RUN` |
 | 004 | LOCAL COMPLETE / CONDITIONAL | Atomic entitled family creation; email-bound invite accept/decline/revoke; remove/leave/transfer; four-session RLS; `a1faa25`..`de5b68d`, `079e4e6`..`40b2dec` | Hosted policy state and production invite delivery `NOT RUN` |
 | 005 | PARTIAL/CONDITIONAL | Three runtime adapters, visible configured failures, loopback readiness, migration/lint/E2E scripts | General version/error-envelope/correlation-ID/rate-limit contract and hosted readiness probe incomplete |
@@ -89,10 +89,10 @@ Canonical execution order: OPORD-001 -> OPORD-002 -> OPORD-005 -> OPORD-006 -> O
 | 009 | LOCAL COMPLETE / CONDITIONAL | Pending/active/deleting lifecycle, signed private reads, upload/list/delete, RLS/Storage attacks, actual browser file selection; `a9769ec`, `c6ee2b2` | Physical Safari/Chrome camera/gallery and hosted Storage `NOT RUN` |
 | 010 | PARTIAL | Recipient-scoped in-app updates, exact-event navigation, read/clear persistence; `c612a75` | Persisted reminder preference is not implemented; production delivery is excluded and `NOT RUN` |
 | 011 | LOCAL COMPLETE / CONDITIONAL | Completed-event derived memories from exact event comments/media, empty/error/query states, browser proof | Physical-browser/human usability `NOT RUN` |
-| 012 | PARTIAL | Reload/server-restart persistence, mutation retry/draft protections, browser metrics and no-overflow proof | Agreed performance budgets, representative capacity/throttled network, reduced-motion and physical-device tests `NOT RUN` |
-| 013 | PARTIAL | Local owner/member/outsider RLS and Storage attack matrices; privacy-safe updates/errors | Incident runbook/tabletop, production telemetry, external assessment, and hosted enforcement `NOT RUN` |
-| 014 | PARTIAL/CONDITIONAL | 70 root + 58 app tests, local integration matrices, 320/390/430 Chrome, Lighthouse 100/100, keyboard/landmark checks | Physical iOS/Android, VoiceOver/TalkBack, practical 200% zoom, reduced motion, and moderated older-adult study `NOT RUN` |
-| 015 | NOT RUN | Local commands exist and pass | Lint remains a placeholder; no CI workflow, seeded-failure proof, or required branch checks |
+| 012 | PARTIAL | Representative 20/100/100/50 capacity, reload/server-restart persistence, exact-once retry/draft protections, throttled-browser metrics, reduced motion, and no-overflow proof | Warm Slow-3G LCP and long-task budgets fail; cold offline, hosted load, and physical-device tests remain unsupported or `NOT RUN` |
+| 013 | PARTIAL | Local owner/member/outsider RLS and Storage attack matrices; privacy-safe errors; incident runbook/tabletop | Production telemetry, named hosted ownership, external assessment, and hosted enforcement `NOT RUN` |
+| 014 | PARTIAL/CONDITIONAL | Local integration matrices, 320/390/430/1280 Chrome, Lighthouse 100/100, keyboard/landmark/reduced-motion checks, and 200% scale proxy | Physical iOS/Android, VoiceOver/TalkBack, practical 200% browser zoom, and moderated older-adult study `NOT RUN` |
+| 015 | PARTIAL/CONDITIONAL | Substantive pinned lint; three least-privilege CI jobs; secret/audit/migration validators; local clean and five seeded-failure proofs | GitHub-hosted runs, disposable-PR failure proof, and administrator-required checks `NOT RUN` |
 | 016 | NOT RUN | Expo web export passes locally | No hosted environments, immutable promotion, TLS/headers/cache verification, deploy, rollback rehearsal, or production approval |
 | 017 | NOT RUN | Private row/object lifecycle and cleanup-safe local tests exist | Backup/PITR, isolated restore, export/deletion, retention, orphan-reconciliation drill, RPO/RTO `NOT RUN` |
 

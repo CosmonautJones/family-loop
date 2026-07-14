@@ -26,7 +26,7 @@ export function useAppShellState() {
     window.addEventListener('popstate', syncRoute);
     const historyState = window.history.state as LoopedInHistoryState | null;
     if (!historyState?.loopedIn) {
-      window.history.replaceState({ loopedIn: true, canGoBack: false }, '', window.location.hash || formatAppRoute(route));
+      window.history.replaceState({ loopedIn: true, canGoBack: false }, '', window.location.hash || formatAppRoute(currentRoute()));
     }
     return () => {
       window.removeEventListener('hashchange', syncRoute);

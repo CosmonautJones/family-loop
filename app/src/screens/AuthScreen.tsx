@@ -67,7 +67,7 @@ export function AuthScreen() {
           {invitation.isError || invitation.data?.status === 'unavailable' ? <Text accessibilityRole="alert" style={styles.error}>This invitation isn’t available. Ask the person who invited you for a new link.</Text> : null}
           {invitationData?.status === 'ready' ? <><Text style={styles.inviteTitle}>Join {invitationData.groupName}</Text><Text style={styles.body}>{invitationData.inviterName} invited {invitationData.maskedEmail}. Sign in, or create the invited account.</Text></> : null}
         </View>
-      ) : <Text style={styles.body}>Sign in to see your family's shared plans.</Text>}
+      ) : <Text style={styles.body}>Sign in to see your family’s shared plans.</Text>}
 
       {mode === 'signUp' ? <LabeledInput nativeID="auth-display-name" label="Display name" inputRef={nameInput} editable={!auth.pending} value={displayName} onChangeText={setDisplayName} autoComplete="name" invalid={Boolean(formError || auth.error)} /> : null}
       <LabeledInput nativeID="auth-email" label="Email" inputRef={emailInput} editable={!auth.pending} value={email} onChangeText={setEmail} autoComplete="email" inputMode="email" autoCapitalize="none" invalid={Boolean(formError || auth.error)} />

@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "echo 'lint placeholder'",
+    "lint": "eslint . --max-warnings 0",
     "test": "node --test ../tests/app-scaffold.test.js"
   },
   "dependencies": {
@@ -34,5 +34,9 @@
     "react-native-web": "^0.20.0",
     "typescript": "~5.8.3",
     "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "eslint": "9.39.5",
+    "eslint-config-expo": "9.2.0"
   }
 }

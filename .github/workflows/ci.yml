@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  application-quality:
+    name: Application quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install app dependencies
+        run: npm ci
+        working-directory: app
+      - name: Lint app
+        run: npm run lint
+        working-directory: app
+      - name: Test repository
+        run: npm test
+      - name: Test app
+        run: npm test
+        working-directory: app
+      - name: Type-check app
+        run: npx tsc --noEmit
+        working-directory: app
+      - name: Check build harness
+        shell: pwsh
+        run: ./scripts/check-harness.ps1
+
+  security-and-dependencies:
+    name: Security and dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Scan repository for secrets
+        run: npm run check:secrets
+      - name: Audit dependency lockfile
+        run: npm audit --package-lock-only --audit-level=high
+        working-directory: app
+
+  migration-integrity:
+    name: Migration integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Validate migration order and checksums
+        run: npm run check:migrations
+      - name: Reject changed historical migrations on pull requests
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-migrations.mjs --base-ref "origin/${{ github.base_ref }}"
+      - name: Reject changed historical migrations on main pushes
+        if: github.event_name == 'push'
+        run: node scripts/check-migrations.mjs --base-ref "${{ github.event.before }}"
+      - name: Install Supabase CLI 2.109.0
+        uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1 branch
+        with:
+          version: 2.109.0
+      - name: Apply and lint migrations in disposable local database
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'supabase stop --no-backup' EXIT
+          supabase start
+          supabase db reset --local
+          supabase db lint --local --level error

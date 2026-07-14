@@ -4,7 +4,6 @@ import type {
   RSVP,
   EventActivity,
   EventMessage,
-  MemoryItem,
   MediaItem,
   GroupMember,
 } from '../types/domain';

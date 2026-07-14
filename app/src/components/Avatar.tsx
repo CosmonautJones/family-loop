@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
-import { palette, radii, shadow } from '../theme/tokens';
+import { palette, shadow } from '../theme/tokens';
 import { useReducedMotion } from './useReducedMotion';
 
 export function Avatar({ uri, initials, size = 34 }: { uri?: string; initials: string; size?: number }) {

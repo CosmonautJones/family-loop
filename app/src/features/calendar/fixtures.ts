@@ -5,7 +5,7 @@ export const calendarEvents = Array.from({ length: 28 }, (_, index) => ({
   highlight: [5, 10, 12, 18, 25].includes(index + 1),
 }));
 
-export const calendarAgenda: Array<{ event: Event; badge: string; tone: 'sage' | 'sky' | 'coral' }> = [
+export const calendarAgenda: { event: Event; badge: string; tone: 'sage' | 'sky' | 'coral' }[] = [
   {
     event: {
       id: 'event-lake-picnic',

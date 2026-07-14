@@ -221,9 +221,9 @@ The 17-order dependency graph and original task intent remain unchanged. Current
 
 - Locally closable product slices: OPORDs 001, 004, 007, 009, and 011 are `LOCAL COMPLETE / CONDITIONAL`; their remaining conditions are external device, human, hosted, or delivery gates rather than missing local core-loop behavior.
 - Partially complete slices: OPORDs 002, 003, 005, 006, 008, 010, 012, 013, and 014 retain named missing criteria. The largest product gaps are password recovery, realtime subscription/reconnect, persisted reminder preference, measured capacity/performance budgets, incident tabletop/runbook, and assistive-technology/human evidence.
-- Not-run operational slices: OPORD 015 lacks substantive lint/CI; OPORD 016 lacks hosted release/rollback; OPORD 017 lacks backup/restore/export/deletion/retention evidence.
-- Evidence baseline at commit `88d0ed9`: root 70/70, app 58/58, TypeScript, Expo web export, harness, loopback database lint, family/media E2E, read-only populated-scenario verification, and diff checks pass. Lint remains a placeholder warning.
-- Explicitly `NOT RUN`: hosted deployment/migrations/monitoring/backup/restore, production recovery email, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% zoom, reduced motion, and moderated older-adult use.
+- Operational slices: OPORD 015 now has substantive lint, a least-privilege CI workflow, and local pass/failure proofs but lacks GitHub-hosted execution and required-check administration; OPORD 016 lacks hosted release/rollback; OPORD 017 lacks backup/restore/export/deletion/retention evidence.
+- Current local evidence includes root/app tests, substantive zero-warning lint, TypeScript, Expo web export, harness, loopback database lint, family/media E2E, read-only populated-scenario verification, secret/dependency/migration checks, and diff checks. Hosted CI remains `NOT RUN`.
+- Explicitly `NOT RUN`: hosted deployment/migrations/monitoring/backup/restore, production recovery email, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% browser zoom, and moderated older-adult use. Local reduced-motion handling and emulation pass.
 
 This reconciliation closes the documentation contradiction found by the final local release-readiness review. It does not round conditional or operational evidence up to campaign completion.
 
