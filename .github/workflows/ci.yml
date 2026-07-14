@@ -98,6 +98,28 @@ jobs:
         run: |
           set -euo pipefail
           trap 'supabase stop --no-backup' EXIT
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          config_path = Path('supabase/config.toml')
+          config = config_path.read_text(encoding='utf-8')
+          replacements = {
+              'project_id = "family-loop"': f'project_id = "family-loop-ci-{os.environ["GITHUB_RUN_ID"]}-{os.environ["GITHUB_RUN_ATTEMPT"]}"',
+              'shadow_port = 54320': 'shadow_port = 65420',
+              'port = 54321': 'port = 65421',
+              'port = 54322': 'port = 65422',
+              'port = 54323': 'port = 65423',
+              'port = 54324': 'port = 65424',
+              'port = 54327': 'port = 65427',
+              'port = 54329': 'port = 65429',
+          }
+          for current, ci_value in replacements.items():
+              if config.count(current) != 1:
+                  raise SystemExit(f'Expected exactly one Supabase setting: {current}')
+              config = config.replace(current, ci_value)
+          config_path.write_text(config, encoding='utf-8')
+          PY
           supabase start
           supabase db reset --local
           supabase db lint --local --level error

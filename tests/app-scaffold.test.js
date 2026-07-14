@@ -5,9 +5,10 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
-const appRoot = path.resolve('C:/Users/Travis/Desktop/Projects/family-loop/app');
-const repoRoot = path.dirname(appRoot);
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const appRoot = path.join(repoRoot, 'app');
 
 function read(rel) {
   return fs.readFileSync(path.join(appRoot, rel), 'utf8');
