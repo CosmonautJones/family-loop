@@ -8,6 +8,7 @@ import type {
   CreateRsvpPayload,
   LoopedInService,
   GroupActionResult,
+  GroupActionStatus,
   GroupInvitation,
   GroupInvitationPreview,
   MediaUploadPayload,
@@ -119,14 +120,18 @@ type RpcResult = {
 
 const mediaBucket = 'loopedin-event-media';
 
-async function mapSession(session: Session): Promise<AuthSession> {
-  const profiles = await getProfiles([session.user.id]);
+function sessionWithoutProfile(session: Session, displayName?: string): AuthSession {
   return {
     userId: session.user.id,
-    displayName: profiles.get(session.user.id)?.display_name ?? session.user.email?.split('@')[0] ?? 'You',
+    displayName: displayName ?? session.user.email?.split('@')[0] ?? 'You',
     token: session.access_token,
     expiresAt: new Date((session.expires_at ?? 0) * 1000).toISOString(),
   };
+}
+
+async function mapSession(session: Session): Promise<AuthSession> {
+  const profiles = await getProfiles([session.user.id]);
+  return sessionWithoutProfile(session, profiles.get(session.user.id)?.display_name);
 }
 
 function throwIfError(error: { message: string } | null) {
@@ -151,10 +156,10 @@ function invitationTokenToHex(token: string) {
   return bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function requireRpcSuccess(data: unknown): RpcResult {
+function requireRpcSuccess(data: unknown, allowedStatuses: readonly GroupActionStatus[]): RpcResult & { code: GroupActionStatus } {
   const result = (data ?? {}) as RpcResult;
-  if (!result.ok) throw new Error('That family action isn’t available.');
-  return result;
+  if (!result.ok || !allowedStatuses.includes(result.code as GroupActionStatus)) throw new Error('That family action isn’t available.');
+  return result as RpcResult & { code: GroupActionStatus };
 }
 
 async function fetchValidatedMediaBlob(fileUri: string) {
@@ -422,59 +427,52 @@ export function createSupabaseLoopedInService(): LoopedInService {
     auth: {
       async login(email, password): Promise<AuthSession> {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        throwIfError(error);
-        if (!data.session || !data.user) throw new Error('Supabase did not return a session.');
+        if (error || !data.session || !data.user) throw new Error('Email or password not recognized.');
 
-        const profiles = await getProfiles([data.user.id]);
-        const profile = profiles.get(data.user.id);
-        return {
-          userId: data.user.id,
-          displayName: profile?.display_name ?? data.user.email?.split('@')[0] ?? 'You',
-          token: data.session.access_token,
-          expiresAt: new Date((data.session.expires_at ?? 0) * 1000).toISOString(),
-        };
+        return mapSession(data.session).catch(() => sessionWithoutProfile(data.session!));
       },
-      async signUp(displayName, email, password): Promise<AuthSignUpResult> {
+      async signUp(invitationToken, displayName, email, password): Promise<AuthSignUpResult> {
         const name = displayName.trim();
         if (!name || name.length > 80) throw new Error('Enter a display name between 1 and 80 characters.');
+        const token = invitationTokenToHex(invitationToken);
+        const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_validate_group_invite', { target_token: token });
+        if (invitationError || !(invitation as RpcResult | null)?.ok || (invitation as RpcResult).code !== 'ready') throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: { data: { display_name: name } },
         });
-        throwIfError(error);
+        if (error) throw new Error('We couldn’t create your account. Try again or ask for a new invitation.');
         if (!data.session) return { status: 'confirmationRequired' };
-        return { status: 'authenticated', session: await mapSession(data.session) };
+        return { status: 'authenticated', session: sessionWithoutProfile(data.session, name) };
       },
       async logout() {
         const { error } = await supabase.auth.signOut();
-        throwIfError(error);
+        if (error) throw new Error('Unable to sign out. Try again.');
       },
       async getSession() {
         const { data, error } = await supabase.auth.getSession();
-        throwIfError(error);
-        return data.session ? await mapSession(data.session) : null;
+        if (error) throw new Error('Unable to restore your session.');
+        return data.session ? await mapSession(data.session).catch(() => sessionWithoutProfile(data.session!)) : null;
       },
       onAuthStateChange(listener) {
+        let generation = 0;
         const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+          const current = ++generation;
           if (!session) listener(null);
-          else void mapSession(session).then(listener).catch(() => listener(null));
+          else void mapSession(session).then((mapped) => {
+            if (current === generation) listener(mapped);
+          }).catch(() => {
+            if (current === generation) listener(null);
+          });
         });
         return () => data.subscription.unsubscribe();
       },
       async refreshSession(): Promise<AuthSession> {
         const { data, error } = await supabase.auth.refreshSession();
-        throwIfError(error);
-        if (!data.session || !data.user) throw new Error('No active Supabase session.');
+        if (error || !data.session || !data.user) throw new Error('Unable to refresh your session. Sign in again.');
 
-        const profiles = await getProfiles([data.user.id]);
-        const profile = profiles.get(data.user.id);
-        return {
-          userId: data.user.id,
-          displayName: profile?.display_name ?? data.user.email?.split('@')[0] ?? 'You',
-          token: data.session.access_token,
-          expiresAt: new Date((data.session.expires_at ?? 0) * 1000).toISOString(),
-        };
+        return mapSession(data.session).catch(() => sessionWithoutProfile(data.session!));
       },
       async listLocalProfiles() {
         return [];
@@ -550,19 +548,23 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async acceptInvitation(token): Promise<GroupActionResult> {
         const { data, error } = await supabase.rpc('loopedin_accept_group_invite', { target_token: invitationTokenToHex(token) });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
-        return { status: result.code ?? 'joined', groupId: result.groupId };
+        const result = requireRpcSuccess(data, ['joined']);
+        if (!result.groupId) throw new Error('That family action isn’t available.');
+        return { status: result.code, groupId: result.groupId };
       },
       async declineInvitation(token): Promise<GroupActionResult> {
         const { data, error } = await supabase.rpc('loopedin_decline_group_invite', { target_token: invitationTokenToHex(token) });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
-        return { status: result.code ?? 'declined' };
+        const result = requireRpcSuccess(data, ['declined']);
+        return { status: result.code };
       },
       async createInvitation(groupId, email, token): Promise<CreatedGroupInvitation> {
         const { data, error } = await supabase.rpc('loopedin_create_group_invite', { target_group_id: groupId, target_email: email, target_token: invitationTokenToHex(token) });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
+        const rpcResult = (data ?? {}) as RpcResult;
+        if (!rpcResult.ok && rpcResult.code === 'already_pending') throw new Error('An invitation is already waiting for that email.');
+        if (!rpcResult.ok) throw new Error('That family action isn’t available.');
+        const result = rpcResult;
         if (!result.invitationId || !result.expiresAt || (result.code !== 'created' && result.code !== 'existing')) throw new Error('That family action isn’t available.');
         return { invitationId: result.invitationId, expiresAt: result.expiresAt, status: result.code };
       },
@@ -574,26 +576,26 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async revokeInvitation(invitationId) {
         const { data, error } = await supabase.rpc('loopedin_revoke_group_invite', { target_invitation_id: invitationId });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
-        return { status: result.code ?? 'revoked' };
+        const result = requireRpcSuccess(data, ['revoked']);
+        return { status: result.code };
       },
       async removeMember(groupId, userId) {
         const { data, error } = await supabase.rpc('loopedin_remove_group_member', { target_group_id: groupId, target_user_id: userId });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
-        return { status: result.code ?? 'removed' };
+        const result = requireRpcSuccess(data, ['removed', 'not_member']);
+        return { status: result.code };
       },
       async leaveGroup(groupId) {
         const { data, error } = await supabase.rpc('loopedin_leave_group', { target_group_id: groupId });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
-        return { status: result.code ?? 'left' };
+        const result = requireRpcSuccess(data, ['left', 'not_member']);
+        return { status: result.code };
       },
       async transferOwnership(groupId, userId) {
         const { data, error } = await supabase.rpc('loopedin_transfer_group_ownership', { target_group_id: groupId, target_user_id: userId });
         throwIfError(error);
-        const result = requireRpcSuccess(data);
-        return { status: result.code ?? 'transferred' };
+        const result = requireRpcSuccess(data, ['transferred', 'already_owner']);
+        return { status: result.code };
       },
       async updateGroup(groupId, patch) {
         void groupId; void patch;

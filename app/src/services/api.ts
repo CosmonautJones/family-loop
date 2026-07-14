@@ -22,7 +22,7 @@ export type AuthSignUpResult =
 
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>;
-  signUp(displayName: string, email: string, password: string): Promise<AuthSignUpResult>;
+  signUp(invitationToken: string, displayName: string, email: string, password: string): Promise<AuthSignUpResult>;
   logout(): Promise<void>;
   getSession(): Promise<AuthSession | null>;
   onAuthStateChange(listener: (session: AuthSession | null) => void): () => void;
@@ -56,8 +56,10 @@ export interface CreatedGroupInvitation {
   expiresAt: string;
 }
 
+export type GroupActionStatus = 'joined' | 'declined' | 'revoked' | 'removed' | 'not_member' | 'left' | 'transferred' | 'already_owner';
+
 export interface GroupActionResult {
-  status: string;
+  status: GroupActionStatus;
   groupId?: string;
 }
 

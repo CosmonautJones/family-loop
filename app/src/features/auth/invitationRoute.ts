@@ -19,3 +19,25 @@ export function formatInvitationRoute(token: string): string {
 export function withoutInvitationRoute(hash: string): string {
   return parseInvitationToken(hash) ? '#/home' : hash;
 }
+
+export function invitationFlowId(token: string): string {
+  let hash = 0xcbf29ce484222325n;
+  for (const character of token) {
+    hash ^= BigInt(character.charCodeAt(0));
+    hash = BigInt.asUintN(64, hash * 0x100000001b3n);
+  }
+  return hash.toString(36);
+}
+
+export function createLatestResolutionGuard() {
+  let generation = 0;
+  return {
+    begin() {
+      const current = ++generation;
+      return () => current === generation;
+    },
+    invalidate() {
+      generation += 1;
+    },
+  };
+}

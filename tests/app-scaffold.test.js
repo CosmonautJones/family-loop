@@ -589,6 +589,7 @@ test('invitation routes accept only canonical 32-byte base64url tokens and never
     assert.equal(invitationRoute.parseInvitationToken(`#/invite/${invalid}`), null);
   }
   assert.equal(invitationRoute.withoutInvitationRoute('#/family'), '#/family');
+  assert.notEqual(invitationRoute.invitationFlowId(token), token);
   const source = read('src/features/auth/invitationRoute.ts');
   assert.doesNotMatch(source, /localStorage|sessionStorage|AsyncStorage/);
 });
@@ -599,7 +600,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   const provider = read('src/features/auth/AuthSessionProvider.tsx');
   const queries = read('src/app/queries.ts');
 
-  assert.match(api, /signUp\(displayName: string, email: string, password: string\)/);
+  assert.match(api, /signUp\(invitationToken: string, displayName: string, email: string, password: string\)/);
   assert.match(api, /creationKey: string/);
   for (const rpc of [
     'loopedin_create_group', 'loopedin_can_create_group', 'loopedin_create_group_invite',
@@ -608,16 +609,47 @@ test('configured service maps the accepted family lifecycle RPC contract without
     'loopedin_leave_group', 'loopedin_transfer_group_ownership',
   ]) assert.match(adapter, new RegExp(`rpc\\('${rpc}'`));
   assert.match(adapter, /options: \{ data: \{ display_name: name \} \}/);
+  assert.ok(adapter.indexOf("rpc('loopedin_validate_group_invite'", adapter.indexOf('async signUp')) < adapter.indexOf('supabase.auth.signUp', adapter.indexOf('async signUp')));
+  assert.match(adapter, /Email or password not recognized/);
+  assert.match(adapter, /We couldn’t create your account\. Try again or ask for a new invitation/);
   assert.match(adapter, /target_creation_key: payload\.creationKey/);
   assert.doesNotMatch(adapter.slice(adapter.indexOf('async createGroup'), adapter.indexOf('async updateGroup')), /from\('loopedin_(groups|group_members)'\)\s*\.insert/);
   assert.match(provider, /parseInvitationToken\(window\.location\.hash\)/);
-  assert.match(provider, /withoutInvitationRoute\(window\.location\.hash\)/);
+  assert.match(provider, /signUpWithInvitation/);
+  assert.match(provider, /loopedInService\.auth\.signUp\(invitationToken,/);
+  assert.match(provider, /clearInvitationToken[\s\S]*?withoutInvitationRoute\(window\.location\.hash\)/);
+  assert.doesNotMatch(provider, /useEffect\(\(\) => \{[\s\S]*?withoutInvitationRoute\(window\.location\.hash\)[\s\S]*?\}, \[invitationToken\]\)/);
   assert.match(provider, /groupsQuery\.data\.some\(\(group\) => group\.id === activeGroupId\)/);
   assert.match(queries, /useCreateGroupMutation/);
   assert.match(queries, /useAcceptInvitationMutation/);
   assert.match(queries, /useMarkNotificationReadMutation/);
   assert.match(queries, /useMarkAllNotificationsReadMutation/);
   assert.match(queries, /queryKeys\.notifications/);
+  assert.match(queries, /invitationFlowId\(token\)/);
+  assert.doesNotMatch(queries, /queryKeys\.invitation\(token\)/);
+  assert.match(queries, /evictGroupScopedQueries\(queryClient\)/);
+});
+
+test('latest-resolution guard deterministically rejects stale restore and auth-event results', async () => {
+  const { invitationRoute } = loadCompiledModules();
+  const guard = invitationRoute.createLatestResolutionGuard();
+  let resolveRestore;
+  let applied = 'none';
+  const restoreIsCurrent = guard.begin();
+  const restore = new Promise((resolve) => { resolveRestore = resolve; }).then((value) => {
+    if (restoreIsCurrent()) applied = value;
+  });
+  const eventIsCurrent = guard.begin();
+  if (eventIsCurrent()) applied = 'signed-out-event';
+  resolveRestore('stale-restored-user');
+  await restore;
+  assert.equal(applied, 'signed-out-event');
+
+  const slowSignInIsCurrent = guard.begin();
+  const signOutIsCurrent = guard.begin();
+  if (signOutIsCurrent()) applied = 'signed-out';
+  if (slowSignInIsCurrent()) applied = 'stale-sign-in';
+  assert.equal(applied, 'signed-out');
 });
 
 test('local demo keeps stable family creation retries and honestly declines remote-only capabilities', async () => {
@@ -631,7 +663,7 @@ test('local demo keeps stable family creation retries and honestly declines remo
   assert.equal(await service.groups.canCreateGroup(), false);
   assert.deepEqual(await service.groups.validateInvitation('A'.repeat(43)), { status: 'unavailable' });
   await assert.rejects(service.groups.acceptInvitation('A'.repeat(43)), /local family demo/i);
-  await assert.rejects(service.auth.signUp('New Person', 'new@example.com', 'password'), /local family demo/i);
+  await assert.rejects(service.auth.signUp('A'.repeat(43), 'New Person', 'new@example.com', 'password'), /local family demo/i);
 });
 
 test('Family screen is service-backed with truthful states and no fixture onboarding controls', () => {

@@ -1,5 +1,6 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
+import { invitationFlowId } from '../features/auth/invitationRoute';
 import { loopedInService } from '../services';
 import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
@@ -13,11 +14,20 @@ export const queryKeys = {
   rsvps: (eventId: string) => ['rsvps', eventId] as const,
   messages: (eventId: string) => ['messages', eventId] as const,
   media: (eventId: string) => ['media', eventId] as const,
-  invitation: (token: string) => ['invitation', token] as const,
+  invitation: (flowId: string) => ['invitation', 'current-preview', flowId] as const,
   invitations: (groupId: string) => ['groups', groupId, 'invitations'] as const,
   canCreateGroup: ['groups', 'can-create'] as const,
   notifications: ['notifications'] as const,
 };
+
+const protectedQueryRoots = new Set(['event', 'events', 'rsvps', 'messages', 'media', 'notifications', 'profiles']);
+
+export function evictGroupScopedQueries(queryClient: QueryClient) {
+  queryClient.removeQueries({ predicate: (query) => {
+    const [root] = query.queryKey;
+    return protectedQueryRoots.has(String(root)) || (root === 'groups' && query.queryKey.length > 1);
+  } });
+}
 
 export function useActiveGroupQuery() {
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
@@ -45,8 +55,9 @@ export function useCanCreateGroupQuery(enabled = true) {
 }
 
 export function useInvitationQuery(token: string | null) {
+  const flowId = token ? invitationFlowId(token) : 'none';
   return useQuery({
-    queryKey: queryKeys.invitation(token ?? ''),
+    queryKey: queryKeys.invitation(flowId),
     queryFn: () => loopedInService.groups.validateInvitation(token!),
     enabled: Boolean(token),
     retry: false,
@@ -82,7 +93,9 @@ export function useAcceptInvitationMutation() {
   const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
   return useMutation({
     mutationFn: (token: string) => loopedInService.groups.acceptInvitation(token),
-    onSuccess: async (result) => {
+    onSuccess: async (result, token) => {
+      queryClient.removeQueries({ queryKey: queryKeys.invitation(invitationFlowId(token)) });
+      evictGroupScopedQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
       if (result.groupId) {
         setActiveGroupId(result.groupId);
@@ -93,7 +106,11 @@ export function useAcceptInvitationMutation() {
 }
 
 export function useDeclineInvitationMutation() {
-  return useMutation({ mutationFn: (token: string) => loopedInService.groups.declineInvitation(token) });
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (token: string) => loopedInService.groups.declineInvitation(token),
+    onSuccess: (_result, token) => queryClient.removeQueries({ queryKey: queryKeys.invitation(invitationFlowId(token)) }),
+  });
 }
 
 export function useCreateGroupInvitationMutation(groupId: string) {
@@ -116,7 +133,10 @@ export function useRemoveGroupMemberMutation(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (userId: string) => loopedInService.groups.removeMember(groupId, userId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.groupMembers(groupId) }),
+    onSuccess: async () => {
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
   });
 }
 
@@ -124,7 +144,10 @@ export function useLeaveGroupMutation(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => loopedInService.groups.leaveGroup(groupId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.groups }),
+    onSuccess: async () => {
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
   });
 }
 
@@ -133,8 +156,8 @@ export function useTransferGroupOwnershipMutation(groupId: string) {
   return useMutation({
     mutationFn: (userId: string) => loopedInService.groups.transferOwnership(groupId, userId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.groupMembers(groupId) });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
     },
   });
 }
