@@ -237,13 +237,52 @@ try {
   assert.equal((await request(`/storage/v1/object/authenticated/${bucket}/${path}`, { token: outsider.token })).response.ok, false);
   assert.equal((await rpc('loopedin_claim_media_deletion', maya.token, { target_media_id: photo.id })).response.ok, false);
 
-  sql(`insert into public.loopedin_notifications(user_id,kind,title,body,event_id,group_id) values ('${alex.id}','message','Lake update','Jordan commented','${lake.id}','${family.id}'),('${maya.id}','media','New photo','Jordan shared a photo','${lake.id}','${family.id}'),('${jordan.id}','event_update','Trip update','The plan changed','${lake.id}','${family.id}');`);
-  for (const actor of [alex, maya, jordan]) assert.equal((await ok(table('loopedin_notifications', actor.token, '?select=*'), 'own notification')).length, 1);
+  sql(`delete from public.loopedin_notifications where group_id='${family.id}';`);
+  const notificationCounts = () => sql(`select count(*) filter(where user_id='${alex.id}') || ',' || count(*) filter(where user_id='${maya.id}') || ',' || count(*) filter(where user_id='${jordan.id}') from public.loopedin_notifications where group_id='${family.id}';`);
+  const notificationStart = new Date(Date.now() + 12 * 86400000);
+  const notificationEvent = (await ok(table('loopedin_events', alex.token, '?select=*', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify({ group_id: family.id, created_by: alex.id, title: 'Family notification proof', starts_at: notificationStart.toISOString(), ends_at: new Date(notificationStart.getTime() + 7200000).toISOString(), location: 'Madison', description: 'Private family plan' }),
+  }), 'create notification event'))[0];
+  assert.equal(notificationCounts(), '0,1,1', 'event creation recipients or actor exclusion changed');
+  await ok(table('loopedin_events', alex.token, `?id=eq.${notificationEvent.id}&select=id`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ title: notificationEvent.title }) }), 'no-op event update');
+  assert.equal(notificationCounts(), '0,1,1', 'no-op event update duplicated notifications');
+  await ok(table('loopedin_events', alex.token, `?id=eq.${notificationEvent.id}&select=id`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ location: 'Milwaukee' }) }), 'material event update');
+  assert.equal(notificationCounts(), '0,2,2');
+
+  const notificationRsvp = { event_id: notificationEvent.id, user_id: maya.id, person_name: 'Maya', status: 'going' };
+  await ok(table('loopedin_rsvps', maya.token, '?on_conflict=event_id,user_id&select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify(notificationRsvp) }), 'notification RSVP');
+  assert.equal(notificationCounts(), '1,2,3');
+  await ok(table('loopedin_rsvps', maya.token, '?on_conflict=event_id,user_id&select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify(notificationRsvp) }), 'no-op RSVP replay');
+  assert.equal(notificationCounts(), '1,2,3', 'no-op RSVP duplicated notifications');
+
+  await ok(table('loopedin_event_messages', jordan.token, '?select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ event_id: notificationEvent.id, author_id: jordan.id, body: 'Sensitive comment contents stay private' }) }), 'notification message');
+  assert.equal(notificationCounts(), '2,3,3');
+
+  const notificationPath = `${notificationEvent.id}/${jordan.id}/${crypto.randomUUID()}.png`;
+  const notificationPending = await ok(rpc('loopedin_begin_media_upload', jordan.token, { target_event_id: notificationEvent.id, target_storage_path: notificationPath, target_caption: 'Sensitive caption', target_alt_text: 'Family by a lake', target_source_name: null, target_source_url: null, target_creator_name: null, target_creator_url: null }), 'begin notification photo');
+  assert.equal(notificationCounts(), '2,3,3', 'pending media emitted a notification');
+  await ok(upload(jordan.token, notificationPath), 'upload notification photo'); paths.add(notificationPath); allPaths.add(notificationPath);
+  const notificationPhoto = await ok(rpc('loopedin_activate_media', jordan.token, { target_media_id: notificationPending.id }), 'activate notification photo');
+  assert.equal(notificationCounts(), '3,4,3');
+  await ok(rpc('loopedin_activate_media', jordan.token, { target_media_id: notificationPending.id }), 'active media replay');
+  assert.equal(notificationCounts(), '3,4,3', 'already-active media duplicated notifications');
+
+  const allGenerated = JSON.parse(sql(`select coalesce(json_agg(json_build_object('kind',kind,'title',title,'body',body)), '[]'::json) from public.loopedin_notifications where group_id='${family.id}';`));
+  assert.equal(allGenerated.length, 10);
+  assert.equal(allGenerated.some((item) => item.body.includes('Sensitive') || item.title.includes('Sensitive')), false, 'notification leaked message or media content');
   assert.equal((await ok(table('loopedin_notifications', outsider.token, '?select=*'), 'outsider notifications')).length, 0);
   const mayaNotification = (await ok(table('loopedin_notifications', maya.token, '?select=id,read'), 'Maya notification'))[0];
   await ok(table('loopedin_notifications', maya.token, `?id=eq.${mayaNotification.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ read: true }) }), 'mark own notification read');
   assert.equal((await ok(table('loopedin_notifications', maya.token, `?id=eq.${mayaNotification.id}&select=read`), 'read state'))[0].read, true);
+  await ok(table('loopedin_notifications', maya.token, '?read=eq.false', { method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ read: true }) }), 'clear own notifications');
+  assert.equal((await ok(table('loopedin_notifications', maya.token, '?select=read'), 'cleared notifications')).every((item) => item.read), true);
+  assert.equal((await ok(table('loopedin_notifications', alex.token, '?select=read'), 'other unread notifications')).every((item) => !item.read), true);
   assert.equal((await table('loopedin_notifications', maya.token, `?id=eq.${mayaNotification.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Tampered' }) })).response.ok, false, 'notification update exceeded read column');
+  assert.equal((await table('loopedin_notifications', maya.token, `?id=eq.${mayaNotification.id}`, { method: 'DELETE' })).response.ok, false, 'notification delete privilege widened');
+  await ok(rpc('loopedin_claim_media_deletion', alex.token, { target_media_id: notificationPhoto.id }), 'owner claims notification photo');
+  await ok(removeObject(alex.token, notificationPath), 'owner removes notification photo'); paths.delete(notificationPath);
+  await ok(rpc('loopedin_finalize_media_deletion', alex.token, { target_media_id: notificationPhoto.id }), 'owner finalizes notification photo');
 
   await assert.rejects(async () => ok(rpc('loopedin_leave_group', alex.token, { target_group_id: family.id }), 'owner cannot leave'), /Transfer ownership/);
   const transferRace = await Promise.all([
@@ -266,6 +305,10 @@ try {
   await ok(rpc('loopedin_remove_group_member', alex.token, { target_group_id: family.id, target_user_id: jordan.id }), 'remove Jordan');
   assert.equal((await ok(table('loopedin_events', jordan.token, `?group_id=eq.${family.id}&select=id`), 'removed event access')).length, 0);
   assert.equal((await ok(table('loopedin_notifications', jordan.token, '?select=id'), 'removed notification access')).length, 0);
+  const jordanNotificationCount = sql(`select count(*) from public.loopedin_notifications where group_id='${family.id}' and user_id='${jordan.id}';`);
+  await ok(table('loopedin_events', alex.token, `?id=eq.${notificationEvent.id}&select=id`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' }, body: JSON.stringify({ location: 'Green Bay' }) }), 'post-removal event update');
+  assert.equal(sql(`select count(*) from public.loopedin_notifications where group_id='${family.id}' and user_id='${jordan.id}';`), jordanNotificationCount, 'removed member received a new update');
+  assert.equal((await ok(table('loopedin_notifications', jordan.token, '?select=id'), 'removed notification access after new update')).length, 0);
   assert.equal((await ok(table('loopedin_events', jordan.token, `?group_id=eq.${privateGroup.id}&select=id`), 'unrelated group remains isolated')).length, 0);
 
   const directOwnerDelete = await table('loopedin_group_members', alex.token, `?group_id=eq.${family.id}&user_id=eq.${alex.id}`, { method: 'DELETE' });
