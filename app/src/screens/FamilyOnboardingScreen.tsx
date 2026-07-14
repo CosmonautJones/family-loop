@@ -96,7 +96,7 @@ function CardAction({ label, disabled = false, onPress }: { label: string; disab
 const styles = StyleSheet.create({
   container: { alignSelf: 'center', gap: spacing.md, maxWidth: 600, padding: spacing.lg, paddingBottom: 48, width: '100%' },
   title: { color: palette.text, fontSize: 30, fontWeight: '900' }, familyName: { color: palette.text, fontSize: 22, fontWeight: '900' }, cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
-  copy: { color: palette.muted, fontSize: 15, lineHeight: 22 }, error: { color: palette.coral, fontSize: 15, lineHeight: 22 }, label: { color: palette.text, fontSize: 15, fontWeight: '800' },
+  copy: { color: palette.muted, fontSize: 15, lineHeight: 22 }, error: { color: palette.berry, fontSize: 15, lineHeight: 22 }, label: { color: palette.text, fontSize: 15, fontWeight: '800' },
   input: { backgroundColor: palette.white, borderColor: palette.plum, borderRadius: 14, borderWidth: 1, color: palette.text, fontSize: 16, minHeight: 52, paddingHorizontal: spacing.md }, multiline: { minHeight: 96, paddingTop: spacing.md, textAlignVertical: 'top' }, center: { alignItems: 'center', gap: spacing.sm },
   cardAction: { alignItems: 'center', backgroundColor: palette.plum, borderColor: palette.plum, borderRadius: 14, borderWidth: 1, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, cardActionDisabled: { opacity: 0.55 }, cardActionText: { color: palette.white, fontSize: 15, fontWeight: '800', textAlign: 'center' },
 });

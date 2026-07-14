@@ -48,7 +48,7 @@ function categoryForError(error: unknown): ServiceErrorCategory | null {
 }
 
 export function sanitizeServiceError(error: unknown): Error {
-  if (error instanceof Error && error.name === userSafeErrorName) return error;
+  if (error instanceof Error && (error.name === userSafeErrorName || error.name.startsWith('LoopedInServiceError:'))) return error;
   const category = categoryForError(error);
   const safeError = new Error(safeMessages[category ?? 'unknown']);
   safeError.name = `LoopedInServiceError:${category ?? 'unknown'}`;

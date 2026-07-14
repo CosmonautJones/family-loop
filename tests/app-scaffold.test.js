@@ -253,6 +253,8 @@ test('Supabase retryable auth transport failures retain the network recovery cat
   const { serviceErrors } = loadCompiledModules();
   const retryable = Object.assign(new Error('request failed'), { name: 'AuthRetryableFetchError', status: 0 });
   assert.equal(serviceErrors.sanitizeServiceError(retryable).message, 'We couldn’t reach LoopedIn. Check your connection and try again.');
+  const networkError = serviceErrors.sanitizeServiceError(new TypeError('Failed to fetch'));
+  assert.equal(serviceErrors.sanitizeServiceError(networkError), networkError, 'sanitizing an already-safe service error is idempotent');
 });
 
 test('reminder preference contract is exact-user/event scoped and delivery-honest', () => {
@@ -775,6 +777,8 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.match(adapter, /target_creation_key: payload\.creationKey/);
   assert.doesNotMatch(adapter.slice(adapter.indexOf('async createGroup'), adapter.indexOf('async updateGroup')), /from\('loopedin_(groups|group_members)'\)\s*\.insert/);
   assert.match(provider, /parseInvitationToken\(window\.location\.hash\)/);
+  assert.match(provider, /addEventListener\('hashchange', syncInvitationRoute\)/);
+  assert.match(provider, /removeEventListener\('hashchange', syncInvitationRoute\)/);
   assert.match(provider, /signUpWithInvitation/);
   assert.match(provider, /loopedInService\.auth\.signUp\(invitationToken,/);
   assert.match(provider, /clearInvitationToken[\s\S]*?withoutInvitationRoute\(window\.location\.hash\)/);
@@ -997,6 +1001,9 @@ test('new light-surface actions use explicit high-contrast plum controls without
   const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
   assert.ok(contrast('#71365D', '#FFFFFF') >= 4.5, 'plum/white text contrast');
   assert.ok(contrast('#71365D', '#FFF9F4') >= 3, 'plum/light-surface boundary contrast');
+  assert.ok(contrast('#B33E6D', '#FFF9F4') >= 4.5, 'berry/light-surface error text contrast');
+  const readableSources = fs.readdirSync(path.join(appRoot, 'src', 'screens')).filter((name) => name.endsWith('.tsx')).map((name) => read(`src/screens/${name}`));
+  for (const source of readableSources) assert.doesNotMatch(source, /color:\s*palette\.(?:coral|sage)/, 'small semantic text must not use low-contrast coral or sage');
 });
 
 test('mobile shell and primary flows expose landmarks, headings, useful image names, and form errors', () => {

@@ -48,7 +48,7 @@ Security failures must use calm plain language and readable type, preserve safe 
 | Evidence avoids secrets/tokens/message bodies/signed URLs | COMPLETE LOCALLY | Executable sanitizer tests inject credentials, tokens, a signed URL, message content, storage paths, and raw database detail; emitted user errors contain none of them. Existing lifecycle verifiers report aggregates/IDs without signed access values. |
 | Safe two-user group/event isolation | COMPLETE LOCALLY | Four-session family/browser/media RLS matrices and outsider direct-route denial. |
 | Incident severity/owner/preservation/gates/runbook | COMPLETE LOCALLY | `docs/runbooks/security-incident-response.md` assigns SEV levels, conditional ownership, minimal evidence, authorization gates, recovery validation, and records a no-production-action tabletop. |
-| Understandable non-leaking user failures | COMPLETE LOCALLY | Supabase service calls are wrapped at the adapter boundary, including rejected transport promises; safe domain validation remains intact and raw media/backend details are no longer appended. |
+| Understandable non-leaking user failures | COMPLETE LOCALLY | Supabase service calls are wrapped at the adapter boundary, including rejected transport promises; safe domain validation remains intact, safe service errors are idempotent, and browser recovery retains actionable network copy during a real offline request. |
 
 ## Validation commands/evidence
 ### Always-local

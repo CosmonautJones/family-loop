@@ -509,7 +509,7 @@ const styles = StyleSheet.create({
   notesInput: { minHeight: 96, textAlignVertical: 'top' },
   editField: { gap: 6, marginTop: spacing.sm },
   editLabel: { color: palette.text, fontSize: 14, lineHeight: 20, fontWeight: '800' },
-  editError: { color: palette.coral, fontSize: 13, lineHeight: 19, fontWeight: '700' },
+  editError: { color: palette.berry, fontSize: 13, lineHeight: 19, fontWeight: '700' },
   lightActionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
   planButton: { minHeight: 48, borderRadius: 999, backgroundColor: palette.plum, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
   planButtonText: { color: '#fff', fontSize: 15, lineHeight: 20, fontWeight: '900' },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   sendButton: { minHeight: 48, borderRadius: 16, backgroundColor: palette.plum, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
   sendButtonDisabled: { opacity: 0.45 },
   sendButtonText: { color: '#fff', fontSize: 15, fontWeight: '900' },
-  threadError: { color: palette.coral, fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
+  threadError: { color: palette.berry, fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
   feedback: { gap: spacing.sm, alignItems: 'flex-start' },
-  successNote: { color: palette.sage, fontSize: 13, lineHeight: 19, marginTop: spacing.sm, fontWeight: '800' },
+  successNote: { color: palette.plum, fontSize: 13, lineHeight: 19, marginTop: spacing.sm, fontWeight: '800' },
 });

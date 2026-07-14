@@ -260,3 +260,15 @@ Use this before considering a mission complete.
 - [x] Agent review log updated.
 - [x] M2 final UX review completed after required phone smokes.
 - [x] M2 automated code review completed, with the wave-runnability advisory recorded.
+
+## Final configured browser replay
+
+- [x] Owner, two members, and outsider exercised independent real Auth sessions.
+- [x] Invitation create/revoke/decline/accept and same-tab reinvite work.
+- [x] Ownership transfer/back, owner removal/reinvite, and member leave/reinvite work.
+- [x] Plan create/edit/cancel, every RSVP state, multi-user comments, Memories, notifications, reminders, URL media, actual-file media, and scoped deletion work.
+- [x] Realtime outage/reconnect, reminder write retry, and recovery offline copy pass dedicated browser gates.
+- [x] Exact deep link, Back, reload, logout/restore, and outsider direct-ID denial pass.
+- [x] 320/390/430/1280 widths, one main/five tabs/one selected, >=48px actions, reduced motion, no hover-only controls, and zero console events pass.
+- [x] Semantic error/emphasis and success text use >=4.5:1 light-surface color pairs; low-contrast coral/sage text is rejected by regression coverage.
+- [ ] Practical Chrome UI 200% zoom, physical phone browsers, VoiceOver/TalkBack, and moderated older-adult use remain `NOT RUN`.

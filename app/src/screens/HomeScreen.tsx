@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   },
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   flexCopy: { flex: 1, minWidth: 0 },
-  errorCopy: { color: palette.coral, fontSize: 14, lineHeight: 20 },
+  errorCopy: { color: palette.berry, fontSize: 14, lineHeight: 20 },
   updateItem: { borderColor: palette.inkSoft, borderRadius: 12, borderWidth: 1, gap: 10, padding: 12 },
   updateUnread: { backgroundColor: 'rgba(247,211,200,0.18)', borderColor: palette.coral },
   updateTime: { color: palette.muted, fontSize: 12, marginTop: 5 },

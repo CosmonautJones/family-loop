@@ -71,7 +71,7 @@ Creation and invitations must state the group name, inviter, joining impact, and
 | Owner-only invite/revoke/remove/transfer | COMPLETE LOCALLY | `ec52a77`, `079e4e6`, `1bc3421`; role UI plus RLS/RPC denial tests. |
 | Intended-user accept; replay/expiry/duplicates safe | COMPLETE LOCALLY | `f04fa77`, `e68d615`, `40b2dec`, `5bd615a`; lifecycle E2E. |
 | Exactly one membership and scoped reveal | COMPLETE LOCALLY | Four-session verifier: three members, zero outsider residue/direct access. |
-| Removal/leave and last-owner transfer invariant | COMPLETE LOCALLY | Family E2E and browser transfer Avery→Maya→Avery. |
+| Removal/leave and last-owner transfer invariant | COMPLETE LOCALLY | Family E2E plus clean browser transfer Avery→Maya→Avery, owner remove/reinvite, and member leave/reinvite. Fresh same-tab invitation hashes now synchronize after decline. |
 | Nonmember direct-ID denial across protected data | COMPLETE LOCALLY | Authenticated outsider browser route plus family/media RLS matrices. |
 | Existing event and no-family gates truthful | COMPLETE | Full browser lifecycle and root/app regressions. |
 

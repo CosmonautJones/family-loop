@@ -49,7 +49,7 @@ Test readable text, contrast, plain labels, 48x48 CSS-pixel targets, visible foc
 | Every core-loop risk has an owned evidence layer | COMPLETE | Tests, local Supabase scripts, runbooks, regression checklist, and this OPORD matrix. |
 | Automated 320/390/430 plus physical Safari/Chrome | PARTIAL/CONDITIONAL | Configured Chrome widths pass; physical iOS Safari/Android Chrome are `NOT RUN`. |
 | Back/history, deep links, reload, virtual keyboard | PARTIAL/CONDITIONAL | Exact-event deep link, Back, hard reload, and invalid-field visibility at 320x500 pass in headless Chrome; physical software-keyboard matrices are `NOT RUN`. |
-| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL/CONDITIONAL | >=48px touch, five sequential labeled tabs, focused error relationships, static card surfaces, zero-duration image transitions under reduced motion, and a 200% CDP page-scale proxy pass. Practical browser zoom and VoiceOver/TalkBack are `NOT RUN`. |
+| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL/CONDITIONAL | >=48px touch, five sequential labeled tabs, focused error relationships, reduced motion, no hover-only role controls, and semantic light-surface text pairs >=4.5:1 pass. A 200% CDP page-scale proxy passes; practical browser zoom and VoiceOver/TalkBack are `NOT RUN`. |
 | Desktop regression and anonymized human findings | PARTIAL | The same production export passes at 1280x900; no moderated-human sample exists. |
 
 ## Validation commands/evidence

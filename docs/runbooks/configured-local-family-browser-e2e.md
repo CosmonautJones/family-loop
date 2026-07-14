@@ -92,6 +92,8 @@ This proves the configured app against local Supabase Auth, Postgres/RLS, and pr
 
 ## Read-only integrity verification
 
+The later clean role-by-role replay, browser-discovered fixes, feature matrix, and explicit remaining boundaries are recorded in `docs/runbooks/final-configured-browser-feature-matrix.md`.
+
 Before cleanup, verify the canonical populated scenario without changing it:
 
 ```powershell

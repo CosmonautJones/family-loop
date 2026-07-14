@@ -55,6 +55,16 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   const operationResolution = useRef(createLatestResolutionGuard());
   const groupsQuery = useGroupsQuery(status === 'authenticated');
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const syncInvitationRoute = () => {
+      const token = parseInvitationToken(window.location.hash);
+      if (token) setInvitationTokenState(token);
+    };
+    window.addEventListener('hashchange', syncInvitationRoute);
+    return () => window.removeEventListener('hashchange', syncInvitationRoute);
+  }, []);
+
   const applySession = useCallback((nextSession: AuthSession | null) => {
     if (previousUserId.current !== undefined && previousUserId.current !== nextSession?.userId) {
       queryClient.clear();

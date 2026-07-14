@@ -395,3 +395,9 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Cleanup is part of both loopback harnesses. The final read-only verifier retained exactly 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 0 reminders, 3 Storage objects, and zero outsider residue.
 - Final gates: root PASS 88/88; app-local PASS 66/66; substantive ESLint and TypeScript PASS; configured Expo export, harness, secret scan across 194 files, four-migration integrity, database lint, family/media/reminder loopback matrices, configured reminder browser proof, populated-scenario verification, and diff check PASS. `npm audit --audit-level=high` exits zero; 11 moderate transitive Expo-toolchain advisories remain because the offered fix is a breaking Expo 57 upgrade outside this mission.
 - Local verdict: **GREEN** for OPORD 010's implementable slice. Hosted RLS, production delivery, physical Safari/Chrome, assistive technology, and moderated family/older-adult use remain `NOT RUN`; actual push/email/SMS delivery remains an explicit non-goal.
+
+## Final configured browser completion audit
+
+- A fresh disposable loopback-Supabase family exercised the full reachable web UI across owner, two members, and an outsider. The exact evidence matrix is `docs/runbooks/final-configured-browser-feature-matrix.md`.
+- Same-tab reinvitation, idempotent safe-error handling, and hidden-state text contrast defects found during the replay were corrected and independently rerun.
+- The configured local user journey is GREEN. The broader mission remains IN PROGRESS because hosted runtime configuration/export/delete/operations, physical browsers and assistive technology, practical UI zoom, and moderated human usability remain unproven.
