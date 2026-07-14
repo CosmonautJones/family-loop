@@ -20,6 +20,7 @@ import { maxBrowserImageBytes, validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
 import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
+import { backendServiceError, userServiceError, withSafeServiceErrors } from './serviceErrors';
 
 type GroupRow = {
   id: string;
@@ -136,11 +137,11 @@ async function mapSession(session: Session): Promise<AuthSession> {
 }
 
 function throwIfError(error: { message: string } | null) {
-  if (error) throw new Error(error.message);
+  if (error) throw backendServiceError(error);
 }
 
 function invitationTokenToHex(token: string) {
-  if (!isCanonicalInvitationToken(token)) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+  if (!isCanonicalInvitationToken(token)) throw userServiceError('This invitation can’t be used. Ask the person who invited you for a new link.');
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
   const bytes: number[] = [];
   let buffer = 0;
@@ -153,22 +154,22 @@ function invitationTokenToHex(token: string) {
       bytes.push((buffer >> bits) & 255);
     }
   }
-  if (bytes.length !== 32) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+  if (bytes.length !== 32) throw userServiceError('This invitation can’t be used. Ask the person who invited you for a new link.');
   return bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 function requireRpcSuccess(data: unknown, allowedStatuses: readonly GroupActionStatus[]): RpcResult & { code: GroupActionStatus } {
   const result = (data ?? {}) as RpcResult;
-  if (!result.ok || !allowedStatuses.includes(result.code as GroupActionStatus)) throw new Error('That family action isn’t available.');
+  if (!result.ok || !allowedStatuses.includes(result.code as GroupActionStatus)) throw userServiceError('That family action isn’t available.');
   return result as RpcResult & { code: GroupActionStatus };
 }
 
 async function fetchValidatedMediaBlob(fileUri: string) {
   const response = await fetch(fileUri);
-  if (!response.ok) throw new Error('The photo could not be downloaded. Check the link and try again.');
+  if (!response.ok) throw userServiceError('The photo could not be downloaded. Check the link and try again.');
 
   const declaredLength = Number(response.headers.get('content-length') ?? 0);
-  if (declaredLength > maxBrowserImageBytes) throw new Error('Choose an image no larger than 1 MB.');
+  if (declaredLength > maxBrowserImageBytes) throw userServiceError('Choose an image no larger than 1 MB.');
 
   const contentType = (response.headers.get('content-type') ?? '').split(';')[0].toLowerCase();
   const chunks: Uint8Array[] = [];
@@ -181,7 +182,7 @@ async function fetchValidatedMediaBlob(fileUri: string) {
       byteLength += value.byteLength;
       if (byteLength > maxBrowserImageBytes) {
         await reader.cancel();
-        throw new Error('Choose an image no larger than 1 MB.');
+        throw userServiceError('Choose an image no larger than 1 MB.');
       }
       chunks.push(value);
     }
@@ -190,9 +191,9 @@ async function fetchValidatedMediaBlob(fileUri: string) {
   const blob = chunks.length ? new Blob(chunks, { type: contentType }) : await response.blob();
   const mime = (blob.type || contentType).toLowerCase();
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime)) {
-    throw new Error('Choose a JPEG, PNG, or WebP image.');
+    throw userServiceError('Choose a JPEG, PNG, or WebP image.');
   }
-  if (!blob.size || blob.size > maxBrowserImageBytes) throw new Error('Choose an image no larger than 1 MB.');
+  if (!blob.size || blob.size > maxBrowserImageBytes) throw userServiceError('Choose an image no larger than 1 MB.');
 
   const signature = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
   const jpeg = signature[0] === 0xff && signature[1] === 0xd8 && signature[2] === 0xff;
@@ -200,16 +201,16 @@ async function fetchValidatedMediaBlob(fileUri: string) {
   const webp = String.fromCharCode(...signature.slice(0, 4)) === 'RIFF'
     && String.fromCharCode(...signature.slice(8, 12)) === 'WEBP';
   if ((mime === 'image/jpeg' && !jpeg) || (mime === 'image/png' && !png) || (mime === 'image/webp' && !webp)) {
-    throw new Error('The selected file does not contain a valid image.');
+    throw userServiceError('The selected file does not contain a valid image.');
   }
   if (typeof createImageBitmap === 'function') {
     try {
       const image = await createImageBitmap(blob);
       const validDimensions = image.width > 0 && image.height > 0;
       image.close();
-      if (!validDimensions) throw new Error('empty image');
+      if (!validDimensions) throw userServiceError('empty image');
     } catch {
-      throw new Error('The selected image could not be decoded.');
+      throw userServiceError('The selected image could not be decoded.');
     }
   }
   return blob.type === mime ? blob : new Blob([blob], { type: mime });
@@ -309,7 +310,7 @@ async function getCurrentUserId() {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
   throwIfError(error);
-  if (!data.user) throw new Error('You must be signed in.');
+  if (!data.user) throw userServiceError('You must be signed in.');
   return data.user.id;
 }
 
@@ -424,36 +425,36 @@ export function createSupabaseLoopedInService(): LoopedInService {
     }
   }
 
-  return {
+  const service: LoopedInService = {
     auth: {
       async login(email, password): Promise<AuthSession> {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error || !data.session || !data.user) throw new Error('Email or password not recognized.');
+        if (error || !data.session || !data.user) throw userServiceError('Email or password not recognized.');
 
         return mapSession(data.session).catch(() => sessionWithoutProfile(data.session!));
       },
       async signUp(invitationToken, displayName, email, password): Promise<AuthSignUpResult> {
         const name = displayName.trim();
-        if (!name || name.length > 80) throw new Error('Enter a display name between 1 and 80 characters.');
+        if (!name || name.length > 80) throw userServiceError('Enter a display name between 1 and 80 characters.');
         const token = invitationTokenToHex(invitationToken);
         const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: token, target_email: email.trim() });
-        if (invitationError || !isReadyInvitationEmailMatch(invitation)) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+        if (invitationError || !isReadyInvitationEmailMatch(invitation)) throw userServiceError('This invitation can’t be used. Ask the person who invited you for a new link.');
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: { data: { display_name: name } },
         });
-        if (error) throw new Error('We couldn’t create your account. Try again or ask for a new invitation.');
+        if (error) throw userServiceError('We couldn’t create your account. Try again or ask for a new invitation.');
         if (!data.session) return { status: 'confirmationRequired' };
         return { status: 'authenticated', session: sessionWithoutProfile(data.session, name) };
       },
       async logout() {
         const { error } = await supabase.auth.signOut();
-        if (error) throw new Error('Unable to sign out. Try again.');
+        if (error) throw userServiceError('Unable to sign out. Try again.');
       },
       async getSession() {
         const { data, error } = await supabase.auth.getSession();
-        if (error) throw new Error('Unable to restore your session.');
+        if (error) throw userServiceError('Unable to restore your session.');
         return data.session ? await mapSession(data.session).catch(() => sessionWithoutProfile(data.session!)) : null;
       },
       onAuthStateChange(listener) {
@@ -469,7 +470,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       async refreshSession(): Promise<AuthSession> {
         const { data, error } = await supabase.auth.refreshSession();
-        if (error || !data.session || !data.user) throw new Error('Unable to refresh your session. Sign in again.');
+        if (error || !data.session || !data.user) throw userServiceError('Unable to refresh your session. Sign in again.');
 
         return mapSession(data.session).catch(() => sessionWithoutProfile(data.session!));
       },
@@ -477,7 +478,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return [];
       },
       async chooseLocalProfile() {
-        throw new Error('Local profile selection is unavailable in Supabase mode.');
+        throw userServiceError('Local profile selection is unavailable in Supabase mode.');
       },
     },
     groups: {
@@ -529,7 +530,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
           })
           .single();
         throwIfError(error);
-        if (!data) throw new Error('Supabase did not return the created group.');
+        if (!data) throw userServiceError('We couldn’t create that family. Try again.');
         return mapGroup(data as GroupRow, 1);
       },
       async canCreateGroup() {
@@ -548,7 +549,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const { data, error } = await supabase.rpc('loopedin_accept_group_invite', { target_token: invitationTokenToHex(token) });
         throwIfError(error);
         const result = requireRpcSuccess(data, ['joined']);
-        if (!result.groupId) throw new Error('That family action isn’t available.');
+        if (!result.groupId) throw userServiceError('That family action isn’t available.');
         return { status: result.code, groupId: result.groupId };
       },
       async declineInvitation(token): Promise<GroupActionResult> {
@@ -561,10 +562,10 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const { data, error } = await supabase.rpc('loopedin_create_group_invite', { target_group_id: groupId, target_email: email, target_token: invitationTokenToHex(token) });
         throwIfError(error);
         const rpcResult = (data ?? {}) as RpcResult;
-        if (!rpcResult.ok && rpcResult.code === 'already_pending') throw new Error('An invitation is already waiting for that email.');
-        if (!rpcResult.ok) throw new Error('That family action isn’t available.');
+        if (!rpcResult.ok && rpcResult.code === 'already_pending') throw userServiceError('An invitation is already waiting for that email.');
+        if (!rpcResult.ok) throw userServiceError('That family action isn’t available.');
         const result = rpcResult;
-        if (!result.invitationId || !result.expiresAt || (result.code !== 'created' && result.code !== 'existing')) throw new Error('That family action isn’t available.');
+        if (!result.invitationId || !result.expiresAt || (result.code !== 'created' && result.code !== 'existing')) throw userServiceError('That family action isn’t available.');
         return { invitationId: result.invitationId, expiresAt: result.expiresAt, status: result.code };
       },
       async listInvitations(groupId) {
@@ -598,11 +599,11 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       async updateGroup(groupId, patch) {
         void groupId; void patch;
-        throw new Error('Group editing is unavailable in this release.');
+        throw userServiceError('Group editing is unavailable in this release.');
       },
       async deleteGroup(groupId) {
         void groupId;
-        throw new Error('Group deletion is unavailable in this release.');
+        throw userServiceError('Group deletion is unavailable in this release.');
       },
     },
     events: {
@@ -663,10 +664,10 @@ export function createSupabaseLoopedInService(): LoopedInService {
           .eq('event_id', eventId)
           .limit(1);
         throwIfError(mediaError);
-        if (media?.length) throw new Error('Remove this event’s photos before canceling the plan.');
+        if (media?.length) throw userServiceError('Remove this event’s photos before canceling the plan.');
         const { data, error } = await supabase.from('loopedin_events').delete().eq('id', eventId).select('id');
         throwIfError(error);
-        if (!data?.some((row) => row.id === eventId)) throw new Error('The plan was not deleted. Check your access and try again.');
+        if (!data?.some((row) => row.id === eventId)) throw userServiceError('The plan was not deleted. Check your access and try again.');
       },
     },
     rsvps: {
@@ -681,7 +682,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async upsertRsvp(payload: CreateRsvpPayload) {
         const { data: userData, error: userError } = await supabase.auth.getUser();
         throwIfError(userError);
-        if (!userData.user) throw new Error('You must be signed in.');
+        if (!userData.user) throw userServiceError('You must be signed in.');
         const userId = userData.user.id;
         const profiles = await getProfiles([userId]);
         const personName = profiles.get(userId)?.display_name ?? userData.user.email?.split('@')[0] ?? 'You';
@@ -701,7 +702,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       async updateRsvp(eventId, personId, patch) {
         const userId = await getCurrentUserId();
-        if (personId !== userId) throw new Error('You can only change your own RSVP.');
+        if (personId !== userId) throw userServiceError('You can only change your own RSVP.');
         const { data, error } = await supabase
           .from('loopedin_rsvps')
           .update({ status: patch.status, note: patch.note ?? null })
@@ -714,7 +715,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       async deleteRsvp(eventId, personId) {
         const userId = await getCurrentUserId();
-        if (personId !== userId) throw new Error('You can only remove your own RSVP.');
+        if (personId !== userId) throw userServiceError('You can only remove your own RSVP.');
         const { error } = await supabase.from('loopedin_rsvps').delete().eq('event_id', eventId).eq('user_id', userId);
         throwIfError(error);
       },
@@ -758,7 +759,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       async sendMessage(eventId, body) {
         const trimmedBody = body.trim();
-        if (!trimmedBody) throw new Error('Write a message before sending.');
+        if (!trimmedBody) throw userServiceError('Write a message before sending.');
         const userId = await getCurrentUserId();
         const { data, error } = await supabase
           .from('loopedin_event_messages')
@@ -791,7 +792,8 @@ export function createSupabaseLoopedInService(): LoopedInService {
             target_creator_url: payload.creatorUrl?.trim() || null,
           })
           .single();
-        if (beginError || !pending) throw new Error(beginError?.message ?? 'The photo upload could not be started.');
+        if (beginError) throw backendServiceError(beginError);
+        if (!pending) throw userServiceError('The photo upload could not be started.');
         const pendingMedia = pending as MediaRow;
 
         const { error: uploadError } = await supabase.storage
@@ -801,14 +803,14 @@ export function createSupabaseLoopedInService(): LoopedInService {
           const { data: recovered } = await supabase.rpc('loopedin_activate_media', { target_media_id: pendingMedia.id }).single();
           if (recovered) return mapMedia(recovered as MediaRow);
           const { data: aborted } = await supabase.rpc('loopedin_abort_media_upload', { target_media_id: pendingMedia.id });
-          if (aborted === true) throw new Error(`The photo file was not uploaded. No incomplete photo was kept. ${uploadError.message}`);
-          throw new Error(`The photo upload is incomplete and remains available for reconciliation. ${uploadError.message}`);
+          if (aborted === true) throw userServiceError('The photo file was not uploaded. No incomplete photo was kept. Try again.');
+          throw userServiceError('The photo upload is incomplete and remains available for reconciliation. Try again.');
         }
 
         const { data, error: activationError } = await supabase
           .rpc('loopedin_activate_media', { target_media_id: pendingMedia.id })
           .single();
-        if (activationError || !data) throw new Error(`The photo file is safe, but activation is pending reconciliation. ${activationError?.message ?? ''}`.trim());
+        if (activationError || !data) throw userServiceError('The photo file is safe, but activation is pending reconciliation. Try again.');
         return mapMedia(data as MediaRow);
       },
       async listMedia(eventId) {
@@ -826,15 +828,16 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const { data: claimed, error: claimError } = await supabase
           .rpc('loopedin_claim_media_deletion', { target_media_id: mediaId })
           .single();
-        if (claimError || !claimed) throw new Error(claimError?.message ?? 'The photo was not found or you no longer have access.');
+        if (claimError) throw backendServiceError(claimError);
+        if (!claimed) throw userServiceError('The photo was not found or you no longer have access.');
         const claimedMedia = claimed as MediaRow;
 
         const { error: storageError } = await supabase.storage.from(mediaBucket).remove([claimedMedia.storage_path]);
-        if (storageError) throw new Error(`The private photo remains in a retryable deletion state. ${storageError.message}`);
+        if (storageError) throw userServiceError('The private photo remains in a retryable deletion state. Try again.');
 
         const { data: finalized, error: finalizeError } = await supabase
           .rpc('loopedin_finalize_media_deletion', { target_media_id: mediaId });
-        if (finalizeError || finalized !== true) throw new Error(`The private file is gone, but cleanup remains retryable. ${finalizeError?.message ?? ''}`.trim());
+        if (finalizeError || finalized !== true) throw userServiceError('The private file is gone, but cleanup remains retryable. Try again.');
       },
     },
     notifications: {
@@ -860,4 +863,6 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
     },
   };
+
+  return withSafeServiceErrors(service);
 }

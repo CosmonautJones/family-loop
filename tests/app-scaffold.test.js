@@ -34,6 +34,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/features/memories/derivedHistory.ts'),
     path.join(appRoot, 'src/features/auth/invitationRoute.ts'),
     path.join(appRoot, 'src/features/auth/invitationDraft.ts'),
+    path.join(appRoot, 'src/services/serviceErrors.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -51,6 +52,7 @@ function loadCompiledModules() {
     derivedHistory: require(path.join(outDir, 'features/memories/derivedHistory.js')),
     invitationRoute: require(path.join(outDir, 'features/auth/invitationRoute.js')),
     invitationDraft: require(path.join(outDir, 'features/auth/invitationDraft.js')),
+    serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
   };
 }
 
@@ -196,6 +198,53 @@ test('Supabase RSVP identity comes from auth and local profile UI is explicitly 
   assert.match(provider, /setActiveGroupId\(''\)/);
   assert.match(detail, /item\.uploadedBy === identity\?\.userId/);
   assert.match(detail, /currentMember\?\.role === 'owner'/);
+});
+
+test('Supabase error boundary redacts backend details and keeps recovery categories actionable', () => {
+  const { serviceErrors } = loadCompiledModules();
+  const cases = [
+    [{ message: 'JWT expired bearer secret-access-token', status: 401, code: 'PGRST301' }, 'session'],
+    [{ message: 'permission denied for /families/private/message-body', status: 403, code: '42501' }, 'access'],
+    [{ message: 'duplicate storage path family/event/private.jpg', status: 409, code: '23505' }, 'conflict'],
+    [{ message: 'rate limit includes password=hunter2', status: 429, code: '429' }, 'rate-limit'],
+    [{ message: 'SQLSTATE XX000 detail: family secret picnic message https://host/storage/v1/object/sign/photo.jpg?token=signed-secret', code: 'XX000' }, 'unknown'],
+  ];
+
+  for (const [backendError, category] of cases) {
+    const safe = serviceErrors.backendServiceError(backendError);
+    assert.match(safe.name, new RegExp(`${category}$`));
+    assert.doesNotMatch(safe.message, /secret|hunter2|picnic|storage\/v1|private\.jpg|sqlstate|bearer|password|token/i);
+    assert.match(safe.message, /try again|sign in again|wait a moment|refresh|don’t have access/i);
+  }
+});
+
+test('configured transport rejection becomes calm copy while safe validation copy is preserved', async () => {
+  const { serviceErrors } = loadCompiledModules();
+  const service = serviceErrors.withSafeServiceErrors({
+    thread: {
+      sendMessage: async () => { throw new TypeError('Failed to fetch'); },
+      rejectBackend: async () => { throw { message: 'postgres message body: private family detail', code: 'XX000' }; },
+      rejectPlainDetail: async () => { throw new Error('private family message without backend metadata'); },
+      validate: async () => { throw serviceErrors.userServiceError('Write a message before sending.'); },
+    },
+  });
+
+  await assert.rejects(service.thread.sendMessage('event-id', 'draft'), (error) => {
+    assert.equal(error.message, 'We couldn’t reach LoopedIn. Check your connection and try again.');
+    assert.doesNotMatch(error.message, /failed to fetch/i);
+    return true;
+  });
+  await assert.rejects(service.thread.rejectBackend(), (error) => {
+    assert.equal(error.message, 'We couldn’t complete that request. Try again.');
+    assert.doesNotMatch(error.message, /postgres|private family detail/i);
+    return true;
+  });
+  await assert.rejects(service.thread.rejectPlainDetail(), (error) => {
+    assert.equal(error.message, 'We couldn’t complete that request. Try again.');
+    assert.doesNotMatch(error.message, /private family message/i);
+    return true;
+  });
+  await assert.rejects(service.thread.validate(), /Write a message before sending\./);
 });
 
 test('local actor sessions isolate family identities while sharing authorized durable records', async () => {

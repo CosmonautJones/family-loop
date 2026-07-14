@@ -109,6 +109,15 @@
 - [ ] Offline write queue/background sync — intentionally not implemented.
 - [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, practical 200% zoom, and hosted load/reconnect — `NOT RUN`.
 
+## OPORD 013 security and incident response
+
+- [x] Supabase returned errors and rejected transport promises cross one adapter-boundary sanitizer.
+- [x] Network, session, access, conflict, rate-limit, and unknown failures use calm recovery copy without raw backend details.
+- [x] Safe validation/domain messages remain intact; media recovery states retain their actionable meaning without appended Storage/RPC messages.
+- [x] Focused tests inject credentials, tokens, signed URLs, message bodies, storage paths, and SQL/backend details and prove they are absent from surfaced copy.
+- [x] The local incident runbook assigns severity, conditional owner, minimal evidence, authorization gates, recovery validation, and records a no-production-action tabletop.
+- [ ] Production telemetry, named hosted incident ownership, retention decisions, hosted enforcement, external assessment, and physical-device failure copy remain `NOT RUN`.
+
 ## Wave 5 mobile accessibility implementation
 
 - [x] Exactly one main landmark wraps the active screen and the fixed navigation appears before it in DOM order.

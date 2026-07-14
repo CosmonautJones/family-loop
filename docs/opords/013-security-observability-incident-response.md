@@ -1,10 +1,10 @@
 # OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
-PARTIAL — loopback authorization/storage attack matrices and privacy-safe error/update behavior are proven; the incident runbook/tabletop, production telemetry, hosted enforcement, and external assessment are `NOT RUN`.
+LOCAL COMPLETE / CONDITIONAL — loopback authorization/storage attack matrices, a user-safe Supabase error boundary, redaction tests, and a local incident runbook/tabletop are complete. Named production ownership, telemetry, hosted enforcement, retention decisions, and external assessment remain `NOT RUN`.
 
 ## Situation and evidence
-Loopback Supabase family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; signed media URLs and update payloads are scoped/private. The configured app gates protected content. No production telemetry, external assessment, or dedicated incident-response runbook/tabletop is evidenced.
+Loopback Supabase family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; signed media URLs and update payloads are scoped/private. The configured app gates protected content. OPORD 012 then reproduced raw `Failed to fetch` copy during a safe loopback outage. The adapter now maps rejected transport promises and backend errors to calm recovery categories, and `docs/runbooks/security-incident-response.md` records the local response baseline and tabletop. Production telemetry, named hosted ownership, and external assessment remain unevidenced.
 
 ## Mission/objective
 Create a minimal, privacy-preserving verification and response baseline for authorization failures, client errors, and suspected data exposure without deploying monitoring infrastructure.
@@ -45,10 +45,10 @@ Security failures must use calm plain language and readable type, preserve safe 
 
 | Criterion | Disposition | Evidence |
 |---|---|---|
-| Evidence avoids secrets/tokens/message bodies/signed URLs | PARTIAL/COMPLETE for current harnesses | Local scripts redact credentials and the verifier reports counts/IDs, not signed URLs; no formal exhaustive emitted-log test exists. |
+| Evidence avoids secrets/tokens/message bodies/signed URLs | COMPLETE LOCALLY | Executable sanitizer tests inject credentials, tokens, a signed URL, message content, storage paths, and raw database detail; emitted user errors contain none of them. Existing lifecycle verifiers report aggregates/IDs without signed access values. |
 | Safe two-user group/event isolation | COMPLETE LOCALLY | Four-session family/browser/media RLS matrices and outsider direct-route denial. |
-| Incident severity/owner/preservation/gates/runbook | NOT RUN | No dedicated runbook/tabletop artifact. |
-| Understandable non-leaking user failures | COMPLETE LOCALLY | Neutral invite matching, configured auth/data errors, and browser checks. |
+| Incident severity/owner/preservation/gates/runbook | COMPLETE LOCALLY | `docs/runbooks/security-incident-response.md` assigns SEV levels, conditional ownership, minimal evidence, authorization gates, recovery validation, and records a no-production-action tabletop. |
+| Understandable non-leaking user failures | COMPLETE LOCALLY | Supabase service calls are wrapped at the adapter boundary, including rejected transport promises; safe domain validation remains intact and raw media/backend details are no longer appended. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -60,7 +60,7 @@ git diff --check
 rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opords tests app/src
 ```
 
-Also run focused redaction/authorization tests, a 390x844 configured-failure smoke, and a recorded tabletop; inspect secret-scan matches rather than treating any match as proof.
+Focused executable redaction coverage includes a configured `sendMessage` transport rejection. The OPORD 012 390x844 outage was the reproducer; the local tabletop and recovery contract are recorded in `docs/runbooks/security-incident-response.md`. Inspect secret-scan matches rather than treating any match as proof.
 
 ### Conditional-staging/mobile-web/human
 Remote/live RLS, production telemetry, and external security assessment are NOT RUN unless separately approved.
@@ -69,7 +69,7 @@ Remote/live RLS, production telemetry, and external security assessment are NOT 
 Stop on any suspected real exposure and escalate; do not inspect more data, rotate credentials, change remote policy, notify users, or deploy containment without incident-owner authorization. Stop before vendors/dependencies.
 
 ## Risks/follow-ups
-False confidence from migration text, overcollection, missing mobile-browser failures, and unclear incident ownership. Production monitoring and external assessment are separate decisions.
+False confidence from local-only evidence, overcollection, missing physical-browser failures, and unnamed hosted incident ownership. Production monitoring, retention, and external assessment are separate decisions.
 
 ## Definition of done
 Minimal redaction tests and runbook are reviewable, tabletop evidence exists, live limitations are explicit, and no operational or remote action was taken without approval.
