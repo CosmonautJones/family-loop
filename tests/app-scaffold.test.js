@@ -21,6 +21,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/services/mockData.ts'),
     path.join(appRoot, 'src/services/durableLocalAdapter.ts'),
     path.join(appRoot, 'src/features/events/createEvent.ts'),
+    path.join(appRoot, 'src/features/memories/derivedHistory.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -34,6 +35,7 @@ function loadCompiledModules() {
     mockData: require(path.join(outDir, 'services/mockData.js')),
     durableAdapter: require(path.join(outDir, 'services/durableLocalAdapter.js')),
     createEvent: require(path.join(outDir, 'features/events/createEvent.js')),
+    derivedHistory: require(path.join(outDir, 'features/memories/derivedHistory.js')),
   };
 }
 
@@ -620,6 +622,106 @@ test('zero-event selectors stay honest and unknown detail is explicit', () => {
   assert.deepEqual(home.memories, []);
   assert.deepEqual(calendar.agenda, []);
   assert.equal(selectors.selectEventDetailViewModel('event-does-not-exist', [], []), null);
+});
+
+test('completed-event history is derived chronologically and keeps exact event comments and photos isolated', () => {
+  const { derivedHistory, mockData, selectors } = loadCompiledModules();
+  const database = mockData.createMockDatabase();
+  const completed = derivedHistory.selectCompletedEvents(database.events, new Date('2026-07-13T12:00:00Z'));
+
+  assert.deepEqual(completed.map((event) => event.id), ['event-lake-geneva']);
+  const event = completed[0];
+  const foreignMessage = {
+    ...database.messages[0], id: 'message-foreign-newer', eventId: 'event-door-county',
+    body: 'This belongs to another event.', createdAt: '2026-07-12T10:00:00-05:00',
+  };
+  const foreignMedia = {
+    ...database.media[0], id: 'media-foreign-newer', eventId: 'event-door-county',
+    caption: 'Another event photo', uploadedAt: '2026-07-12T11:00:00-05:00',
+  };
+  const messages = [...database.messages.filter((message) => message.eventId === event.id), foreignMessage];
+  const media = [...database.media.filter((item) => item.eventId === event.id), foreignMedia];
+  const history = derivedHistory.deriveEventHistory(event, messages, media);
+  assert.ok(history.messages.every((message) => message.eventId === event.id));
+  assert.ok(history.media.every((item) => item.eventId === event.id));
+  assert.equal(history.messages.some((message) => message.id === foreignMessage.id), false);
+  assert.equal(history.media.some((item) => item.id === foreignMedia.id), false);
+  assert.equal(history.latestActivityAt, '2026-06-15T10:00:00-05:00');
+
+  const memories = selectors.selectMemoriesViewModel([history]);
+  assert.deepEqual(memories.map((memory) => memory.id), [event.id]);
+  assert.equal(memories[0].photoCount, 3);
+  assert.equal(memories[0].commentCount, 1);
+});
+
+test('derived family history has truthful empty behavior and excludes unfinished events', () => {
+  const { derivedHistory, selectors } = loadCompiledModules();
+  const futureEvent = {
+    id: 'event-future', groupId: 'group-jones-family', title: 'Future trip',
+    startsAt: '2027-08-01T10:00:00Z', endsAt: '2027-08-01T12:00:00Z',
+    location: 'Somewhere', description: '', statusLabel: 'Upcoming', coverUri: '',
+  };
+
+  assert.deepEqual(derivedHistory.selectCompletedEvents([], new Date('2026-07-13T12:00:00Z')), []);
+  assert.deepEqual(derivedHistory.selectCompletedEvents([futureEvent], new Date('2026-07-13T12:00:00Z')), []);
+  assert.deepEqual(selectors.selectMemoriesViewModel([]), []);
+  const home = selectors.selectHomeViewModel({ events: [futureEvent], history: [], now: new Date('2026-07-13T12:00:00Z') });
+  assert.deepEqual(home.activity, []);
+  assert.deepEqual(home.memories, []);
+});
+
+test('completed-event comments and photos remain truthful after durable reconstruction', async () => {
+  const { durableAdapter, derivedHistory, selectors } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const first = durableAdapter.createDurableLocalLoopedInService(storage);
+  const event = await first.events.createEvent({
+    groupId: 'group-jones-family', title: 'Completed test reunion',
+    startsAt: '2026-05-01T10:00:00Z', endsAt: '2026-05-01T12:00:00Z',
+    location: 'Family cabin', description: 'Durable history proof',
+  });
+  await first.thread.sendMessage(event.id, 'This belongs only to the reunion.');
+  await first.media.uploadMedia({
+    eventId: event.id, fileUri: 'https://example.com/reunion.jpg', caption: 'Cabin reunion',
+    altText: 'Family outside a cabin', sourceName: 'Example', sourceUrl: 'https://example.com/reunion',
+    creatorName: 'Example photographer', creatorUrl: 'https://example.com/photographer',
+  });
+  await first.thread.sendMessage('event-door-county', 'Other event comment');
+
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  const exactEvent = await reconstructed.events.getEvent(event.id);
+  const history = derivedHistory.deriveEventHistory(
+    exactEvent,
+    await reconstructed.thread.listMessages(event.id),
+    await reconstructed.media.listMedia(event.id),
+  );
+  assert.deepEqual(history.messages.map((message) => message.body), ['This belongs only to the reunion.']);
+  assert.deepEqual(history.media.map((item) => item.caption), ['Cabin reunion']);
+  assert.deepEqual(selectors.selectMemoriesViewModel([history]).map((memory) => memory.id), [event.id]);
+});
+
+test('history UI uses service truth, exact-event navigation, and has no fake reminder or photo counters', () => {
+  const queries = read('src/app/queries.ts');
+  const memories = read('src/screens/MemoriesScreen.tsx');
+  const home = read('src/screens/HomeScreen.tsx');
+  const detail = read('src/screens/EventDetailScreen.tsx');
+  const shell = read('src/navigation/AppShell.tsx');
+  const store = read('src/store/useLoopedInStore.ts');
+
+  assert.match(queries, /useActiveGroupHistoryQuery/);
+  assert.match(queries, /queryKeys\.messages\(event\.id\)/);
+  assert.match(queries, /queryKeys\.media\(event\.id\)/);
+  assert.match(memories, /No completed events yet/);
+  assert.match(memories, /onOpenEvent\?\.\(memory\.id\)/);
+  assert.match(shell, /MemoriesScreen onOpenEvent=\{\(eventId\) => openEventDetail\('Memories', eventId\)\}/);
+  assert.match(home, /useActiveGroupHistoryQuery/);
+  for (const source of [home, memories]) assert.doesNotMatch(source, /features\/(home|memories)\/fixtures/);
+  for (const source of [detail, store]) assert.doesNotMatch(source, /reminderDraft|toggleReminderDraft|stagedPhotoCounts|stageEventPhoto/);
+  assert.doesNotMatch(detail, /Stage reminder|Clear reminder|Push delivery is not wired/);
 });
 
 test('Home selector keeps the next event prominent and orders every later event', () => {

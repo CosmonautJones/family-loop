@@ -9,10 +9,6 @@ export type LoopedInStore = {
   draftEvent: CreateEventDraft;
   updateDraftEvent: (patch: Partial<CreateEventDraft>) => void;
   resetDraftEvent: () => void;
-  stagedPhotoCounts: Record<string, number>;
-  stageEventPhoto: (eventId: string) => void;
-  reminderDrafts: Record<string, boolean>;
-  toggleReminderDraft: (eventId: string) => void;
 };
 
 export const useLoopedInStore = create<LoopedInStore>((set) => ({
@@ -31,18 +27,4 @@ export const useLoopedInStore = create<LoopedInStore>((set) => ({
     saveDraftEvent(createEventDraft);
     set({ draftEvent: createEventDraft });
   },
-  stagedPhotoCounts: {},
-  stageEventPhoto: (eventId) => set((state) => ({
-    stagedPhotoCounts: {
-      ...state.stagedPhotoCounts,
-      [eventId]: (state.stagedPhotoCounts[eventId] ?? 0) + 1,
-    },
-  })),
-  reminderDrafts: {},
-  toggleReminderDraft: (eventId) => set((state) => ({
-    reminderDrafts: {
-      ...state.reminderDrafts,
-      [eventId]: !state.reminderDrafts[eventId],
-    },
-  })),
 }));

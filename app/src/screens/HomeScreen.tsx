@@ -6,16 +6,17 @@ import { Chip } from '../components/Chip';
 import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
-import { useActiveEventsQuery } from '../app/queries';
+import { useActiveEventsQuery, useActiveGroupHistoryQuery } from '../app/queries';
 import { palette, spacing } from '../theme/tokens';
 
 export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
   const eventsQuery = useActiveEventsQuery();
-  const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], activity: [], memories: [] });
+  const historyQuery = useActiveGroupHistoryQuery();
+  const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], history: historyQuery.data ?? [] });
   const heroEvent = appSections.heroEvent;
 
   if (eventsQuery.isPending) return <ScreenState title="Loading your plans" detail="Finding what’s next for this group…" />;
-  if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} />;
+  if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} onRetry={() => eventsQuery.refetch()} />;
 
   return (
     <View style={styles.root}>
@@ -42,7 +43,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
         {heroEvent ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
-              <Text style={styles.cardTitle}>This week</Text>
+              <Text style={styles.cardTitle}>Upcoming plans</Text>
               <Text style={styles.cardCopy}>{appSections.weekSummary}</Text>
             </View>
             <Chip label="Agenda" tone="sky" />
@@ -64,17 +65,20 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
           </View>
         </SurfaceCard> : null}
 
-        {appSections.activity.length > 0 ? <SurfaceCard>
+        {historyQuery.isPending ? <SurfaceCard><Text style={styles.cardTitle}>Loading recent family history</Text><Text style={styles.cardCopy}>Gathering comments and photos from completed events…</Text></SurfaceCard> : null}
+        {historyQuery.isError ? <SurfaceCard><Text style={styles.cardTitle}>Recent history is unavailable</Text><Text style={styles.cardCopy}>{historyQuery.error instanceof Error ? historyQuery.error.message : 'Try again in a moment.'}</Text><Button label="Retry history" tone="secondary" onPress={() => historyQuery.refetch()} /></SurfaceCard> : null}
+        {historyQuery.isSuccess && appSections.activity.length === 0 ? <SurfaceCard><Text style={styles.cardTitle}>No recent comments or photos</Text><Text style={styles.cardCopy}>New activity from completed family events will appear here.</Text></SurfaceCard> : null}
+        {historyQuery.isSuccess && appSections.activity.length > 0 ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
               <Text style={styles.cardTitle}>Recent activity</Text>
               <Text style={styles.cardCopy}>{appSections.recentActivityTitle}</Text>
             </View>
-            <Chip label="Live" tone="coral" />
+            <Chip label="Recent" tone="coral" />
           </View>
           <View style={styles.divider} />
           {appSections.activity.map((item) => (
-            <View key={item.title} style={styles.listItem}>
+            <View key={item.id} style={styles.listItem}>
               <View style={styles.activityMain}>
                 <Avatar uri={item.actor?.avatarUri} initials={item.actor?.initials ?? 'LI'} />
                 <View>
@@ -87,10 +91,11 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
           ))}
         </SurfaceCard> : null}
 
-        {appSections.memories.length > 0 ? <View style={styles.memoryRow}>
+        {historyQuery.isSuccess && appSections.memories.length > 0 ? <View style={styles.memoryRow}>
           {appSections.memories.map((memory) => (
-            <View key={memory.title} style={styles.memoryTile}>
+            <View key={memory.eventId} style={styles.memoryTile}>
               <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={`${memory.eyebrow} · ${memory.subtitle}`} height={172} />
+              <View style={styles.memoryAction}><Button label="Open event" tone="secondary" onPress={() => onOpenEvent?.(memory.eventId)} /></View>
             </View>
           ))}
         </View> : null}
@@ -99,8 +104,8 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
   );
 }
 
-function ScreenState({ title, detail }: { title: string; detail: string }) {
-  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+function ScreenState({ title, detail, onRetry }: { title: string; detail: string; onRetry?: () => void }) {
+  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <Button label="Retry" tone="secondary" onPress={onRetry} /> : null}</SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({
@@ -194,9 +199,15 @@ const styles = StyleSheet.create({
   },
   memoryRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   memoryTile: {
     flex: 1,
+    flexBasis: 240,
+  },
+  memoryAction: {
+    marginTop: 8,
+    alignItems: 'flex-start',
   },
 });

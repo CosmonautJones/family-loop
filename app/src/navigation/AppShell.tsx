@@ -51,7 +51,7 @@ export function AppShell() {
           {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={(eventId) => openEventDetail('Home', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={(eventId) => openEventDetail('Calendar', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Create' ? <CreateEventScreen onCreated={(eventId) => openEventDetail('Create', eventId)} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Memories' ? <MemoriesScreen /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Memories' ? <MemoriesScreen onOpenEvent={(eventId) => openEventDetail('Memories', eventId)} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Family' ? <GroupsScreen /> : null}
         </View>
         <View style={[styles.navOuter, { width: Math.max(width - (2 * spacing.md), 0) }]}>

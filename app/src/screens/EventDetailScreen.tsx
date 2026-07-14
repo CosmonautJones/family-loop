@@ -43,8 +43,6 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const eventDetail = eventQuery.data?.groupId === activeGroupId ? selectEventDetailViewModel(eventQuery.data, rsvpsQuery.data ?? [], []) : null;
   const identity = auth.session;
   const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status;
-  const reminderDrafted = useLoopedInStore((state) => Boolean(state.reminderDrafts[eventId ?? '']));
-  const toggleReminderDraft = useLoopedInStore((state) => state.toggleReminderDraft);
 
   if (!eventId) return <DetailState title="Event not found" detail="No event was selected." backLabel={backLabel} onBack={onBack} />;
   if (eventQuery.isPending || rsvpsQuery.isPending) return <DetailState title="Loading event" detail="Gathering the plan and responses…" backLabel={backLabel} onBack={onBack} />;
@@ -157,22 +155,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       </View>
 
       <SurfaceCard>
-        <View style={styles.galleryHeader}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Reminder draft</Text>
-            <Text style={styles.cardCopy}>
-              {reminderDrafted
-                ? 'Morning-of reminder copy is staged for this event. Push delivery is not wired yet.'
-                : 'No reminder is staged. Keep timing visible here before push notifications exist.'}
-            </Text>
-          </View>
-          <Chip label={reminderDrafted ? 'Staged' : 'Off'} tone={reminderDrafted ? 'sage' : 'sky'} />
-        </View>
-        <Button label={reminderDrafted ? 'Clear reminder' : 'Stage reminder'} onPress={() => toggleReminderDraft(eventDetail.id)} />
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Event pulse</Text>
+        <Text style={styles.cardTitle}>Event details</Text>
         <View style={styles.journey}>
           {eventDetail.sections.map((section, index) => (
             <View key={section.title} style={styles.journeyRow}>

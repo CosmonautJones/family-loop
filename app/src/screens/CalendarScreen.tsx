@@ -16,14 +16,14 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Calendar</Text>
-      <Text style={styles.title}>See the month, then drill into the moment.</Text>
+      <Text style={styles.title}>Review upcoming family plans.</Text>
       <Text style={styles.subtitle}>{viewModel.calendarSummary}</Text>
 
       <SurfaceCard>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.cardTitle}>{viewModel.month} rhythm</Text>
-            <Text style={styles.cardCopy}>A month view that still feels warm and social.</Text>
+            <Text style={styles.cardTitle}>{viewModel.month}</Text>
+            <Text style={styles.cardCopy}>Dates with an event are marked with a dot.</Text>
           </View>
           <Chip label={viewModel.calendarSummary} tone="sky" />
         </View>
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   listRow: {
+    minHeight: 48,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

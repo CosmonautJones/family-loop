@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
 import { loopedInService } from '../services';
 import type { CreateEventPayload, CreateRsvpPayload, MediaUploadPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
@@ -47,6 +48,37 @@ export function useActiveEventsQuery() {
     queryFn: () => loopedInService.events.listEvents(activeGroupId),
     enabled: Boolean(activeGroupId),
   });
+}
+
+export function useActiveGroupHistoryQuery() {
+  const eventsQuery = useActiveEventsQuery();
+  const completedEvents = selectCompletedEvents(eventsQuery.data ?? []);
+  const messageQueries = useQueries({
+    queries: completedEvents.map((event) => ({ queryKey: queryKeys.messages(event.id), queryFn: () => loopedInService.thread.listMessages(event.id) })),
+  });
+  const mediaQueries = useQueries({
+    queries: completedEvents.map((event) => ({ queryKey: queryKeys.media(event.id), queryFn: () => loopedInService.media.listMedia(event.id) })),
+  });
+  const detailQueries = [...messageQueries, ...mediaQueries];
+  const detailPending = detailQueries.some((query) => query.isPending);
+  const detailError = detailQueries.find((query) => query.isError)?.error;
+  const history = completedEvents.map((event, index) => deriveEventHistory(
+    event,
+    messageQueries[index]?.data ?? [],
+    mediaQueries[index]?.data ?? [],
+  ));
+
+  return {
+    data: eventsQuery.isSuccess && !detailPending && !detailError ? history : undefined,
+    error: eventsQuery.error ?? detailError ?? null,
+    isPending: eventsQuery.isPending || detailPending,
+    isError: eventsQuery.isError || Boolean(detailError),
+    isSuccess: eventsQuery.isSuccess && !detailPending && !detailError,
+    refetch: async () => {
+      await eventsQuery.refetch();
+      await Promise.all([...messageQueries, ...mediaQueries].map((query) => query.refetch()));
+    },
+  };
 }
 
 export function useEventQuery(eventId: string) {
