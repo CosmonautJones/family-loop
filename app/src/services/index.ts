@@ -14,7 +14,7 @@ function createUnavailableSupabaseService(): LoopedInService {
   const unavailable = new Proxy({}, { get: () => () => Promise.reject(error) });
   return {
     auth: {
-      login: () => Promise.reject(error), logout: () => Promise.reject(error),
+      login: () => Promise.reject(error), signUp: () => Promise.reject(error), logout: () => Promise.reject(error),
       getSession: () => Promise.reject(error), refreshSession: () => Promise.reject(error),
       onAuthStateChange: () => () => undefined,
       listLocalProfiles: () => Promise.reject(error), chooseLocalProfile: () => Promise.reject(error),

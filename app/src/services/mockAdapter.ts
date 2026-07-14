@@ -66,6 +66,9 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         authListeners.forEach((listener) => listener(session));
         return session!;
       },
+      signUp: async () => {
+        throw new Error('Account creation is unavailable in the local family demo.');
+      },
       logout: async () => {
         actorSession.setActorId(null);
         authListeners.forEach((listener) => listener(null));
@@ -102,10 +105,22 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       getGroup: async (groupId) => wait(groupMembership(groupId).group),
       createGroup: async (payload: CreateGroupPayload) => {
         const profile = actor();
+        const existing = db.groups.find((group) => 'creationKey' in group && group.creationKey === payload.creationKey);
+        if (existing) return wait(existing);
         const group = { id: `group-created-${nextGroupId++}`, badge: 'New', tone: 'coral' as const, memberCount: 1, members: [{ ...profile, role: 'owner' as const }], ...payload };
         db.groups.push(group);
         return changed(group);
       },
+      canCreateGroup: async () => false,
+      validateInvitation: async () => ({ status: 'unavailable' as const }),
+      acceptInvitation: async () => { throw new Error('Invitations are unavailable in the local family demo.'); },
+      declineInvitation: async () => { throw new Error('Invitations are unavailable in the local family demo.'); },
+      createInvitation: async () => { throw new Error('Invitations are unavailable in the local family demo.'); },
+      listInvitations: async () => [],
+      revokeInvitation: async () => { throw new Error('Invitations are unavailable in the local family demo.'); },
+      removeMember: async () => { throw new Error('Membership management is unavailable in the local family demo.'); },
+      leaveGroup: async () => { throw new Error('Membership management is unavailable in the local family demo.'); },
+      transferOwnership: async () => { throw new Error('Membership management is unavailable in the local family demo.'); },
       updateGroup: async (groupId, patch) => {
         const { group, member } = groupMembership(groupId);
         if (member?.role !== 'owner' && member?.role !== 'admin') throw new Error('Only a family owner or admin can update this group.');

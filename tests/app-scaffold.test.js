@@ -23,6 +23,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/services/durableLocalAdapter.ts'),
     path.join(appRoot, 'src/features/events/createEvent.ts'),
     path.join(appRoot, 'src/features/memories/derivedHistory.ts'),
+    path.join(appRoot, 'src/features/auth/invitationRoute.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -38,6 +39,7 @@ function loadCompiledModules() {
     localActorSession: require(path.join(outDir, 'services/localActorSession.js')),
     createEvent: require(path.join(outDir, 'features/events/createEvent.js')),
     derivedHistory: require(path.join(outDir, 'features/memories/derivedHistory.js')),
+    invitationRoute: require(path.join(outDir, 'features/auth/invitationRoute.js')),
   };
 }
 
@@ -575,6 +577,61 @@ test('web routes preserve tabs and exact event IDs while unknown hashes safely r
   assert.deepEqual(selectors.parseAppRoute(hash), eventRoute);
   assert.deepEqual(selectors.parseAppRoute('#/unknown'), { surface: 'Home' });
   assert.deepEqual(selectors.parseAppRoute('#/event/%E0%A4%A'), { surface: 'Home' });
+});
+
+test('invitation routes accept only canonical 32-byte base64url tokens and never persist them', () => {
+  const { invitationRoute } = loadCompiledModules();
+  const token = 'A'.repeat(43);
+  assert.equal(invitationRoute.formatInvitationRoute(token), `#/invite/${token}`);
+  assert.equal(invitationRoute.parseInvitationToken(`#/invite/${token}`), token);
+  assert.equal(invitationRoute.withoutInvitationRoute(`#/invite/${token}`), '#/home');
+  for (const invalid of ['', 'A'.repeat(42), `${'A'.repeat(42)}B`, `${'A'.repeat(43)}?extra=1`, '%E0%A4%A']) {
+    assert.equal(invitationRoute.parseInvitationToken(`#/invite/${invalid}`), null);
+  }
+  assert.equal(invitationRoute.withoutInvitationRoute('#/family'), '#/family');
+  const source = read('src/features/auth/invitationRoute.ts');
+  assert.doesNotMatch(source, /localStorage|sessionStorage|AsyncStorage/);
+});
+
+test('configured service maps the accepted family lifecycle RPC contract without direct group writes', () => {
+  const api = read('src/services/api.ts');
+  const adapter = read('src/services/supabaseAdapter.ts');
+  const provider = read('src/features/auth/AuthSessionProvider.tsx');
+  const queries = read('src/app/queries.ts');
+
+  assert.match(api, /signUp\(displayName: string, email: string, password: string\)/);
+  assert.match(api, /creationKey: string/);
+  for (const rpc of [
+    'loopedin_create_group', 'loopedin_can_create_group', 'loopedin_create_group_invite',
+    'loopedin_validate_group_invite', 'loopedin_accept_group_invite', 'loopedin_decline_group_invite',
+    'loopedin_list_group_invites', 'loopedin_revoke_group_invite', 'loopedin_remove_group_member',
+    'loopedin_leave_group', 'loopedin_transfer_group_ownership',
+  ]) assert.match(adapter, new RegExp(`rpc\\('${rpc}'`));
+  assert.match(adapter, /options: \{ data: \{ display_name: name \} \}/);
+  assert.match(adapter, /target_creation_key: payload\.creationKey/);
+  assert.doesNotMatch(adapter.slice(adapter.indexOf('async createGroup'), adapter.indexOf('async updateGroup')), /from\('loopedin_(groups|group_members)'\)\s*\.insert/);
+  assert.match(provider, /parseInvitationToken\(window\.location\.hash\)/);
+  assert.match(provider, /withoutInvitationRoute\(window\.location\.hash\)/);
+  assert.match(provider, /groupsQuery\.data\.some\(\(group\) => group\.id === activeGroupId\)/);
+  assert.match(queries, /useCreateGroupMutation/);
+  assert.match(queries, /useAcceptInvitationMutation/);
+  assert.match(queries, /useMarkNotificationReadMutation/);
+  assert.match(queries, /useMarkAllNotificationsReadMutation/);
+  assert.match(queries, /queryKeys\.notifications/);
+});
+
+test('local demo keeps stable family creation retries and honestly declines remote-only capabilities', async () => {
+  const { mockAdapter } = loadCompiledModules();
+  const service = mockAdapter.createMockLoopedInService();
+  await service.auth.chooseLocalProfile('person-you');
+  const payload = { creationKey: '11111111-1111-4111-8111-111111111111', name: 'Retry Family', description: '', kind: 'family' };
+  const first = await service.groups.createGroup(payload);
+  const replay = await service.groups.createGroup(payload);
+  assert.equal(replay.id, first.id);
+  assert.equal(await service.groups.canCreateGroup(), false);
+  assert.deepEqual(await service.groups.validateInvitation('A'.repeat(43)), { status: 'unavailable' });
+  await assert.rejects(service.groups.acceptInvitation('A'.repeat(43)), /local family demo/i);
+  await assert.rejects(service.auth.signUp('New Person', 'new@example.com', 'password'), /local family demo/i);
 });
 
 test('Family screen is service-backed with truthful states and no fixture onboarding controls', () => {

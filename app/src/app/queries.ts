@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
 import { loopedInService } from '../services';
-import type { CreateEventPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
+import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 
 export const queryKeys = {
@@ -13,6 +13,10 @@ export const queryKeys = {
   rsvps: (eventId: string) => ['rsvps', eventId] as const,
   messages: (eventId: string) => ['messages', eventId] as const,
   media: (eventId: string) => ['media', eventId] as const,
+  invitation: (token: string) => ['invitation', token] as const,
+  invitations: (groupId: string) => ['groups', groupId, 'invitations'] as const,
+  canCreateGroup: ['groups', 'can-create'] as const,
+  notifications: ['notifications'] as const,
 };
 
 export function useActiveGroupQuery() {
@@ -29,6 +33,109 @@ export function useGroupsQuery(enabled = true) {
     queryKey: queryKeys.groups,
     queryFn: () => loopedInService.groups.listGroups(),
     enabled,
+  });
+}
+
+export function useCanCreateGroupQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.canCreateGroup,
+    queryFn: () => loopedInService.groups.canCreateGroup(),
+    enabled,
+  });
+}
+
+export function useInvitationQuery(token: string | null) {
+  return useQuery({
+    queryKey: queryKeys.invitation(token ?? ''),
+    queryFn: () => loopedInService.groups.validateInvitation(token!),
+    enabled: Boolean(token),
+    retry: false,
+  });
+}
+
+export function useGroupInvitationsQuery(groupId: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.invitations(groupId),
+    queryFn: () => loopedInService.groups.listInvitations(groupId),
+    enabled: enabled && Boolean(groupId),
+  });
+}
+
+export function useCreateGroupMutation() {
+  const queryClient = useQueryClient();
+  const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
+  return useMutation({
+    mutationFn: (payload: CreateGroupPayload) => loopedInService.groups.createGroup(payload),
+    onSuccess: (group) => {
+      queryClient.setQueryData(queryKeys.group(group.id), group);
+      queryClient.setQueryData(queryKeys.groups, (current: Array<typeof group> | undefined) => current
+        ? [...current.filter((item) => item.id !== group.id), group]
+        : [group]);
+      setActiveGroupId(group.id);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
+  });
+}
+
+export function useAcceptInvitationMutation() {
+  const queryClient = useQueryClient();
+  const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
+  return useMutation({
+    mutationFn: (token: string) => loopedInService.groups.acceptInvitation(token),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+      if (result.groupId) {
+        setActiveGroupId(result.groupId);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.group(result.groupId) });
+      }
+    },
+  });
+}
+
+export function useDeclineInvitationMutation() {
+  return useMutation({ mutationFn: (token: string) => loopedInService.groups.declineInvitation(token) });
+}
+
+export function useCreateGroupInvitationMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ email, token }: { email: string; token: string }) => loopedInService.groups.createInvitation(groupId, email, token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invitations(groupId) }),
+  });
+}
+
+export function useRevokeGroupInvitationMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => loopedInService.groups.revokeInvitation(invitationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invitations(groupId) }),
+  });
+}
+
+export function useRemoveGroupMemberMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => loopedInService.groups.removeMember(groupId, userId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.groupMembers(groupId) }),
+  });
+}
+
+export function useLeaveGroupMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => loopedInService.groups.leaveGroup(groupId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.groups }),
+  });
+}
+
+export function useTransferGroupOwnershipMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => loopedInService.groups.transferOwnership(groupId, userId),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groupMembers(groupId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.group(groupId) });
+    },
   });
 }
 
@@ -190,7 +297,23 @@ export function useUpsertRsvpMutation() {
 
 export function useNotificationsQuery() {
   return useQuery({
-    queryKey: ['notifications'],
+    queryKey: queryKeys.notifications,
     queryFn: () => loopedInService.notifications.listNotifications(),
+  });
+}
+
+export function useMarkNotificationReadMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (notificationId: string) => loopedInService.notifications.markRead(notificationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
+  });
+}
+
+export function useMarkAllNotificationsReadMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => loopedInService.notifications.clearAll(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
   });
 }

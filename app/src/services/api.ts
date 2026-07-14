@@ -16,8 +16,13 @@ export interface AuthSession {
   expiresAt: string;
 }
 
+export type AuthSignUpResult =
+  | { status: 'authenticated'; session: AuthSession }
+  | { status: 'confirmationRequired' };
+
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>;
+  signUp(displayName: string, email: string, password: string): Promise<AuthSignUpResult>;
   logout(): Promise<void>;
   getSession(): Promise<AuthSession | null>;
   onAuthStateChange(listener: (session: AuthSession | null) => void): () => void;
@@ -27,9 +32,33 @@ export interface AuthApi {
 }
 
 export interface CreateGroupPayload {
+  creationKey: string;
   name: string;
   description: string;
   kind: 'family' | 'friends';
+}
+
+export type GroupInvitationPreview =
+  | { status: 'ready'; groupId: string; groupName: string; inviterName: string; maskedEmail: string; expiresAt: string }
+  | { status: 'unavailable' };
+
+export interface GroupInvitation {
+  id: string;
+  email: string;
+  status: 'pending' | 'accepted' | 'declined' | 'revoked' | 'expired';
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface CreatedGroupInvitation {
+  invitationId: string;
+  status: 'created' | 'existing';
+  expiresAt: string;
+}
+
+export interface GroupActionResult {
+  status: string;
+  groupId?: string;
 }
 
 export interface GroupsApi {
@@ -37,6 +66,16 @@ export interface GroupsApi {
   listGroupMembers(groupId: string): Promise<GroupMember[]>;
   getGroup(groupId: string): Promise<Group | null>;
   createGroup(payload: CreateGroupPayload): Promise<Group>;
+  canCreateGroup(): Promise<boolean>;
+  validateInvitation(token: string): Promise<GroupInvitationPreview>;
+  acceptInvitation(token: string): Promise<GroupActionResult>;
+  declineInvitation(token: string): Promise<GroupActionResult>;
+  createInvitation(groupId: string, email: string, token: string): Promise<CreatedGroupInvitation>;
+  listInvitations(groupId: string): Promise<GroupInvitation[]>;
+  revokeInvitation(invitationId: string): Promise<GroupActionResult>;
+  removeMember(groupId: string, userId: string): Promise<GroupActionResult>;
+  leaveGroup(groupId: string): Promise<GroupActionResult>;
+  transferOwnership(groupId: string, userId: string): Promise<GroupActionResult>;
   updateGroup(groupId: string, patch: Partial<Pick<Group, 'name' | 'description'>>): Promise<Group>;
   deleteGroup(groupId: string): Promise<void>;
 }

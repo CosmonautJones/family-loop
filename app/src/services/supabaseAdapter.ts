@@ -1,10 +1,15 @@
 import type { Event, EventActivity, EventMessage, Group, GroupMember, MediaItem, Person, RSVP } from '../types/domain';
 import type {
   AuthSession,
+  AuthSignUpResult,
+  CreatedGroupInvitation,
   CreateEventPayload,
   CreateGroupPayload,
   CreateRsvpPayload,
   LoopedInService,
+  GroupActionResult,
+  GroupInvitation,
+  GroupInvitationPreview,
   MediaUploadPayload,
   NotificationItem,
   UpdateEventPayload,
@@ -93,6 +98,25 @@ type GroupMemberRow = {
   role: GroupMember['role'];
 };
 
+type InvitationRow = {
+  id: string;
+  invitee_email: string;
+  status: GroupInvitation['status'];
+  expires_at: string;
+  created_at: string;
+};
+
+type RpcResult = {
+  ok?: boolean;
+  code?: string;
+  groupId?: string;
+  groupName?: string;
+  inviterName?: string;
+  maskedEmail?: string;
+  expiresAt?: string;
+  invitationId?: string;
+};
+
 const mediaBucket = 'loopedin-event-media';
 
 async function mapSession(session: Session): Promise<AuthSession> {
@@ -107,6 +131,30 @@ async function mapSession(session: Session): Promise<AuthSession> {
 
 function throwIfError(error: { message: string } | null) {
   if (error) throw new Error(error.message);
+}
+
+function invitationTokenToHex(token: string) {
+  if (!/^[A-Za-z0-9_-]{42}[AQgw]$/.test(token)) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  const bytes: number[] = [];
+  let buffer = 0;
+  let bits = 0;
+  for (const character of token) {
+    buffer = (buffer << 6) | alphabet.indexOf(character);
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      bytes.push((buffer >> bits) & 255);
+    }
+  }
+  if (bytes.length !== 32) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+  return bytes.map((byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function requireRpcSuccess(data: unknown): RpcResult {
+  const result = (data ?? {}) as RpcResult;
+  if (!result.ok) throw new Error('That family action isn’t available.');
+  return result;
 }
 
 async function fetchValidatedMediaBlob(fileUri: string) {
@@ -386,6 +434,18 @@ export function createSupabaseLoopedInService(): LoopedInService {
           expiresAt: new Date((data.session.expires_at ?? 0) * 1000).toISOString(),
         };
       },
+      async signUp(displayName, email, password): Promise<AuthSignUpResult> {
+        const name = displayName.trim();
+        if (!name || name.length > 80) throw new Error('Enter a display name between 1 and 80 characters.');
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { data: { display_name: name } },
+        });
+        throwIfError(error);
+        if (!data.session) return { status: 'confirmationRequired' };
+        return { status: 'authenticated', session: await mapSession(data.session) };
+      },
       async logout() {
         const { error } = await supabase.auth.signOut();
         throwIfError(error);
@@ -463,37 +523,85 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return mapGroup(data as GroupRow, counts.get(groupId) ?? 1);
       },
       async createGroup(payload: CreateGroupPayload) {
-        const userId = await getCurrentUserId();
         const { data, error } = await supabase
-          .from('loopedin_groups')
-          .insert({ ...payload, created_by: userId })
-          .select('id, name, description, kind, cover_url')
+          .rpc('loopedin_create_group', {
+            target_name: payload.name,
+            target_description: payload.description,
+            target_kind: payload.kind,
+            target_creation_key: payload.creationKey,
+          })
           .single();
         throwIfError(error);
         if (!data) throw new Error('Supabase did not return the created group.');
-
-        const { error: memberError } = await supabase
-          .from('loopedin_group_members')
-          .insert({ group_id: data.id, user_id: userId, role: 'owner' });
-        throwIfError(memberError);
-
         return mapGroup(data as GroupRow, 1);
       },
-      async updateGroup(groupId, patch) {
-        const { data, error } = await supabase
-          .from('loopedin_groups')
-          .update(patch)
-          .eq('id', groupId)
-          .select('id, name, description, kind, cover_url')
-          .single();
+      async canCreateGroup() {
+        const { data, error } = await supabase.rpc('loopedin_can_create_group');
         throwIfError(error);
-
-        const counts = await countMembers([groupId]);
-        return mapGroup(data as GroupRow, counts.get(groupId) ?? 1);
+        return data === true;
+      },
+      async validateInvitation(token): Promise<GroupInvitationPreview> {
+        const { data, error } = await supabase.rpc('loopedin_validate_group_invite', { target_token: invitationTokenToHex(token) });
+        throwIfError(error);
+        const result = (data ?? {}) as RpcResult;
+        if (!result.ok || !result.groupId || !result.groupName || !result.inviterName || !result.maskedEmail || !result.expiresAt) return { status: 'unavailable' };
+        return { status: 'ready', groupId: result.groupId, groupName: result.groupName, inviterName: result.inviterName, maskedEmail: result.maskedEmail, expiresAt: result.expiresAt };
+      },
+      async acceptInvitation(token): Promise<GroupActionResult> {
+        const { data, error } = await supabase.rpc('loopedin_accept_group_invite', { target_token: invitationTokenToHex(token) });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        return { status: result.code ?? 'joined', groupId: result.groupId };
+      },
+      async declineInvitation(token): Promise<GroupActionResult> {
+        const { data, error } = await supabase.rpc('loopedin_decline_group_invite', { target_token: invitationTokenToHex(token) });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        return { status: result.code ?? 'declined' };
+      },
+      async createInvitation(groupId, email, token): Promise<CreatedGroupInvitation> {
+        const { data, error } = await supabase.rpc('loopedin_create_group_invite', { target_group_id: groupId, target_email: email, target_token: invitationTokenToHex(token) });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        if (!result.invitationId || !result.expiresAt || (result.code !== 'created' && result.code !== 'existing')) throw new Error('That family action isn’t available.');
+        return { invitationId: result.invitationId, expiresAt: result.expiresAt, status: result.code };
+      },
+      async listInvitations(groupId) {
+        const { data, error } = await supabase.rpc('loopedin_list_group_invites', { target_group_id: groupId });
+        throwIfError(error);
+        return ((data ?? []) as InvitationRow[]).map((invitation) => ({ id: invitation.id, email: invitation.invitee_email, status: invitation.status, expiresAt: invitation.expires_at, createdAt: invitation.created_at }));
+      },
+      async revokeInvitation(invitationId) {
+        const { data, error } = await supabase.rpc('loopedin_revoke_group_invite', { target_invitation_id: invitationId });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        return { status: result.code ?? 'revoked' };
+      },
+      async removeMember(groupId, userId) {
+        const { data, error } = await supabase.rpc('loopedin_remove_group_member', { target_group_id: groupId, target_user_id: userId });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        return { status: result.code ?? 'removed' };
+      },
+      async leaveGroup(groupId) {
+        const { data, error } = await supabase.rpc('loopedin_leave_group', { target_group_id: groupId });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        return { status: result.code ?? 'left' };
+      },
+      async transferOwnership(groupId, userId) {
+        const { data, error } = await supabase.rpc('loopedin_transfer_group_ownership', { target_group_id: groupId, target_user_id: userId });
+        throwIfError(error);
+        const result = requireRpcSuccess(data);
+        return { status: result.code ?? 'transferred' };
+      },
+      async updateGroup(groupId, patch) {
+        void groupId; void patch;
+        throw new Error('Group editing is unavailable in this release.');
       },
       async deleteGroup(groupId) {
-        const { error } = await supabase.from('loopedin_groups').delete().eq('id', groupId);
-        throwIfError(error);
+        void groupId;
+        throw new Error('Group deletion is unavailable in this release.');
       },
     },
     events: {
