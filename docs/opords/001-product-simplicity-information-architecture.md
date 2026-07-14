@@ -6,7 +6,7 @@ PLANNED — documentation order only; implementation requires separate mission a
 
 ## Situation and evidence
 
-- LoopedIn's wedge is one mobile event page joining logistics, RSVP, discussion, and memories (`docs/vision.md:3-15`; `docs/core-loop.md:18-19`).
+- LoopedIn's wedge is one mobile-web event page joining logistics, RSVP, discussion, and memories (`docs/vision.md:3-15`; `docs/core-loop.md:18-19`).
 - The shell currently presents five tabs and a separate Event Detail surface (`app/src/navigation/useAppShellState.ts:3-27`; `app/src/navigation/AppShell.tsx:47-52`).
 - Home correctly leads with the next event and offers exact-event entry (`app/src/screens/HomeScreen.tsx:24-39`), while Calendar repeats event discovery (`app/src/screens/CalendarScreen.tsx:17-60`).
 - Product guidance rejects generic dashboards and features unrelated to plan, attend, discuss, or remember (`docs/taste-bar.md:23-29`; `docs/anti-goals.md:17-22`).
@@ -43,7 +43,9 @@ Depends on: None
 
 ## Older-adult usability guardrail
 
-Keep no more than four primary choices visible at once where practical; use concrete nouns and verbs, persistent labels (not icon-only controls), predictable Back behavior, readable type, and at least 48x48-point primary targets. Verify the core route without relying on gesture memory, hover, or color alone. Preserve screen-reader order, reduced-motion behavior, and a plain recovery route.
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
+
+Keep no more than four primary choices visible at once where practical; use concrete nouns and verbs, persistent labels (not icon-only controls), predictable Back behavior, readable type, and at least 48x48 CSS-pixel primary targets. Verify the core route without relying on gesture memory, hover, or color alone. Preserve screen-reader order, reduced-motion behavior, and a plain recovery route.
 
 ## Execution
 
@@ -77,7 +79,7 @@ git status --short
 - Phone smoke at 390x844: Home → exact event → Back; Calendar → exact event → Back; Create → exact created event.
 - Review the explicit manifest after commands pass.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 
 - Older-adult moderated walkthrough or `NOT RUN — participant unavailable`; do not substitute author opinion.
 
@@ -93,4 +95,4 @@ Stop before navigation dependencies, auth changes, removing reachable data, remo
 
 ## Definition of done
 
-Acceptance criteria pass; phone and automated evidence are recorded honestly; architecture and `evals/review-log.md` are updated; lint/native/human limitations and follow-ups are listed; the diff remains small and reviewable.
+Acceptance criteria pass; phone-browser and automated evidence are recorded honestly; architecture and `evals/review-log.md` are updated; lint/Safari/Chrome/human limitations and follow-ups are listed; the diff remains small and reviewable.

@@ -4,7 +4,7 @@ LoopedIn is a mobile-first, private, event-centered social calendar for families
 
 Shared plans should not be split across calendar rows, buried group chats, and forgotten photo threads. The event is the anchor: logistics, RSVP, discussion, reminders, photos, and recap all stay attached to the same shared moment.
 
-The primary product is the iOS/Android app. Web exists for local preview, docs, and a possible later companion experience, but the product decisions should be judged against a phone-in-hand coordination moment first.
+The primary product is a responsive web app, optimized first for iOS Safari and Android Chrome phone browsers. Desktop web remains usable, but product decisions should be judged against a phone-in-hand coordination moment first.
 
 ## Target users
 
@@ -25,6 +25,6 @@ The first time a user taps into an event and sees the plan, attendance state, th
 
 ## Platform stance
 
-- Main surface: mobile app in `app/`, built with Expo and React Native.
-- First production targets: iOS and Android.
-- Secondary surface: web preview or later lightweight companion only after the mobile loop is strong.
+- Main surface: responsive web app in `app/`, built with Expo and React Native Web.
+- First production targets: iOS Safari and Android Chrome phone browsers.
+- Secondary surface: desktop web. Native apps, app stores, and EAS builds are future non-goals unless separately authorized.

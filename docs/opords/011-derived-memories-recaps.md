@@ -24,6 +24,8 @@ Memory selectors/queries, existing Memories/Home surfaces, event/media read cont
 New memory tables unless separately approved, schema/RLS/deploy changes, media mutation, AI services, public feeds, notifications, dependencies, and auth changes.
 
 ## Older-adult usability guardrail
+
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
 Use event title and date as the primary anchor, plain copy, readable cards with 48x48-point actions, explicit “No photos yet” copy, and a simple recovery route back to the source event; avoid gesture-only carousels and dense mosaics. Provide screen-reader summaries and respect reduced motion.
 
 ## Execution
@@ -51,8 +53,8 @@ git diff --check
 
 Also run focused selector/query tests, a 390x844 completed-event and empty-memory smoke, and configured signed-out smoke; label lint as placeholder.
 
-### Conditional-staging/native/human
-Live RLS and human/native usability remain NOT RUN unless separately available and approved.
+### Conditional-staging/mobile-web/human
+Live RLS and human/mobile-browser usability remain NOT RUN unless separately available and approved.
 
 ## Stop conditions/authorization limits
 Stop if completion semantics require schema change, if media M4 is incomplete, or before AI, public sharing, remote migrations, credentials, new dependencies, or source-event mutation.

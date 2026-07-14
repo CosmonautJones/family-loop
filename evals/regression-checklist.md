@@ -8,7 +8,9 @@
 - [x] Coverage includes all requested frontend, backend, server/database, security, quality, release, and operations domains.
 - [x] Future orders do not claim authorization or live proof.
 - [x] Existing M4-M6 persistent-data backlog entries remain and are mapped rather than deleted.
-- [ ] Native-device, screen-reader, reduced-motion, and moderated older-adult validation — NOT RUN; future OPORD 014.
+- [ ] iOS Safari/Android Chrome, browser screen-reader, reduced-motion, and moderated older-adult validation — NOT RUN; future OPORD 014.
+- [x] Responsive widths, touch targets, keyboard/history/reload, zoom/reflow, focus, and desktop-secondary gates are documented.
+- [x] Native applications and app-store delivery are not active campaign blockers.
 - [ ] Remote Supabase, deploy, backup, and restore validation — NOT RUN; safe authorized environment unavailable here.
 
 ## M3 event thread

@@ -9,7 +9,14 @@
 - [x] Mock/schema/adapter presence is separated from live server or database proof.
 - [ ] Runtime implementation — deferred to separately authorized OPORD executions.
 - [ ] Substantive lint — repository command remains a placeholder.
-- [ ] Live database, native, release, backup, and restore gates — not run here.
+- [ ] Live database, phone-browser/human, release, backup, and restore gates — not run here.
+
+## Responsive-web campaign correction
+
+- [x] Exactly 17 OPORD documents and 60 task rows remain.
+- [x] OPORD 014 and 016 use their mobile-web testing and web-release filenames.
+- [x] Source documents define phone browsers as primary and desktop web as secondary.
+- [x] Native apps, EAS, and app stores are future non-goals rather than campaign gates.
 
 ## M3 event-thread evidence
 

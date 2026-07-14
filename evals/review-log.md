@@ -1,5 +1,16 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-WEB-001 responsive-web campaign correction
+
+- Scope reviewed: source-of-truth product/architecture documents, all 17 OPORDs and their index, portable contract tests, and mission/evaluation records. No runtime, dependency, configuration, credential, remote, or deployment file changed.
+- Platform correction: LoopedIn is now consistently specified as a responsive web app built with Expo/React Native Web, optimized first for iOS Safari and Android Chrome phone browsers, with desktop web usable and secondary. Native apps, EAS, and app stores are future non-goals unless separately authorized.
+- Campaign invariants: numeric OPORD IDs, 60 bounded tasks, dependency graph, canonical order, backend/server/database scope, and authorization boundaries are preserved. OPORD 014 and 016 received accurate mobile-web testing and web-release filenames.
+- Browser-specific correction: the campaign now addresses touch without hover, virtual keyboards, Back/history/deep-link/reload behavior, zoom/reflow, focus/screen readers/reduced motion, browser media selection, visit/resume updates, browser resilience, hosted artifacts, TLS/security headers/cache control, SPA fallback, and instant frontend rollback.
+- Evidence boundary: mobile Safari/Chrome hardware, assistive technology, moderated older-adult sessions, live Supabase, deployment, backup, and restore remain `NOT RUN`; this documentation-only correction does not infer implementation.
+- Automated gate: root tests PASS 23/23; app tests PASS 13/13; TypeScript PASS; harness PASS; `git diff --check` PASS. The lint command exits successfully but remains the existing honest placeholder assigned to OPORD 015.
+- Review gate: GREEN for the documentation mission, with the placeholder lint and unavailable conditional browser/human/live-environment evidence carried as explicit limitations rather than implementation claims.
+- Historical records describing the former native-first stance remain historical and are labeled superseded rather than rewritten as past responsive-web evidence.
+
 ## 2026-07-13 — FAMILY-LOOP-OPORD-001 campaign documentation
 
 - Scope reviewed: one index, 17 numeric OPORDs, portable documentation-contract tests, and authorized architecture/mission/evaluation records. No runtime, dependency, environment, credential, deployment, or remote file changed.

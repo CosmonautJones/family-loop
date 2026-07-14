@@ -1,11 +1,11 @@
 # LoopedIn
 
-A mobile-first repo for a private, event-centered social app for families and friend groups.
+A mobile-first web repo for a private, event-centered social app for families and friend groups.
 
 ## Purpose
-This repository captures the initial product research, proposal, roadmap, technical spec, visual concept artifacts, and Expo scaffold for **LoopedIn** — a calendar-style, photo-rich, modern mobile app centered on shared events, memories, and communication.
+This repository captures the initial product research, proposal, roadmap, technical spec, visual concept artifacts, and Expo/React Native Web scaffold for **LoopedIn** — a calendar-style, photo-rich, responsive web app centered on shared events, memories, and communication.
 
-The main product surface is the iOS/Android app in `app/`. Web is currently for local preview and later companion thinking, not the primary product direction.
+The main product surface is the responsive web app in `app/`, optimized for iOS Safari and Android Chrome phone browsers with usable desktop web. Native apps and app-store delivery are future work unless separately authorized.
 
 ## Artifacts
 - `docs/01-executive-summary.md`
@@ -30,14 +30,14 @@ npm test
 npm run preview:prototype
 ```
 
-### Run the mobile scaffold
+### Run the responsive web app
 ```bash
 cd app
 npm install
-npm start
+npm run web
 ```
 
-See `docs/10-loop-architecture-and-workflow.md` for the mobile-first app structure, screen model, sample data strategy, and agent/subagent contribution workflow.
+See `docs/10-loop-architecture-and-workflow.md` for the originally proposed app structure, screen model, sample data strategy, and agent/subagent contribution workflow. The current platform stance is defined in `docs/vision.md` and `docs/architecture.md`.
 
 ## Concept summary
 LoopedIn blends:
@@ -45,6 +45,6 @@ LoopedIn blends:
 - group chat and event conversation
 - photo/memory sharing
 - reminders and tagging
-- premium motion, transitions, and modern mobile interactions
+- premium motion, transitions, and modern touch-first web interactions
 
 The goal is to create a product people actually use every day because it is both emotionally resonant and deeply practical.

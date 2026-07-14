@@ -2,9 +2,9 @@
 
 ## Full engineering OPORD campaign
 
-The canonical 17-mission dependency graph is indexed in `docs/opords/README.md`. Each order remains `Planned` and requires separate authorization. The index does not delete the persistent-data M4-M6 missions below: M4 maps primarily to OPORD 009, M5 to 010, and M6 to 011 plus closeout gates in 014-017.
+The canonical 17-mission dependency graph is indexed in `docs/opords/README.md`. Each order remains `Planned` and requires separate authorization. The campaign targets a responsive web app optimized for phone browsers; desktop web is secondary, and native apps are future non-goals unless separately authorized. The index does not delete the persistent-data M4-M6 missions below: M4 maps primarily to OPORD 009, M5 to 010, and M6 to 011 plus closeout gates in 014-017.
 
-Execute in the canonical dependency-safe order in `docs/opords/README.md`; numeric IDs are stable identifiers, not execution positions. The documentation mission is complete, but it is not evidence that runtime, remote Supabase, native, release, backup, or human-usability work is complete. The external gate's placeholder-lint warning is assigned to OPORD 015.
+Execute in the canonical dependency-safe order in `docs/opords/README.md`; numeric IDs are stable identifiers, not execution positions. The documentation mission is complete, but it is not evidence that runtime, remote Supabase, phone-browser, release, backup, or human-usability work is complete. The external gate's placeholder-lint warning is assigned to OPORD 015.
 
 ## Persistent data campaign
 
@@ -23,6 +23,6 @@ M0-M6 are sequential. A later mission must not silently absorb adjacent work.
 ## Deferred
 
 - Invitations, push delivery, onboarding/no-groups, and navigation migration require separate authorization.
-- Keep Event Detail as the mobile proof point and web as preview/companion.
+- Keep Event Detail as the phone-browser proof point and desktop web as a usable secondary surface.
 - Add live RLS/private-storage coverage only when a safe environment exists.
 - Revisit lower-page phone spacing once real content density is known.

@@ -2,9 +2,9 @@
 
 ## Older-adult campaign standard
 
-Every UI OPORD preserves plain language, readable type, 48x48-point minimum primary targets, obvious status and next action, screen-reader semantics, reduced-motion behavior, low cognitive load, and a visible recovery path. Structural or web tests cannot substitute for native screen-reader and moderated older-adult evidence required by OPORD 014.
+Every UI OPORD preserves plain language, readable type, 48x48 CSS-pixel minimum primary targets, obvious status and next action, browser screen-reader semantics, reduced-motion behavior, low cognitive load, and a visible recovery path. Structural tests cannot substitute for mobile-browser assistive-technology and moderated older-adult evidence required by OPORD 014.
 
-Campaign-planning verdict: PASS for documented requirements only. Native accessibility and human usability remain `NOT RUN`.
+Campaign-planning verdict: PASS for documented requirements only. Mobile-browser accessibility and human usability remain `NOT RUN`.
 
 ## M3 event-thread evidence
 

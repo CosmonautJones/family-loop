@@ -42,7 +42,9 @@ Depends on: OPORD-004, OPORD-006
 
 ## Older-adult usability guardrail
 
-Show date, time, place, and current RSVP in plain language; keep primary RSVP options at least 48x48 points, persistent, and mutually understandable; confirm state without relying on color. Avoid dense calendar-only discovery—every marked date must have a readable agenda/event route. Announce state to screen readers, respect reduced motion, and offer obvious error recovery.
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
+
+Show date, time, place, and current RSVP in plain language; keep primary RSVP options at least 48x48 CSS pixels, persistent, and mutually understandable; confirm state without relying on color. Avoid dense calendar-only discovery—every marked date must have a readable agenda/event route. Announce state to screen readers, respect reduced motion, and offer obvious error recovery.
 
 ## Execution
 
@@ -78,10 +80,10 @@ git status --short
 - Mock phone smoke at 390x844, including exact IDs, calendar discovery, RSVP mutation/refetch, zero/unknown states where safely injectable.
 - Configured signed-out regression at 390x844 with non-secret placeholder configuration and no submitted credentials.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 
 - Live event/RSVP two-user persistence: `NOT RUN — safe environment unavailable` unless separately authorized.
-- iOS/Android native and older-adult usability tests: record `NOT RUN` separately when unavailable.
+- iOS Safari/Android Chrome and older-adult usability tests: record `NOT RUN` separately when unavailable. Verify browser-local timezone, locale, date-input, and DST-boundary rendering.
 
 ## Stop conditions/authorization limits
 
@@ -96,4 +98,4 @@ Stop before event editing/deletion, recurrence, invites, sync, schema/RLS, remot
 
 ## Definition of done
 
-All authorized acceptance criteria pass with automated and phone evidence; native/human/live results are honestly marked; no adjacent feature or remote action is absorbed; architecture, regression checklist, and review log are updated; risks/follow-ups remain explicit and the diff is narrow.
+All authorized acceptance criteria pass with automated and phone-browser evidence; Safari/Chrome/human/live results are honestly marked; timezone and DST behavior is evidenced; no adjacent feature or remote action is absorbed; architecture, regression checklist, and review log are updated; risks/follow-ups remain explicit and the diff is narrow.

@@ -74,13 +74,13 @@ git status --short
 
 - Report lint as placeholder unless changed.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 
 - Migration apply/reset and policy tests in approved disposable environment only.
 - Query plans before/after with representative row counts.
 - Two-user CRUD/direct-ID matrix.
 - If Docker/safe remote remains unavailable: `NOT RUN` and do not claim acceptance completion.
-- Lint remains placeholder; native/human UI tests are not database proof.
+- Lint remains placeholder; browser/human UI tests are not database proof.
 
 ## Stop conditions/authorization limits
 

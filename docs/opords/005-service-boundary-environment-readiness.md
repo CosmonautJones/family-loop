@@ -80,7 +80,7 @@ git status --short
 - Report lint as placeholder unless changed; retain probe output with the readiness matrix.
 - Docker: `NOT AVAILABLE` baseline unless newly proven.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 
 - Remote configured check: `NOT RUN — safe environment unavailable` by default.
 - Native/human tests: not applicable to a read-only readiness audit unless failure UX is separately authorized.
@@ -97,4 +97,4 @@ Stop before credential prompts, secret output, environment edits, remote writes,
 
 ## Definition of done
 
-The versioned local boundary and probes meet acceptance, the readiness matrix is source-cited, commands/results are honest, remote/Docker/native limits are explicit, review log is updated, and no environment, credential, or remote state changed; staging remains separately authorized.
+The versioned local boundary and probes meet acceptance, the readiness matrix is source-cited, commands/results are honest, remote/Docker/mobile-browser limits are explicit, review log is updated, and no environment, credential, or remote state changed; staging remains separately authorized.

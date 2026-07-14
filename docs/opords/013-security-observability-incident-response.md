@@ -24,6 +24,8 @@ Focused authorization tests, redaction helpers using existing facilities, error-
 Secrets, production logs/data, remote policy/migration deployment, new observability vendors/dependencies, auth expansion, destructive remediation, or contacting users/third parties.
 
 ## Older-adult usability guardrail
+
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
 Security failures must use calm plain language and readable type, preserve safe navigation, avoid blame, and provide a 48x48-point retry/sign-in action; internal codes may supplement but not replace understandable copy. Announce recovery state to screen readers and avoid unnecessary motion.
 
 ## Execution
@@ -51,14 +53,14 @@ rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opord
 
 Also run focused redaction/authorization tests, a 390x844 configured-failure smoke, and a recorded tabletop; inspect secret-scan matches rather than treating any match as proof.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 Remote/live RLS, production telemetry, and external security assessment are NOT RUN unless separately approved.
 
 ## Stop conditions/authorization limits
 Stop on any suspected real exposure and escalate; do not inspect more data, rotate credentials, change remote policy, notify users, or deploy containment without incident-owner authorization. Stop before vendors/dependencies.
 
 ## Risks/follow-ups
-False confidence from migration text, overcollection, missing native crashes, and unclear incident ownership. Production monitoring and external assessment are separate decisions.
+False confidence from migration text, overcollection, missing mobile-browser failures, and unclear incident ownership. Production monitoring and external assessment are separate decisions.
 
 ## Definition of done
 Minimal redaction tests and runbook are reviewable, tabletop evidence exists, live limitations are explicit, and no operational or remote action was taken without approval.

@@ -2,6 +2,17 @@
 
 Move finished missions here with a short summary.
 
+## 2026-07-13 - FAMILY-LOOP-WEB-001 responsive-web campaign correction
+
+### Summary
+Corrected the active product stance and all 17 planned OPORDs from native-first assumptions to a responsive web app built with Expo/React Native Web, optimized for iOS Safari and Android Chrome phone browsers with desktop web secondary. Renamed OPORDs 014 and 016 while preserving all IDs, 60 tasks, dependencies, canonical order, and backend scope.
+
+### Result
+Documentation-contract, app, TypeScript, harness, lint-placeholder, diff, and status evidence is recorded in the review log. Conditional phone-browser hardware, assistive-technology, and moderated older-adult validation remains future implementation evidence and was not claimed by this documentation-only mission.
+
+### Links / commits
+See the repository commit immediately following this record.
+
 ## 2026-07-13 - FAMILY-LOOP-OPORD-001 engineering campaign plan
 
 Authored `docs/opords/README.md` and exactly 17 dependency-resolvable operations orders with 60 bounded tasks covering the full frontend, backend, server/database, security, quality, accessibility, release, and operations surface. Campaign commits: `6c612ce`, `0291b3f`, and `fd6061d`. External Run 3 gate: G1 PASS; G2 WARN because lint remains a placeholder assigned to OPORD 015; G3/G4/G5 PASS; zero blockers; overall AMBER / PROCEED-WARN. Product behavior changed: no. Remote Supabase, native-device, human-usability, deployment, backup, and restore validation were not run and are not claimed.
@@ -50,13 +61,15 @@ The app now type-checks, the web build renders, and the Home -> Event Detail -> 
 ### Links / commits
 Committed in repo history.
 
-## 2026-07-05 - Mobile-first product focus
+## 2026-07-05 - Mobile-first product focus (historical, superseded)
 
 ### Summary
 Updated the harness docs, architecture guide, README files, product rubric, current mission, and backlog so LoopedIn is explicitly judged as an iOS/Android-first mobile app.
 
 ### Result
 Future slices now prioritize phone ergonomics, mobile event coordination, and mobile navigation. Web remains framed as preview or later companion work.
+
+This was the platform stance at the time. `FAMILY-LOOP-WEB-001` later superseded it with responsive web as the primary surface while retaining phone-first ergonomics.
 
 ### Links / commits
 Committed in repo history.

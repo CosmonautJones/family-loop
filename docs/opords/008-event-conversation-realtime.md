@@ -1,7 +1,7 @@
 # OPORD 008 — Event conversation realtime
 
 ## Status
-Planned; separately authorize after the completed M3 thread foundation. Remote Supabase and native behavior remain unverified.
+Planned; separately authorize after the completed M3 thread foundation. Remote Supabase and real-phone Safari/Chrome behavior remain unverified.
 
 ## Situation and evidence
 M3 already provides event-keyed Query reads/sends and exact-key refetch (`docs/architecture.md:19,32`; `evals/review-log.md:13-23`; `tasks/completed.md:9-12`). The migration declares messages in the realtime publication (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:523`), but repository definitions are not live proof (`docs/architecture.md:43`). Realtime subscriptions and presence were excluded from the completed M3 implementation, as shown by its immutable completion and review records (`tasks/completed.md:9-12`; `evals/review-log.md:13-23`).
@@ -24,6 +24,8 @@ Presence, typing indicators, reactions, mentions, DMs, moderation, push notifica
 Auth expansion, schema/RLS edits, migration deployment, credentials, new dependencies, remote mutation, destructive Git, push/PR, notifications, media, and memories.
 
 ## Older-adult usability guardrail
+
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
 New messages must appear without stealing focus, moving the composer unexpectedly, or requiring refresh controls smaller than 48x48 points; reconnect/error copy must be plain, persistent, and readable at large text sizes. Announce new/error state without overwhelming screen readers, respect reduced motion, and keep recovery obvious.
 
 ## Execution
@@ -52,7 +54,7 @@ git status --short
 
 Record lint as placeholder per `app/package.json:11`; run focused subscription tests named by the mission, 390x844 mock smoke, and configured signed-out smoke.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 Run an approved live two-user transcript only in a safe staging environment. Native/human tests: currently NOT RUN.
 
 ## Stop conditions/authorization limits

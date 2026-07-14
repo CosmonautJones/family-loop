@@ -81,7 +81,7 @@ test('engineering campaign contains exactly 17 ordered OPORDs with executable ta
       assert.match(content, new RegExp(`^## ${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), `${file} missing ${heading}`);
     }
     assert.match(content, /Always-local/i, `${file} must separate always-local evidence`);
-    assert.match(content, /Conditional-(staging|native|human)/i, `${file} must separate conditional evidence`);
+    assert.match(content, /Conditional-(staging|mobile-web|human)/i, `${file} must separate conditional evidence`);
     assert.match(content, /^Depends on: (?:None|OPORD-\d{3}(?:, OPORD-\d{3})*)$/m, `${file} needs machine-readable dependencies`);
     const lines = content.split(/\r?\n/);
     const header = '| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |';
@@ -105,6 +105,7 @@ test('engineering campaign contains exactly 17 ordered OPORDs with executable ta
       taskIds.add(row[0]);
     }
   }
+  assert.equal(taskIds.size, 60, 'campaign must retain exactly 60 bounded tasks');
 });
 
 test('OPORD dependency graph is resolvable and acyclic', () => {
@@ -176,9 +177,35 @@ test('OPORD index resolves dependencies and covers the full engineering scope', 
     'Older-adult accessibility', 'Frontend navigation', 'Authentication', 'API/server',
     'Database, RLS, migrations', 'Events, RSVP, and calendar', 'Chat and realtime',
     'Images and private object storage', 'Reminders and notifications', 'Memories and recaps',
-    'Offline behavior', 'Security, privacy, observability', 'native, accessibility, and usability tests',
+    'Offline behavior', 'Security, privacy, observability', 'mobile-web, accessibility, and usability tests',
     'CI quality gates', 'Deployment, release, promotion, and rollback', 'Backup, restore, retention, export, and deletion'
   ]) assert.match(content, new RegExp(domain, 'i'), `coverage matrix missing ${domain}`);
+});
+
+test('active campaign is responsive-web and preserves renamed testing and release orders', () => {
+  const opordDir = path.join(root, 'docs/opords');
+  const index = fs.readFileSync(path.join(opordDir, 'README.md'), 'utf8');
+  const vision = fs.readFileSync(path.join(root, 'docs/vision.md'), 'utf8');
+  const architecture = fs.readFileSync(path.join(root, 'docs/architecture.md'), 'utf8');
+
+  for (const content of [index, vision, architecture]) {
+    assert.match(content, /responsive web app/i);
+    assert.match(content, /phone browser/i);
+  }
+  assert.match(index, /desktop web.+secondary/i);
+  assert.match(index, /014-test-pyramid-mobile-web-accessibility-usability\.md/);
+  assert.match(index, /016-web-release-deployment-rollback\.md/);
+  assert.equal(fs.existsSync(path.join(opordDir, '014-test-pyramid-native-accessibility-usability.md')), false);
+  assert.equal(fs.existsSync(path.join(opordDir, '016-release-deployment-rollback.md')), false);
+
+  const media = fs.readFileSync(path.join(opordDir, '009-private-media-lifecycle.md'), 'utf8');
+  const testing = fs.readFileSync(path.join(opordDir, '014-test-pyramid-mobile-web-accessibility-usability.md'), 'utf8');
+  const release = fs.readFileSync(path.join(opordDir, '016-web-release-deployment-rollback.md'), 'utf8');
+  assert.doesNotMatch(media, /require(?:ment|d)?.{0,30}expo-image-picker/i);
+  assert.doesNotMatch(testing, /native (?:device|app|emulator).{0,30}(?:required|requirement|gate)/i);
+  assert.doesNotMatch(release, /(?:EAS|app store|Play Store).{0,30}(?:release|required|gate)/i);
+  assert.match(release, /(?:hosting|hosted)/i);
+  assert.match(release, /(?:SPA|history) fallback/i);
 });
 
 test('spec roadmap includes MVP and roadmap phases', () => {

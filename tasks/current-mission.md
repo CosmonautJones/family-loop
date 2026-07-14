@@ -1,52 +1,84 @@
 # Current Mission
 
-Mission ID: `FAMILY-LOOP-OPORD-001`
+Mission ID: `FAMILY-LOOP-WEB-001`
 
-Status: Complete — external Run 3 review accepted AMBER / PROCEED-WARN; runtime execution remains separately authorized per OPORD.
+Status: Complete — responsive-web campaign correction passed the listed documentation evidence gates.
 
 ## Objective
 
-Create a complete, sequential set of at least ten independently executable operations orders covering the frontend, backend, server/database, security, quality, release, and older-adult usability work needed for a simple and dependable LoopedIn app.
+Correct the product and all 17 planned OPORDs to one platform stance: LoopedIn is a responsive web app built with Expo and React Native Web, optimized first for iOS Safari and Android Chrome phone browsers, with desktop web as a usable secondary surface.
+
+## Non-goals
+
+- Runtime application changes, new dependencies, environment/configuration changes, remote mutations, or deployment.
+- Changing the 17 OPORD IDs, 60 task contracts, dependency graph, canonical order, or backend/server/database scope.
+- Treating Expo native targets, EAS, app stores, or native applications as current delivery requirements.
+- Rewriting historical records as though earlier evidence used the corrected platform stance.
 
 ## Authorized manifest
 
+- `README.md`
+- `app/README.md`
+- `docs/vision.md`
+- `docs/core-loop.md`
+- `docs/taste-bar.md`
+- `docs/anti-goals.md`
+- `docs/architecture.md`
 - `docs/opords/**`
 - `tests/spec-docs.test.js`
 - `tasks/current-mission.md`
 - `tasks/backlog.md`
 - `tasks/completed.md`
-- `docs/architecture.md`
 - `evals/review-log.md`
+- `evals/product-rubric.md`
 - `evals/code-rubric.md`
 - `evals/ux-rubric.md`
 - `evals/regression-checklist.md`
 
-No runtime, dependency, configuration, credential, deployment, or remote-system change was authorized.
+## Ordered owned tasks
 
-## Deliverables and acceptance
+1. Correct source-of-truth product and architecture documents.
+2. Semantically review and correct every OPORD; rename OPORD 014 and 016 without changing their numeric identities.
+3. Strengthen documentation-contract tests for filenames, platform language, task count, dependencies, and prohibited active native-release requirements.
+4. Update backlog, completed-work, review, and rubric records without altering historical evidence.
+5. Run root/app tests, TypeScript, harness, placeholder lint, diff, and status checks; commit only the explicit manifest.
 
-- One campaign index and exactly 17 unique, dependency-resolvable OPORDs.
-- Every OPORD contains a machine-readable `Depends on:` line and an executable task table with at least three bounded, uniquely identified tasks.
-- Coverage of accessibility; navigation/design/forms; auth/users/groups; API/server; database/RLS/migrations; events/calendar/RSVP; realtime chat; private media; notifications; memories; offline/performance; security/observability; testing/native usability; and CI/release/deploy/backup/restore.
-- Each order is one coherent mission with evidence, territory, usability guardrails, ordered work, measurable acceptance, local/conditional validation, stop conditions, and definition of done.
-- Portable Node tests prove count, numbering, headings, dependency links, and domain coverage.
-- Baseline remains truthful: M1-M3 exist; remote Supabase is unverified; Docker is unavailable; lint is a placeholder; native/human tests are not run.
+## Acceptance criteria
 
-## Authorization limits
+- Source documents and campaign index state responsive web, phone browsers first, and desktop web secondary.
+- Exactly 17 numbered OPORD documents and exactly 60 task rows remain; dependencies and canonical order are unchanged and valid.
+- OPORD 014 is `014-test-pyramid-mobile-web-accessibility-usability.md`; OPORD 016 is `016-web-release-deployment-rollback.md`; obsolete filenames are absent.
+- UI work requires 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard safety, browser history/deep-link/reload behavior, 200% zoom/reflow, focus/screen-reader/reduced-motion checks, conditional Safari/Chrome checks, and secondary desktop smoke.
+- Media, reminders, resilience, testing, and release orders describe browser capabilities rather than native dependencies or app-store delivery.
+- Native applications never block this campaign and remain a separately authorized future option.
 
-Future mission documents can name files and systems but do not authorize execution. Credentials, remote mutation/deploy, destructive migration, new dependencies, push/PR/release, and production data access remain RED until separately approved.
+## Validation commands
 
-## Completion evidence
+```text
+npm test
+cd app && npm test
+cd app && npx tsc --noEmit
+cd app && npm run lint
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
 
-Campaign commits: `6c612ce` (initial 15-order campaign), `0291b3f` (17 executable orders), and `fd6061d` (Run 3 authority/parser correction). The external gate found zero blockers: G1 PASS, G2 WARN for placeholder lint assigned to OPORD 015, and G3/G4/G5 PASS; overall AMBER / PROCEED-WARN.
+Conditional phone-browser hardware, assistive-technology, and moderated older-adult evidence remains `NOT RUN` in this documentation-only mission.
 
-Definition of done:
+## Stop conditions
 
-- [x] Exactly 17 OPORDs and 60 bounded tasks are indexed and parser-validated.
-- [x] Dependencies resolve, are acyclic, and precede dependents in the canonical execution order.
-- [x] Required engineering and older-adult usability domains are covered.
-- [x] Relevant local tests, TypeScript, harness, and diff checks pass.
-- [x] Independent review has zero blockers; the sole warning has a named remediation order.
-- [x] Conditional evidence remains explicit rather than inferred.
+Stop before runtime files, dependencies, configuration, credentials, remote systems, deployment, destructive Git operations, push/PR, or changes outside the authorized manifest.
 
-No live backend, native-device, human-usability, deployment, backup, or restore proof is claimed.
+## Risks and follow-ups
+
+- Expo package naming and historical documents may still contain native terminology; they are not active production commitments.
+- Browser and human evidence must be collected during the applicable implementation OPORDs.
+- Lint remains an honest placeholder assigned to OPORD 015.
+
+## Definition of done
+
+- [x] All acceptance criteria have direct repository evidence.
+- [x] Required commands pass or retain an explicit truthful limitation.
+- [x] Review log and campaign records are updated.
+- [x] Explicit manifest is committed with a clean worktree.

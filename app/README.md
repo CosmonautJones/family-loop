@@ -1,9 +1,9 @@
-# LoopedIn Mobile Scaffold
+# LoopedIn Responsive Web App
 
-This Expo/React Native scaffold is the main LoopedIn product surface. It splits the mobile MVP foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
+This Expo/React Native Web scaffold is the main LoopedIn product surface. It splits the mobile-first web foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
 
 ## Included
-- Expo app shell
+- Expo/React Native Web app shell
 - typed domain models in `src/types`
 - feature fixtures/selectors in `src/features`
 - app-level selectors in `src/app`
@@ -20,13 +20,13 @@ This Expo/React Native scaffold is the main LoopedIn product surface. It splits 
 - production navigation/state libraries
 
 ## Product stance
-Build and review this app as mobile-first. Web is useful for fast local preview, but iOS/Android ergonomics should decide screen hierarchy, action placement, and scope.
+Build and review this responsive web app mobile-first. iOS Safari and Android Chrome phone-browser ergonomics should decide screen hierarchy and action placement; desktop web remains usable. Native apps, app stores, and EAS builds are future non-goals unless separately authorized.
 
 ## Run
 ```bash
 cd app
 npm install
-npm start
+npm run web
 ```
 
 ## Verify

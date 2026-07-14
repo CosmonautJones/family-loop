@@ -2,7 +2,7 @@
 
 The planned evolution of this architecture is governed by the 17 separately authorized operations orders in `docs/opords/README.md`. Their machine-readable dependency graph and bounded task tables describe future work and evidence gates; they do not assert that planned server, database, native, security, release, or operations capabilities are live.
 
-LoopedIn is currently an Expo and React Native mobile prototype. The event is the central product object; the code should continue to favor the path from a group to its events and then to RSVP, discussion, media, and memory state.
+LoopedIn is currently a responsive web app built with Expo and React Native Web. The event is the central product object; the code should continue to favor the path from a group to its events and then to RSVP, discussion, media, and memory state.
 
 ## Application entry and providers
 
@@ -40,11 +40,12 @@ Event messages are scoped by stable event ID. The mock and Supabase adapters tri
 - The in-memory mock adapter is used when Expo Supabase environment variables are absent.
 - The Supabase adapter is used when `EXPO_PUBLIC_SUPABASE_URL` and a publishable or anonymous key are present.
 
-The Supabase client persists auth sessions through AsyncStorage. Adapter availability does not imply that remote backend flows are deployed or verified. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions are intended infrastructure rather than live proof. Live Supabase event/RSVP CRUD for M2 is `NOT RUN — ENV unavailable`.
+The Supabase client uses AsyncStorage for auth-session persistence; on web, the React Native Web-compatible storage implementation supplies the browser-backed session boundary. Adapter availability does not imply that remote backend flows are deployed or verified. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions are intended infrastructure rather than live proof. Live Supabase event/RSVP CRUD for M2 is `NOT RUN — ENV unavailable`.
 
 ## Product and implementation constraints
 
-- Treat iOS and Android phone use as the primary surface; web is a preview or later companion.
+- Treat iOS Safari and Android Chrome phone browsers as the primary surface; desktop web is a usable secondary surface.
+- Treat Expo native targets, native apps, app stores, and EAS builds as future non-goals unless separately authorized.
 - Keep event detail as the center of logistics, RSVP, discussion, media, and recap behavior.
 - Keep memories derived from completed events and keep group context as the event permission boundary.
 - Do not expand auth, billing, settings, teams, notifications, deployment, or dependencies without an explicit mission.

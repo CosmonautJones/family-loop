@@ -41,6 +41,8 @@ Depends on: OPORD-003, OPORD-006
 
 ## Older-adult usability guardrail
 
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
+
 Creation and invitations must state the group name, inviter, joining impact, and next action in plain language. Use obvious 48x48-point Accept/Decline/Back and removal/transfer confirmations; explain loss of access before confirmation. Avoid role jargon, silent ownership changes, and surprise event exposure.
 
 ## Execution
@@ -77,7 +79,7 @@ git status --short
 - Run focused service/query tests named by the approved mission; report lint as placeholder unless changed.
 - 390x844 invitation comprehension and acceptance smoke.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 
 - RLS policy tests in an approved database environment.
 - Multi-user matrix covering owner/member/invitee/nonmember, atomic-create failure, wrong account, expiry, replay, duplicate, revoke, removal, last-owner denial, transfer race, escalation, and direct-ID access.
@@ -96,4 +98,4 @@ Stop before schema/RLS/remote mutation, delivery integration, production account
 
 ## Definition of done
 
-The approved narrow lifecycle passes contract, RLS, two-user, phone, and regression evidence; live/native/human gaps are explicit; architecture and review log are updated; no generic team-management surface is introduced.
+The approved narrow lifecycle passes contract, RLS, two-user, phone-browser, and desktop-secondary evidence; live/Safari/Chrome/human gaps are explicit; architecture and review log are updated; no generic team-management surface is introduced.

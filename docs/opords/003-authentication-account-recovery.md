@@ -20,7 +20,7 @@ After OPORDs 002, 005, and 006 pass, deliver an accessible invite-first identity
 Depends on: OPORD-002, OPORD-005, OPORD-006
 
 - Product decision: invite-first signup/sign-in only; no open registration, OAuth, or broad profile management.
-- Security-approved redirect origin/deep-link behavior and Supabase project configuration.
+- Security-approved web redirect origins, deep-link/reload behavior, and Supabase project configuration.
 - Safe non-production test accounts and environment; credentials supplied out of repo.
 - OPORD-005 environment readiness complete for the intended target.
 
@@ -42,6 +42,8 @@ Depends on: OPORD-002, OPORD-005, OPORD-006
 
 ## Older-adult usability guardrail
 
+Shared mobile-web gate: verify 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, visible focus, screen-reader semantics, and reduced motion. Run iOS Safari and Android Chrome conditionally on real phones; keep desktop browsers as a secondary regression target.
+
 Use explicit “Accept invitation,” “Create account,” “Sign in,” and “Forgot password?” routes; plain persistent instructions; readable type; 48x48-point controls; password-manager compatibility; accessible errors; and forgiving return paths. Never reveal whether an email is registered or invited. Profile bootstrap asks only for essential display identity, explains why, and cannot trap the user behind optional fields.
 
 ## Execution
@@ -51,7 +53,7 @@ Use explicit “Accept invitation,” “Create account,” “Sign in,” and �
 | O003-T1 | 1 | Identity contract designer | Private / gpt-5.3-instant | Auth/service contracts, invitation contract (read-only), flow record | Specify invite validation, signup/sign-in, neutral recovery, restore/logout, redirect/expiry/retry, and minimum profile bootstrap states. | State machine denies open registration, uses enumeration-safe responses, and names every accessible error/recovery route. |
 | O003-T2 | 1 | Auth test owner | Private / gpt-5.3-instant | Focused auth/session/profile contract tests | Add tests for valid/invalid/expired/wrong-account invite, duplicate signup, known/unknown recovery equivalence, restore/logout, bootstrap retry, and protected-content denial. | Tests run against deterministic seams without real credentials. |
 | O003-T3 | 2 | Identity implementer | Private / gpt-5.3-instant | Separately approved auth provider/screen/service/profile-bootstrap manifest | Implement invite-first accessible signup/sign-in, neutral recovery, session lifecycle, and required profile bootstrap; preserve configured failures and mock entry. | Tests pass; optional profile data cannot block entry; no enumeration or public signup exists. |
-| O003-T4 | 3 | Staging identity verifier | Private / gpt-5.3-instant | Approved non-production auth project and disposable accounts | Under separate authorization, verify redirects, recovery expiry/replay, invite binding, restore/logout, and profile bootstrap. | Evidence contains no secrets and native deep-link results are recorded or `NOT RUN`. |
+| O003-T4 | 3 | Staging identity verifier | Private / gpt-5.3-instant | Approved non-production auth project and disposable accounts | Under separate authorization, verify browser redirects, autofill/password-manager behavior, recovery expiry/replay, invite binding, Back/history, deep-link/reload, restore/logout, and profile bootstrap. | Evidence contains no secrets and iOS Safari/Android Chrome results are recorded or `NOT RUN`. |
 
 ## Acceptance criteria
 
@@ -78,7 +80,7 @@ git status --short
 - Report lint as placeholder unless changed.
 - 390x844 configured signed-out and recovery UI smoke.
 
-### Conditional-staging/native/human
+### Conditional-staging/mobile-web/human
 
 - Safe-environment matrix: valid/invalid/expired/wrong-account invite; new/existing account; known/unknown email neutral recovery; expired/reused reset; offline failure; bootstrap retry; session restore/sign-out.
 - Live recovery: `NOT RUN — safe environment unavailable` until prerequisites exist.
@@ -90,10 +92,10 @@ RED: stop before remote auth settings, email templates, credentials, production 
 
 ## Risks/follow-ups
 
-- Misconfigured redirects can leak tokens or strand native users.
-- Web success does not prove iOS/Android deep-link behavior.
+- Misconfigured origins or redirects can leak tokens or strand browser users.
+- Desktop success does not prove iOS Safari/Android Chrome autofill or deep-link behavior.
 - Email delivery and throttling are external-system evidence, not guaranteed by code presence.
 
 ## Definition of done
 
-Only after separate authorization: acceptance matrix passes in a safe environment, repository checks pass, no secrets appear, native/live limitations are recorded, architecture/security notes and review log are updated, and recovery remains narrower than general account management.
+Only after separate authorization: acceptance matrix passes in a safe environment, repository checks pass, no secrets appear, mobile-browser/live limitations are recorded, architecture/security notes and review log are updated, and recovery remains narrower than general account management.

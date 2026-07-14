@@ -10,7 +10,7 @@
 - Task/project management modules.
 - Broad community or marketplace behavior.
 - Desktop-first admin/dashboard surfaces.
-- Treating web as the main product before iOS/Android feel excellent.
+- Native iOS/Android apps, app-store releases, or EAS builds unless separately authorized.
 
 ## Product guardrails
 
@@ -18,4 +18,4 @@
 - Keep create/edit flows fast by default.
 - Keep memories derived from completed events, not free-floating posts.
 - Favor realistic fixture-backed behavior over fake placeholder features.
-- Judge new UI against phone ergonomics first.
+- Judge new UI against iOS Safari and Android Chrome phone ergonomics first while preserving usable desktop web.

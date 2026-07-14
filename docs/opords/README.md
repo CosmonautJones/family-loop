@@ -2,7 +2,7 @@
 
 ## Campaign intent
 
-These 17 operations orders sequence the work required to turn the current mobile prototype into an elegantly simple, dependable family coordination app that older adults can use without coaching. Each OPORD is a separately authorized, independently executable mission. The campaign preserves the event-centered wedge: plan, attend, discuss, and remember one shared event.
+These 17 operations orders sequence the work required to turn the current Expo/React Native Web prototype into an elegantly simple, dependable responsive web app that older adults can use without coaching. Phone browsers are primary (iOS Safari and Android Chrome); desktop web is a secondary responsive target. Native binaries, app stores, and EAS are future non-goals. Each OPORD is a separately authorized, independently executable mission. The campaign preserves the event-centered wedge: plan, attend, discuss, and remember one shared event.
 
 This index is planning authority only. It does not prove that a feature is deployed or grant permission to use credentials, change remote infrastructure, run destructive migrations, add dependencies, push, or release.
 
@@ -17,7 +17,7 @@ This index is planning authority only. It does not prove that a feature is deplo
 | Local backend | Docker is unavailable, so the local Supabase stack has not been exercised. |
 | Automated checks | Root tests, app structural tests, TypeScript, and the harness exist. |
 | Lint | `app/package.json` still defines a placeholder lint command; it is not substantive lint evidence. |
-| Device/usability evidence | Prior 390x844 web smokes exist; native iOS/Android, screen-reader, reduced-motion, and moderated older-adult usability sessions have not been run. |
+| Browser/usability evidence | Prior 390x844 web smokes exist; the full 320/390/430 CSS-pixel phone matrix, iOS Safari, Android Chrome, screen-reader, reduced-motion, 200% zoom/reflow, and moderated older-adult usability sessions have not been run. |
 
 ## Standard OPORD template
 
@@ -41,7 +41,8 @@ All missions use `Correctness > Safety > Scope discipline > Speed`.
 - RED: credentials or secrets; remote deployment or mutation; destructive or irreversible migrations; production data access; backup deletion; public API break; new dependency; push/PR/release; or work outside authorized territory. Stop and obtain separate approval.
 - Never infer live capability from schemas, adapters, mocks, generated clients, or a passing structural test.
 - Every mission preserves explicit loading, error, empty, pending, success, and recoverable-failure states where applicable.
-- UI missions use plain language, readable type, at least 48x48-point primary touch targets, screen-reader semantics, reduced-motion behavior, low cognitive load, and a visible recovery route.
+- UI missions use plain language, readable type, at least 48x48 CSS-pixel primary touch targets, screen-reader semantics, visible keyboard focus, reduced-motion behavior, low cognitive load, and a visible recovery route. Essential actions never depend on hover.
+- Mobile-web gates cover 320, 390, and 430 CSS-pixel widths, virtual-keyboard behavior, browser Back/history, deep links and reload, 200% zoom/reflow, and conditional real-device Safari/Chrome checks; desktop remains a secondary regression target.
 
 ## Registry and dependencies
 
@@ -62,9 +63,9 @@ Numeric OPORD IDs are stable identifiers, not execution positions. The registry 
 | 011 | [Derived memories and recaps](011-derived-memories-recaps.md) | OPORD-007, OPORD-008, OPORD-009 | Completed events become memories |
 | 012 | [Resilience, offline, performance, and capacity](012-resilience-offline-performance-capacity.md) | OPORD-005, OPORD-006, OPORD-007, OPORD-008, OPORD-009, OPORD-010, OPORD-011 | Predictable degraded-network behavior |
 | 013 | [Security, observability, and incident response](013-security-observability-incident-response.md) | OPORD-005, OPORD-006, OPORD-012 | Privacy controls and operable failure signals |
-| 014 | [Test pyramid, native accessibility, and usability](014-test-pyramid-native-accessibility-usability.md) | OPORD-001, OPORD-002, OPORD-003, OPORD-004, OPORD-005, OPORD-006, OPORD-007, OPORD-008, OPORD-009, OPORD-010, OPORD-011, OPORD-012, OPORD-013 | Evidence across contracts, devices, and people |
+| 014 | [Test pyramid, mobile-web accessibility, and usability](014-test-pyramid-mobile-web-accessibility-usability.md) | OPORD-001, OPORD-002, OPORD-003, OPORD-004, OPORD-005, OPORD-006, OPORD-007, OPORD-008, OPORD-009, OPORD-010, OPORD-011, OPORD-012, OPORD-013 | Evidence across contracts, browsers, and people |
 | 015 | [CI quality gates](015-ci-quality-gates.md) | OPORD-013, OPORD-014 | Enforced lint, test, security, and migration gates |
-| 016 | [Release, deployment, and rollback](016-release-deployment-rollback.md) | OPORD-015 | Controlled environment promotion and recovery |
+| 016 | [Web release, deployment, and rollback](016-web-release-deployment-rollback.md) | OPORD-015 | Controlled web/backend promotion and recovery |
 | 017 | [Backup, restore, and data lifecycle](017-backup-restore-data-lifecycle.md) | OPORD-006, OPORD-016 | Proven restore, retention, export, and deletion lifecycle |
 
 No later order may silently absorb an earlier order's unfinished acceptance criteria. The stable numeric registry does not override the dependency-safe execution order.
@@ -109,7 +110,7 @@ OPORD-017: OPORD-006, OPORD-016
 | Memories and recaps | 011 |
 | Offline behavior, resilience, performance, and capacity | 012 |
 | Security, privacy, observability, and incident response | 013 |
-| Unit, integration, contract, native, accessibility, and usability tests | 014 |
+| Unit, integration, contract, mobile-web, accessibility, and usability tests | 014 |
 | CI quality gates | 015 |
 | Deployment, release, promotion, and rollback | 016 |
 | Backup, restore, retention, export, and deletion | 017 |
@@ -118,13 +119,13 @@ OPORD-017: OPORD-006, OPORD-016
 
 Each execution updates this table by linking evidence rather than changing `Planned` based on intent.
 
-| Capability | Repository definition | Local executable proof | Conditional staging/native/human proof |
+| Capability | Repository definition | Local executable proof | Conditional staging/browser/human proof |
 |---|---|---|---|
 | Session/auth gate | Present | Mock/configured signed-out smoke exists | Live auth/recovery not run |
 | Groups/events/RSVP | Contract and UI present | Mock tests and web smoke exist | Live CRUD/RLS not run |
 | Event chat | Contract and UI present | Mock isolation/send tests exist | Live realtime/two-user not run |
-| Media | Schema/adapter present | Not yet connected end-to-end | Native picker/storage policy proof not run |
-| Notifications/reminders | Partial contract/schema | Not yet connected end-to-end | Delivery/device proof not run |
+| Media | Schema/adapter present | Not yet connected end-to-end | Safari/Chrome file-input, camera/gallery, and storage-policy proof not run |
+| Notifications/reminders | Partial contract/schema | Not yet connected end-to-end | Visit/resume behavior not run; Notifications API/service workers are deferred |
 | Memories | Fixture presentation only | Fixture behavior only | Derived durable model not run |
 | Backup/restore/release | Planning only | Not run | Staging restore/release rehearsal not run |
 

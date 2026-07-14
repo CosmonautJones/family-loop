@@ -14,7 +14,7 @@ Can the user get value almost immediately?
 
 Score: 4
 
-Mobile check: can someone open the app on a phone and understand the next event without setup or desktop-style scanning?
+Mobile-web check: can someone open the responsive web app in a phone browser and understand the next event without setup or desktop-style scanning?
 
 ## Core loop
 
@@ -60,4 +60,4 @@ Delay public social, AI, direct messaging, billing, admin, and heavy settings un
 
 ## Product verdict
 
-LoopedIn has a clear wedge: the mobile event page as the private source of truth before, during, and after shared plans. The next product risk is making mobile RSVP, calendar, and event creation feel real enough before adding desktop or web companion surfaces.
+LoopedIn has a clear wedge: the phone-browser event page as the private source of truth before, during, and after shared plans. The next product risk is making responsive-web RSVP, calendar, and event creation feel real across narrow phone widths before polishing the secondary desktop surface.
