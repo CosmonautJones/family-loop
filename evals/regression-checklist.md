@@ -18,12 +18,13 @@
 
 - [x] `listGroupMembers(groupId)` returns the five Jones members and preserves group isolation across mock and durable reconstruction.
 - [x] Family uses active-group, member, and event Query data with loading, error/retry, no-family, and no-members states; fixture onboarding and dead controls are absent.
-- [x] Family is the fifth tab, selected state is accessible, and visible navigation/button targets have a 48px minimum.
+- [x] Family is the fifth tab; one tablist/five tabs render, the active tab has a visible `Selected` marker, and Chrome AX exposed `Family Selected`.
 - [x] Pure hash-route parser/formatter tests cover all tabs, exact encoded event IDs, return source, and unknown/invalid fallback to Home.
 - [ ] Interactive browser Back and hard reload — NOT PROVEN; pure route tests do not establish browser-history behavior.
-- [ ] 320/390/430 mobile viewport proof — NOT RUN VALIDLY; Chrome DOM rendered Family content, but headless `--window-size` retained a minimum/intrinsic desktop layout.
+- [x] Exact CDP viewport proof at 320/390/430/1280: HTML/body `scrollWidth === clientWidth`; Family and Owner were present and all five tabs remained reachable.
 - [ ] Remote Supabase membership/RLS and real-phone Safari/Chrome — NOT RUN.
 - [ ] Substantive lint — placeholder command only; AMBER.
+- [ ] Independent Run 2 gate — pending; Run 1 defects are fixed but not self-certified final GREEN.
 
 ## OPORD campaign documentation
 

@@ -221,6 +221,14 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Executable coverage proves five Jones members, group isolation, durable reconstruction, session/member consistency, route parser/formatter round trips, exact encoded event IDs, and safe unknown-route fallback.
 - Verification: root tests PASS 33/33; app tests PASS 22/22; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder AMBER.
 - Chrome DOM at `#/family` showed Jones Family, five members, and selected Family-route semantics. Headless `--window-size` retained a minimum/intrinsic desktop layout, so it is not accepted as 320/390/430 mobile viewport evidence. Interactive Back/reload is also unproven; pure route tests do not establish browser-history behavior.
-- Wave 1 is **COMPLETE**. Wave 2 is pending. No remote Supabase, RLS, real-phone, private-media, or multi-user capability is claimed.
+- The initial closeout marked Wave 1 complete, but that status was superseded by independent Run 1 RED below. No remote Supabase, RLS, real-phone, private-media, or multi-user capability is claimed.
 
-Current truth: **Wave 0 and Wave 1 are complete with their recorded AMBER limitations. Wave 2 is pending and the broader campaign remains in progress. No remote/live capability is claimed complete.**
+### Wave 1 independent Run 1 correction
+
+- Independent Run 1 reopened Wave 1 at **RED** for narrow-width document overflow, fabricated member-role presentation, and missing browser-verifiable selected-tab state.
+- Fix commit `8480c17` contains decorative overflow, carries explicit `owner | admin | member` roles through membership contracts, derives role labels from data, and renders a live visible `Selected` marker in the active tab.
+- Exact CDP at 320/390/430/1280 proved HTML/body `scrollWidth` equals `clientWidth`, Family and Owner are present, and one tablist contains five tabs. Chrome AX names included `Family Selected`.
+- Fresh verification: root tests PASS 34/34; app tests PASS 23/23; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER. Remote Supabase/RLS remains unverified.
+- Run 1 defects are fixed. Wave 1 awaits the independent Run 2 gate and is not self-certified final GREEN.
+
+Current truth: **Wave 0 is complete. Wave 1 Run 1 defects are fixed in `8480c17` and await independent Run 2 review; Wave 2 has not started. No remote/live capability is claimed complete.**
