@@ -41,3 +41,11 @@ export function createLatestResolutionGuard() {
     },
   };
 }
+
+export function isReadyInvitationEmailMatch(value: unknown): boolean {
+  return Boolean(value && typeof value === 'object' && 'ok' in value && value.ok === true && 'code' in value && value.code === 'ready');
+}
+
+export function resolveWithFallback<T>(primary: Promise<T>, fallback: T): Promise<T> {
+  return primary.catch(() => fallback);
+}

@@ -594,6 +594,16 @@ test('invitation routes accept only canonical 32-byte base64url tokens and never
   assert.doesNotMatch(source, /localStorage|sessionStorage|AsyncStorage/);
 });
 
+test('invite email matching and auth-event profile fallback are deterministic and fail closed', async () => {
+  const { invitationRoute } = loadCompiledModules();
+  assert.equal(invitationRoute.isReadyInvitationEmailMatch({ ok: true, code: 'ready' }), true);
+  for (const result of [null, {}, { ok: false, code: 'ready' }, { ok: true, code: 'unavailable' }]) {
+    assert.equal(invitationRoute.isReadyInvitationEmailMatch(result), false);
+  }
+  assert.equal(await invitationRoute.resolveWithFallback(Promise.resolve('profile session'), 'fallback session'), 'profile session');
+  assert.equal(await invitationRoute.resolveWithFallback(Promise.reject(new Error('profile unavailable')), 'fallback session'), 'fallback session');
+});
+
 test('configured service maps the accepted family lifecycle RPC contract without direct group writes', () => {
   const api = read('src/services/api.ts');
   const adapter = read('src/services/supabaseAdapter.ts');
@@ -605,11 +615,18 @@ test('configured service maps the accepted family lifecycle RPC contract without
   for (const rpc of [
     'loopedin_create_group', 'loopedin_can_create_group', 'loopedin_create_group_invite',
     'loopedin_validate_group_invite', 'loopedin_accept_group_invite', 'loopedin_decline_group_invite',
+    'loopedin_match_group_invite_email',
     'loopedin_list_group_invites', 'loopedin_revoke_group_invite', 'loopedin_remove_group_member',
     'loopedin_leave_group', 'loopedin_transfer_group_ownership',
   ]) assert.match(adapter, new RegExp(`rpc\\('${rpc}'`));
   assert.match(adapter, /options: \{ data: \{ display_name: name \} \}/);
-  assert.ok(adapter.indexOf("rpc('loopedin_validate_group_invite'", adapter.indexOf('async signUp')) < adapter.indexOf('supabase.auth.signUp', adapter.indexOf('async signUp')));
+  const signUpStart = adapter.indexOf('async signUp');
+  const matchRpc = adapter.indexOf("rpc('loopedin_match_group_invite_email'", signUpStart);
+  assert.ok(matchRpc > signUpStart && matchRpc < adapter.indexOf('supabase.auth.signUp', signUpStart));
+  assert.match(adapter.slice(matchRpc, adapter.indexOf('supabase.auth.signUp', signUpStart)), /target_token: token, target_email: email\.trim\(\)/);
+  const authListener = adapter.slice(adapter.indexOf('onAuthStateChange(listener)'), adapter.indexOf('async refreshSession'));
+  assert.match(authListener, /resolveWithFallback\(mapSession\(session\), sessionWithoutProfile\(session\)\)/);
+  assert.doesNotMatch(authListener, /catch\([\s\S]*?listener\(null\)/);
   assert.match(adapter, /Email or password not recognized/);
   assert.match(adapter, /We couldn’t create your account\. Try again or ask for a new invitation/);
   assert.match(adapter, /target_creation_key: payload\.creationKey/);

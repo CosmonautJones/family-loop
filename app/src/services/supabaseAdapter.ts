@@ -19,6 +19,7 @@ import { getSupabaseClient } from './supabaseClient';
 import { maxBrowserImageBytes, validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
+import { isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
 
 type GroupRow = {
   id: string;
@@ -435,8 +436,8 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const name = displayName.trim();
         if (!name || name.length > 80) throw new Error('Enter a display name between 1 and 80 characters.');
         const token = invitationTokenToHex(invitationToken);
-        const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_validate_group_invite', { target_token: token });
-        if (invitationError || !(invitation as RpcResult | null)?.ok || (invitation as RpcResult).code !== 'ready') throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+        const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: token, target_email: email.trim() });
+        if (invitationError || !isReadyInvitationEmailMatch(invitation)) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -460,10 +461,8 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const { data } = supabase.auth.onAuthStateChange((_event, session) => {
           const current = ++generation;
           if (!session) listener(null);
-          else void mapSession(session).then((mapped) => {
+          else void resolveWithFallback(mapSession(session), sessionWithoutProfile(session)).then((mapped) => {
             if (current === generation) listener(mapped);
-          }).catch(() => {
-            if (current === generation) listener(null);
           });
         });
         return () => data.subscription.unsubscribe();
