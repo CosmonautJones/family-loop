@@ -100,9 +100,11 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
       fileUri,
       caption,
       altText,
-      creatorName: submittedCreatorName || undefined,
-      sourceName: photoMode === 'link' ? 'Unsplash' : undefined,
-      sourceUrl: photoMode === 'link' ? submittedSourceUrl : undefined,
+      ...(photoMode === 'link' ? {
+        creatorName: submittedCreatorName,
+        sourceName: 'Unsplash',
+        sourceUrl: submittedSourceUrl,
+      } : {}),
     }, {
       onSuccess: () => {
         setPhotoUri((current) => current.trim() === fileUri ? '' : current);
@@ -117,6 +119,10 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   };
   const choosePhoto = () => {
     setPhotoMode('file');
+    setCreatorName('');
+    setSourceUrl('');
+    setPhotoError('');
+    uploadMedia.reset();
     if (Platform.OS !== 'web' || typeof document === 'undefined') {
       setPhotoError('File selection is available in the web app. You can paste an HTTPS image address instead.');
       return;
@@ -144,7 +150,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   };
 
   const beginEditing = () => {
-    if (!eventQuery.data) return;
+    if (!eventQuery.data || deleteEvent.isPending) return;
     setEditForm(eventToForm(eventQuery.data));
     setEditErrors({});
     updateEvent.reset();
@@ -155,21 +161,29 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     updateEvent.reset();
   };
   const savePlan = async () => {
-    if (!eventQuery.data || !editForm || updateEvent.isPending) return;
-    const errors = validateEventForm(editForm);
+    if (!eventQuery.data || !editForm || updateEvent.isPending || deleteEvent.isPending) return;
+    const submittedForm = { ...editForm };
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      for (const key of ['title', 'date', 'time', 'location', 'description'] as const) {
+        const input = document.getElementById(`edit-${key}-input`) as HTMLInputElement | HTMLTextAreaElement | null;
+        if (input) submittedForm[key] = input.value;
+      }
+      setEditForm(submittedForm);
+    }
+    const errors = validateEventForm(submittedForm);
     setEditErrors(errors);
     if (Object.keys(errors).length > 0) {
       const firstInvalid = (['title', 'date', 'time', 'location'] as const).find((key) => errors[key]);
-      if (firstInvalid) editInputRefs.current[firstInvalid]?.focus();
+      if (firstInvalid) setTimeout(() => editInputRefs.current[firstInvalid]?.focus(), 0);
       return;
     }
     try {
-      await updateEvent.mutateAsync({ eventId: eventQuery.data.id, patch: buildEventUpdate(eventQuery.data, editForm) });
+      await updateEvent.mutateAsync({ eventId: eventQuery.data.id, patch: buildEventUpdate(eventQuery.data, submittedForm) });
       setEditForm(null);
     } catch { /* The mutation keeps the form open and exposes a retryable error below. */ }
   };
   const cancelPlan = async () => {
-    if (!eventQuery.data || deleteEvent.isPending) return;
+    if (!eventQuery.data || deleteEvent.isPending || updateEvent.isPending) return;
     const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm(`Cancel “${eventQuery.data.title}”? This removes the plan for everyone.`);
     if (!approved) return;
     try {
@@ -209,8 +223,8 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           <View style={styles.planOptions}>
             <Text style={styles.planOptionsLabel}>Plan options</Text>
             <View style={styles.actionRow}>
-              <Button label="Edit plan" tone="ghost" disabled={deleteEvent.isPending} onPress={beginEditing} />
-              <Button label={deleteEvent.isPending ? 'Canceling plan…' : deleteEvent.isError ? 'Try canceling again' : 'Cancel plan'} tone="ghost" disabled={deleteEvent.isPending} onPress={cancelPlan} />
+              <Button label="Edit plan" tone="ghost" disabled={deleteEvent.isPending || updateEvent.isPending} onPress={beginEditing} />
+              <Button label={deleteEvent.isPending ? 'Canceling plan…' : deleteEvent.isError ? 'Try canceling again' : 'Cancel plan'} tone="ghost" disabled={deleteEvent.isPending || updateEvent.isPending} onPress={cancelPlan} />
             </View>
             {deleteEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.responseNote}>{deleteEvent.error instanceof Error ? deleteEvent.error.message : 'We couldn’t cancel this plan. Try again.'}</Text> : null}
           </View>
@@ -228,12 +242,14 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             { key: 'location' as const, label: 'Location', placeholder: 'City, address, or meeting place' },
           ]).map((field) => (
             <View key={field.key} style={styles.editField}>
-              <Text nativeID={`edit-${field.key}-label`} style={styles.editLabel}>{field.label}</Text>
+              <Text nativeID={`edit-${field.key}-label`} style={styles.editLabel}>{field.label} (required)</Text>
               <TextInput
                 {...(editErrors[field.key] ? { 'aria-describedby': `edit-${field.key}-error`, 'aria-invalid': true } : { 'aria-invalid': false })}
                 ref={(node) => { editInputRefs.current[field.key] = node; }}
+                nativeID={`edit-${field.key}-input`}
                 accessibilityLabel={field.label}
                 accessibilityLabelledBy={`edit-${field.key}-label`}
+                aria-required
                 editable={!updateEvent.isPending}
                 onChangeText={(value) => changeEditField(field.key, value)}
                 placeholder={field.placeholder}
@@ -246,12 +262,12 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           ))}
           <View style={styles.editField}>
             <Text style={styles.editLabel}>Notes (optional)</Text>
-            <TextInput accessibilityLabel="Notes, optional" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.muted} style={[styles.input, styles.notesInput]} value={editForm.description} />
+            <TextInput nativeID="edit-description-input" accessibilityLabel="Notes, optional" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.muted} style={[styles.input, styles.notesInput]} value={editForm.description} />
           </View>
           {updateEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.editError}>{updateEvent.error instanceof Error ? updateEvent.error.message : 'We couldn’t update this plan. Your changes are still here.'}</Text> : null}
           <View style={styles.lightActionRow}>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending }} disabled={updateEvent.isPending} onPress={savePlan} style={styles.planButton}><Text style={styles.planButtonText}>{updateEvent.isPending ? 'Saving changes…' : updateEvent.isError ? 'Try saving again' : 'Save changes'}</Text></Pressable>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending }} disabled={updateEvent.isPending} onPress={() => setEditForm(null)} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Keep current plan</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending || deleteEvent.isPending }} disabled={updateEvent.isPending || deleteEvent.isPending} onPress={savePlan} style={styles.planButton}><Text style={styles.planButtonText}>{updateEvent.isPending ? 'Saving changes…' : updateEvent.isError ? 'Try saving again' : 'Save changes'}</Text></Pressable>
+            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending || deleteEvent.isPending }} disabled={updateEvent.isPending || deleteEvent.isPending} onPress={() => setEditForm(null)} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Keep current plan</Text></Pressable>
           </View>
         </SurfaceCard>
       ) : null}
@@ -358,11 +374,11 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
 
       <SurfaceCard>
         {!photoComposerOpen ? (
-          <Pressable accessibilityRole="button" onPress={() => { setPhotoComposerOpen(true); setPhotoError(''); }} style={styles.planButton}>
+          <Pressable accessibilityRole="button" aria-controls="photo-composer" aria-expanded={false} onPress={() => { setPhotoComposerOpen(true); setPhotoError(''); }} style={styles.planButton}>
             <Text style={styles.planButtonText}>Add photo</Text>
           </Pressable>
         ) : (
-          <View style={styles.photoComposer}>
+          <View nativeID="photo-composer" style={styles.photoComposer}>
             <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Add a photo</Text>
             {!photoMode ? (
               <View style={styles.lightActionRow}>
@@ -371,6 +387,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               </View>
             ) : null}
             {photoMode === 'file' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>{photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'}</Text></Pressable> : null}
+            {photoMode === 'link' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Use image file instead</Text></Pressable> : null}
             {photoMode === 'link' ? <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
             {photoMode && photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
             {photoMode ? <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
@@ -378,7 +395,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             {photoMode === 'link' ? <TextInput accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
             {photoMode === 'link' ? <TextInput accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Unsplash photo page (required)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} /> : null}
             {photoMode ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={submitPhoto} style={styles.planButton}><Text style={styles.planButtonText}>{uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'}</Text></Pressable> : null}
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={() => { setPhotoComposerOpen(false); setPhotoMode(null); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Close photo form</Text></Pressable>
+            <Pressable accessibilityRole="button" aria-controls="photo-composer" aria-expanded accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={() => { setPhotoComposerOpen(false); setPhotoMode(null); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Close photo form</Text></Pressable>
             {photoError || uploadMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
             {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
           </View>

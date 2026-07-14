@@ -745,6 +745,8 @@ test('event plan permissions, edits, and cancellation are durable and event-scop
   await service.media.uploadMedia({ eventId: created.id, fileUri: 'data:image/png;base64,iVBORw0KGgo=', caption: 'Scoped photo', altText: 'A small test image' });
   const updated = await service.events.updateEvent(created.id, { title: 'Updated family plan', location: 'New place', description: 'Bring lunch' });
   assert.equal(updated.title, 'Updated family plan');
+  assert.equal(updated.timeline.find((item) => item.title === 'Logistics').detail.includes('New place'), true);
+  assert.equal(updated.timeline.some((item) => item.detail.includes('Old place')), false);
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.equal((await reconstructed.events.getEvent(created.id)).location, 'New place');
 
@@ -755,6 +757,24 @@ test('event plan permissions, edits, and cancellation are durable and event-scop
   assert.equal(envelope.database.messages.some((item) => item.eventId === created.id), false);
   assert.equal(envelope.database.media.some((item) => item.eventId === created.id), false);
   assert.equal(await durableAdapter.createDurableLocalLoopedInService(storage).events.getEvent(created.id), null);
+});
+
+test('unchanged displayed schedule preserves the exact second DST fallback instant', () => {
+  const { createEvent, mockData } = loadCompiledModules();
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = 'America/Chicago';
+  try {
+    const template = mockData.createMockDatabase().events[0];
+    const fallback = { ...template, startsAt: '2026-11-01T01:30:00-06:00', endsAt: '2026-11-01T03:30:00-06:00' };
+    const form = createEvent.eventToForm(fallback);
+    assert.equal(form.date, '2026-11-01');
+    assert.equal(form.time, '01:30');
+    const patch = createEvent.buildEventUpdate(fallback, { ...form, title: 'Title-only correction' });
+    assert.equal(patch.startsAt, fallback.startsAt);
+    assert.equal(patch.endsAt, fallback.endsAt);
+  } finally {
+    process.env.TZ = previousTimezone;
+  }
 });
 
 test('Event Detail keeps its 320px hierarchy simple and progressively discloses photo fields', () => {
@@ -768,11 +788,28 @@ test('Event Detail keeps its 320px hierarchy simple and progressively discloses 
   assert.match(detail, /photoMode === 'file'/);
   assert.match(detail, /photoMode === 'link'/);
   assert.match(detail, /Add the photographer and Unsplash photo page/);
+  assert.match(detail, /setCreatorName\(''\)/);
+  assert.match(detail, /setSourceUrl\(''\)/);
+  assert.match(detail, /\.\.\.\(photoMode === 'link' \? \{/);
+  assert.match(detail, /Use image file instead/);
   assert.match(detail, /canManageEvent\(eventQuery\.data, currentMember\)/);
   assert.match(detail, /window\.confirm\(`Cancel/);
+  assert.match(detail, /setTimeout\(\(\) => editInputRefs\.current\[firstInvalid\]\?\.focus\(\), 0\)/);
+  assert.match(detail, /aria-describedby/);
+  assert.match(detail, /aria-required/);
+  assert.match(detail, /aria-expanded=\{false\}/);
   assert.match(queries, /useUpdateEventMutation/);
   assert.match(queries, /useDeleteEventMutation/);
   assert.match(shell, /fontSize: 12/);
+});
+
+test('Supabase event cancellation fails closed for media and zero-row deletes', () => {
+  const adapter = read('src/services/supabaseAdapter.ts');
+  assert.match(adapter, /from\('loopedin_event_media'\)[\s\S]*?\.eq\('event_id', eventId\)[\s\S]*?\.limit\(1\)/);
+  assert.match(adapter, /Remove this event’s photos before canceling the plan/);
+  assert.match(adapter, /delete\(\)\.eq\('id', eventId\)\.select\('id'\)/);
+  assert.match(adapter, /data\?\.some\(\(row\) => row\.id === eventId\)/);
+  assert.match(adapter, /The plan was not deleted/);
 });
 
 test('failed durable plan updates and cancellations do not publish partial state', async () => {

@@ -446,8 +446,16 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return mapEvent(data as EventRow);
       },
       async deleteEvent(eventId) {
-        const { error } = await supabase.from('loopedin_events').delete().eq('id', eventId);
+        const { data: media, error: mediaError } = await supabase
+          .from('loopedin_event_media')
+          .select('id')
+          .eq('event_id', eventId)
+          .limit(1);
+        throwIfError(mediaError);
+        if (media?.length) throw new Error('Remove this event’s photos before canceling the plan.');
+        const { data, error } = await supabase.from('loopedin_events').delete().eq('id', eventId).select('id');
         throwIfError(error);
+        if (!data?.some((row) => row.id === eventId)) throw new Error('The plan was not deleted. Check your access and try again.');
       },
     },
     rsvps: {

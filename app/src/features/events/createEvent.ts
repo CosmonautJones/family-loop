@@ -57,12 +57,14 @@ export function eventToForm(event: Event): EventForm {
 }
 
 export function buildEventUpdate(event: Event, form: EventForm) {
-  const startsAt = new Date(`${form.date}T${form.time}:00`);
+  const originalForm = eventToForm(event);
+  const scheduleUnchanged = form.date === originalForm.date && form.time === originalForm.time;
+  const startsAt = scheduleUnchanged ? new Date(event.startsAt) : new Date(`${form.date}T${form.time}:00`);
   const duration = Math.max(0, Date.parse(event.endsAt) - Date.parse(event.startsAt));
   return {
     title: form.title.trim(),
-    startsAt: startsAt.toISOString(),
-    endsAt: new Date(startsAt.getTime() + duration).toISOString(),
+    startsAt: scheduleUnchanged ? event.startsAt : startsAt.toISOString(),
+    endsAt: scheduleUnchanged ? event.endsAt : new Date(startsAt.getTime() + duration).toISOString(),
     location: form.location.trim(),
     description: form.description.trim(),
   };

@@ -67,7 +67,7 @@ export function AppShell() {
                   {tab.active ? <LinearGradient colors={gradients.sunset} style={styles.activePill} /> : null}
                   <Ionicons
                     name={tabIcons[tab.label]}
-                    size={tab.label === 'Create' ? 27 : 22}
+                    size={tab.label === 'Create' ? 25 : 20}
                     color={tab.active ? palette.white : palette.muted}
                   />
                   <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     boxSizing: 'border-box',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: 8,
+    padding: 5,
   },
   navItem: {
     flexBasis: '20%',
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.card,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
     overflow: 'hidden',
   },
   activePill: {
@@ -163,7 +163,8 @@ const styles = StyleSheet.create({
   navText: {
     color: palette.muted,
     fontSize: 12,
-    fontWeight: '800',
+    fontWeight: '700',
+    letterSpacing: -0.35,
     flexShrink: 1,
   },
   navTextActive: {

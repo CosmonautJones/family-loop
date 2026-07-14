@@ -161,9 +161,11 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         if (!event) throw new Error(`Missing event ${eventId}`);
         if (event.creatorId !== profile.id && member.role !== 'owner' && member.role !== 'admin') throw new Error('Only the event creator or a family owner can update this event.');
         Object.assign(event, patch);
-        if (patch.location && event.timeline[0]?.title === 'Plan') {
-          event.timeline[0] = { ...event.timeline[0], detail: `${patch.location} · details shared with the family` };
-        }
+        if (patch.location) event.timeline = event.timeline.map((item) => (
+          item.title === 'Plan' || item.title === 'Logistics'
+            ? { ...item, detail: `${patch.location} · details shared with the family` }
+            : item
+        ));
         return changed(event);
       },
       deleteEvent: async (eventId) => {
