@@ -16,7 +16,7 @@ export function FamilyOnboardingScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [showCreate, setShowCreate] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; tone: 'error' | 'info' } | null>(null);
   const firstField = useRef<TextInput>(null);
   const creationKey = useRef(crypto.randomUUID());
 
@@ -26,24 +26,25 @@ export function FamilyOnboardingScreen() {
     try {
       if (decision === 'accept') {
         await accept.mutateAsync(auth.invitationToken);
-        setMessage(`You joined ${invitation.data?.status === 'ready' ? invitation.data.groupName : 'the family'}.`);
+        setMessage({ text: `You joined ${invitation.data?.status === 'ready' ? invitation.data.groupName : 'the family'}.`, tone: 'info' });
       } else {
         await decline.mutateAsync(auth.invitationToken);
-        setMessage('Invitation declined.');
+        setMessage({ text: 'Invitation declined.', tone: 'info' });
       }
+      await new Promise((resolve) => setTimeout(resolve, 1500));
       auth.clearInvitationToken();
     } catch {
-      setMessage('That family action isn’t available. Ask for a new invitation and try again.');
+      setMessage({ text: 'That family action isn’t available. Ask for a new invitation and try again.', tone: 'error' });
     }
   };
 
   const useInviteCode = () => {
     const value = inviteCode.trim();
-    if (!value) { setMessage('Paste the invitation code from your family link.'); return; }
+    if (!value) { setMessage({ text: 'Paste the invitation code from your family link.', tone: 'error' }); return; }
     const rawToken = value.includes('#/invite/') ? value.split('#/invite/').pop() ?? '' : value;
     const token = rawToken.split(/[/?#]/)[0];
     try { auth.setInvitationToken(token); setMessage(null); }
-    catch { setMessage('This invitation isn’t available. Paste the complete link or ask for a new one.'); }
+    catch { setMessage({ text: 'This invitation isn’t available. Paste the complete link or ask for a new one.', tone: 'error' }); }
   };
 
   if (auth.invitationToken) {
@@ -57,7 +58,7 @@ export function FamilyOnboardingScreen() {
         <CardAction label={decline.isPending ? 'Declining…' : 'Decline invitation'} disabled={accept.isPending || decline.isPending} onPress={() => finishInvite('decline')} />
       </> : null}
       {invitation.isError || invitation.data?.status === 'unavailable' ? <><Text accessibilityRole="alert" style={styles.error}>This invitation isn’t available. Ask the sender for a new link.</Text><CardAction label="Remove invitation" onPress={auth.clearInvitationToken} /></> : null}
-      {message ? <Text accessibilityLiveRegion="polite" style={styles.copy}>{message}</Text> : null}
+      {message ? <Text accessibilityLiveRegion={message.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={message.tone === 'error' ? 'alert' : undefined} style={message.tone === 'error' ? styles.error : styles.copy}>{message.text}</Text> : null}
     </SurfaceCard></ScrollView>;
   }
 
@@ -78,13 +79,13 @@ export function FamilyOnboardingScreen() {
         <Text style={styles.label}>Description (optional)</Text><TextInput accessibilityLabel="Family description" multiline onChangeText={setDescription} placeholder="Trips, plans, and memories" style={[styles.input, styles.multiline]} value={description} />
         <CardAction label={create.isPending ? 'Creating family…' : 'Create family'} disabled={create.isPending || !name.trim()} onPress={async () => {
           setMessage(null);
-          try { await create.mutateAsync({ creationKey: creationKey.current, name: name.trim(), description: description.trim(), kind: 'family' }); setMessage('Family created.'); }
-          catch { setMessage('We couldn’t create that family. Try again.'); }
+          try { await create.mutateAsync({ creationKey: creationKey.current, name: name.trim(), description: description.trim(), kind: 'family' }); setMessage({ text: 'Family created.', tone: 'info' }); }
+          catch { setMessage({ text: 'We couldn’t create that family. Try again.', tone: 'error' }); }
         }} />
       </>}
     </SurfaceCard> : null}
     {entitlement.data === false ? <SurfaceCard><Text style={styles.cardTitle}>Creation unavailable</Text><Text style={styles.copy}>This account can join a family by invitation, but it can’t create another family.</Text></SurfaceCard> : null}
-    {message ? <Text accessibilityLiveRegion="polite" style={message.includes('couldn’t') ? styles.error : styles.copy}>{message}</Text> : null}
+    {message ? <Text accessibilityLiveRegion={message.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={message.tone === 'error' ? 'alert' : undefined} style={message.tone === 'error' ? styles.error : styles.copy}>{message.text}</Text> : null}
   </ScrollView>;
 }
 

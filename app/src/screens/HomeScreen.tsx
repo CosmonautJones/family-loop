@@ -53,7 +53,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
           {notificationsQuery.isSuccess ? [...notificationsQuery.data].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 3).map((item) => (
             <View key={item.id} style={[styles.updateItem, !item.read && styles.updateUnread]}>
               <View style={styles.flexCopy}><Text style={styles.listTitle}>{item.title}</Text><Text style={styles.cardCopy}>{item.body}</Text><Text style={styles.updateTime}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>
-              {item.eventId ? <CardAction label={`Open update: ${item.title}`} disabled={markRead.isPending} onPress={async () => { if (!item.read) await markRead.mutateAsync(item.id); onOpenEvent?.(item.eventId!); }} /> : !item.read ? <CardAction label={`Mark ${item.title} read`} disabled={markRead.isPending} onPress={() => markRead.mutate(item.id)} /> : null}
+              {item.eventId ? <CardAction label={`Open update: ${item.title}`} disabled={markRead.isPending} onPress={async () => { try { if (!item.read) await markRead.mutateAsync(item.id); } catch { /* Opening the event does not depend on read-state persistence. */ } onOpenEvent?.(item.eventId!); }} /> : !item.read ? <CardAction label={`Mark ${item.title} read`} disabled={markRead.isPending} onPress={() => markRead.mutate(item.id)} /> : null}
             </View>
           )) : null}
           {notificationsQuery.isSuccess && notificationsQuery.data.some((item) => !item.read) ? <CardAction label={markAllRead.isPending ? 'Marking updates read…' : 'Mark all read'} disabled={markAllRead.isPending} onPress={() => markAllRead.mutate()} /> : null}

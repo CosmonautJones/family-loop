@@ -624,6 +624,12 @@ test('invitation drafts normalize email and retain one canonical 32-byte token a
   const changed = invitationDraft.invitationDraftForEmail(first, 'other@example.com', () => secondBytes);
   assert.equal(changed.email, 'other@example.com');
   assert.notEqual(changed.token, first.token);
+  const confirmed = invitationDraft.confirmInvitationDraft(first, 'https://loopedin.example/');
+  assert.equal(confirmed.link, `https://loopedin.example/#/invite/${first.token}`);
+  assert.equal(invitationDraft.canSubmitInvitation(confirmed, 'FAMILY@example.com', false), false, 'success blocks an ordinary second submit');
+  assert.equal(invitationDraft.retainInvitationPresentation(confirmed), confirmed, 'already_pending preserves the valid displayed link');
+  assert.equal(invitationDraft.revokeInvitationPresentation(confirmed, 'family@example.com'), null, 'revoke removes the matching link');
+  assert.equal(invitationDraft.revokeInvitationPresentation(confirmed, 'other@example.com'), confirmed, 'unrelated revoke preserves the link');
   assert.throws(() => invitationDraft.encodeInvitationToken(new Uint8Array(31)), /exactly 32 random bytes/);
 });
 
@@ -719,12 +725,17 @@ test('Family screen is service-backed with owner and member controls', () => {
   assert.match(family, /new Uint8Array\(32\)/);
   assert.match(family, /Pending invitations/);
   assert.match(family, /invitationDraftForEmail\(inviteDraft\.current, email, randomInvitationBytes\)/);
-  assert.match(family, /if \(inviteInFlight\.current\) return/);
+  assert.match(family, /if \(!canSubmitInvitation\(invitePresentation, email, inviteInFlight\.current\)\) return/);
   assert.match(family, /inviteInFlight\.current = true/);
   assert.match(family, /inviteInFlight\.current = false/);
   assert.match(family, /Retry to safely reuse the same private link/);
   assert.match(family, /already pending for this email\. Revoke it below/);
-  assert.ok(family.indexOf("setInviteLink(`${base}#/invite/${draft.token}`)") < family.indexOf("inviteDraft.current = null"));
+  assert.match(family, /setInvitePresentation\(confirmInvitationDraft\(draft, base\)\)/);
+  assert.match(family, /setInvitePresentation\(\(current\) => retainInvitationPresentation\(current\)\)/);
+  assert.match(family, /revokeInvitationPresentation\(invitePresentation, item\.email\)/);
+  assert.match(family, /Invitation link created/);
+  assert.match(family, /notice\.tone === 'error'/);
+  assert.doesNotMatch(family, /notice\.includes/);
   assert.match(family, /Transfer ownership to/);
   assert.match(family, /immediately lose access/);
   assert.match(family, /Leave family/);
@@ -778,7 +789,10 @@ test('authenticated family onboarding handles invite decisions and honest zero-f
   assert.match(onboarding, /Invitation link or code/);
   assert.match(onboarding, /creationKey = useRef\(crypto\.randomUUID\(\)\)/);
   assert.match(onboarding, /creationKey: creationKey\.current/);
-  assert.match(onboarding, /catch \{ setMessage\('This invitation isn’t available/);
+  assert.match(onboarding, /catch \{ setMessage\(\{ text: 'This invitation isn’t available/);
+  assert.match(onboarding, /setMessage\(\{ text: `You joined/);
+  assert.match(onboarding, /await new Promise\(\(resolve\) => setTimeout\(resolve, 1500\)\)[\s\S]*?auth\.clearInvitationToken\(\)/);
+  assert.doesNotMatch(onboarding, /message\.includes/);
 });
 
 test('Home Updates card is compact, truthful, and marks opened or all updates read', () => {
@@ -792,6 +806,7 @@ test('Home Updates card is compact, truthful, and marks opened or all updates re
   assert.match(home, /\.slice\(0, 3\)/);
   assert.match(home, /!item\.read/);
   assert.match(home, /await markRead\.mutateAsync\(item\.id\)[\s\S]*?onOpenEvent/);
+  assert.match(home, /try \{ if \(!item\.read\) await markRead\.mutateAsync\(item\.id\); \} catch[\s\S]*?onOpenEvent/);
   assert.match(home, /Mark all read/);
 });
 

@@ -4,7 +4,7 @@ import { useActiveEventsQuery, useActiveGroupMembersQuery, useActiveGroupQuery, 
 import { selectFamilyViewModel } from '../app/selectors';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
-import { invitationDraftForEmail, normalizeInvitationEmail, type InvitationDraft } from '../features/auth/invitationDraft';
+import { canSubmitInvitation, confirmInvitationDraft, invitationDraftForEmail, normalizeInvitationEmail, retainInvitationPresentation, revokeInvitationPresentation, type InvitationDraft, type InvitationPresentation } from '../features/auth/invitationDraft';
 import { palette, spacing } from '../theme/tokens';
 
 function confirmAction(title: string, detail: string) {
@@ -34,8 +34,8 @@ export function GroupsScreen() {
   const leaveGroup = useLeaveGroupMutation(groupId);
   const transferOwnership = useTransferGroupOwnershipMutation(groupId);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteLink, setInviteLink] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
+  const [invitePresentation, setInvitePresentation] = useState<InvitationPresentation | null>(null);
+  const [notice, setNotice] = useState<{ text: string; tone: 'error' | 'info' } | null>(null);
   const inviteDraft = useRef<InvitationDraft | null>(null);
   const inviteInFlight = useRef(false);
   const loading = groupQuery.isPending || membersQuery.isPending || eventsQuery.isPending;
@@ -47,11 +47,11 @@ export function GroupsScreen() {
   if (!groupQuery.data) return <View style={styles.state}><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>No active family yet.</Text><Text style={styles.cardCopy}>Create or join a family to manage people and invitations.</Text></View>;
 
   const family = selectFamilyViewModel(groupQuery.data, membersQuery.data ?? [], eventsQuery.data ?? []);
-  const act = async (action: () => Promise<unknown>, success: string) => { setNotice(null); try { await action(); setNotice(success); } catch { setNotice('That family action isn’t available. Try again.'); } };
+  const act = async (action: () => Promise<unknown>, success: string) => { setNotice(null); try { await action(); setNotice({ text: success, tone: 'info' }); } catch { setNotice({ text: 'That family action isn’t available. Try again.', tone: 'error' }); } };
   const invite = async () => {
     const email = normalizeInvitationEmail(inviteEmail);
-    if (!email) { setNotice('Enter the email address your relative will use.'); return; }
-    if (inviteInFlight.current) return;
+    if (!email) { setNotice({ text: 'Enter the email address your relative will use.', tone: 'error' }); return; }
+    if (!canSubmitInvitation(invitePresentation, email, inviteInFlight.current)) return;
     const draft = invitationDraftForEmail(inviteDraft.current, email, randomInvitationBytes);
     inviteDraft.current = draft;
     inviteInFlight.current = true;
@@ -59,14 +59,13 @@ export function GroupsScreen() {
     try {
       await createInvitation.mutateAsync({ email: draft.email, token: draft.token });
       const base = typeof window === 'undefined' ? 'https://loopedin.app/' : `${window.location.origin}${window.location.pathname}`;
-      setInviteLink(`${base}#/invite/${draft.token}`);
-      inviteDraft.current = null;
-      setNotice('Invitation created. Share the private link below with the invited person.');
+      setInvitePresentation(confirmInvitationDraft(draft, base));
+      setNotice({ text: 'Invitation created. Share the private link below with the invited person.', tone: 'info' });
     } catch (cause: unknown) {
-      setInviteLink('');
-      setNotice(cause instanceof Error && /already waiting|already pending/i.test(cause.message)
+      setInvitePresentation((current) => retainInvitationPresentation(current));
+      setNotice({ text: cause instanceof Error && /already waiting|already pending/i.test(cause.message)
         ? 'An invitation is already pending for this email. Revoke it below, then create a new link.'
-        : 'We couldn’t confirm this invitation. Retry to safely reuse the same private link.');
+        : 'We couldn’t confirm this invitation. Retry to safely reuse the same private link.', tone: 'error' });
     } finally {
       inviteInFlight.current = false;
     }
@@ -74,19 +73,19 @@ export function GroupsScreen() {
 
   return <ScrollView contentContainerStyle={[styles.container, { width: Math.max(width - (2 * spacing.lg), 0) }]}>
     <Text style={styles.eyebrow}>Your family</Text><Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{family.name}</Text><Text style={styles.subtitle}>{family.description}</Text>
-    {notice ? <Text accessibilityLiveRegion="polite" style={notice.includes('isn’t') ? styles.error : styles.notice}>{notice}</Text> : null}
+    {notice ? <Text accessibilityLiveRegion={notice.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={notice.tone === 'error' ? 'alert' : undefined} style={notice.tone === 'error' ? styles.error : styles.notice}>{notice.text}</Text> : null}
     <SurfaceCard><Text style={styles.cardTitle}>Family at a glance</Text><Text style={styles.summary}>{family.memberCountLabel}</Text><Text style={styles.cardCopy}>{family.upcomingLabel}</Text></SurfaceCard>
     {owner ? <SurfaceCard>
       <Text style={styles.cardTitle}>Invite someone</Text><Text style={styles.cardCopy}>The link is private and tied to this email. LoopedIn does not send it for you yet.</Text>
-      <Text style={styles.label}>Email address</Text><TextInput accessibilityLabel="Invite email address" autoCapitalize="none" autoComplete="email" inputMode="email" onChangeText={(value) => { if (normalizeInvitationEmail(value) !== normalizeInvitationEmail(inviteEmail)) { inviteDraft.current = null; setInviteLink(''); } setInviteEmail(value); }} placeholder="relative@example.com" style={styles.input} value={inviteEmail} />
-      <CardAction label={createInvitation.isPending ? 'Creating invitation…' : 'Create invitation link'} disabled={createInvitation.isPending || inviteInFlight.current} onPress={invite} />
-      {inviteDraft.current && !createInvitation.isPending ? <CardAction label="Cancel invitation draft" onPress={() => { inviteDraft.current = null; setInviteLink(''); setNotice('Invitation draft cleared.'); }} /> : null}
-      {inviteLink ? <View style={styles.linkBox}><Text selectable style={styles.link}>{inviteLink}</Text><CardAction label="Copy invitation link" onPress={async () => { if (typeof navigator !== 'undefined' && navigator.clipboard) { await navigator.clipboard.writeText(inviteLink); setNotice('Invitation link copied.'); } else setNotice('Select and copy the invitation link above.'); }} /></View> : null}
+      <Text style={styles.label}>Email address</Text><TextInput accessibilityLabel="Invite email address" autoCapitalize="none" autoComplete="email" inputMode="email" onChangeText={(value) => { if (normalizeInvitationEmail(value) !== normalizeInvitationEmail(inviteEmail)) { inviteDraft.current = null; setInvitePresentation(null); } setInviteEmail(value); }} placeholder="relative@example.com" style={styles.input} value={inviteEmail} />
+      <CardAction label={createInvitation.isPending ? 'Creating invitation…' : invitePresentation ? 'Invitation link created' : 'Create invitation link'} disabled={!canSubmitInvitation(invitePresentation, inviteEmail, createInvitation.isPending || inviteInFlight.current)} onPress={invite} />
+      {(inviteDraft.current || invitePresentation) && !createInvitation.isPending ? <CardAction label="Cancel invitation draft" onPress={() => { inviteDraft.current = null; setInvitePresentation(null); setNotice({ text: 'Invitation draft cleared.', tone: 'info' }); }} /> : null}
+      {invitePresentation ? <View style={styles.linkBox}><Text selectable style={styles.link}>{invitePresentation.link}</Text><CardAction label="Copy invitation link" onPress={async () => { if (typeof navigator !== 'undefined' && navigator.clipboard) { await navigator.clipboard.writeText(invitePresentation.link); setNotice({ text: 'Invitation link copied.', tone: 'info' }); } else setNotice({ text: 'Select and copy the invitation link above.', tone: 'info' }); }} /></View> : null}
       <Text style={styles.sectionTitle}>Pending invitations</Text>
       {invitations.isPending ? <ActivityIndicator color={palette.plum} /> : null}
       {invitations.isError ? <><Text style={styles.error}>Pending invitations are unavailable.</Text><CardAction label="Retry invitations" onPress={() => invitations.refetch()} /></> : null}
       {invitations.isSuccess && invitations.data.filter((item) => item.status === 'pending').length === 0 ? <Text style={styles.cardCopy}>No invitations are waiting.</Text> : null}
-      {invitations.data?.filter((item) => item.status === 'pending').map((item) => <View key={item.id} style={styles.actionRow}><View style={styles.rowCopy}><Text style={styles.memberName}>{item.email}</Text><Text style={styles.role}>Pending</Text></View><CardAction label={`Revoke invitation for ${item.email}`} disabled={revokeInvitation.isPending} onPress={() => act(() => revokeInvitation.mutateAsync(item.id), 'Invitation revoked.')} /></View>)}
+      {invitations.data?.filter((item) => item.status === 'pending').map((item) => <View key={item.id} style={styles.actionRow}><View style={styles.rowCopy}><Text style={styles.memberName}>{item.email}</Text><Text style={styles.role}>Pending</Text></View><CardAction label={`Revoke invitation for ${item.email}`} disabled={revokeInvitation.isPending} onPress={async () => { setNotice(null); try { await revokeInvitation.mutateAsync(item.id); const nextPresentation = revokeInvitationPresentation(invitePresentation, item.email); if (!nextPresentation) inviteDraft.current = null; setInvitePresentation(nextPresentation); setNotice({ text: 'Invitation revoked. Any displayed link for it is no longer usable.', tone: 'info' }); } catch { setNotice({ text: 'That family action isn’t available. Try again.', tone: 'error' }); } }} /></View>)}
     </SurfaceCard> : null}
     <SurfaceCard><Text style={styles.cardTitle}>People</Text><View style={styles.list}>{family.members.map((member) => <View key={member.id} style={styles.memberBlock}>
       <View style={styles.memberRow} accessibilityLabel={`${member.name}, ${member.role}`}><View accessible={false} style={styles.avatar}><Text style={styles.avatarText}>{member.initials}</Text></View><View style={styles.memberCopy}><Text style={styles.memberName}>{member.name}</Text><Text style={styles.role}>{member.role}</Text></View></View>

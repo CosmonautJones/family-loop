@@ -1,4 +1,5 @@
 export type InvitationDraft = { email: string; token: string };
+export type InvitationPresentation = InvitationDraft & { link: string };
 
 export function normalizeInvitationEmail(email: string) {
   return email.trim().toLowerCase();
@@ -21,4 +22,20 @@ export function invitationDraftForEmail(current: InvitationDraft | null, email: 
   const normalizedEmail = normalizeInvitationEmail(email);
   if (current?.email === normalizedEmail) return current;
   return { email: normalizedEmail, token: encodeInvitationToken(randomBytes()) };
+}
+
+export function confirmInvitationDraft(draft: InvitationDraft, baseUrl: string): InvitationPresentation {
+  return { ...draft, link: `${baseUrl}#/invite/${draft.token}` };
+}
+
+export function canSubmitInvitation(presentation: InvitationPresentation | null, email: string, inFlight: boolean) {
+  return !inFlight && !(presentation && presentation.email === normalizeInvitationEmail(email));
+}
+
+export function retainInvitationPresentation(presentation: InvitationPresentation | null) {
+  return presentation;
+}
+
+export function revokeInvitationPresentation(presentation: InvitationPresentation | null, email: string) {
+  return presentation?.email === normalizeInvitationEmail(email) ? null : presentation;
 }
