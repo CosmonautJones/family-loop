@@ -83,7 +83,7 @@ git status --short
 ### Conditional-staging/mobile-web/human
 
 - Remote configured check: `NOT RUN — safe environment unavailable` by default.
-- Native/human tests: not applicable to a read-only readiness audit unless failure UX is separately authorized.
+- Mobile-web browser/human tests: not applicable to a read-only readiness audit unless failure UX is separately authorized.
 
 ## Stop conditions/authorization limits
 

@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-WEB-001`
 
-Status: Complete — responsive-web campaign correction passed the listed documentation evidence gates.
+Status: In progress — targeted Run 1 RED correction implemented; external re-review pending.
 
 ## Objective
 
@@ -24,6 +24,8 @@ Correct the product and all 17 planned OPORDs to one platform stance: LoopedIn i
 - `docs/taste-bar.md`
 - `docs/anti-goals.md`
 - `docs/architecture.md`
+- `docs/04-spec-roadmap.md`
+- `docs/10-loop-architecture-and-workflow.md`
 - `docs/opords/**`
 - `tests/spec-docs.test.js`
 - `tasks/current-mission.md`
@@ -38,10 +40,11 @@ Correct the product and all 17 planned OPORDs to one platform stance: LoopedIn i
 ## Ordered owned tasks
 
 1. Correct source-of-truth product and architecture documents.
-2. Semantically review and correct every OPORD; rename OPORD 014 and 016 without changing their numeric identities.
-3. Strengthen documentation-contract tests for filenames, platform language, task count, dependencies, and prohibited active native-release requirements.
-4. Update backlog, completed-work, review, and rubric records without altering historical evidence.
-5. Run root/app tests, TypeScript, harness, placeholder lint, diff, and status checks; commit only the explicit manifest.
+2. Mark the original native-first roadmap as historical/superseded and correct the implementation bridge to responsive web.
+3. Semantically review and correct every OPORD; rename OPORD 014 and 016 without changing their numeric identities.
+4. Strengthen documentation-contract tests for filenames, platform language, task count, dependencies, and prohibited active native-release requirements.
+5. Update backlog, completed-work, review, and rubric records without altering historical evidence.
+6. Run root/app tests, TypeScript, harness, placeholder lint, diff, and status checks; commit only the explicit manifest.
 
 ## Acceptance criteria
 
@@ -51,6 +54,7 @@ Correct the product and all 17 planned OPORDs to one platform stance: LoopedIn i
 - UI work requires 320/390/430 CSS-pixel widths, 48x48 CSS-pixel touch targets, no hover dependency, virtual-keyboard safety, browser history/deep-link/reload behavior, 200% zoom/reflow, focus/screen-reader/reduced-motion checks, conditional Safari/Chrome checks, and secondary desktop smoke.
 - Media, reminders, resilience, testing, and release orders describe browser capabilities rather than native dependencies or app-store delivery.
 - Native applications never block this campaign and remain a separately authorized future option.
+- The historical roadmap is prominently superseded, and the active implementation bridge specifies responsive web.
 
 ## Validation commands
 
@@ -81,4 +85,4 @@ Stop before runtime files, dependencies, configuration, credentials, remote syst
 - [x] All acceptance criteria have direct repository evidence.
 - [x] Required commands pass or retain an explicit truthful limitation.
 - [x] Review log and campaign records are updated.
-- [x] Explicit manifest is committed with a clean worktree.
+- [ ] Explicit manifest is committed with a clean worktree.

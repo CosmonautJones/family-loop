@@ -210,6 +210,9 @@ test('active campaign is responsive-web and preserves renamed testing and releas
 
 test('spec roadmap includes MVP and roadmap phases', () => {
   const content = fs.readFileSync(path.join(root, 'docs/04-spec-roadmap.md'), 'utf8');
+  assert.match(content, /HISTORICAL CONCEPT ROADMAP/);
+  assert.match(content, /SUPERSEDED PLATFORM DIRECTION/);
+  for (const link of ['vision.md', 'architecture.md', 'opords/README.md']) assert.match(content, new RegExp(link.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(content, /Core MVP feature specification/);
   assert.match(content, /Phase 1 — MVP build/);
   assert.match(content, /Phase 2 — retention and polish/);
@@ -235,9 +238,28 @@ test('brand package and landing page contain brand and product positioning', () 
 
 test('architecture workflow doc covers app structure, sample data, and contributor flow', () => {
   const architecture = fs.readFileSync(path.join(root, 'docs/10-loop-architecture-and-workflow.md'), 'utf8');
-  assert.match(architecture, /## Mobile app structure/);
+  assert.match(architecture, /## Responsive web app structure/);
+  assert.match(architecture, /Expo \+ React Native Web/);
+  assert.match(architecture, /phone browsers/);
+  assert.match(architecture, /desktop web.+secondary/i);
   assert.match(architecture, /## Screen model for the MVP foundation/);
   assert.match(architecture, /## Sample data strategy/);
   assert.match(architecture, /## Recommended implementation workflow for agent\/subagent teams/);
   assert.match(architecture, /## Local run and test commands/);
+});
+
+test('active OPORDs do not require native application testing', () => {
+  const opordDir = path.join(root, 'docs/opords');
+  const files = fs.readdirSync(opordDir).filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file));
+  const prohibited = [
+    /Native deep-link tests/i,
+    /Native\/human tests/i,
+    /native smoke/i,
+    /both native platforms/i,
+    /iOS\/Android builds/i
+  ];
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(opordDir, file), 'utf8');
+    for (const pattern of prohibited) assert.doesNotMatch(content, pattern, `${file} contains active native-test language`);
+  }
 });

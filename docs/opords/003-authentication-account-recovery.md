@@ -84,7 +84,7 @@ git status --short
 
 - Safe-environment matrix: valid/invalid/expired/wrong-account invite; new/existing account; known/unknown email neutral recovery; expired/reused reset; offline failure; bootstrap retry; session restore/sign-out.
 - Live recovery: `NOT RUN — safe environment unavailable` until prerequisites exist.
-- Native deep-link tests: report each platform honestly.
+- HTTPS browser-link tests: report iOS Safari and Android Chrome results honestly, including existing/new tab, Back/history, deep-link, and reload behavior.
 
 ## Stop conditions/authorization limits
 

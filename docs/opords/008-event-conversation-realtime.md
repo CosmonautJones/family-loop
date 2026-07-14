@@ -55,7 +55,7 @@ git status --short
 Record lint as placeholder per `app/package.json:11`; run focused subscription tests named by the mission, 390x844 mock smoke, and configured signed-out smoke.
 
 ### Conditional-staging/mobile-web/human
-Run an approved live two-user transcript only in a safe staging environment. Native/human tests: currently NOT RUN.
+Run an approved live two-user transcript only in a safe staging environment. Mobile-web browser/human tests: currently NOT RUN.
 
 ## Stop conditions/authorization limits
 Stop before credentials, remote deploy, publication/RLS/migration changes, new packages, destructive operations, or any need to broaden beyond event messages. Stop if a safe two-user environment is unavailable; report live acceptance as NOT RUN.

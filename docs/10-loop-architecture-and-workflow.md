@@ -1,19 +1,19 @@
-# LoopedIn Mobile Architecture and Contributor Workflow
+# LoopedIn Responsive Web Architecture and Contributor Workflow
 
 ## Purpose
-This document translates the product proposal and roadmap into a build-ready foundation for the LoopedIn mobile app. It describes:
-- the recommended mobile app structure
+This document bridges the historical concept proposal and roadmap to the current LoopedIn responsive web app. It describes:
+- the recommended responsive web app structure
 - the screen model for the first shipping slices
 - a sample data strategy for scaffolding and demos
 - contributor workflow guidance for agent/subagent teams
 - the local commands contributors should use to run and verify the repo
 
-Use this doc as the implementation bridge between the concept artifacts in `docs/03-product-proposal.md`, the roadmap in `docs/04-spec-roadmap.md`, and the Expo scaffold in `app/`.
+Use this doc as the implementation bridge between the historical concept artifacts, the authoritative direction in `docs/vision.md` and `docs/architecture.md`, and the Expo/React Native Web scaffold in `app/`.
 
 ---
 
 ## System architecture at a glance
-LoopedIn should be implemented as an **event-centered mobile client** backed by a service layer that treats the event as the primary object. The mobile app is the main product surface; web is useful for previewing and may become a companion later, but it should not drive product shape.
+LoopedIn is an **event-centered responsive web app** backed by a service layer that treats the event as the primary object. iOS Safari and Android Chrome phone browsers are the primary product surface; desktop web remains usable and secondary.
 
 ### Product object hierarchy
 1. **Group** is the permission boundary.
@@ -22,9 +22,10 @@ LoopedIn should be implemented as an **event-centered mobile client** backed by 
 4. **Memories/recaps** are derived from completed events rather than free-floating posts.
 
 ### Recommended system shape
-- **Mobile client:** Expo + React Native + TypeScript
-- **Primary platform target:** iOS and Android first
-- **Web stance:** preview/companion only until the mobile loop is excellent
+- **Web client:** Expo + React Native Web + TypeScript
+- **Primary platform target:** iOS Safari and Android Chrome phone browsers
+- **Desktop stance:** usable secondary responsive surface
+- **Native stance:** Expo native targets, native apps, EAS, and app stores are future non-goals unless separately authorized
 - **Client state:**
   - server-backed data via TanStack Query when backend work begins
   - local UI/session state via a lightweight store such as Zustand
@@ -37,7 +38,7 @@ If a feature does not make an event easier to plan, attend, discuss, or remember
 
 ---
 
-## Mobile app structure
+## Responsive web app structure
 The current scaffold lives in `app/` and should evolve toward a feature-oriented structure instead of a flat screen-only codebase.
 
 ### Current repo surfaces
@@ -93,7 +94,7 @@ This keeps the code structure aligned with the product roadmap instead of coupli
 ---
 
 ## Screen model for the MVP foundation
-The mobile app should be organized around a small set of high-value phone surfaces.
+The responsive web app should be organized around a small set of high-value phone-browser surfaces that also reflow for desktop web.
 
 ### 1. Home dashboard
 **Purpose:** answer “what matters next?” within seconds.
@@ -168,7 +169,7 @@ Keep creation fast by default, then allow richer editing inside event detail aft
 ---
 
 ## Suggested navigation model
-Recommended bottom navigation for the first real mobile build:
+Recommended touch-first navigation for narrow phone-browser widths:
 - **Home**
 - **Calendar**
 - **Create**
@@ -176,10 +177,10 @@ Recommended bottom navigation for the first real mobile build:
 - **Profile**
 
 ### Navigation rules
-- Event detail must be reachable from Home, Calendar, Memories, and notifications.
+- Event detail must be reachable from Home, Calendar, Memories, and in-app updates, with browser history, deep-link, and reload behavior preserved.
 - Group switching should update all event-derived surfaces consistently.
 - Avoid splitting event conversation into a separate top-level tab in MVP; it belongs to the event.
-- Avoid desktop-first navigation patterns unless a later companion web app earns them.
+- Keep desktop web usable without letting desktop-first navigation weaken the phone-browser hierarchy.
 
 ---
 
@@ -294,23 +295,17 @@ npm run preview:prototype
 ```
 Serves the `docs/` directory locally on port `8765` for visual review.
 
-### Mobile app install and start
+### Responsive web app install and start
 ```bash
 cd app
 npm install
-npm start
-```
-Starts the Expo app.
-
-### Mobile platform shortcuts
-From `app/`:
-```bash
-npm run android
-npm run ios
 npm run web
 ```
+Starts the Expo/React Native Web app in a browser.
 
-### Mobile scaffold test
+Expo's native shortcuts remain scaffold capabilities, not production commitments. Native targets require separate authorization.
+
+### App scaffold test
 From `app/`:
 ```bash
 npm test
@@ -334,11 +329,11 @@ To build intelligently from the current scaffold, contributors should usually wo
 
 1. establish fixture models and screen-ready selectors
 2. extract Home screen sections from `App.tsx` into feature/components structure
-3. add navigation shell and placeholder routes
+3. add browser-history-aware navigation and placeholder routes
 4. scaffold Calendar and Event Detail screens
 5. connect all screens to shared fixture scenarios
 6. add Memories and Group/Profile surfaces
-7. only then begin backend-facing data layer integration
+7. only then begin backend-facing data layer integration through the existing service boundary
 
 This order preserves design momentum while reducing rework.
 

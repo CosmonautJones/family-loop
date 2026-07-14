@@ -1,5 +1,9 @@
 # LoopedIn — Spec and Roadmap
 
+> **HISTORICAL CONCEPT ROADMAP — SUPERSEDED PLATFORM DIRECTION**
+>
+> This artifact preserves the original native-first concept and its APNs/FCM recommendations for historical context. It must not guide current implementation. The authoritative responsive-web direction is defined by [`docs/vision.md`](vision.md), [`docs/architecture.md`](architecture.md), and [`docs/opords/README.md`](opords/README.md): phone browsers first, desktop web secondary, and native apps separately authorized future work.
+
 ## Product definition
 LoopedIn is a private, mobile-first social calendar app for families and friend groups. It combines event planning, contextual conversation, reminders, attendance, and shared photos into one event-centered experience.
 

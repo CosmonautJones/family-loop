@@ -56,7 +56,7 @@ Get-ChildItem supabase/migrations -File | Sort-Object Name | ForEach-Object Name
 Capture intentional-failure evidence on a disposable branch for lint, tests, secret scanning, and migration immutability; remove seeded violations before completion.
 
 ### Conditional-staging/mobile-web/human
-Trigger the workflow on an approved draft PR and have an administrator enable required checks only after stable names pass. Native/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
+Trigger the workflow on an approved draft PR and have an administrator enable required checks only after stable names pass. Mobile-web browser/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
 
 ## Stop conditions/authorization limits
 Stop before adding lint dependencies without approval, using secrets, editing runtime code outside focused lint corrections, mutating branch protection, opening/pushing a PR, or running remote migration/deploy commands.

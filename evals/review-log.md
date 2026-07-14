@@ -2,6 +2,9 @@
 
 ## 2026-07-13 — FAMILY-LOOP-WEB-001 responsive-web campaign correction
 
+- External Run 1 review: RED. Blocking contradictions remained in `docs/04-spec-roadmap.md` and `docs/10-loop-architecture-and-workflow.md`, and active native-test wording remained in OPORDs 003, 004, 005, 008, and 015. The targeted correction is authorized; external re-review remains pending after evidence and commit.
+- Targeted Run 1 fix evidence: historical roadmap banner and authoritative links added; implementation bridge corrected to responsive web; all 17 active OPORDs searched and stale native-test phrases removed. Root tests PASS 24/24; app tests PASS 13/13; TypeScript and harness PASS; lint exits successfully but remains a placeholder. External PASS is not claimed.
+
 - Scope reviewed: source-of-truth product/architecture documents, all 17 OPORDs and their index, portable contract tests, and mission/evaluation records. No runtime, dependency, configuration, credential, remote, or deployment file changed.
 - Platform correction: LoopedIn is now consistently specified as a responsive web app built with Expo/React Native Web, optimized first for iOS Safari and Android Chrome phone browsers, with desktop web usable and secondary. Native apps, EAS, and app stores are future non-goals unless separately authorized.
 - Campaign invariants: numeric OPORD IDs, 60 bounded tasks, dependency graph, canonical order, backend/server/database scope, and authorization boundaries are preserved. OPORD 014 and 016 received accurate mobile-web testing and web-release filenames.

@@ -84,7 +84,7 @@ git status --short
 - RLS policy tests in an approved database environment.
 - Multi-user matrix covering owner/member/invitee/nonmember, atomic-create failure, wrong account, expiry, replay, duplicate, revoke, removal, last-owner denial, transfer race, escalation, and direct-ID access.
 - Live two-user/RLS: `NOT RUN — safe environment unavailable` until approved.
-- Native/human tests recorded separately; lint remains placeholder unless changed.
+- Mobile-web browser/human tests recorded separately; lint remains placeholder unless changed.
 
 ## Stop conditions/authorization limits
 
