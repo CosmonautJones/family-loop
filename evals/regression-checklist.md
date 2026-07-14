@@ -128,6 +128,17 @@
 - [x] The local incident runbook assigns severity, conditional owner, minimal evidence, authorization gates, recovery validation, and records a no-production-action tabletop.
 - [ ] Production telemetry, named hosted incident ownership, retention decisions, hosted enforcement, external assessment, and physical-device failure copy remain `NOT RUN`.
 
+## OPORD 016 local release and rollback
+
+- [x] Exact-commit builds use `git archive`, clean `npm ci`, dotenv-disabled durable-local mode, and 300-second npm/export process bounds.
+- [x] Two independent candidate exports have byte-identical timestamp-free manifests: 22 files, digest `ef793a72101bb80a5c8f6fe40bd6425fcec7630e04fd1b32c1e25ea4b11117dd`.
+- [x] Promotion verifies every file, publishes digest-addressed directories atomically, and moves only a small named alias.
+- [x] Local baseline → candidate → baseline rehearsal passed release-header, CSP/security, cache, hashed-asset consistency, and extensionless SPA fallback checks.
+- [x] Promoted candidate passed 320/390/430/1280 no-overflow/landmark/navigation, reduced motion, sequential focus, 200% scale proxy, exact-event deep link, Back/reload, and reduced-height validation focus.
+- [x] Rollback changed only the frontend alias; no destructive/down database migration or hosted mutation occurred.
+- [ ] Identical artifact promotion across distinct hosted backends requires an approved runtime-config design because Expo public backend values are currently compile-time.
+- [ ] GitHub-hosted green commit, named host/environments/operators, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
+
 ## Wave 5 mobile accessibility implementation
 
 - [x] Exactly one main landmark wraps the active screen and the fixed navigation appears before it in DOM order.

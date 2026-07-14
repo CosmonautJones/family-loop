@@ -81,3 +81,9 @@ The forward-only `20260714120000_loopedin_group_invitation_lifecycle.sql` migrat
 ## Verification
 
 From the repository root, run `npm test`. For app changes, also run `cd app`, then `npm test` and `npx tsc --noEmit`. Use `scripts/check-harness.ps1` when the current mission requires the full harness check.
+
+## Local web release boundary
+
+OPORD 016 adds a repository-local release boundary without selecting a host. `scripts/build-web-release.ps1` exports an exact Git commit with dotenv disabled and durable-local mode forced, then writes a timestamp-free canonical manifest of sorted file digests. `scripts/promote-web-release.ps1` verifies every byte before storing the artifact under its digest and atomically moving a named alias. `scripts/serve-web-release.mjs` is an executable loopback reference for CSP/security headers, immutable content-addressed assets, revalidated HTML, and extensionless SPA fallback; `scripts/rehearse-web-release.ps1` exercises candidate promotion and rollback through that alias.
+
+This is local artifact integrity and rollback evidence, not deployment evidence. No host, DNS, TLS, staging backend, production backend, secret store, or remote environment is configured. The Supabase endpoint is currently an Expo public compile-time variable, so identical artifact promotion across isolated hosted backends requires a separate runtime-configuration decision before a hosted release can satisfy environment separation.
