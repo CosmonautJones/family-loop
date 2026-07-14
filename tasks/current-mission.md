@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-FULL-001`
 
-Status: `IN PROGRESS — LOCAL WAVES 0-6 + LOCAL MULTI-USER/KISS GATE COMPLETE — REMOTE/PRODUCTION GATE PENDING SEPARATE AUTHORIZATION`
+Status: `IN PROGRESS — LOCAL WAVES 0-6 + CONFIGURED LOCAL SUPABASE MULTI-USER/KISS GATE COMPLETE — REMOTE/PRODUCTION GATE PENDING SEPARATE AUTHORIZATION`
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
@@ -337,3 +337,15 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Deployment/certification procedure and current limits are in `docs/runbooks/remote-media-readiness.md`.
 - Local Supabase evidence now exceeds the original repository-only checkpoint: migration and database lint pass, and the reproducible media runner passes signup-session uploader/member/owner/outsider metadata and private-Storage behavior, manager recovery, concurrent abort/upload locking, attack cases, event FK restriction, and real PNG bytes. No hosted environment was changed.
 - Current final gates: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo web export, and diff check PASS. Lint remains a placeholder WARN.
+
+## Configured local Supabase family browser proof
+
+- The loopback-only browser harness provisioned the smallest trusted state: one email-confirmed entitled owner, one outsider, and no pre-created family. The app ran with `EXPO_PUBLIC_DATA_MODE=supabase`; no hosted project or shared environment was touched.
+- Avery created Jones Family through the UI. Maya and Jordan used separate invitation-bound signup sessions and joined, producing one owner plus two members. A fourth authenticated outsider remained isolated in the no-family state, including after direct navigation to a Jones event URL.
+- The three members created Door County Cabin Weekend, Yellowstone Road Trip, and completed Lake Geneva Family Reunion, then added distinct Going/Maybe RSVPs and event comments. Home, Calendar, Event Detail, and Memories retained exact identities and records across reloads.
+- Lake Geneva retained three private signed-access photos after reload: two attributed Unsplash-source uploads and one actual local JPEG browser-file upload with caption and alt text. Member/owner media controls stayed role- and uploader-scoped.
+- Recipient-scoped database-generated updates appeared for non-actors and current members. The owner observed 14 unread updates and successfully used Mark all read; invitees had their own independent counts.
+- A configured-browser failure in active-family query transition was reproduced and fixed in `89d8720`. Focused regression tests, root 69/69, app-local 58/58, TypeScript, and Expo web export passed after the correction; a final all-gates rerun is still owned by the campaign closeout.
+- Exact 320/390/430 CSS-pixel browser checks passed without horizontal overflow. At 320 there was one main landmark, one primary heading, and no visible action below 48×48 CSS pixels. Authenticated Home Lighthouse scored 100 Accessibility and 100 Best Practices; SEO 67 and agentic browsing 50 are recorded without being treated as release blockers or passes.
+- Detailed setup, journey, cleanup, and evidence boundaries are in `docs/runbooks/configured-local-family-browser-e2e.md`.
+- This closes the configured **local** Auth/Postgres/RLS/private-Storage browser proof. It does not close the production mission: hosted deployment/migrations/monitoring/backup/restore, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% zoom, reduced-motion verification, and moderated older-adult testing remain `NOT RUN` pending the appropriate authorization, environment, devices, or participants.
