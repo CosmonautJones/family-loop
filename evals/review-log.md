@@ -1,5 +1,11 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 Run 3 closeout
+
+- Independent Run 3 result: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
+- The gate accepted the durable v1-to-v2 membership-role migration in `483e55e` and its retained-envelope browser evidence; records checkpoint `a9a5981` remains the detailed Run 2 correction record.
+- Wave 1 is **COMPLETE**. Lint remains a placeholder warning, and remote Supabase/RLS behavior remains unverified and is not inferred from local evidence.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 Run 2 correction
 
 - Independent Run 2 result: **RED**. Retained pre-role version-1 durable envelopes lacked an explicit schema migration, so a hard reload could not guarantee truthful member roles.

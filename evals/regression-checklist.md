@@ -27,7 +27,7 @@
 - [x] Independent Run 2 gate — RED on retained-v1 role migration; the blocker is addressed by `483e55e` below.
 - [x] Retained pre-role v1 envelope migrates once to v2 on the same key; data/revision and valid roles survive, missing Jones roles receive deterministic owner/member values, and unsupported versions stay visible.
 - [x] CDP 320 hard reload from retained v1: width 320, Alex Owner, custom trip visible, stored v2 revision 11, custom event/message/notification and owner + four members preserved.
-- [ ] Independent Run 3 gate — pending; Run 2 migration blocker is fixed but not self-certified final GREEN.
+- [x] Independent Run 3 gate — AMBER / PROCEED-WARN, zero blockers; Wave 1 accepted complete with placeholder lint and remote Supabase/RLS warnings preserved.
 
 ## OPORD campaign documentation
 

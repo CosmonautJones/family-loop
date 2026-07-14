@@ -239,4 +239,9 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Fresh verification: root tests PASS 35/35; app tests PASS 24/24; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER and remote Supabase/RLS remains unverified.
 - The Run 2 blocker is fixed. Wave 1 is ready for independent Run 3 and is not self-certified final GREEN.
 
-Current truth: **Wave 0 is complete. Wave 1 Run 2 migration blocker is fixed in `483e55e` and awaits independent Run 3 review; Wave 2 has not started. No remote/live capability is claimed complete.**
+### Wave 1 independent Run 3 acceptance
+
+- Independent Run 3 accepted Wave 1 at **AMBER / PROCEED-WARN with zero blockers** after reviewing the durable v1-to-v2 migration and retained-envelope browser evidence.
+- Wave 1 is **COMPLETE**. Lint remains a placeholder warning, and remote Supabase/RLS behavior remains unverified; neither warning is represented as production evidence.
+
+Current truth: **Wave 0 and Wave 1 are complete. Independent Wave 1 Run 3 accepted the corrected checkpoint at AMBER / PROCEED-WARN with zero blockers; Wave 2 has not started. No remote/live capability is claimed complete.**
