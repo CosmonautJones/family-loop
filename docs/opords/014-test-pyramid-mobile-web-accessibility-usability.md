@@ -1,10 +1,10 @@
 # OPORD 014 — Test Pyramid, Mobile-Web Accessibility, and Usability
 
 ## Status
-PARTIAL/CONDITIONAL — layered automated, database, configured-browser, responsive-width, keyboard, and Lighthouse gates pass; physical devices, screen readers, practical 200% zoom, reduced motion, and moderated-human usability remain `NOT RUN`.
+PARTIAL/CONDITIONAL — layered automated, database, configured-browser, responsive-width, keyboard, reduced-motion, and Lighthouse gates pass; physical devices, screen readers, practical browser zoom, and moderated-human usability remain `NOT RUN`.
 
 ## Situation and evidence
-At commit `88d0ed9`, root tests pass 70/70, app tests 58/58, TypeScript, Expo export, harness, database lint, family/media E2E, and the read-only populated-scenario verifier pass. Configured Chrome covered four isolated sessions, Back/deep-link/reload, actual file input, 320/390/430 CSS pixels, keyboard/landmarks, and Lighthouse Accessibility/Best Practices 100. Lint remains a placeholder. Physical browsers/assistive technology/human gates remain open.
+The reconciled baseline at `88d0ed9` passed root 70/70, app 58/58, TypeScript, Expo export, harness, database lint, family/media E2E, and the populated-scenario verifier. The 2026-07-14 local accessibility pass adds platform preference handling for Moti cards and Expo images plus a dependency-free Chrome/CDP gate. It covers 320/390/430 and 1280 CSS-pixel layouts, sequential navigation focus, exact-event deep link/Back/reload, invalid-form focus in a 320x500 keyboard-height proxy, reduced-motion emulation, and a 200% page-scale proxy. Lint remains a placeholder. Physical browsers, assistive technology, practical browser zoom/reflow, and human gates remain open.
 
 ## Mission/objective
 Establish the smallest credible layered quality gate for pure logic, server/database contracts, rendered responsive-web behavior, browser navigation, accessibility, and representative older-adult usability.
@@ -48,9 +48,9 @@ Test readable text, contrast, plain labels, 48x48 CSS-pixel targets, visible foc
 |---|---|---|
 | Every core-loop risk has an owned evidence layer | COMPLETE | Tests, local Supabase scripts, runbooks, regression checklist, and this OPORD matrix. |
 | Automated 320/390/430 plus physical Safari/Chrome | PARTIAL/CONDITIONAL | Configured Chrome widths pass; physical iOS Safari/Android Chrome are `NOT RUN`. |
-| Back/history, deep links, reload, virtual keyboard | PARTIAL | Back/deep-link/reload pass; a complete virtual-keyboard matrix on physical devices is `NOT RUN`. |
-| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL | >=48px touch, sequential keyboard, landmarks, and no-hover essentials pass; practical 200%, VoiceOver/TalkBack, and reduced motion are `NOT RUN`. |
-| Desktop regression and anonymized human findings | PARTIAL | Desktop/local export smokes pass; no moderated-human sample exists. |
+| Back/history, deep links, reload, virtual keyboard | PARTIAL/CONDITIONAL | Exact-event deep link, Back, hard reload, and invalid-field visibility at 320x500 pass in headless Chrome; physical software-keyboard matrices are `NOT RUN`. |
+| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL/CONDITIONAL | >=48px touch, five sequential tabs, focused error relationships, reduced-motion media emulation, zero-duration card/image transitions, and a 200% CDP page-scale proxy pass. Practical browser zoom and VoiceOver/TalkBack are `NOT RUN`. |
+| Desktop regression and anonymized human findings | PARTIAL | The same production export passes at 1280x900; no moderated-human sample exists. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -61,7 +61,17 @@ powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
 git diff --check
 ```
 
-Run the 320/390/430 CSS-pixel responsive matrix, keyboard/focus smoke, 200% zoom/reflow, reduced-motion and browser navigation/deep-link/reload checks; label placeholder lint honestly.
+Build a local-only production export with dotenv disabled, serve it on loopback, and run the no-dependency Chrome gate:
+
+```powershell
+$env:EXPO_NO_DOTENV='1'; $env:EXPO_PUBLIC_DATA_MODE='local'
+Push-Location app; npx expo export --platform web --output-dir .codex/export-op14 --clear; Pop-Location
+python -m http.server 8086 --bind 127.0.0.1 --directory app/.codex/export-op14
+# In a second terminal:
+node scripts/check-opord14-mobile-accessibility.mjs http://127.0.0.1:8086
+```
+
+The script starts a disposable separate headless Chrome profile, records JSON, terminates Chrome, and removes its temporary profile. Its 200% measurement is a CDP page-scale proxy (`visualViewport.scale === 2`, 160 CSS-pixel visual viewport from a 320 CSS-pixel layout), not a substitute for practical browser zoom on supported phones.
 
 ### Conditional-staging/mobile-web/human
 On real phones, run iOS Safari with VoiceOver and Android Chrome with TalkBack, recording OS/browser versions; run a desktop secondary regression and a consented older-adult walkthrough. Native binaries are out of scope.
@@ -70,7 +80,7 @@ On real phones, run iOS Safari with VoiceOver and Android Chrome with TalkBack, 
 Stop before adding dependencies/device-farm services, using production data, recruiting/recording without consent, broad redesign, or declaring accessibility compliance from partial checks.
 
 ## Risks/follow-ups
-Structural tests can pass while rendered behavior fails; desktop emulation does not prove mobile Safari/Chrome; a small usability sample is directional only. A dependency-backed browser E2E mission requires measured justification and approval.
+Structural tests can pass while rendered behavior fails; desktop Chrome emulation does not prove mobile Safari/Chrome, a physical software keyboard, or assistive technology. The shared reduced-motion hook defaults to reduced motion until the async platform preference resolves, preventing first-paint motion for opted-out users; normal transitions remain available for subsequently mounted content. A small usability sample is directional only. A dependency-backed browser E2E mission requires measured justification and approval.
 
 ## Definition of done
 The layered matrix and critical regressions are executable, mobile Safari/Chrome and accessibility evidence is honest, desktop regression and usability limitations are recorded, and the review log is updated.

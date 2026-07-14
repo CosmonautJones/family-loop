@@ -935,6 +935,24 @@ test('mobile shell and primary flows expose landmarks, headings, useful image na
   assert.match(avatar, /accessible=\{false\}/);
 });
 
+test('core cards honor reduced-motion preference without removing normal transitions', () => {
+  const reducedMotion = read('src/components/useReducedMotion.ts');
+  const surfaceCard = read('src/components/SurfaceCard.tsx');
+  const photoCard = read('src/components/PhotoCard.tsx');
+  const avatar = read('src/components/Avatar.tsx');
+
+  assert.match(reducedMotion, /useState\(true\)/, 'first paint must not animate before the preference resolves');
+  assert.match(reducedMotion, /AccessibilityInfo\.isReduceMotionEnabled\(\)\.then\(\(enabled\) =>/);
+  assert.match(reducedMotion, /if \(mounted\) setReduceMotion\(enabled\)/);
+  assert.match(reducedMotion, /addEventListener\('reduceMotionChanged', setReduceMotion\)/);
+  assert.match(reducedMotion, /mounted = false/);
+  assert.match(reducedMotion, /subscription\.remove\(\)/);
+  assert.match(surfaceCard, /from=\{reduceMotion \? \{ opacity: 1, translateY: 0 \} : \{ opacity: 0, translateY: 10 \}\}/);
+  assert.match(surfaceCard, /duration: reduceMotion \? 0 : 360/);
+  assert.match(photoCard, /transition=\{reduceMotion \? 0 : 300\}/);
+  assert.match(avatar, /transition=\{reduceMotion \? 0 : 220\}/);
+});
+
 test('Family roles come from membership data and decorative glows cannot widen the document', () => {
   const { selectors, mockData } = loadCompiledModules();
   const database = mockData.createMockDatabase();

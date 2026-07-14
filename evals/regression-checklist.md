@@ -128,8 +128,11 @@
 - [x] Root tests 44/44 and app-local tests 33/33; TypeScript, harness, and Expo web export pass.
 - [x] Independent Run 1 RED keyboard defect reproduced and corrected; Run 2 accepted at AMBER / PROCEED-WARN with zero blockers.
 - [x] Sequential Home → Calendar → Create → Memories → Family keyboard order, Enter routing, one selected tab, one main landmark, and 320×844 width/overflow/navigation sanity passed.
-- [ ] Practical 200% zoom/reflow remains unverified; the pre-existing React Native Web warning remains advisory.
-- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, and moderated older-adult testing — `NOT RUN`.
+- [x] Platform reduced-motion state and changes disable Moti entrance displacement/fades and Expo image crossfades; normal transition durations remain covered.
+- [x] Dependency-free Chrome/CDP smoke passes 320/390/430/1280 overflow and landmark checks, five sequential tabs, exact-event deep-link/Back/reload, and invalid-field focus/visibility at a 320×500 keyboard-height proxy.
+- [x] A 200% CDP page-scale proxy reports scale 2, a 160 CSS-pixel visual viewport, and no document-width overflow from the 320 CSS-pixel layout.
+- [ ] Practical browser 200% zoom/reflow remains unverified; the CDP page-scale proxy is limited evidence and the pre-existing React Native Web warning remains advisory.
+- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, physical software-keyboard behavior, and moderated older-adult testing — `NOT RUN`.
 
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.
 - [x] Exactly 17 OPORDs and 60 task rows preserved after platform correction.
@@ -140,7 +143,7 @@
 - [x] Coverage includes all requested frontend, backend, server/database, security, quality, release, and operations domains.
 - [x] Future orders do not claim authorization or live proof.
 - [x] Existing M4-M6 persistent-data backlog entries remain and are mapped rather than deleted.
-- [ ] iOS Safari/Android Chrome, browser screen-reader, reduced-motion, and moderated older-adult validation — NOT RUN; future OPORD 014.
+- [ ] iOS Safari/Android Chrome, browser screen-reader, practical browser zoom, and moderated older-adult validation — NOT RUN; local reduced-motion handling and emulation now pass under OPORD 014.
 - [x] Responsive widths, touch targets, keyboard/history/reload, zoom/reflow, focus, and desktop-secondary gates are documented.
 - [x] Native applications and app-store delivery are not active campaign blockers.
 - [ ] Remote Supabase, deploy, backup, and restore validation — NOT RUN; safe authorized environment unavailable here.
