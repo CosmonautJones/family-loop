@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-DATA-002`
 
-Status: Complete. Final Wave 3 commit SHA to be recorded by the Sergeant.
+Status: Complete (`fd08450`).
 
 ## Mission
 
@@ -131,7 +131,7 @@ Wave 3 success criterion: every acceptance item has direct evidence, required ch
 - [x] Configured-boundary phone smoke passes at 390x844 without credentials or remote mutation and proves protected content does not fall back to mock/fixtures.
 - [x] Conditional live Supabase verification is recorded exactly as `NOT RUN — ENV unavailable`.
 - [x] All required automated commands pass; architecture, task history, review log, rubrics, and regression checklist accurately describe the implemented behavior and remaining limitations.
-- [ ] All three waves are reviewed and committed sequentially by the Sergeant, with no later mission silently absorbed.
+- [x] All three waves are reviewed and committed sequentially by the Sergeant, with no later mission silently absorbed.
 
 ## Verification commands
 
@@ -197,11 +197,11 @@ The Sergeant alone may authorize an AMBER interpretation, return a wave for corr
 
 ## Definition of done
 
-- [ ] Waves 1, 2, and 3 are accepted and committed in order by the Sergeant.
+- [x] Waves 1, 2, and 3 are accepted and committed in order by the Sergeant.
 - [x] Every behavioral acceptance criterion has direct current-state evidence or the explicitly permitted conditional live result.
 - [x] The complete mock phone loop and configured-boundary smoke are recorded with exact results and the process-local reload limitation.
 - [x] All required commands pass without weakening tests or omitting failures.
 - [x] ADR 001 ownership rules hold for the migrated event/RSVP slice.
 - [x] Review, architecture, task, rubric, and regression records are truthful and current.
 - [x] Residual risks and later missions are recorded without expanding M2.
-- [ ] The worktree contains no uncommitted M2 changes after the Sergeant's final commit.
+- [x] The worktree contains no uncommitted M2 implementation changes after the Sergeant's final commit.
