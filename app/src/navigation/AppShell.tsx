@@ -46,8 +46,8 @@ export function AppShell() {
         <View style={styles.content}>
           {activeSurface === 'EventDetail' ? <EventDetailScreen eventId={activeEventId} backLabel={`Back to ${activeTab.toLowerCase()}`} onBack={closeEventDetail} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={(eventId) => openEventDetail('Home', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={() => openEventDetail('Calendar')} /> : null}
-          {activeTab === 'Create' ? <CreateEventScreen /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={(eventId) => openEventDetail('Calendar', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
+          {activeTab === 'Create' ? <CreateEventScreen onCreated={(eventId) => openEventDetail('Create', eventId)} /> : null}
           {activeTab === 'Memories' ? <MemoriesScreen /> : null}
           {activeTab === 'Groups' ? <GroupsScreen /> : null}
         </View>

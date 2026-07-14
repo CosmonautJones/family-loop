@@ -1,4 +1,3 @@
-import { calendarAgenda, calendarEvents, calendarSummary } from '../features/calendar/fixtures';
 import { eventDetail, eventDetails, eventRsvps, eventThread } from '../features/events/fixtures';
 import { selectEventRsvpSummary, selectEventThreadPreview, selectEventTimeline } from '../features/events/selectors';
 import { groupsOverview } from '../features/groups/fixtures';
@@ -54,15 +53,25 @@ export function selectHomeViewModel(input: HomeViewModelInput = defaultHomeInput
   };
 }
 
-export function selectCalendarViewModel() {
+export function selectCalendarViewModel(events: Event[] = []) {
+  const sortedEvents = [...events].sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
+  const monthDate = sortedEvents[0] ? new Date(sortedEvents[0].startsAt) : new Date();
+  const month = monthDate.toLocaleDateString('en-US', { month: 'long' });
+  const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+  const eventDays = new Set(sortedEvents
+    .filter((event) => new Date(event.startsAt).getMonth() === monthDate.getMonth())
+    .map((event) => new Date(event.startsAt).getDate()));
+
   return {
-    calendarSummary,
-    calendarEvents,
-    agenda: calendarAgenda.map((item) => ({
-      title: item.event.title,
-      detail: `${item.event.location} · ${item.badge}`,
-      badge: item.badge,
-      tone: item.tone,
+    calendarSummary: sortedEvents.length === 1 ? '1 shared plan' : `${sortedEvents.length} shared plans`,
+    month,
+    calendarEvents: Array.from({ length: daysInMonth }, (_, index) => ({ day: index + 1, highlight: eventDays.has(index + 1) })),
+    agenda: sortedEvents.map((event) => ({
+      id: event.id,
+      title: event.title,
+      detail: `${formatEventDateRange(event.startsAt, event.endsAt)} · ${event.location}`,
+      badge: event.statusLabel,
+      tone: 'sky' as const,
     })),
   };
 }

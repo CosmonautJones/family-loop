@@ -6,6 +6,8 @@ import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
+import { useEventQuery, useEventRsvpsQuery, useUpsertRsvpMutation } from '../app/queries';
+import { useAuthSession } from '../features/auth/AuthSessionProvider';
 
 const rsvpOptions: RSVPStatus[] = ['going', 'maybe', 'declined'];
 const rsvpLabels: Record<RSVPStatus, string> = {
@@ -20,14 +22,31 @@ const rsvpNotes: Record<RSVPStatus, string> = {
 };
 
 export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eventId?: string; backLabel?: string; onBack?: () => void }) {
-  const eventDetail = selectEventDetailViewModel(eventId);
-  const eventThread = eventDetail.thread;
-  const currentStatus = useLoopedInStore((state) => state.rsvpOverrides[eventDetail.id] ?? 'going');
-  const setRsvpStatus = useLoopedInStore((state) => state.setRsvpStatus);
-  const stagedPhotoCount = useLoopedInStore((state) => state.stagedPhotoCounts[eventDetail.id] ?? 0);
+  const eventQuery = useEventQuery(eventId ?? '');
+  const rsvpsQuery = useEventRsvpsQuery(eventId ?? '');
+  const upsertRsvp = useUpsertRsvpMutation();
+  const auth = useAuthSession();
+  const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
+  const eventDetail = eventQuery.data?.groupId === activeGroupId ? selectEventDetailViewModel(eventQuery.data, rsvpsQuery.data ?? [], []) : null;
+  const identity = auth.session;
+  const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status ?? 'maybe';
+  const stagedPhotoCount = useLoopedInStore((state) => state.stagedPhotoCounts[eventId ?? ''] ?? 0);
   const stageEventPhoto = useLoopedInStore((state) => state.stageEventPhoto);
-  const reminderDrafted = useLoopedInStore((state) => Boolean(state.reminderDrafts[eventDetail.id]));
+  const reminderDrafted = useLoopedInStore((state) => Boolean(state.reminderDrafts[eventId ?? '']));
   const toggleReminderDraft = useLoopedInStore((state) => state.toggleReminderDraft);
+
+  if (!eventId) return <DetailState title="Event not found" detail="No event was selected." backLabel={backLabel} onBack={onBack} />;
+  if (eventQuery.isPending || rsvpsQuery.isPending) return <DetailState title="Loading event" detail="Gathering the plan and responses…" backLabel={backLabel} onBack={onBack} />;
+  if (eventQuery.isError || rsvpsQuery.isError) {
+    const error = eventQuery.error ?? rsvpsQuery.error;
+    return <DetailState title="We couldn’t load this event" detail={error instanceof Error ? error.message : 'Try again in a moment.'} backLabel={backLabel} onBack={onBack} />;
+  }
+  if (!eventDetail) return <DetailState title="Event not found" detail="This event may have been removed or is unavailable to this group." backLabel={backLabel} onBack={onBack} />;
+  const eventThread = eventDetail.thread;
+  const setRsvpStatus = (status: RSVPStatus) => {
+    if (!identity || upsertRsvp.isPending) return;
+    upsertRsvp.mutate({ eventId: eventDetail.id, personId: identity.userId, personName: identity.displayName, status });
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -48,12 +67,13 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
               key={status}
               label={rsvpLabels[status]}
               tone={status === currentStatus ? 'primary' : 'secondary'}
-              onPress={() => setRsvpStatus(eventDetail.id, status)}
+              onPress={() => setRsvpStatus(status)}
             />
           ))}
           <Button label={stagedPhotoCount > 0 ? 'Stage another' : 'Stage photo'} tone="ghost" onPress={() => stageEventPhoto(eventDetail.id)} />
         </View>
         <Text style={styles.responseNote}>{rsvpNotes[currentStatus]}</Text>
+        {upsertRsvp.isError ? <Text style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
       </View>
 
       <SurfaceCard>
@@ -120,7 +140,12 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   );
 }
 
+function DetailState({ title, detail, backLabel, onBack }: { title: string; detail: string; backLabel: string; onBack?: () => void }) {
+  return <View style={styles.state}>{onBack ? <Button label={backLabel} onPress={onBack} /> : null}<SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+}
+
 const styles = StyleSheet.create({
+  state: { flex: 1, justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
   container: { padding: spacing.lg, gap: spacing.md, paddingBottom: 40 },
   heroCard: { backgroundColor: palette.plum, borderRadius: 28, padding: spacing.lg, gap: spacing.sm },
   heroMini: { color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', letterSpacing: 1.4, fontSize: 11, fontWeight: '700' },

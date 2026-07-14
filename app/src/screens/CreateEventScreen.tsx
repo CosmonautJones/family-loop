@@ -6,18 +6,43 @@ import { SurfaceCard } from '../components/SurfaceCard';
 import { buildCreateEventFields, summarizeDraftEvent } from '../features/events';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
+import { useCreateEventMutation } from '../app/queries';
+import { useAuthSession } from '../features/auth/AuthSessionProvider';
 
-export function CreateEventScreen() {
+export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string) => void }) {
   const [draftStatus, setDraftStatus] = useState('Ready to save on this device.');
   const [previewVisible, setPreviewVisible] = useState(false);
   const draftEvent = useLoopedInStore((state) => state.draftEvent);
   const updateDraftEvent = useLoopedInStore((state) => state.updateDraftEvent);
   const resetDraftEvent = useLoopedInStore((state) => state.resetDraftEvent);
+  const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
+  const createEvent = useCreateEventMutation();
+  const auth = useAuthSession();
   const draftFields = buildCreateEventFields(draftEvent).filter((field) => !['Invitees', 'Cover treatment'].includes(field.label));
   const resetDraft = () => {
     resetDraftEvent();
     setDraftStatus('Draft reset to the starter plan.');
     setPreviewVisible(false);
+  };
+  const submitEvent = async () => {
+    if (createEvent.isPending || !activeGroupId) return;
+    setDraftStatus('Saving event…');
+    try {
+      const startsAt = nextDraftStart(draftEvent.dateLabel, draftEvent.timeLabel);
+      const event = await createEvent.mutateAsync({
+        groupId: activeGroupId,
+        title: draftEvent.title,
+        startsAt: startsAt.toISOString(),
+        endsAt: new Date(startsAt.getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        location: draftEvent.location,
+        description: draftEvent.notes,
+      });
+      resetDraftEvent();
+      setDraftStatus('Event saved.');
+      onCreated?.(event.id);
+    } catch (cause: unknown) {
+      setDraftStatus(cause instanceof Error ? cause.message : 'We couldn’t save this event. Try again.');
+    }
   };
 
   return (
@@ -29,12 +54,12 @@ export function CreateEventScreen() {
       </Text>
 
       <View style={styles.heroCard}>
-        <Text style={styles.heroMini}>Mobile draft</Text>
+        <Text style={styles.heroMini}>{auth.session ? `Planning as ${auth.session.displayName}` : 'Mobile draft'}</Text>
         <Text style={styles.heroTitle}>{draftEvent.title}</Text>
         <Text style={styles.heroCopy}>{summarizeDraftEvent(draftEvent)}</Text>
         <Text style={styles.statusText}>{draftStatus}</Text>
         <View style={styles.heroActions}>
-          <Button label="Save draft" onPress={() => setDraftStatus('Draft saved locally for this group.')} />
+          <Button label={createEvent.isPending ? 'Saving…' : 'Create event'} onPress={submitEvent} />
           <Button label={previewVisible ? 'Hide preview' : 'Preview invite'} tone="secondary" onPress={() => setPreviewVisible((visible) => !visible)} />
           <Button label="Reset" tone="ghost" onPress={resetDraft} />
         </View>
@@ -95,6 +120,13 @@ export function CreateEventScreen() {
       </SurfaceCard>
     </ScrollView>
   );
+}
+
+function nextDraftStart(dateLabel: string, timeLabel: string) {
+  const parsed = new Date(`${dateLabel.replace(/^[A-Za-z]{3}\s*·\s*/, '')}, ${new Date().getFullYear()} ${timeLabel}`);
+  if (Number.isNaN(parsed.getTime())) throw new Error('The draft date or time could not be understood.');
+  if (parsed.getTime() < Date.now()) parsed.setFullYear(parsed.getFullYear() + 1);
+  return parsed;
 }
 
 const styles = StyleSheet.create({

@@ -6,11 +6,16 @@ import { Chip } from '../components/Chip';
 import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
+import { useActiveEventsQuery } from '../app/queries';
 import { palette, spacing } from '../theme/tokens';
 
 export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
-  const appSections = selectHomeViewModel();
+  const eventsQuery = useActiveEventsQuery();
+  const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], activity: [], memories: [] });
   const heroEvent = appSections.heroEvent;
+
+  if (eventsQuery.isPending) return <ScreenState title="Loading your plans" detail="Finding what’s next for this group…" />;
+  if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} />;
 
   return (
     <View style={styles.root}>
@@ -79,6 +84,10 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
   );
 }
 
+function ScreenState({ title, detail }: { title: string; detail: string }) {
+  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+}
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -117,6 +126,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginTop: 12,
   },
+  state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',

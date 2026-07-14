@@ -2,10 +2,16 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectCalendarViewModel } from '../app/selectors';
+import { useActiveEventsQuery } from '../app/queries';
+import { Button } from '../components/Button';
 import { palette, spacing } from '../theme/tokens';
 
-export function CalendarScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
-  const viewModel = selectCalendarViewModel();
+export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
+  const eventsQuery = useActiveEventsQuery();
+  const viewModel = selectCalendarViewModel(eventsQuery.data ?? []);
+
+  if (eventsQuery.isPending) return <CalendarState title="Loading the calendar" detail="Gathering this group’s plans…" />;
+  if (eventsQuery.isError) return <CalendarState title="We couldn’t load the calendar" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} />;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -16,10 +22,10 @@ export function CalendarScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
       <SurfaceCard>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.cardTitle}>July rhythm</Text>
+            <Text style={styles.cardTitle}>{viewModel.month} rhythm</Text>
             <Text style={styles.cardCopy}>A month view that still feels warm and social.</Text>
           </View>
-          <Chip label="7 plans" tone="sky" />
+          <Chip label={viewModel.calendarSummary} tone="sky" />
         </View>
 
         <View style={styles.grid}>
@@ -32,7 +38,7 @@ export function CalendarScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
         </View>
       </SurfaceCard>
 
-      <SurfaceCard>
+      {viewModel.agenda.length > 0 ? <SurfaceCard>
         <Text style={styles.cardTitle}>Upcoming agenda</Text>
         <View style={styles.list}>
           {viewModel.agenda.map((item) => (
@@ -40,7 +46,7 @@ export function CalendarScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
               key={item.title}
               accessibilityRole="button"
               accessibilityLabel={`Open ${item.title}`}
-              onPress={onOpenEvent}
+              onPress={() => onOpenEvent?.(item.id)}
               style={styles.listRow}
             >
               <View>
@@ -51,12 +57,17 @@ export function CalendarScreen({ onOpenEvent }: { onOpenEvent?: () => void }) {
             </Pressable>
           ))}
         </View>
-      </SurfaceCard>
+      </SurfaceCard> : <SurfaceCard><Text style={styles.cardTitle}>No events planned yet</Text><Text style={styles.cardCopy}>Create the first event to put this group on the calendar.</Text><Button label="Create event" onPress={onCreateEvent} /></SurfaceCard>}
     </ScrollView>
   );
 }
 
+function CalendarState({ title, detail }: { title: string; detail: string }) {
+  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+}
+
 const styles = StyleSheet.create({
+  state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
   container: {
     padding: spacing.lg,
     gap: spacing.md,
