@@ -158,6 +158,61 @@ test('durable local service surfaces corrupt storage and write errors without si
   await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
 });
 
+test('durable local services serialize stale-instance mutations and advance revisions', async () => {
+  const { durableAdapter } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const first = durableAdapter.createDurableLocalLoopedInService(storage);
+  const second = durableAdapter.createDurableLocalLoopedInService(storage);
+  await Promise.all([first.groups.listGroups(), second.groups.listGroups()]);
+  const initialRevision = JSON.parse(values.get(durableAdapter.durableDatabaseKey)).revision;
+
+  const [eventA, eventB] = await Promise.all([
+    first.events.createEvent({ groupId: 'group-jones-family', title: 'First family plan', startsAt: '2027-03-01T10:00:00Z', endsAt: '2027-03-01T11:00:00Z', location: 'Park', description: 'From A' }),
+    second.events.createEvent({ groupId: 'group-jones-family', title: 'Second family plan', startsAt: '2027-03-02T10:00:00Z', endsAt: '2027-03-02T11:00:00Z', location: 'Lake', description: 'From B' }),
+  ]);
+  await Promise.all([
+    first.rsvps.upsertRsvp({ eventId: eventA.id, personId: 'person-you', personName: 'Alex Jones', status: 'going' }),
+    second.thread.sendMessage(eventB.id, 'I saved both dates.'),
+    first.media.uploadMedia({ eventId: eventA.id, fileUri: 'https://example.com/photo.jpg', caption: 'Shared photo' }),
+  ]);
+
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
+  const events = await reconstructed.events.listEvents('group-jones-family');
+  assert.ok(events.some((event) => event.id === eventA.id));
+  assert.ok(events.some((event) => event.id === eventB.id));
+  assert.equal((await reconstructed.rsvps.listRsvps(eventA.id))[0].status, 'going');
+  assert.equal((await reconstructed.thread.listMessages(eventB.id))[0].body, 'I saved both dates.');
+  assert.equal((await reconstructed.media.listMedia(eventA.id))[0].caption, 'Shared photo');
+  assert.equal(JSON.parse(values.get(durableAdapter.durableDatabaseKey)).revision, initialRevision + 5);
+});
+
+test('durable stringify failures preserve acknowledged state and reset revisions safely', async () => {
+  const { durableAdapter } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const service = durableAdapter.createDurableLocalLoopedInService(storage);
+  const retained = await service.events.createEvent({ groupId: 'group-jones-family', title: 'Retained plan', startsAt: '2027-04-01T10:00:00Z', endsAt: '2027-04-01T11:00:00Z', location: 'Home', description: 'Keep me' });
+  const circular = {};
+  circular.self = circular;
+  await assert.rejects(service.events.createEvent({ groupId: 'group-jones-family', title: 'Circular plan', startsAt: '2027-04-02T10:00:00Z', endsAt: '2027-04-02T11:00:00Z', location: 'Home', description: circular }), /circular|serialize|JSON/i);
+  assert.equal((await service.events.getEvent(retained.id)).title, 'Retained plan');
+  assert.equal((await durableAdapter.createDurableLocalLoopedInService(storage).events.getEvent(retained.id)).title, 'Retained plan');
+
+  const beforeReset = JSON.parse(values.get(durableAdapter.durableDatabaseKey)).revision;
+  await service.resetAndReseed();
+  assert.equal(JSON.parse(values.get(durableAdapter.durableDatabaseKey)).revision, beforeReset + 1);
+  assert.equal(await service.events.getEvent(retained.id), null);
+});
+
 test('explicit Supabase mode has a visible missing-config path and never selects durable local fallback', () => {
   const serviceIndex = read('src/services/index.ts');
   assert.match(serviceIndex, /dataMode === 'supabase'/);

@@ -1,15 +1,28 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 0 Run 1 correction
+
+- External/reviewer Run 1 result: **RED**. Review found a stale multi-adapter lost-update risk and a serialization rollback gap in the durable local persistence path.
+- Wave 0 was reopened. The prior AMBER/complete statement and associated automated results remain historical run evidence, but were superseded as completion evidence.
+- Targeted fix acceptance requires a revisioned envelope and same-runtime per-key serialization, with each mutation re-reading the latest persisted state and either replaying safely or surfacing a visible conflict so previously acknowledged data is not lost.
+- The rollback boundary must cover stringify, storage-write, and persisted-payload validation failures, and multi-instance tests must exercise stale adapters, ordering, acknowledged-data preservation, visible conflicts, and rollback.
+- Coordination claims must remain platform-accurate: prefer `navigator.locks` when available, use an explicit module-level fallback otherwise, and document the Safari limitation that a module fallback does not serialize independent tabs when Web Locks is unavailable.
+- Targeted correction evidence: root tests PASS 29/29; app tests PASS 18/18; TypeScript, harness, Expo web export, and diff check PASS. Lint remains a placeholder and is WARN rather than substantive lint evidence.
+- Independent internal review confirms the revisioned envelope, latest-state deterministic replay under a per-key lock, retention of both A+B event mutations, retention of concurrent RSVP/message/media mutations, and safe stringify-failure rollback and reset behavior.
+- Internal Run 1 fix gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. The correction is ready for external re-review; external GREEN and final Wave 0 completion are not claimed.
+- Limitation: `navigator.locks` is used when available. The module fallback coordinates adapter instances only inside the same JavaScript runtime; cross-tab atomicity on Safari or any environment without Web Locks is `NOT PROVEN`.
+- The broader campaign remains in progress.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 0 documentation handoff
 
 - Implementation documentation reflects the current durable local service: AsyncStorage is the default/unconfigured mode, `memory` is explicit for isolated tests, and only `EXPO_PUBLIC_DATA_MODE=supabase` selects the remote adapter.
 - The version-1 envelope, explicit reset/reseed recovery seam, stable Jones Family dataset, and visible storage/configuration failures are documented without claiming a production reset UI.
 - The seed includes five members, three future trips and one completed trip relative to 2026-07-13, with consistent RSVPs, event messages, memories, and Unsplash-backed media metadata/captions.
 - Evidence boundary: local browser durability is not remote persistence, multi-user synchronization, RLS, private media upload, or deployed server proof. Unsplash attribution/domain handling remains a later media-wave follow-up.
-- Independent line review required targeted fix loops for explicit-Supabase missing-config fallback, versioning the persistence envelope, rolling back failed writes, allowing explicit reset/reseed after corrupt initialization, validating the complete persisted payload, and preserving the asynchronous auth-unsubscribe contract. Each finding was repaired before final review.
+- Independent line review required targeted fix loops for explicit-Supabase missing-config fallback, versioning the persistence envelope, rolling back failed writes, allowing explicit reset/reseed after corrupt initialization, validating the complete persisted payload, and preserving the synchronous auth-unsubscribe contract. Each finding was repaired before final review.
 - Automated gate: root `npm test` PASS 27/27; app `npm test` PASS 16/16; app `npx tsc --noEmit` PASS; harness PASS; Expo web export PASS with temporary output removed; `git diff --check` PASS.
 - Lint exits 0 but remains a placeholder, so it is WARN rather than substantive lint evidence. Actual browser hard-reload was `NOT RUN`; adapter reconstruction is automated durability evidence and the web export proves bundling only.
-- Independent Wave 0 gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. Wave 0 is complete; the campaign remains in progress. Remote Supabase, RLS, private media, and multi-user verification remain `NOT RUN` and are not inferred.
+- Historical independent Wave 0 gate: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. This result was superseded as completion evidence by the subsequent external/reviewer Run 1 RED recorded above. Remote Supabase, RLS, private media, and multi-user verification remain `NOT RUN` and are not inferred.
 
 ## 2026-07-13 — FAMILY-LOOP-WEB-001 responsive-web campaign correction
 
