@@ -27,6 +27,8 @@ The event coordination loop is Query-owned in every data mode. By default, and w
 
 Mock seed events use unique stable IDs, and the mock adapter explicitly sorts group event reads by start time rather than relying on insertion order. This keeps Home, Calendar, and Event Detail identity-consistent as new events are created during a running process.
 
+The Create tab owns transient form state for title, local start date/time, location, and optional notes. It validates before calling the event service, keeps fields after a failed mutation, and uses a two-hour default duration. Success seeds the returned exact-event Query key, invalidates the active family's event list, and routes to that exact ID. Events and RSVPs remain service-owned rather than mirrored in Zustand, so durable-local reconstruction feeds Home, Calendar, Family, and Event Detail consistently.
+
 ## Adopted data and session boundary
 
 ADR 001 governs upcoming migrations: service data accessed through TanStack Query is authoritative; deterministic memory data is limited to explicit test use; configured backend failures remain visible; Query owns service state; Zustand owns transient UI state only; and migrated screens explicitly render loading, error, empty, and populated states.

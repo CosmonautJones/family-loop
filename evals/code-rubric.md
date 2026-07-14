@@ -39,6 +39,17 @@
 
 ## Scope control
 
+## Wave 2 trip creation and RSVP
+
+- [x] Editable title, date, time, location, and optional notes replace preset cards.
+- [x] Validation rejects blank, malformed, and impossible required values before mutation.
+- [x] Pending/error/retry behavior prevents duplicate writes and retains fields after failure.
+- [x] Success uses the returned exact ID and invalidates the active family event list.
+- [x] Durable reconstruction covers the trip and RSVP plus derived Home, Calendar, and Family visibility.
+- [x] Untouched RSVP is `No response`, not a fabricated Maybe.
+- [x] Root/app 37/37, TypeScript, harness, web export, diff, and scoped browser checks pass.
+- [ ] Independent Wave 2 gate, substantive lint, and remote Supabase/RLS — pending or unproven.
+
 - Did the implementation stay inside the mission?
 - Were unrelated changes avoided?
 

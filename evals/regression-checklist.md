@@ -29,6 +29,16 @@
 - [x] CDP 320 hard reload from retained v1: width 320, Alex Owner, custom trip visible, stored v2 revision 11, custom event/message/notification and owner + four members preserved.
 - [x] Independent Run 3 gate — AMBER / PROCEED-WARN, zero blockers; Wave 1 accepted complete with placeholder lint and remote Supabase/RLS warnings preserved.
 
+## Wave 2 trip creation and RSVP
+
+- [x] Real form has inline required-value and impossible-date validation; optional notes remain optional.
+- [x] Failure preserves fields for retry; success routes to the returned exact event ID.
+- [x] Created event and RSVP survive durable reconstruction and feed Home, Calendar, and Family-derived views.
+- [x] RSVP pending/error/no-response states are truthful and announced.
+- [x] Exact 320×844 browser flow covered create, RSVP, reload, Back, Home, and Calendar without document overflow.
+- [x] 430×932 and 1280×900 width checks retained the trip without document overflow.
+- [ ] Independent Wave 2 review — pending; real-device and remote/multi-user behavior — NOT RUN.
+
 ## OPORD campaign documentation
 
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.

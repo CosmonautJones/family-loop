@@ -1,5 +1,13 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 2 implementation handoff
+
+- Commit `c1b135e` replaces preset-only creation with a five-field family-plan form, inline validation, pending/error/retry states, exact-ID navigation, and pending-safe, truthful RSVP controls.
+- Root/app tests PASS 37/37; TypeScript, harness, Expo web export, and diff check PASS. Lint remains the known placeholder AMBER.
+- Exact 320×844 browser flow created “Wisconsin Dells weekend,” routed to `#/event/event-created-1?from=create`, saved Going, reloaded with event and RSVP retained, returned to Create with Back, and found the trip on Home and Calendar. Client and scroll widths matched at 320, 430, and 1280.
+- Read-only Private review blockers for validation export, impossible-date normalization, and selector expectation were fixed; its RSVP live-region advisory was also fixed.
+- Wave 2 awaits independent review. Remote Supabase/RLS, multi-user sync, and real-device Safari/Chrome remain unverified.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 Run 3 closeout
 
 - Independent Run 3 result: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
