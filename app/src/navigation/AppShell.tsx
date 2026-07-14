@@ -61,12 +61,11 @@ export function AppShell() {
             </Pressable>
           ) : null}
           <BlurView intensity={42} tint="light" style={styles.navWrap}>
-            <View style={styles.navRow}>
+            <View accessibilityRole="tablist" style={styles.navRow}>
               {tabItems.map((tab) => (
                 <Pressable
                   key={tab.label}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${tab.label} tab`}
+                  accessibilityRole="tab"
                   accessibilityState={{ selected: tab.active }}
                   onPress={() => setActiveTab(tab.label)}
                   style={styles.navItem}
@@ -78,6 +77,7 @@ export function AppShell() {
                     color={tab.active ? palette.white : palette.muted}
                   />
                   <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
+                  {tab.active ? <Text style={styles.selectedText}>Selected</Text> : null}
                 </Pressable>
               ))}
             </View>
@@ -166,5 +166,10 @@ const styles = StyleSheet.create({
   },
   navTextActive: {
     color: palette.white,
+  },
+  selectedText: {
+    color: palette.white,
+    fontSize: 8,
+    fontWeight: '800',
   },
 });

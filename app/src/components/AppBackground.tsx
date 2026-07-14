@@ -16,6 +16,9 @@ export function AppBackground({ children }: PropsWithChildren) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    width: '100%',
+    maxWidth: '100%',
+    overflow: 'hidden',
     backgroundColor: palette.bg,
   },
   glowOne: {

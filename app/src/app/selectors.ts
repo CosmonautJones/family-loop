@@ -4,7 +4,7 @@ import { groupsOverview } from '../features/groups/fixtures';
 import { heroEvent, homeActivity, homeActivityTitle, homeMemories, homeWeekSummary } from '../features/home/fixtures';
 import { memoriesRecap } from '../features/memories/fixtures';
 import { formatEventDateRange } from '../lib/date';
-import type { Event, EventActivity, Group, MemoryItem, Person } from '../types/domain';
+import type { Event, EventActivity, Group, GroupMember, MemoryItem } from '../types/domain';
 
 type HomeViewModelInput = {
   events?: Event[];
@@ -132,7 +132,7 @@ export function selectGroupsViewModel() {
   };
 }
 
-export function selectFamilyViewModel(group: Group, members: Person[], events: Event[], now = new Date()) {
+export function selectFamilyViewModel(group: Group, members: GroupMember[], events: Event[], now = new Date()) {
   const upcoming = [...events]
     .filter((event) => Date.parse(event.endsAt) >= now.getTime())
     .sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt));
@@ -142,7 +142,7 @@ export function selectFamilyViewModel(group: Group, members: Person[], events: E
     memberCountLabel: `${members.length} family members`,
     members: members.map((member) => ({
       ...member,
-      role: member.id === 'person-you' ? 'Organizer' : 'Family member',
+      role: member.role === 'owner' ? 'Owner' : member.role === 'admin' ? 'Organizer' : 'Family member',
     })),
     upcomingLabel: upcoming.length === 0
       ? 'No upcoming trips yet.'

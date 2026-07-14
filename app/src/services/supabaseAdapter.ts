@@ -1,4 +1,4 @@
-import type { Event, EventActivity, EventMessage, Group, MediaItem, Person, RSVP } from '../types/domain';
+import type { Event, EventActivity, EventMessage, Group, GroupMember, MediaItem, Person, RSVP } from '../types/domain';
 import type {
   AuthSession,
   CreateEventPayload,
@@ -74,6 +74,11 @@ type ProfileRow = {
   id: string;
   display_name: string;
   avatar_url: string | null;
+};
+
+type GroupMemberRow = {
+  user_id: string;
+  role: GroupMember['role'];
 };
 
 const mediaBucket = 'loopedin-event-media';
@@ -326,15 +331,16 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async listGroupMembers(groupId) {
         const { data, error } = await supabase
           .from('loopedin_group_members')
-          .select('user_id')
+          .select('user_id, role')
           .eq('group_id', groupId);
         throwIfError(error);
 
-        const userIds = (data ?? []).map((membership) => membership.user_id as string);
+        const memberships = (data ?? []) as GroupMemberRow[];
+        const userIds = memberships.map((membership) => membership.user_id);
         const profiles = await getProfiles(userIds);
-        return userIds.flatMap((userId) => {
-          const profile = profiles.get(userId);
-          return profile ? [mapProfile(profile)] : [];
+        return memberships.flatMap((membership) => {
+          const profile = profiles.get(membership.user_id);
+          return profile ? [{ ...mapProfile(profile), role: membership.role }] : [];
         });
       },
       async getGroup(groupId) {

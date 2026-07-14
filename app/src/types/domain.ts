@@ -13,6 +13,10 @@ export type Person = {
   initials: string;
 };
 
+export type GroupMember = Person & {
+  role: 'owner' | 'admin' | 'member';
+};
+
 export type Group = {
   id: GroupId;
   name: string;
@@ -21,7 +25,7 @@ export type Group = {
   badge: string;
   tone: AccentTone;
   memberCount: number;
-  members?: Person[];
+  members?: GroupMember[];
   coverUri?: string;
 };
 

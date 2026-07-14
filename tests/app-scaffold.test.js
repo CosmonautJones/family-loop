@@ -109,7 +109,7 @@ test('durable local service persists the family loop across reconstruction and c
 test('group member reads return the five Jones members, stay group-isolated, and survive durable reconstruction', async () => {
   const { durableAdapter, mockAdapter, mockData } = loadCompiledModules();
   const seed = mockData.createMockDatabase();
-  const otherMember = { id: 'person-other', name: 'Other Person', initials: 'OP', avatarUri: '' };
+  const otherMember = { id: 'person-other', name: 'Other Person', initials: 'OP', avatarUri: '', role: 'member' };
   seed.groups.push({
     id: 'group-other', name: 'Other Family', description: 'Isolation fixture', kind: 'family',
     badge: 'Family', tone: 'sage', memberCount: 1, members: [otherMember],
@@ -120,6 +120,7 @@ test('group member reads return the five Jones members, stay group-isolated, and
   assert.deepEqual(jonesMembers.map((member) => member.id), [
     'person-you', 'person-maya', 'person-emma', 'person-noah', 'person-ruth',
   ]);
+  assert.deepEqual(jonesMembers.map((member) => member.role), ['owner', 'member', 'member', 'member', 'member']);
   const session = await mock.auth.getSession();
   assert.equal(session.userId, 'person-you');
   assert.equal(jonesMembers.find((member) => member.id === session.userId).name, session.displayName);
@@ -146,8 +147,8 @@ test('Supabase member adapter scopes memberships before resolving profiles', () 
   const api = read('src/services/api.ts');
   const supabase = read('src/services/supabaseAdapter.ts');
   const queries = read('src/app/queries.ts');
-  assert.match(api, /listGroupMembers\(groupId: string\): Promise<Person\[\]>/);
-  assert.match(supabase, /from\('loopedin_group_members'\)[\s\S]*?select\('user_id'\)[\s\S]*?eq\('group_id', groupId\)/);
+  assert.match(api, /listGroupMembers\(groupId: string\): Promise<GroupMember\[\]>/);
+  assert.match(supabase, /from\('loopedin_group_members'\)[\s\S]*?select\('user_id, role'\)[\s\S]*?eq\('group_id', groupId\)/);
   assert.match(supabase, /const profiles = await getProfiles\(userIds\)/);
   assert.match(queries, /groupMembers: \(groupId: string\)/);
   assert.match(queries, /loopedInService\.groups\.listGroupMembers\(activeGroupId\)/);
@@ -300,6 +301,10 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(family, /No family members are available yet/);
   assert.doesNotMatch(family, /features\/groups\/fixtures|Create group|friend-group/);
   assert.match(shell, /accessibilityState=\{\{ selected: tab\.active \}\}/);
+  assert.match(shell, /accessibilityRole="tablist"/);
+  assert.match(shell, /accessibilityRole="tab"/);
+  assert.match(shell, /tab\.active \? <Text style=\{styles\.selectedText\}>Selected<\/Text> : null/);
+  assert.doesNotMatch(shell, /accessibilityLabel=\{`\$\{tab\.label\}/);
   assert.match(shell, /function ActiveFamilyLabel\(\)/);
   assert.ok(shell.indexOf('<ActiveFamilyLabel />') > shell.indexOf("auth.groups?.length === 0"), 'family query child renders after auth gates');
   const shellState = read('src/navigation/useAppShellState.ts');
@@ -307,6 +312,18 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(shellState, /pushState\(\{ loopedIn: true, canGoBack: true \}/);
   assert.match(shellState, /historyState\?\.loopedIn && historyState\.canGoBack/);
   assert.doesNotMatch(shellState, /history\.length/);
+});
+
+test('Family roles come from membership data and decorative glows cannot widen the document', () => {
+  const { selectors, mockData } = loadCompiledModules();
+  const database = mockData.createMockDatabase();
+  const family = selectors.selectFamilyViewModel(database.groups[0], database.groups[0].members, database.events, new Date('2026-07-13T12:00:00Z'));
+  assert.deepEqual(family.members.map((member) => member.role), ['Owner', 'Family member', 'Family member', 'Family member', 'Family member']);
+  const selectorsSource = read('src/app/selectors.ts');
+  assert.doesNotMatch(selectorsSource, /member\.id === 'person-you'/);
+  const background = read('src/components/AppBackground.tsx');
+  assert.match(background, /overflow: 'hidden'/);
+  assert.match(background, /maxWidth: '100%'/);
 });
 
 test('mock service completes create, refetch, same-detail, and RSVP loop', async () => {
