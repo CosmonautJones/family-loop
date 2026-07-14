@@ -148,6 +148,23 @@ test('mock service is group-scoped, chronological, and instance-local', async ()
   assert.deepEqual(await freshService.events.listEvents('group-a'), []);
 });
 
+test('mock service orders mixed-offset events by instant regardless of insertion order', async () => {
+  const { mockAdapter, mockData } = loadCompiledModules();
+  const service = mockAdapter.createMockLoopedInService(mockData.createEmptyMockDatabase());
+  const base = {
+    groupId: 'group-offsets',
+    endsAt: '2026-08-01T16:00:00Z',
+    location: 'Test location',
+    description: 'Test description',
+  };
+
+  await service.events.createEvent({ ...base, title: 'Later instant', startsAt: '2026-08-01T10:00:00-05:00' });
+  await service.events.createEvent({ ...base, title: 'Earlier instant', startsAt: '2026-08-01T14:30:00Z' });
+
+  const events = await service.events.listEvents('group-offsets');
+  assert.deepEqual(events.map((event) => event.title), ['Earlier instant', 'Later instant']);
+});
+
 test('zero-event selectors stay honest and unknown detail is explicit', () => {
   const { selectors } = loadCompiledModules();
   const home = selectors.selectHomeViewModel({ events: [], activity: [], memories: [] });

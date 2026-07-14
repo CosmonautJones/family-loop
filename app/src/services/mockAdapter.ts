@@ -52,7 +52,18 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
     events: {
       listEvents: (groupId) => wait(db.events
         .filter((event) => !groupId || event.groupId === groupId)
-        .sort((left, right) => left.startsAt.localeCompare(right.startsAt) || left.id.localeCompare(right.id))),
+        .sort((left, right) => {
+          const leftTime = Date.parse(left.startsAt);
+          const rightTime = Date.parse(right.startsAt);
+          const leftInvalid = Number.isNaN(leftTime);
+          const rightInvalid = Number.isNaN(rightTime);
+          const timeOrder = leftInvalid !== rightInvalid
+            ? Number(leftInvalid) - Number(rightInvalid)
+            : leftInvalid
+              ? left.startsAt.localeCompare(right.startsAt)
+              : leftTime - rightTime;
+          return timeOrder || left.id.localeCompare(right.id);
+        })),
       getEvent: (eventId) => wait(db.events.find((event) => event.id === eventId) ?? null),
       createEvent: (payload: CreateEventPayload) => {
         const event = {
