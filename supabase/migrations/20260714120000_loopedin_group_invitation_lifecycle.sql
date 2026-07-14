@@ -13,6 +13,16 @@ create unique index if not exists loopedin_groups_creator_creation_key_idx
   on public.loopedin_groups (created_by, creation_key)
   where creation_key is not null;
 
+create table if not exists loopedin_private.loopedin_group_creation_entitlements (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  provisioned_at timestamptz not null default now(),
+  consumed_at timestamptz,
+  group_id uuid unique references public.loopedin_groups(id) on delete set null,
+  check ((consumed_at is null and group_id is null) or consumed_at is not null)
+);
+
+revoke all on loopedin_private.loopedin_group_creation_entitlements from public, anon, authenticated;
+
 create table if not exists public.loopedin_group_invitations (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references public.loopedin_groups(id) on delete cascade,
@@ -104,11 +114,43 @@ as $$
 declare
   actor_id uuid := auth.uid();
   created_group public.loopedin_groups;
+  entitlement loopedin_private.loopedin_group_creation_entitlements;
 begin
   if actor_id is null then raise exception 'Authentication required.' using errcode = '42501'; end if;
   if target_creation_key is null then raise exception 'A creation key is required.' using errcode = '22023'; end if;
   if nullif(btrim(target_name), '') is null then raise exception 'A group name is required.' using errcode = '22023'; end if;
   if target_kind not in ('family', 'friends') then raise exception 'Unsupported group kind.' using errcode = '22023'; end if;
+
+  select * into created_group
+  from public.loopedin_groups
+  where created_by = actor_id and creation_key = target_creation_key;
+  if created_group.id is not null then
+    if created_group.name <> btrim(target_name)
+       or created_group.description <> coalesce(btrim(target_description), '')
+       or created_group.kind <> target_kind then
+      raise exception 'The creation key was already used with different group details.' using errcode = '23505';
+    end if;
+    return created_group;
+  end if;
+
+  select * into entitlement
+  from loopedin_private.loopedin_group_creation_entitlements
+  where user_id = actor_id
+  for update;
+  if entitlement.user_id is null or entitlement.consumed_at is not null then
+    select * into created_group
+    from public.loopedin_groups
+    where created_by = actor_id and creation_key = target_creation_key;
+    if created_group.id is not null then
+      if created_group.name <> btrim(target_name)
+         or created_group.description <> coalesce(btrim(target_description), '')
+         or created_group.kind <> target_kind then
+        raise exception 'The creation key was already used with different group details.' using errcode = '23505';
+      end if;
+      return created_group;
+    end if;
+    raise exception 'Family creation is not available for this account.' using errcode = '42501';
+  end if;
 
   insert into public.loopedin_groups (name, description, kind, created_by, creation_key)
   values (btrim(target_name), coalesce(btrim(target_description), ''), target_kind, actor_id, target_creation_key)
@@ -130,8 +172,25 @@ begin
   values (created_group.id, actor_id, 'owner')
   on conflict (group_id, user_id) do nothing;
 
+  update loopedin_private.loopedin_group_creation_entitlements
+  set consumed_at = now(), group_id = created_group.id
+  where user_id = actor_id and consumed_at is null;
+
   return created_group;
 end;
+$$;
+
+create or replace function public.loopedin_can_create_group()
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public
+as $$
+  select auth.uid() is not null and exists (
+    select 1 from loopedin_private.loopedin_group_creation_entitlements entitlement
+    where entitlement.user_id = auth.uid() and entitlement.consumed_at is null
+  );
 $$;
 
 create or replace function public.loopedin_create_group_invite(target_group_id uuid, target_email text, target_token text)
@@ -232,6 +291,9 @@ declare
   matching public.loopedin_group_invitations;
 begin
   if actor_id is null then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
+  if not exists (select 1 from auth.users where id = actor_id and email_confirmed_at is not null and lower(email) = actor_email) then
+    return jsonb_build_object('ok', false, 'code', 'unavailable');
+  end if;
   select * into matching
   from public.loopedin_group_invitations
   where token_hash = case when lower(btrim(coalesce(target_token, ''))) ~ '^[0-9a-f]{64}$'
@@ -241,8 +303,7 @@ begin
   if matching.id is not null and matching.status = 'pending' and matching.expires_at <= now() then
     update public.loopedin_group_invitations set status = 'expired' where id = matching.id;
   end if;
-  if not exists (select 1 from auth.users where id = actor_id and email_confirmed_at is not null and lower(email) = actor_email)
-     or matching.id is null or matching.expires_at <= now() or (matching.status = 'accepted' and matching.responded_by <> actor_id) then
+  if matching.id is null or matching.expires_at <= now() or (matching.status = 'accepted' and matching.responded_by <> actor_id) then
     return jsonb_build_object('ok', false, 'code', 'unavailable');
   end if;
   if matching.status = 'pending' then
@@ -269,6 +330,9 @@ declare
   matching public.loopedin_group_invitations;
 begin
   if actor_id is null then return jsonb_build_object('ok', false, 'code', 'unavailable'); end if;
+  if not exists (select 1 from auth.users where id = actor_id and email_confirmed_at is not null and lower(email) = actor_email) then
+    return jsonb_build_object('ok', false, 'code', 'unavailable');
+  end if;
   select * into matching
   from public.loopedin_group_invitations
   where token_hash = case when lower(btrim(coalesce(target_token, ''))) ~ '^[0-9a-f]{64}$'
@@ -431,6 +495,7 @@ revoke all on function loopedin_private.assert_one_group_owner() from public;
 grant execute on function loopedin_private.assert_one_group_owner() to postgres;
 
 revoke all on function public.loopedin_create_group(text, text, text, uuid) from public;
+revoke all on function public.loopedin_can_create_group() from public;
 revoke all on function public.loopedin_create_group_invite(uuid, text, text) from public;
 revoke all on function public.loopedin_validate_group_invite(text) from public;
 revoke all on function public.loopedin_accept_group_invite(text) from public;
@@ -442,6 +507,7 @@ revoke all on function public.loopedin_leave_group(uuid) from public;
 revoke all on function public.loopedin_transfer_group_ownership(uuid, uuid) from public;
 
 grant execute on function public.loopedin_create_group(text, text, text, uuid) to authenticated;
+grant execute on function public.loopedin_can_create_group() to authenticated;
 grant execute on function public.loopedin_create_group_invite(uuid, text, text) to authenticated;
 grant execute on function public.loopedin_validate_group_invite(text) to anon, authenticated;
 grant execute on function public.loopedin_accept_group_invite(text) to authenticated;
