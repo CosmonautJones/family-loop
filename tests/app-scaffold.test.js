@@ -24,6 +24,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/features/events/createEvent.ts'),
     path.join(appRoot, 'src/features/memories/derivedHistory.ts'),
     path.join(appRoot, 'src/features/auth/invitationRoute.ts'),
+    path.join(appRoot, 'src/features/auth/invitationDraft.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -40,6 +41,7 @@ function loadCompiledModules() {
     createEvent: require(path.join(outDir, 'features/events/createEvent.js')),
     derivedHistory: require(path.join(outDir, 'features/memories/derivedHistory.js')),
     invitationRoute: require(path.join(outDir, 'features/auth/invitationRoute.js')),
+    invitationDraft: require(path.join(outDir, 'features/auth/invitationDraft.js')),
   };
 }
 
@@ -585,13 +587,19 @@ test('invitation routes accept only canonical 32-byte base64url tokens and never
   assert.equal(invitationRoute.formatInvitationRoute(token), `#/invite/${token}`);
   assert.equal(invitationRoute.parseInvitationToken(`#/invite/${token}`), token);
   assert.equal(invitationRoute.withoutInvitationRoute(`#/invite/${token}`), '#/home');
+  for (const finalCharacter of 'AEIMQUYcgkosw048') {
+    assert.equal(invitationRoute.isCanonicalInvitationToken(`${'A'.repeat(42)}${finalCharacter}`), true);
+  }
   for (const invalid of ['', 'A'.repeat(42), `${'A'.repeat(42)}B`, `${'A'.repeat(43)}?extra=1`, '%E0%A4%A']) {
     assert.equal(invitationRoute.parseInvitationToken(`#/invite/${invalid}`), null);
   }
   assert.equal(invitationRoute.withoutInvitationRoute('#/family'), '#/family');
   assert.notEqual(invitationRoute.invitationFlowId(token), token);
   const source = read('src/features/auth/invitationRoute.ts');
+  const adapter = read('src/services/supabaseAdapter.ts');
   assert.doesNotMatch(source, /localStorage|sessionStorage|AsyncStorage/);
+  assert.match(adapter, /if \(!isCanonicalInvitationToken\(token\)\)/);
+  assert.doesNotMatch(adapter, /\[AQgw\]/);
 });
 
 test('invite email matching and auth-event profile fallback are deterministic and fail closed', async () => {
@@ -602,6 +610,21 @@ test('invite email matching and auth-event profile fallback are deterministic an
   }
   assert.equal(await invitationRoute.resolveWithFallback(Promise.resolve('profile session'), 'fallback session'), 'profile session');
   assert.equal(await invitationRoute.resolveWithFallback(Promise.reject(new Error('profile unavailable')), 'fallback session'), 'fallback session');
+});
+
+test('invitation drafts normalize email and retain one canonical 32-byte token across retries', () => {
+  const { invitationDraft } = loadCompiledModules();
+  const firstBytes = Uint8Array.from({ length: 32 }, (_, index) => index);
+  const secondBytes = Uint8Array.from({ length: 32 }, (_, index) => 255 - index);
+  const first = invitationDraft.invitationDraftForEmail(null, ' Family@Example.COM ', () => firstBytes);
+  assert.equal(first.email, 'family@example.com');
+  assert.match(first.token, /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/);
+  const retry = invitationDraft.invitationDraftForEmail(first, 'FAMILY@example.com', () => { throw new Error('must not rotate'); });
+  assert.equal(retry, first);
+  const changed = invitationDraft.invitationDraftForEmail(first, 'other@example.com', () => secondBytes);
+  assert.equal(changed.email, 'other@example.com');
+  assert.notEqual(changed.token, first.token);
+  assert.throws(() => invitationDraft.encodeInvitationToken(new Uint8Array(31)), /exactly 32 random bytes/);
 });
 
 test('configured service maps the accepted family lifecycle RPC contract without direct group writes', () => {
@@ -695,6 +718,13 @@ test('Family screen is service-backed with owner and member controls', () => {
   assert.match(family, /crypto\.getRandomValues\(bytes\)/);
   assert.match(family, /new Uint8Array\(32\)/);
   assert.match(family, /Pending invitations/);
+  assert.match(family, /invitationDraftForEmail\(inviteDraft\.current, email, randomInvitationBytes\)/);
+  assert.match(family, /if \(inviteInFlight\.current\) return/);
+  assert.match(family, /inviteInFlight\.current = true/);
+  assert.match(family, /inviteInFlight\.current = false/);
+  assert.match(family, /Retry to safely reuse the same private link/);
+  assert.match(family, /already pending for this email\. Revoke it below/);
+  assert.ok(family.indexOf("setInviteLink(`${base}#/invite/${draft.token}`)") < family.indexOf("inviteDraft.current = null"));
   assert.match(family, /Transfer ownership to/);
   assert.match(family, /immediately lose access/);
   assert.match(family, /Leave family/);
@@ -763,6 +793,23 @@ test('Home Updates card is compact, truthful, and marks opened or all updates re
   assert.match(home, /!item\.read/);
   assert.match(home, /await markRead\.mutateAsync\(item\.id\)[\s\S]*?onOpenEvent/);
   assert.match(home, /Mark all read/);
+});
+
+test('new light-surface actions use explicit high-contrast plum controls without secondary Button tone', () => {
+  const sources = ['src/screens/AuthScreen.tsx', 'src/screens/FamilyOnboardingScreen.tsx', 'src/screens/GroupsScreen.tsx', 'src/screens/HomeScreen.tsx'].map(read);
+  for (const source of sources) {
+    assert.doesNotMatch(source, /tone="secondary"/);
+    assert.match(source, /backgroundColor: palette\.plum/);
+    assert.match(source, /color: palette\.white/);
+  }
+  const channel = (value) => {
+    const linear = value / 255;
+    return linear <= 0.04045 ? linear / 12.92 : ((linear + 0.055) / 1.055) ** 2.4;
+  };
+  const luminance = (hex) => 0.2126 * channel(parseInt(hex.slice(1, 3), 16)) + 0.7152 * channel(parseInt(hex.slice(3, 5), 16)) + 0.0722 * channel(parseInt(hex.slice(5, 7), 16));
+  const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
+  assert.ok(contrast('#71365D', '#FFFFFF') >= 4.5, 'plum/white text contrast');
+  assert.ok(contrast('#71365D', '#FFF9F4') >= 3, 'plum/light-surface boundary contrast');
 });
 
 test('mobile shell and primary flows expose landmarks, headings, useful image names, and form errors', () => {

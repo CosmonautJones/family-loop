@@ -19,7 +19,7 @@ import { getSupabaseClient } from './supabaseClient';
 import { maxBrowserImageBytes, validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
-import { isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
+import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
 
 type GroupRow = {
   id: string;
@@ -140,7 +140,7 @@ function throwIfError(error: { message: string } | null) {
 }
 
 function invitationTokenToHex(token: string) {
-  if (!/^[A-Za-z0-9_-]{42}[AQgw]$/.test(token)) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
+  if (!isCanonicalInvitationToken(token)) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
   const bytes: number[] = [];
   let buffer = 0;

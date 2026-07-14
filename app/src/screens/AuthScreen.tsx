@@ -101,10 +101,10 @@ const styles = StyleSheet.create({
   inviteCard: { backgroundColor: 'rgba(247,211,200,0.35)', borderRadius: radii.card, gap: spacing.sm, padding: spacing.md },
   inviteTitle: { color: palette.text, fontSize: 18, fontWeight: '900', textAlign: 'center' },
   field: { gap: 6 }, label: { color: palette.text, fontSize: 15, fontWeight: '800' },
-  input: { backgroundColor: palette.white, borderColor: palette.inkSoft, borderRadius: radii.card, borderWidth: 1, color: palette.text, fontSize: 16, minHeight: 52, paddingHorizontal: spacing.md },
+  input: { backgroundColor: palette.white, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, color: palette.text, fontSize: 16, minHeight: 52, paddingHorizontal: spacing.md },
   inputInvalid: { borderColor: palette.coral }, error: { color: palette.coral, fontSize: 14, lineHeight: 20 }, success: { color: palette.plum, fontSize: 14, lineHeight: 20 },
-  button: { alignItems: 'center', backgroundColor: palette.coral, borderRadius: radii.card, justifyContent: 'center', minHeight: 52 }, buttonDisabled: { opacity: 0.5 }, buttonText: { color: palette.white, fontSize: 16, fontWeight: '900' },
+  button: { alignItems: 'center', backgroundColor: palette.plum, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, justifyContent: 'center', minHeight: 52 }, buttonDisabled: { opacity: 0.5 }, buttonText: { color: palette.white, fontSize: 16, fontWeight: '900' },
   textButton: { alignItems: 'center', justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.sm }, textButtonLabel: { color: palette.plum, fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  profileList: { gap: spacing.sm }, profileButton: { alignItems: 'center', backgroundColor: palette.white, borderColor: palette.inkSoft, borderRadius: radii.card, borderWidth: 1, flexDirection: 'row', gap: spacing.md, minHeight: 60, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  profileList: { gap: spacing.sm }, profileButton: { alignItems: 'center', backgroundColor: palette.white, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, flexDirection: 'row', gap: spacing.md, minHeight: 60, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   profileInitials: { color: palette.coral, fontSize: 16, fontWeight: '900', width: 32 }, profileCopy: { flex: 1 }, profileName: { color: palette.text, fontSize: 16, fontWeight: '900' }, profileRole: { color: palette.muted, fontSize: 13, marginTop: 2 },
 });
