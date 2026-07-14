@@ -47,9 +47,10 @@
 - [x] Photo names, decorative avatars, and repeated Open/Remove action names are contextual rather than ambiguous.
 - [x] Loading/error feedback uses polite or alert/assertive semantics appropriate to urgency.
 - [x] Root tests PASS 44/44 and app-local tests PASS 33/33; TypeScript, harness, and Expo web export PASS.
-- [x] Independent Run 1 RED keyboard defect corrected; Run 2 acceptance remains pending.
-- [ ] Independent rendered-browser accessibility gate — pending.
+- [x] Independent Run 1 RED keyboard defect corrected; Run 2 accepted at AMBER / PROCEED-WARN with zero blockers.
+- [x] Rendered keyboard order, Enter routing, one-selected/one-main semantics, and 320×844 width/overflow/navigation sanity passed.
 - [ ] Substantive lint and physical-device/screen-reader/moderated-human evidence — unproven.
+- [ ] Practical 200% zoom/reflow remains unverified; the pre-existing React Native Web warning remains advisory.
 
 ## Wave 2 trip creation and RSVP
 

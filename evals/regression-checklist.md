@@ -80,8 +80,9 @@
 - [x] Create validation focuses the first invalid field and exposes stable invalid/error relationships without changing submitted data.
 - [x] Screen/state headings, contextual action names, informative photos, decorative avatars, and live/error semantics have focused contract coverage.
 - [x] Root tests 44/44 and app-local tests 33/33; TypeScript, harness, and Expo web export pass.
-- [x] Independent Run 1 RED keyboard defect reproduced and corrected; independent Run 2 remains pending.
-- [ ] Actual rendered AX tree, keyboard journey, zoom/reflow, and phone viewport review — pending independent gate.
+- [x] Independent Run 1 RED keyboard defect reproduced and corrected; Run 2 accepted at AMBER / PROCEED-WARN with zero blockers.
+- [x] Sequential Home → Calendar → Create → Memories → Family keyboard order, Enter routing, one selected tab, one main landmark, and 320×844 width/overflow/navigation sanity passed.
+- [ ] Practical 200% zoom/reflow remains unverified; the pre-existing React Native Web warning remains advisory.
 - [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, and moderated older-adult testing — `NOT RUN`.
 
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.
