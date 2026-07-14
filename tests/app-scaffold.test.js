@@ -396,7 +396,8 @@ test('Family screen is service-backed with truthful states and no fixture onboar
   assert.match(shell, /aria-selected=\{tab\.active\}/);
   assert.match(shell, /accessibilityRole="tablist"/);
   assert.match(shell, /accessibilityRole="tab"/);
-  assert.match(shell, /tabIndex=\{tab\.active \? 0 : -1\}/);
+  assert.match(shell, /tabIndex=\{0\}/);
+  assert.doesNotMatch(shell, /tabIndex=\{tab\.active \? 0 : -1\}/);
   assert.doesNotMatch(shell, />Selected<\/Text>/);
   assert.doesNotMatch(shell, /accessibilityLabel=\{`\$\{tab\.label\}/);
   assert.match(shell, /function ActiveFamilyLabel\(\)/);

@@ -41,12 +41,13 @@
 
 ## Wave 5 mobile accessibility implementation
 
-- [x] The shell exposes one main landmark; fixed navigation precedes it in DOM order and uses selected state plus a roving tab stop.
+- [x] The shell exposes one main landmark; fixed navigation precedes it in DOM order and keeps all five tabs sequentially tabbable with explicit selected state.
 - [x] Primary/state titles and Event Detail sections expose level-appropriate headings.
 - [x] Invalid Create submission focuses the first invalid input and connects stable field labels to alert text with invalid/described-by semantics.
 - [x] Photo names, decorative avatars, and repeated Open/Remove action names are contextual rather than ambiguous.
 - [x] Loading/error feedback uses polite or alert/assertive semantics appropriate to urgency.
-- [x] Root and app-local tests PASS 44/44; TypeScript, harness, and Expo web export PASS.
+- [x] Root tests PASS 44/44 and app-local tests PASS 33/33; TypeScript, harness, and Expo web export PASS.
+- [x] Independent Run 1 RED keyboard defect corrected; Run 2 acceptance remains pending.
 - [ ] Independent rendered-browser accessibility gate — pending.
 - [ ] Substantive lint and physical-device/screen-reader/moderated-human evidence — unproven.
 

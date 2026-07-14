@@ -75,11 +75,12 @@
 ## Wave 5 mobile accessibility implementation
 
 - [x] Exactly one main landmark wraps the active screen and the fixed navigation appears before it in DOM order.
-- [x] Only the selected tab is in the sequential keyboard tab order; all tabs remain operable and expose selected state.
+- [x] All five tabs are in the sequential keyboard order and expose selected state; no unimplemented roving-focus behavior is claimed.
 - [x] Navigation labels are at least 11px, targets remain at least 48px, and main content clears the fixed navigation.
 - [x] Create validation focuses the first invalid field and exposes stable invalid/error relationships without changing submitted data.
 - [x] Screen/state headings, contextual action names, informative photos, decorative avatars, and live/error semantics have focused contract coverage.
-- [x] Root tests 44/44 and app-local tests 44/44; TypeScript, harness, and Expo web export pass.
+- [x] Root tests 44/44 and app-local tests 33/33; TypeScript, harness, and Expo web export pass.
+- [x] Independent Run 1 RED keyboard defect reproduced and corrected; independent Run 2 remains pending.
 - [ ] Actual rendered AX tree, keyboard journey, zoom/reflow, and phone viewport review — pending independent gate.
 - [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, and moderated older-adult testing — `NOT RUN`.
 

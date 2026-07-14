@@ -241,9 +241,11 @@
 - Scope review: no onboarding, backend/query plumbing, dependency, navigation-library, or unrelated screen changes.
 # 2026-07-14 — Wave 5 mobile accessibility implementation handoff
 
-- Added a single main landmark and placed the fixed five-tab navigation before it in DOM order. Tabs expose selected state directly, use a roving keyboard tab stop, retain 48px targets, and use at least 11px labels; content clearance now keeps long forms above the fixed bar.
+- Added a single main landmark and placed the fixed five-tab navigation before it in DOM order. Tabs expose selected state directly, remain in sequential keyboard order, retain 48px targets, and use at least 11px labels; content clearance now keeps long forms above the fixed bar.
 - Primary and state titles expose explicit heading levels. Loading updates are polite and failure feedback uses alert/assertive semantics where action is required.
 - Photo cards have informative names derived from their visible title/subtitle; adjacent avatars are decorative. Repeated event/photo actions include the event title or photo caption.
 - Invalid Create submission focuses the first invalid field and exposes stable labels, `aria-invalid`, and `aria-describedby` error relationships. Location/URL/name fields use conservative autocomplete and keyboard hints.
-- Automated implementation evidence: root tests PASS 44/44; app-local tests PASS 44/44; TypeScript PASS; harness PASS; Expo web export PASS; diff check pending final commit check. Lint exits 0 but is still a placeholder WARN.
-- Independent rendered-browser/AX review remains pending. Physical iOS Safari/Android Chrome, browser screen readers, reduced motion, and moderated older-adult testing remain `NOT RUN` and are not inferred.
+- Independent Run 1 was **RED** because inactive tabs used `tabIndex=-1` without arrow-key handling and therefore were unreachable by sequential keyboard navigation.
+- The targeted fix keeps all five tabs sequentially tabbable while retaining tablist/tab roles and explicit selected state; it does not claim a roving-tab implementation.
+- Fresh fix evidence: root tests PASS 44/44; app-local tests PASS 33/33; TypeScript PASS; harness PASS; Expo web export PASS. Lint exits 0 but is still a placeholder WARN.
+- Independent Run 2 acceptance remains pending. Physical iOS Safari/Android Chrome, browser screen readers, reduced motion, and moderated older-adult testing remain `NOT RUN` and are not inferred.

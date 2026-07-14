@@ -62,7 +62,7 @@ export function AppShell() {
                   aria-selected={tab.active}
                   onPress={() => setActiveTab(tab.label)}
                   style={styles.navItem}
-                  tabIndex={tab.active ? 0 : -1}
+                  tabIndex={0}
                 >
                   {tab.active ? <LinearGradient colors={gradients.sunset} style={styles.activePill} /> : null}
                   <Ionicons
