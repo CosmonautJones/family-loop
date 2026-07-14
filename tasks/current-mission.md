@@ -284,4 +284,11 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Removed reminder controls and the dead staged-photo/reminder transient store state rather than implying delivery or scheduling that does not exist.
 - Wave 4 is **COMPLETE** only as the local product-truth/completed-event-history checkpoint. Remote Supabase/RLS/private object storage, multi-user behavior, and physical iOS Safari/Android Chrome remain unverified.
 
+### Wave 4 external final gate
+
+- External review accepted commits `d4f4b4d` and `3d80a62` at **AMBER / PROCEED-WARN with zero blockers**.
+- Authoritative independent results remain root tests PASS 43/43 and app-local tests PASS 32/32; TypeScript, harness, Expo web export, browser checks, and diff check remain PASS. Lint remains a placeholder warning.
+- Legacy Home/memory fixture exports remain in the repository but are not consumed by production Home or Memories. Their removal is advisory cleanup, not a runtime fallback or Wave 4 blocker.
+- Live Supabase/RLS/private storage, multi-user behavior, and physical iOS Safari/Android Chrome remain unverified and are not inferred from the accepted local gate.
+
 Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the corrected implementation at AMBER / PROCEED-WARN with zero blockers. The broader campaign remains IN PROGRESS; no remote/live Supabase, RLS, private object storage, multi-user, or physical-device capability is claimed complete.**

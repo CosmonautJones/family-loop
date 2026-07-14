@@ -66,6 +66,8 @@
 - [x] Exact Chrome viewports 320×844, 390×844, 430×932, and 1280×900 have no document overflow.
 - [x] Root tests 43/43 and app-local tests 32/32; TypeScript, harness, Expo web export, and diff check pass.
 - [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers.
+- [x] External final gate after `3d80a62` — AMBER / PROCEED-WARN, zero blockers; authoritative root 43/43 and app-local 32/32 remain independently transcribed.
+- [x] Legacy Home/memory fixture exports are unconsumed by production Home and Memories; removal remains advisory cleanup rather than a runtime-truth blocker.
 - [ ] Placeholder lint, remote Supabase/RLS/private object storage, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
 
 ## OPORD campaign documentation

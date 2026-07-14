@@ -1,5 +1,12 @@
 # Review Log
 
+## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 4 external final gate
+
+- External review accepted `d4f4b4d` and records commit `3d80a62` at **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
+- Authoritative independent command summaries are root tests PASS 43/43 and app-local tests PASS 32/32. TypeScript, harness, Expo web export, responsive browser checks, and diff check passed; lint remains the known placeholder warning.
+- Unused legacy Home and memory fixture exports remain present but are not imported by production Home or Memories. This is advisory cleanup only and does not reintroduce fixture fallback.
+- Live Supabase/RLS/private object storage, multi-user behavior, and physical iOS Safari/Android Chrome remain `NOT RUN` and are not inferred from the accepted local evidence.
+
 ## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 4 final closeout
 
 - Accepted implementation commit: `d4f4b4d`.
