@@ -297,7 +297,7 @@ export function useSendMessageMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ eventId, body }: { eventId: string; body: string }) => loopedInService.thread.sendMessage(eventId, body),
+    mutationFn: ({ eventId, body, operationKey }: { eventId: string; body: string; operationKey: string }) => loopedInService.thread.sendMessage(eventId, body, operationKey),
     onSuccess: (message) => queryClient.invalidateQueries({ queryKey: queryKeys.messages(message.eventId) }),
   });
 }

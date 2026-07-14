@@ -30,6 +30,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
   const [form, setForm] = useState<EventForm>(initialForm);
   const [errors, setErrors] = useState<EventFormErrors>({});
   const inputRefs = useRef<Partial<Record<RequiredEventField, TextInput | null>>>({});
+  const operationKey = useRef(crypto.randomUUID());
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   const createEvent = useCreateEventMutation();
   const auth = useAuthSession();
@@ -41,6 +42,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
   ]), []);
 
   const updateField = (key: keyof EventForm, value: string) => {
+    operationKey.current = crypto.randomUUID();
     setForm((current) => ({ ...current, [key]: value }));
     if (key !== 'description') setErrors((current) => ({ ...current, [key]: undefined }));
     if (createEvent.isError) createEvent.reset();
@@ -58,6 +60,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
     const startsAt = new Date(`${form.date}T${form.time}:00`);
     try {
       const event = await createEvent.mutateAsync({
+        operationKey: operationKey.current,
         groupId: activeGroupId,
         title: form.title.trim(),
         startsAt: startsAt.toISOString(),
@@ -66,6 +69,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
         description: form.description.trim(),
       });
       setForm(initialForm());
+      operationKey.current = crypto.randomUUID();
       onCreated?.(event.id);
     } catch { /* The mutation exposes a retryable error below and keeps every field intact. */ }
   };

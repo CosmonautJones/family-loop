@@ -219,6 +219,44 @@ try {
   for (const actor of [alex, maya, jordan]) assert.equal((await ok(table('loopedin_events', actor.token, `?group_id=eq.${family.id}&select=id`), 'family event list')).length, 3);
   assert.equal((await ok(table('loopedin_events', alex.token, `?id=eq.${privateEvent.id}&select=id`), 'cross-family event isolation')).length, 0);
 
+  const eventOperationKey = crypto.randomUUID();
+  const idempotentEventInput = {
+    target_group_id: family.id, target_title: 'Response-loss family plan',
+    target_starts_at: new Date(Date.now() + 8 * 86400000).toISOString(), target_ends_at: new Date(Date.now() + 8 * 86400000 + 7200000).toISOString(),
+    target_location: 'Madison', target_description: 'The first committed response is intentionally discarded.',
+    target_status_label: 'Open', target_visibility: 'group', target_timeline: [], target_cover_url: null, target_operation_key: eventOperationKey,
+  };
+  const lostEventResponse = await rpc('loopedin_create_event', alex.token, idempotentEventInput);
+  assert.ok(lostEventResponse.response.ok, `initial event commit failed before response-loss simulation: ${lostEventResponse.response.status} ${JSON.stringify(lostEventResponse.body)}`);
+  const retriedEvent = await ok(rpc('loopedin_create_event', alex.token, idempotentEventInput), 'retry committed event');
+  const repeatedEvent = await ok(rpc('loopedin_create_event', alex.token, idempotentEventInput), 'repeat committed event');
+  assert.equal(retriedEvent.id, repeatedEvent.id);
+  assert.equal(sql(`select count(*) from public.loopedin_events where id='${retriedEvent.id}';`), '1');
+  assert.equal(sql(`select count(*) from loopedin_private.loopedin_event_create_operations where actor_id='${alex.id}' and group_id='${family.id}' and operation_key='${eventOperationKey}';`), '1');
+  const distinctEvent = await ok(rpc('loopedin_create_event', alex.token, { ...idempotentEventInput, target_operation_key: crypto.randomUUID() }), 'distinct event operation');
+  assert.notEqual(distinctEvent.id, retriedEvent.id);
+  const mayaSameKeyEvent = await ok(rpc('loopedin_create_event', maya.token, idempotentEventInput), 'cross-user event key');
+  assert.notEqual(mayaSameKeyEvent.id, retriedEvent.id);
+  assert.equal(mayaSameKeyEvent.created_by, maya.id);
+  assert.equal((await rpc('loopedin_create_event', outsider.token, idempotentEventInput)).response.ok, false, 'outsider used a family event operation key');
+
+  const messageOperationKey = crypto.randomUUID();
+  const messageInput = { target_event_id: retriedEvent.id, target_body: 'Response-loss family comment', target_operation_key: messageOperationKey };
+  const lostMessageResponse = await rpc('loopedin_send_event_message', alex.token, messageInput);
+  assert.ok(lostMessageResponse.response.ok, `initial comment commit failed before response-loss simulation: ${lostMessageResponse.response.status} ${JSON.stringify(lostMessageResponse.body)}`);
+  const retriedMessage = await ok(rpc('loopedin_send_event_message', alex.token, messageInput), 'retry committed comment');
+  const repeatedMessage = await ok(rpc('loopedin_send_event_message', alex.token, messageInput), 'repeat committed comment');
+  assert.equal(retriedMessage.id, repeatedMessage.id);
+  assert.equal(sql(`select count(*) from public.loopedin_event_messages where id='${retriedMessage.id}';`), '1');
+  assert.equal(sql(`select count(*) from loopedin_private.loopedin_message_create_operations where actor_id='${alex.id}' and event_id='${retriedEvent.id}' and operation_key='${messageOperationKey}';`), '1');
+  const distinctMessage = await ok(rpc('loopedin_send_event_message', alex.token, { ...messageInput, target_operation_key: crypto.randomUUID() }), 'distinct comment operation');
+  assert.notEqual(distinctMessage.id, retriedMessage.id);
+  const mayaSameKeyMessage = await ok(rpc('loopedin_send_event_message', maya.token, messageInput), 'cross-user comment key');
+  assert.notEqual(mayaSameKeyMessage.id, retriedMessage.id);
+  assert.equal(mayaSameKeyMessage.author_id, maya.id);
+  assert.equal((await rpc('loopedin_send_event_message', outsider.token, messageInput)).response.ok, false, 'outsider used a family comment operation key');
+  assert.equal(sql(`select exists (select 1 from (values ('select'),('insert'),('update'),('delete')) privilege(name) where has_table_privilege('authenticated','loopedin_private.loopedin_event_create_operations',privilege.name) or has_table_privilege('authenticated','loopedin_private.loopedin_message_create_operations',privilege.name));`), 'f');
+
   const lake = eventRows[2];
   for (const [actor, status] of [[alex, 'going'], [maya, 'maybe'], [jordan, 'declined']]) {
     await ok(table('loopedin_rsvps', actor.token, '?on_conflict=event_id,user_id&select=*', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }, body: JSON.stringify({ event_id: lake.id, user_id: actor.id, person_name: actor.email.split('@')[0], status }) }), 'upsert RSVP');

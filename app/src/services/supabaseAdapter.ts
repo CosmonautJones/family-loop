@@ -668,11 +668,14 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
       async createEvent(payload: CreateEventPayload) {
         const userId = await getCurrentUserId();
+        const insert = eventInsert(payload, userId);
         const { data, error } = await supabase
-          .from('loopedin_events')
-          .insert(eventInsert(payload, userId))
-          .select('id, group_id, created_by, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
-          .single();
+          .rpc('loopedin_create_event', {
+            target_group_id: insert.group_id, target_title: insert.title, target_starts_at: insert.starts_at,
+            target_ends_at: insert.ends_at, target_location: insert.location, target_description: insert.description,
+            target_status_label: insert.status_label, target_visibility: insert.visibility, target_timeline: insert.timeline,
+            target_cover_url: insert.cover_url, target_operation_key: payload.operationKey,
+          }).single();
         throwIfError(error);
         return mapEvent(data as EventRow);
       },
@@ -799,15 +802,12 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const profiles = await getProfiles(messages.map((message) => message.author_id));
         return messages.map((message) => mapMessage(message, profiles.get(message.author_id), message.author_id === userId));
       },
-      async sendMessage(eventId, body) {
+      async sendMessage(eventId, body, operationKey) {
         const trimmedBody = body.trim();
         if (!trimmedBody) throw userServiceError('Write a message before sending.');
         const userId = await getCurrentUserId();
         const { data, error } = await supabase
-          .from('loopedin_event_messages')
-          .insert({ event_id: eventId, author_id: userId, body: trimmedBody })
-          .select('id, event_id, author_id, body, created_at')
-          .single();
+          .rpc('loopedin_send_event_message', { target_event_id: eventId, target_body: trimmedBody, target_operation_key: operationKey }).single();
         throwIfError(error);
 
         const profiles = await getProfiles([userId]);

@@ -1,5 +1,15 @@
 # Review Log
 
+## 2026-07-14 — OPORD 005 event/comment response-loss idempotency
+
+- Event and comment writes still never auto-retry. Their mobile-web composers retain a UUID operation key only while the unchanged failed draft remains visible and rotate it on any edit or successful authoritative response.
+- Durable-local advances to v8 with private actor/entity/key operation mappings. A committed response-loss replay returns the retained record without another row or revision; retained v1–v7 envelopes migrate once.
+- Forward migration `20260714140000_loopedin_create_idempotency.sql` keeps operation keys out of member-readable event/comment rows. Revoked private tables and narrow security-definer RPCs serialize actor/entity/key scopes with transaction advisory locks and return the authoritative public row.
+- The loopback family harness discards initial committed responses, retries, and proves same ID/one row, distinct operations, cross-user same-key separation, outsider denial, revoked table access, and cleanup. Retained SQL counts stayed exactly 8/2/6/5/9/9/4/60/1; the populated scenario verifier remained exact.
+- First fix loop corrected an ambiguous PL/pgSQL local variable. Second fix loop updated v8 migration fixtures and the composer contract assertion. Independent review then found a membership-removal TOCTOU in the security-definer RPCs; the correction holds key-share locks on the exact membership row and, for comments, the event row through commit. TypeScript, migration/secret checks, and the expanded local family harness pass after final gates.
+- Independent privacy/RLS/schema review: **AMBER before correction, GREEN after the exact blocking race was repaired**. All other reviewed areas passed: private key storage/privileges, actor/entity scoping, authoritative replay, advisory-lock behavior, cascades, UI key lifecycle, durable no-write replay, and cross-user collision behavior.
+- Hosted correlation/version propagation, universal deadlines/rate enforcement, and other write classes remain open; OPORD 005 remains PARTIAL/CONDITIONAL overall.
+
 ## 2026-07-14 — OPORD 005/006 local readiness and query-plan gate
 
 - OPORD 005 audit rejected a client-only universal envelope: every configured adapter rejection already crosses the central safe-error mapper, while correlation propagation, health endpoints, universal deadlines, and rate enforcement require a cooperating server/gateway. The smallest explicit contract now retries reads once and never automatically retries writes.

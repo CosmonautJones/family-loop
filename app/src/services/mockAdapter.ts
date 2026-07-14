@@ -164,6 +164,10 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       getEvent: async (eventId) => wait(eventMembership(eventId).event),
       createEvent: async (payload: CreateEventPayload) => {
         const { profile } = groupMembership(payload.groupId);
+        const resolvedOperationKey = payload.operationKey ?? crypto.randomUUID();
+        const operation = db.eventOperations.find((item) => item.operationKey === resolvedOperationKey && item.actorId === profile.id && item.groupId === payload.groupId);
+        if (operation) return wait(db.events.find((event) => event.id === operation.eventId)!);
+        const { operationKey, ...eventPayload } = payload;
         const event = {
           id: `event-created-${nextEventId++}`,
           statusLabel: 'Draft',
@@ -173,9 +177,10 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
             { title: 'Conversation', detail: 'Chat, reminders, and media will attach to this event.' },
           ],
           creatorId: profile.id,
-          ...payload,
+          ...eventPayload,
         };
         db.events.unshift(event);
+        db.eventOperations.push({ operationKey: operationKey ?? resolvedOperationKey, actorId: profile.id, groupId: payload.groupId, eventId: event.id });
         return changed(event);
       },
       updateEvent: async (eventId, patch: UpdateEventPayload) => {
@@ -197,6 +202,8 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         db.memories = db.memories.filter((memory) => memory.eventId !== eventId);
         db.notifications = db.notifications.filter((notification) => notification.eventId !== eventId);
         db.reminders = db.reminders.filter((reminder) => reminder.eventId !== eventId);
+        db.eventOperations = db.eventOperations.filter((operation) => operation.eventId !== eventId);
+        db.messageOperations = db.messageOperations.filter((operation) => operation.eventId !== eventId);
         return changed(undefined);
       },
     },
@@ -247,12 +254,16 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
           return timeOrder || left.id.localeCompare(right.id);
         }).map((message) => ({ ...message, self: message.authorId === profile.id })));
       },
-      sendMessage: async (eventId, body) => {
+      sendMessage: async (eventId, body, operationKey) => {
         const trimmedBody = body.trim();
         if (!trimmedBody) return Promise.reject(new Error('Write a message before sending.'));
         const { profile } = requireEventMembership(eventId);
+        const resolvedOperationKey = operationKey ?? crypto.randomUUID();
+        const operation = db.messageOperations.find((item) => item.operationKey === resolvedOperationKey && item.actorId === profile.id && item.eventId === eventId);
+        if (operation) return wait(db.messages.find((message) => message.id === operation.messageId)!);
         const message = { id: `message-created-${nextMessageId++}`, eventId, body: trimmedBody, authorId: profile.id, authorName: profile.name, author: profile, self: true, createdAt: new Date().toISOString() };
         db.messages.push(message);
+        db.messageOperations.push({ operationKey: resolvedOperationKey, actorId: profile.id, eventId, messageId: message.id });
         return changed(message);
       },
     },

@@ -1,5 +1,14 @@
 # Regression Checklist
 
+## OPORD 005 event/comment response-loss retries
+
+- [x] Event and comment drafts retain one UUID operation key across an unchanged manual retry and rotate it on edit or success; writes still never retry automatically.
+- [x] Durable-local v8 replays the same authoritative ID with one row and no revision increment; v1–v7 migrate once with empty private operation maps.
+- [x] Loopback Supabase response-loss/retry returns the same IDs and one row; distinct keys create distinct rows.
+- [x] Operation maps are private, authenticated has no table privilege, actor/entity scoping prevents cross-user replay, and outsiders remain denied by membership checks/RLS.
+- [x] The destructive harness cleans its rows; retained baseline remains exactly 8/2/6/5/9/9/4/60/1 and the populated browser scenario remains unchanged.
+- [ ] Universal deadlines/rate enforcement, request correlation/version propagation, hosted deployment, and other write classes remain `NOT RUN` or separately scoped.
+
 ## OPORD 003 password recovery
 
 - [x] Known and unknown addresses receive identical HTTP and visible request responses; only the known disposable account receives local mail.
@@ -15,7 +24,7 @@
 ## OPORD 010 reminder preference
 
 - [x] Exact-user/event read, enable/upsert, and disable/delete exist across memory, durable-local, and Supabase adapters.
-- [x] Durable-local v7 preserves reminder preferences across reconstruction and migrates v1–v6 with an empty collection without changing retained data/revision.
+- [x] Durable-local v8 preserves reminder preferences across reconstruction and migrates v1–v7 with empty missing collections without changing retained data/revision.
 - [x] Two authenticated loopback users can enable the same event independently across relogin; one user's idempotent disable leaves the other unchanged.
 - [x] Outsider event read is empty and direct-ID reminder insert is denied by existing self-user/event-member RLS.
 - [x] Event Detail uses a 48px switch with explicit checked semantics, `Morning of event`, On/Off state, honest no-push/email copy, and pending/error/refetch/retry/success states.

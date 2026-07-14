@@ -231,6 +231,62 @@ test('durable local service persists the family loop across reconstruction and c
   assert.equal((await reconstructed.events.listEvents('group-jones-family')).length, mockData.createMockDatabase().events.length);
 });
 
+test('event and comment retries replay committed results without duplicate durable rows', async () => {
+  const { durableAdapter, localActorSession } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const alex = durableAdapter.createDurableLocalLoopedInService(storage, undefined, localActorSession.createMemoryActorSessionStore('person-you'));
+  const eventPayload = {
+    operationKey: '11111111-1111-4111-8111-111111111111', groupId: 'group-jones-family', title: 'Response-loss plan',
+    startsAt: '2027-05-01T10:00:00Z', endsAt: '2027-05-01T12:00:00Z', location: 'Home', description: 'Committed before the response vanished',
+  };
+
+  const firstEvent = await alex.events.createEvent(eventPayload); // Simulate a committed response the caller never receives.
+  const revisionAfterCommit = JSON.parse(values.get(durableAdapter.durableDatabaseKey)).revision;
+  const retriedEvent = await alex.events.createEvent(eventPayload);
+  const afterEventRetry = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
+  assert.equal(retriedEvent.id, firstEvent.id);
+  assert.equal(afterEventRetry.revision, revisionAfterCommit, 'a replay must not publish a second durable write');
+  assert.equal(afterEventRetry.database.events.filter((event) => event.title === eventPayload.title).length, 1);
+
+  const distinctEvent = await alex.events.createEvent({ ...eventPayload, operationKey: '22222222-2222-4222-8222-222222222222' });
+  assert.notEqual(distinctEvent.id, firstEvent.id, 'distinct operations remain distinct even with identical content');
+
+  const maya = durableAdapter.createDurableLocalLoopedInService(storage, undefined, localActorSession.createMemoryActorSessionStore('person-maya'));
+  const mayaEvent = await maya.events.createEvent(eventPayload);
+  assert.notEqual(mayaEvent.id, firstEvent.id, 'another actor cannot replay the first actor’s operation');
+  assert.equal(mayaEvent.creatorId, 'person-maya');
+
+  const messageKey = '33333333-3333-4333-8333-333333333333';
+  const firstMessage = await alex.thread.sendMessage(firstEvent.id, 'Response-loss comment', messageKey);
+  const messageRevision = JSON.parse(values.get(durableAdapter.durableDatabaseKey)).revision;
+  const retriedMessage = await alex.thread.sendMessage(firstEvent.id, 'Response-loss comment', messageKey);
+  const afterMessageRetry = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
+  assert.equal(retriedMessage.id, firstMessage.id);
+  assert.equal(afterMessageRetry.revision, messageRevision);
+  assert.equal(afterMessageRetry.database.messages.filter((message) => message.id === firstMessage.id).length, 1);
+
+  const distinctMessage = await alex.thread.sendMessage(firstEvent.id, 'Response-loss comment', '44444444-4444-4444-8444-444444444444');
+  assert.notEqual(distinctMessage.id, firstMessage.id);
+  const mayaMessage = await maya.thread.sendMessage(firstEvent.id, 'Response-loss comment', messageKey);
+  assert.notEqual(mayaMessage.id, firstMessage.id, 'another actor cannot replay the first actor’s comment operation');
+  assert.equal(mayaMessage.authorId, 'person-maya');
+});
+
+test('Supabase event and comment operation keys stay private and membership-locked through commit', () => {
+  const migration = fs.readFileSync(path.join(repoRoot, 'supabase', 'migrations', '20260714140000_loopedin_create_idempotency.sql'), 'utf8');
+  assert.match(migration, /loopedin_private\.loopedin_event_create_operations/);
+  assert.match(migration, /loopedin_private\.loopedin_message_create_operations/);
+  assert.doesNotMatch(migration, /alter table public\.loopedin_(?:events|event_messages).*operation_key/is);
+  assert.equal((migration.match(/for key share;/g) ?? []).length, 3, 'event membership plus comment event/membership rows must stay locked through commit');
+  assert.match(migration, /revoke all on loopedin_private\.loopedin_event_create_operations from public, anon, authenticated/);
+  assert.match(migration, /revoke all on loopedin_private\.loopedin_message_create_operations from public, anon, authenticated/);
+});
+
 test('group member reads return the five Jones members, stay group-isolated, and survive durable reconstruction', async () => {
   const { durableAdapter, mockAdapter, mockData } = loadCompiledModules();
   const seed = mockData.createMockDatabase();
@@ -540,7 +596,7 @@ test('durable operations keep the actor captured at invocation across an immedia
   assert.equal((await service.notifications.listNotifications())[0].read, true);
 });
 
-test('v3 durable messages and events migrate to actor-owned v7 records without changing revision', async () => {
+test('v3 durable messages and events migrate to actor-owned v8 records without changing revision', async () => {
   const { durableAdapter, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   for (const message of legacy.messages) delete message.authorId;
@@ -554,12 +610,12 @@ test('v3 durable messages and events migrate to actor-owned v7 records without c
   const messages = await service.thread.listMessages('event-door-county');
   assert.deepEqual(messages.map((message) => message.authorId), ['person-maya', 'person-you']);
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 7);
+  assert.equal(stored.version, 8);
   assert.equal(stored.revision, 19);
   assert.ok(stored.database.events.every((event) => event.creatorId));
 });
 
-test('v5 group notification fans out once per recipient in v7 without changing revision', async () => {
+test('v5 group notification fans out once per recipient in v8 without changing revision', async () => {
   const { durableAdapter, localActorSession, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   legacy.notifications = [{ id: 'notification-legacy-group', kind: 'event_update', title: 'Shared update', body: 'Keep this update', eventId: 'event-door-county', groupId: 'group-jones-family', read: false, createdAt: '2026-07-10T18:00:00Z' }];
@@ -574,7 +630,7 @@ test('v5 group notification fans out once per recipient in v7 without changing r
   assert.deepEqual((await alex.notifications.listNotifications()).map((item) => item.id), ['notification-legacy-group']);
   assert.deepEqual((await maya.notifications.listNotifications()).map((item) => item.id), ['notification-legacy-group:person-maya']);
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 7);
+  assert.equal(stored.version, 8);
   assert.equal(stored.revision, 23);
   assert.equal(stored.database.notifications.length, 5);
   assert.deepEqual(stored.database.notifications.map((item) => item.userId), ['person-you', 'person-maya', 'person-emma', 'person-noah', 'person-ruth']);
@@ -597,7 +653,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   assert.equal(corruptWrites, 1, 'explicit reset is allowed to overwrite corrupt storage');
 
   const writeFailure = new Error('storage is full');
-  let persisted = JSON.stringify({ version: 7, database: { groups: [{ id: 'group-a', name: 'A', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }] }], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [], reminders: [] } });
+  let persisted = JSON.stringify({ version: 8, database: { groups: [{ id: 'group-a', name: 'A', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }] }], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [], reminders: [], eventOperations: [], messageOperations: [] } });
   const failing = {
     getItem: async () => persisted,
     setItem: async () => { throw writeFailure; },
@@ -609,7 +665,7 @@ test('durable local service surfaces corrupt storage and write errors without si
 
   let unsupportedWrites = 0;
   const unsupported = {
-    getItem: async () => JSON.stringify({ version: 8, database: {} }),
+    getItem: async () => JSON.stringify({ version: 9, database: {} }),
     setItem: async () => { unsupportedWrites += 1; },
     removeItem: async () => undefined,
   };
@@ -633,7 +689,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
 });
 
-test('durable local service migrates pre-role v1 members to v7 without losing user data or revision', async () => {
+test('durable local service migrates pre-role v1 members to v8 without losing user data or revision', async () => {
   const { durableAdapter, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   for (const member of legacy.groups[0].members) delete member.role;
@@ -659,7 +715,7 @@ test('durable local service migrates pre-role v1 members to v7 without losing us
   assert.equal((await migrated.thread.listMessages('event-legacy-custom'))[0].body, 'Keep this note.');
   assert.ok((await migrated.notifications.listNotifications()).some((item) => item.id === 'notification-legacy-custom'));
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 7);
+  assert.equal(stored.version, 8);
   assert.deepEqual(stored.database.reminders, []);
   assert.equal(stored.database.messages.find((message) => message.id === 'message-legacy-custom').authorId, 'person-you');
   assert.equal(stored.revision, 7);
@@ -668,7 +724,7 @@ test('durable local service migrates pre-role v1 members to v7 without losing us
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.deepEqual((await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.role), members.map((member) => member.role));
   assert.equal((await reconstructed.events.getEvent('event-legacy-custom')).title, 'Retained custom plan');
-  assert.equal(writes, 1, 'a migrated v7 envelope must remain stable on later reconstruction');
+  assert.equal(writes, 1, 'a migrated v8 envelope must remain stable on later reconstruction');
 
   const legacyRaw = JSON.stringify({ version: 1, revision: 7, database: legacy });
   const failedMigration = durableAdapter.createDurableLocalLoopedInService({
@@ -711,7 +767,7 @@ test('media uploads are event-scoped, accessible, attributed when remote, remova
   const migrated = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.equal((await migrated.media.listMedia('event-lake-geneva'))[0].altText, legacy.media[0].caption);
   const envelope = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(envelope.version, 7);
+  assert.equal(envelope.version, 8);
   assert.equal(envelope.revision, 12);
 });
 
@@ -1608,7 +1664,9 @@ test('Event Detail renders truthful thread states and a recoverable composer wit
   assert.match(detail, /key=\{item\.id\}/);
   assert.match(detail, /disabled=\{sendDisabled\}/);
   assert.match(detail, /sendMessage\.isPending/);
-  assert.match(detail, /onSuccess: \(\) => setMessageDraft\(\(current\) => current\.trim\(\) === body \? '' : current\)/);
+  assert.match(detail, /operationKey: messageOperationKey\.current/);
+  assert.match(detail, /messageOperationKey\.current = crypto\.randomUUID\(\)/);
+  assert.match(detail, /setMessageDraft\(\(current\) => current\.trim\(\) === body \? '' : current\)/);
   assert.match(detail, /sendMessage\.isError/);
   assert.doesNotMatch(detail, /eventThread|features\/events\/fixtures/);
 });

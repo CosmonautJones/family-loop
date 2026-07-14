@@ -4,7 +4,7 @@ import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData
 import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 7;
+export const durableDatabaseVersion = 8;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -43,11 +43,11 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
 
 function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
   const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
-  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== 5 && parsed.version !== 6 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== 5 && parsed.version !== 6 && parsed.version !== 7 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
-  if (parsed.version === durableDatabaseVersion && !Array.isArray(parsed.database.reminders)) {
+  if (parsed.version === durableDatabaseVersion && (!Array.isArray(parsed.database.reminders) || !Array.isArray(parsed.database.eventOperations) || !Array.isArray(parsed.database.messageOperations))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
   if (parsed.revision !== undefined && (!Number.isSafeInteger(parsed.revision) || parsed.revision < 0)) {
@@ -55,6 +55,8 @@ function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrat
   }
   const database = cloneDatabase(parsed.database);
   database.reminders = Array.isArray(database.reminders) ? database.reminders : [];
+  database.eventOperations = Array.isArray(database.eventOperations) ? database.eventOperations : [];
+  database.messageOperations = Array.isArray(database.messageOperations) ? database.messageOperations : [];
   if (parsed.version === 1) {
     database.groups = database.groups.map((group) => ({
       ...group,
@@ -151,7 +153,10 @@ export function createDurableLocalLoopedInService(
       });
       const method = latestService[name][property as keyof LoopedInService[K]] as (...values: unknown[]) => Promise<unknown>;
       const result = await method(...args);
-      if (!nextDatabase) throw new Error(`Local mutation ${String(name)}.${property} did not produce a database update.`);
+      if (!nextDatabase) {
+        build(latest);
+        return result;
+      }
       const next: DurableDatabaseEnvelope = {
         version: durableDatabaseVersion,
         revision: latest.revision + 1,

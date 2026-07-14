@@ -84,6 +84,7 @@ export interface GroupsApi {
 }
 
 export interface CreateEventPayload {
+  operationKey: string;
   groupId: string;
   title: string;
   startsAt: string;
@@ -131,7 +132,7 @@ export interface ActivityApi {
 
 export interface ThreadApi {
   listMessages(eventId: string): Promise<EventMessage[]>;
-  sendMessage(eventId: string, body: string): Promise<EventMessage>;
+  sendMessage(eventId: string, body: string, operationKey: string): Promise<EventMessage>;
   subscribeMessages(eventId: string, onChange: () => void, onStatus?: (status: ThreadSubscriptionStatus) => void): () => void;
 }
 

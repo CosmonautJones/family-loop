@@ -2,7 +2,7 @@
 
 ## Status
 
-PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are executable and diagnosable; errors are centrally sanitized, reads retry once, and writes explicitly never auto-retry. A general request-version/correlation-ID/deadline/rate-limit contract and hosted readiness remain `NOT RUN` because they require a cooperating server/gateway.
+PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are executable and diagnosable; errors are centrally sanitized, reads retry once, writes never auto-retry, and unchanged manual retries of response-lost event/comment commits are idempotent. A general request-version/correlation-ID/deadline/rate-limit contract and hosted readiness remain `NOT RUN` because they require a cooperating server/gateway.
 
 ## Situation and evidence
 
@@ -70,7 +70,7 @@ Readiness must include the failure experience: configured outages, timeouts, rat
 | PASS/FAIL/NOT RUN path per capability | COMPLETE | Campaign/index and runbooks separate durable-local, loopback Supabase, browser, and hosted evidence. |
 | Stable non-sensitive error envelope/correlation ID for all classes | PARTIAL | Every configured adapter rejection is centrally mapped to a stable safe recovery category; no server-propagated request version or correlation ID exists. |
 | Readiness/liveness connection semantics | PARTIAL | Loopback startup/migration/lint/E2E prove readiness; no general application health endpoints. |
-| Bounded idempotent retries/no duplicate writes | PARTIAL | Query reads retry once and mutations explicitly never auto-retry. Invite/media/durable-local paths retain targeted idempotency or persisted lifecycle, but manual retry of a response-lost message/event insert has no idempotency key and can duplicate. Universal request deadlines remain a hosted/server policy gap. |
+| Bounded idempotent retries/no duplicate writes | COMPLETE LOCALLY | Query reads retry once and mutations never auto-retry. Event/comment drafts retain UUID operation keys across unchanged manual retries; private actor/entity/key operation maps replay the same authoritative row in durable-local and loopback Supabase. Distinct operations and cross-user key collisions remain distinct. Universal request deadlines remain a hosted/server policy gap. |
 | Privileged operations server-only | COMPLETE LOCALLY | Narrow security-definer RPCs and local RLS tests; service role is not shipped to client. |
 | Evidence modes never conflated | COMPLETE | Architecture, review log, and runbooks explicitly distinguish them. |
 | Environment names/adapter selection documented | COMPLETE | `docs/architecture.md`, strict runtime-config validator, lazy service/client selector, and release runbook. The exact artifact ran with local and loopback-Supabase overlays and failed closed on an invalid overlay. |
@@ -93,7 +93,7 @@ git status --short
 ```
 
 - Report lint as placeholder unless changed; retain probe output with the readiness matrix.
-- Docker: `NOT AVAILABLE` baseline unless newly proven.
+- Local Docker/Supabase response-loss harness: PASS; retained populated scenario remained exact and the harness cleaned its private operation mappings.
 
 ### Conditional-staging/mobile-web/human
 

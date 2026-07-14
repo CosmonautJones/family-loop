@@ -36,6 +36,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const updateEvent = useUpdateEventMutation();
   const deleteEvent = useDeleteEventMutation();
   const [messageDraft, setMessageDraft] = useState('');
+  const messageOperationKey = useRef(crypto.randomUUID());
   const [photoUri, setPhotoUri] = useState('');
   const [photoPreviewUri, setPhotoPreviewUri] = useState('');
   const [photoCaption, setPhotoCaption] = useState('');
@@ -82,7 +83,10 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const submitMessage = () => {
     const body = messageDraft.trim();
     if (!body || sendMessage.isPending) return;
-    sendMessage.mutate({ eventId: eventDetail.id, body }, { onSuccess: () => setMessageDraft((current) => current.trim() === body ? '' : current) });
+    sendMessage.mutate({ eventId: eventDetail.id, body, operationKey: messageOperationKey.current }, { onSuccess: () => {
+      messageOperationKey.current = crypto.randomUUID();
+      setMessageDraft((current) => current.trim() === body ? '' : current);
+    } });
   };
   const sendDisabled = !messageDraft.trim() || sendMessage.isPending;
   const submitPhoto = () => {
@@ -362,7 +366,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             autoComplete="off"
             multiline
             editable={!sendMessage.isPending}
-            onChangeText={(value) => { setMessageDraft(value); sendMessage.reset(); }}
+            onChangeText={(value) => { messageOperationKey.current = crypto.randomUUID(); setMessageDraft(value); sendMessage.reset(); }}
             placeholder="Add a note for this event"
             placeholderTextColor={palette.muted}
             style={styles.composerInput}
