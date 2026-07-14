@@ -177,7 +177,10 @@
 - [x] Observed snapshot age 14.806s and restore 7.745s are recorded as measurements, not approved RPO/RTO targets.
 - [x] Self-scoped dry-run planning denies cross-user scope, excludes foreign user IDs, is deterministic/bounded, exposes no apply mode, and found zero live row/object discrepancies.
 - [x] Fixture tests exercise both orphan directions with review-only grace/retention/legal-hold exclusions.
-- [ ] Hosted backup/PITR/schedule/retention, approved RPO/RTO, complete authenticated encrypted export, deletion/apply, legal/product policy, and hosted restore remain `NOT RUN`.
+- [x] Authenticated current-user export includes own profile/memberships and only own created/authored/uploaded/selected records; owned media bytes are embedded without signed URLs.
+- [x] PBKDF2-SHA256/AES-256-GCM actual downloads decrypt and verify counts/digests; wrong passphrase and tampering fail; unavailable-media retry succeeds.
+- [x] Real loopback Auth sessions for owner/member/outsider exclude pairwise foreign IDs; outsider contributions are empty; 390px inputs/actions are 52/48px with no overflow or console events.
+- [ ] Hosted backup/PITR/schedule/retention/export operations, approved RPO/RTO, shared-family export scope, deletion/apply, legal/product policy, and hosted restore remain `NOT RUN`.
 
 ## Wave 5 mobile accessibility implementation
 

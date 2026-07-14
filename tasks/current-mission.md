@@ -8,6 +8,8 @@ Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
 Latest checkpoint: OPORD 006's local database slice is complete. A rollback-safe representative 20-member/100-event/100-comment/50-media harness measures the real production query shapes, asserts member/outsider helper results, cleans dead fixture tuples, refreshes retained statistics, and preserves the exact family baseline. Every live path stayed below 1 ms; an index candidate that improved only an uncalled activity method was rejected, so no speculative migration remains. OPORD 005 now bounds reads to one retry and disables automatic write retries, while honestly retaining response-loss/manual-retry idempotency, server correlation, deadlines/rate enforcement, and hosted readiness as gaps.
 
+OPORD 017's local authenticated export slice is also complete. The Family/no-family surfaces produce a client-encrypted current-account contribution bundle with owned photo bytes, counts, and integrity metadata. Owner, member, and outsider actual browser downloads passed decryption and cross-user exclusion without mutating the retained scenario. Shared-family archive scope, hosted export operations, and every destructive deletion behavior remain open.
+
 ## Commander's intent
 
 Deliver LoopedIn as an elegantly simple, genuinely usable responsive-web family account experience. A family should be able to open the app on a phone browser, understand what is next, plan trips and gatherings, RSVP, converse, share photos, and revisit completed events without losing identity or context.
@@ -383,6 +385,14 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Observed restore was 7.745 seconds from a 14.806-second-old snapshot. These are not approved RTO/RPO targets.
 - Self-scoped planning is deterministic, bounded, cross-user-denying, and dry-run only. It found 21 protected/blocked owner candidates and zero live media orphans; fixtures cover both orphan directions.
 - The populated primary stack remained read-only. Hosted PITR/scheduling, retention/grace/legal policy, complete authenticated export, deletion/apply, hosted restore, and production authorization remain open. OPORD 017 is **PARTIAL/CONDITIONAL**.
+
+## OPORD 017 authenticated encrypted export checkpoint
+
+- The signed-in Family surface, including the no-family state, downloads a versioned current-account contribution bundle. It includes the profile identifier/display name, memberships, created plans, own RSVPs/comments/photos/reminders, and owned photo bytes when readable; it excludes other people’s contributions, whole-family archives, Auth/invitation secrets, and signed URLs.
+- PBKDF2-SHA256/AES-256-GCM uses a user-supplied memory-only passphrase. The encrypted manifest records counts and data integrity; wrong passphrases and modified ciphertext fail closed. Unavailable photo bytes are reported while metadata remains, and a fresh export retries the authorized read.
+- Isolated configured Chrome sessions for Avery, Maya, and the outsider each produced an actual `.loopedin` download. Decryption proved exact-user filtering and pairwise foreign-ID absence; the outsider export was minimal/empty. At 390px inputs/action measured 52/48px, width was 390/390, mismatch retry retained the passphrase, and console events were zero.
+- The read-only proof preserved the canonical 4/3/3/6/6/3/38/0/3 scenario with zero outsider residue. Details are in `docs/runbooks/authenticated-encrypted-user-export.md`.
+- Local export verdict: **GREEN** for the conservative current-user scope. Shared-family scope, server audit/hosted delivery, physical devices/assistive technology, product/legal retention approval, and all account deletion behavior remain open. OPORD 017 overall remains **PARTIAL/CONDITIONAL**.
 
 ## 2026-07-14 — OPORD 010 local per-user event reminder preference
 

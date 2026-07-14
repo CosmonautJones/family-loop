@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, 
 import { useActiveEventsQuery, useActiveGroupMembersQuery, useActiveGroupQuery, useCreateGroupInvitationMutation, useGroupInvitationsQuery, useLeaveGroupMutation, useRemoveGroupMemberMutation, useRevokeGroupInvitationMutation, useTransferGroupOwnershipMutation } from '../app/queries';
 import { selectFamilyViewModel } from '../app/selectors';
 import { SurfaceCard } from '../components/SurfaceCard';
+import { DataExportCard } from '../features/account/DataExportCard';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { canSubmitInvitation, confirmInvitationDraft, invitationDraftForEmail, normalizeInvitationEmail, retainInvitationPresentation, revokeInvitationPresentation, type InvitationDraft, type InvitationPresentation } from '../features/auth/invitationDraft';
 import { palette, spacing } from '../theme/tokens';
@@ -91,6 +92,7 @@ export function GroupsScreen() {
       <View style={styles.memberRow} accessibilityLabel={`${member.name}, ${member.role}`}><View accessible={false} style={styles.avatar}><Text style={styles.avatarText}>{member.initials}</Text></View><View style={styles.memberCopy}><Text style={styles.memberName}>{member.name}</Text><Text style={styles.role}>{member.role}</Text></View></View>
       {owner && member.id !== auth.session?.userId ? <View style={styles.memberActions}><CardAction label={`Transfer ownership to ${member.name}`} disabled={transferOwnership.isPending} onPress={async () => { if (await confirmAction('Transfer family ownership?', `${member.name} will control invitations and members. You will become a member.`)) await act(() => transferOwnership.mutateAsync(member.id), 'Ownership transferred.'); }} /><CardAction label={`Remove ${member.name}`} disabled={removeMember.isPending} onPress={async () => { if (await confirmAction(`Remove ${member.name}?`, 'They will immediately lose access to this family’s plans, comments, and photos.')) await act(() => removeMember.mutateAsync(member.id), `${member.name} removed.`); }} /></View> : null}
     </View>)}</View></SurfaceCard>
+    {auth.session ? <DataExportCard session={auth.session} /> : null}
     {!owner ? <SurfaceCard><Text style={styles.cardTitle}>Leave family</Text><Text style={styles.cardCopy}>Leaving removes your access to this family’s plans, comments, and photos.</Text><CardAction label={leaveGroup.isPending ? 'Leaving family…' : 'Leave family'} disabled={leaveGroup.isPending} onPress={async () => { if (await confirmAction(`Leave ${family.name}?`, 'You will lose access immediately. You’ll need a new invitation to return.')) await act(() => leaveGroup.mutateAsync(), 'You left the family.'); }} /></SurfaceCard> : null}
   </ScrollView>;
 }

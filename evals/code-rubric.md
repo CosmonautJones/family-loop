@@ -1,5 +1,14 @@
 # Code Rubric
 
+## OPORD 017 authenticated encrypted export
+
+- [x] Export composes the existing authenticated service/RLS boundary and adds no schema, privileged endpoint, dependency, token handling, or destructive behavior.
+- [x] Current-user filtering is explicit for created events, RSVPs, comments, uploaded media, and reminders; group/member records are reduced to the current membership.
+- [x] Media URIs, event covers, and nested comment author/avatar objects are absent from plaintext; owned bytes stream through a 1 MiB/15-second bound and carry size/type/SHA-256 while unavailable reads produce truthful partial counts.
+- [x] PBKDF2-SHA256/AES-256-GCM, inner integrity, wrong-passphrase/tamper rejection, retry, and two-user mock isolation have executable coverage.
+- [x] Configured owner/member/outsider actual downloads pass pairwise foreign-ID exclusion, minimal outsider scope, 390px mobile contracts, and zero console events without changing canonical data.
+- [ ] Hosted delivery/audit, shared-family archive policy, physical devices/AT, and deletion/grace/retention apply remain external or policy-gated.
+
 ## OPORD 012 focused mobile-web startup correction
 
 - [x] A dependency-free CDP gate reproduces three warm 390x844 reloads under 500 kbps/400 ms RTT plus 4x CPU and fails on LCP >4,000 ms, main-thread task >200 ms, event usability >1,000 ms, or horizontal overflow.

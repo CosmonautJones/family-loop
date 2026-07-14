@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { useAcceptInvitationMutation, useCanCreateGroupQuery, useCreateGroupMutation, useDeclineInvitationMutation, useInvitationQuery } from '../app/queries';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
+import { DataExportCard } from '../features/account/DataExportCard';
 import { palette, spacing } from '../theme/tokens';
 
 export function FamilyOnboardingScreen() {
@@ -85,6 +86,7 @@ export function FamilyOnboardingScreen() {
       </>}
     </SurfaceCard> : null}
     {entitlement.data === false ? <SurfaceCard><Text style={styles.cardTitle}>Creation unavailable</Text><Text style={styles.copy}>This account can join a family by invitation, but it can’t create another family.</Text></SurfaceCard> : null}
+    {auth.session ? <DataExportCard session={auth.session} /> : null}
     {message ? <Text accessibilityLiveRegion={message.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={message.tone === 'error' ? 'alert' : undefined} style={message.tone === 'error' ? styles.error : styles.copy}>{message.text}</Text> : null}
   </ScrollView>;
 }

@@ -34,6 +34,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/features/memories/derivedHistory.ts'),
     path.join(appRoot, 'src/features/auth/invitationRoute.ts'),
     path.join(appRoot, 'src/features/auth/invitationDraft.ts'),
+    path.join(appRoot, 'src/features/account/dataExport.ts'),
     path.join(appRoot, 'src/services/serviceErrors.ts'),
     path.join(appRoot, 'src/services/messageSubscription.ts'),
     '--outDir', outDir,
@@ -53,6 +54,7 @@ function loadCompiledModules() {
     derivedHistory: require(path.join(outDir, 'features/memories/derivedHistory.js')),
     invitationRoute: require(path.join(outDir, 'features/auth/invitationRoute.js')),
     invitationDraft: require(path.join(outDir, 'features/auth/invitationDraft.js')),
+    dataExport: require(path.join(outDir, 'features/account/dataExport.js')),
     serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
     messageSubscription: require(path.join(outDir, 'services/messageSubscription.js')),
   };
@@ -86,6 +88,106 @@ test('mobile scaffold and event-loop files exist', () => {
   }
 
   assert.equal(fs.existsSync(path.join(appRoot, 'src/data/sampleData.ts')), false);
+});
+
+test('encrypted account export contains only the current user contributions and verifies integrity', async () => {
+  const { dataExport, mockAdapter, mockData } = loadCompiledModules();
+  const database = mockData.createMockDatabase();
+  const ownMessage = database.messages.find((item) => item.authorId === 'person-you');
+  assert.ok(ownMessage);
+  ownMessage.author = { id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: 'https://private.example/avatar?token=credential' };
+  const service = mockAdapter.createMockLoopedInService(database);
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(Uint8Array.from([137, 80, 78, 71]), { headers: { 'content-type': 'image/png' } });
+  try {
+    const alexSession = await service.auth.chooseLocalProfile('person-you');
+    const alex = await dataExport.collectCurrentUserData(service, alexSession, '2026-07-14T12:00:00.000Z');
+    assert.equal(alex.account.userId, 'person-you');
+    assert.ok(alex.memberships.length > 0);
+    assert.ok(alex.createdEvents.every((item) => item.creatorId === 'person-you' && !('coverUri' in item)));
+    assert.ok(alex.rsvps.every((item) => item.personId === 'person-you'));
+    assert.ok(alex.messages.every((item) => item.authorId === 'person-you'));
+    assert.ok(alex.messages.every((item) => !('author' in item)));
+    assert.ok(alex.media.every((item) => item.uploadedBy === 'person-you' && !('uri' in item)));
+    assert.ok(alex.media.every((item) => item.file?.sha256 && item.file.byteLength === 4));
+
+    const encrypted = await dataExport.encryptUserDataExport(alex, 'correct horse family');
+    const decrypted = await dataExport.decryptUserDataExport(encrypted.bundle, 'correct horse family');
+    assert.deepEqual(decrypted.data, alex);
+    assert.equal(decrypted.manifest.counts.mediaFiles, alex.media.length);
+    assert.doesNotMatch(JSON.stringify(decrypted), /X-Amz-|token=|signature=/i);
+    await assert.rejects(dataExport.decryptUserDataExport(encrypted.bundle, 'wrong passphrase'), /incorrect|changed|damaged/i);
+
+    const changed = structuredClone(encrypted.bundle);
+    changed.ciphertextBase64 = `${changed.ciphertextBase64.slice(0, -2)}AA`;
+    await assert.rejects(dataExport.decryptUserDataExport(changed, 'correct horse family'), /changed|damaged/i);
+
+    const inconsistent = structuredClone(decrypted);
+    inconsistent.manifest.counts.messages += 1;
+    await assert.rejects(dataExport.verifyUserDataExportPlaintext(inconsistent), /integrity check/i);
+    const wrongScope = structuredClone(decrypted);
+    wrongScope.manifest.scope = 'other-scope';
+    await assert.rejects(dataExport.verifyUserDataExportPlaintext(wrongScope), /integrity check/i);
+
+    const mayaSession = await service.auth.chooseLocalProfile('person-maya');
+    const maya = await dataExport.collectCurrentUserData(service, mayaSession, '2026-07-14T12:01:00.000Z');
+    assert.equal(maya.account.userId, 'person-maya');
+    assert.ok(maya.rsvps.every((item) => item.personId === 'person-maya'));
+    assert.ok(maya.messages.every((item) => item.authorId === 'person-maya'));
+    assert.ok(maya.media.every((item) => item.uploadedBy === 'person-maya'));
+    assert.notDeepEqual(maya, alex);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('account export reports an unavailable photo and succeeds on a later retry', async () => {
+  const { dataExport, mockAdapter } = loadCompiledModules();
+  const service = mockAdapter.createMockLoopedInService();
+  const session = await service.auth.chooseLocalProfile('person-you');
+  const originalFetch = globalThis.fetch;
+  let fail = true;
+  globalThis.fetch = async () => fail
+    ? new Response('unavailable', { status: 503 })
+    : new Response(Uint8Array.from([255, 216, 255, 217]), { headers: { 'content-type': 'image/jpeg' } });
+  try {
+    const first = await dataExport.collectCurrentUserData(service, session);
+    const firstEncrypted = await dataExport.encryptUserDataExport(first, 'retry family export');
+    assert.equal(firstEncrypted.manifest.counts.unavailableMediaFiles, first.media.length);
+    fail = false;
+    const second = await dataExport.collectCurrentUserData(service, session);
+    const secondEncrypted = await dataExport.encryptUserDataExport(second, 'retry family export');
+    assert.equal(secondEncrypted.manifest.counts.unavailableMediaFiles, 0);
+    assert.equal(secondEncrypted.manifest.counts.mediaFiles, second.media.length);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('account export caps streamed media before buffering and aborts hung reads', async () => {
+  const { dataExport, mockAdapter } = loadCompiledModules();
+  const service = mockAdapter.createMockLoopedInService();
+  const session = await service.auth.chooseLocalProfile('person-you');
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => new Response(new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(700_000));
+        controller.enqueue(new Uint8Array(700_000));
+        controller.close();
+      },
+    }), { headers: { 'content-type': 'image/jpeg' } });
+    const oversized = await dataExport.collectCurrentUserData(service, session, new Date().toISOString(), { mediaRequestTimeoutMs: 100 });
+    assert.ok(oversized.media.every((item) => item.file === null));
+
+    globalThis.fetch = async (_uri, init) => new Promise((_resolve, reject) => {
+      init.signal.addEventListener('abort', () => reject(init.signal.reason), { once: true });
+    });
+    const hung = await dataExport.collectCurrentUserData(service, session, new Date().toISOString(), { mediaRequestTimeoutMs: 10 });
+    assert.ok(hung.media.every((item) => item.file === null));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test('durable local service persists the family loop across reconstruction and can reseed', async () => {
