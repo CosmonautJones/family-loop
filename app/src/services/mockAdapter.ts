@@ -106,13 +106,15 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         return changed(group);
       },
       updateGroup: async (groupId, patch) => {
-        const { group } = groupMembership(groupId);
+        const { group, member } = groupMembership(groupId);
+        if (member?.role !== 'owner' && member?.role !== 'admin') throw new Error('Only a family owner or admin can update this group.');
         if (!group) throw new Error(`Missing group ${groupId}`);
         Object.assign(group, patch);
         return changed(group);
       },
       deleteGroup: async (groupId) => {
-        groupMembership(groupId);
+        const { member } = groupMembership(groupId);
+        if (member?.role !== 'owner') throw new Error('Only the family owner can delete this group.');
         db.groups = db.groups.filter((group) => group.id !== groupId);
         return changed(undefined);
       },
@@ -139,7 +141,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       },
       getEvent: async (eventId) => wait(eventMembership(eventId).event),
       createEvent: async (payload: CreateEventPayload) => {
-        groupMembership(payload.groupId);
+        const { profile } = groupMembership(payload.groupId);
         const event = {
           id: `event-created-${nextEventId++}`,
           statusLabel: 'Draft',
@@ -148,19 +150,22 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
             { title: 'Logistics', detail: `${payload.location} · details are ready to share.` },
             { title: 'Conversation', detail: 'Chat, reminders, and media will attach to this event.' },
           ],
+          creatorId: profile.id,
           ...payload,
         };
         db.events.unshift(event);
         return changed(event);
       },
       updateEvent: async (eventId, patch: UpdateEventPayload) => {
-        const { event } = eventMembership(eventId);
+        const { event, member, profile } = requireEventMembership(eventId);
         if (!event) throw new Error(`Missing event ${eventId}`);
+        if (event.creatorId !== profile.id && member.role !== 'owner' && member.role !== 'admin') throw new Error('Only the event creator or a family owner can update this event.');
         Object.assign(event, patch);
         return changed(event);
       },
       deleteEvent: async (eventId) => {
-        requireEventMembership(eventId);
+        const { event, member, profile } = requireEventMembership(eventId);
+        if (event.creatorId !== profile.id && member.role !== 'owner' && member.role !== 'admin') throw new Error('Only the event creator or a family owner can delete this event.');
         db.events = db.events.filter((event) => event.id !== eventId);
         return changed(undefined);
       },
@@ -242,14 +247,30 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       },
     },
     notifications: {
-      listNotifications: () => wait([...db.notifications]),
-      markRead: (notificationId) => {
+      listNotifications: async () => {
+        const profile = actor();
+        const allowedGroups = new Set(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)).map((group) => group.id));
+        return wait(db.notifications.filter((notification) => {
+          const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
+          return Boolean(groupId && allowedGroups.has(groupId));
+        }));
+      },
+      markRead: async (notificationId) => {
         const notification = db.notifications.find((item) => item.id === notificationId);
-        if (notification) notification.read = true;
+        if (!notification) throw new Error(`Missing notification ${notificationId}`);
+        const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
+        if (!groupId) throw new Error('This notification is not attached to an accessible group.');
+        groupMembership(groupId);
+        notification.read = true;
         return changed(undefined);
       },
-      clearAll: () => {
-        db.notifications = [];
+      clearAll: async () => {
+        const profile = actor();
+        const allowedGroups = new Set(db.groups.filter((group) => group.members?.some((member) => member.id === profile.id)).map((group) => group.id));
+        db.notifications = db.notifications.map((notification) => {
+          const groupId = notification.groupId ?? db.events.find((event) => event.id === notification.eventId)?.groupId;
+          return groupId && allowedGroups.has(groupId) ? { ...notification, read: true } : notification;
+        });
         return changed(undefined);
       },
     },

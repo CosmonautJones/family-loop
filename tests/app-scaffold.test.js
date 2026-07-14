@@ -186,7 +186,8 @@ test('local actor sessions isolate family identities while sharing authorized du
   const seed = mockData.createMockDatabase();
   const outsider = { id: 'person-outsider', name: 'Outside Person', initials: 'OP', avatarUri: '', role: 'owner' };
   seed.groups.push({ id: 'group-outsider', name: 'Outside Family', description: '', kind: 'family', badge: 'Family', tone: 'sky', memberCount: 1, members: [outsider] });
-  seed.events.push({ id: 'event-outsider', groupId: 'group-outsider', title: 'Private outside plan', startsAt: '2027-01-01T10:00:00Z', endsAt: '2027-01-01T11:00:00Z', location: 'Elsewhere', description: '', statusLabel: 'Plan', visibility: 'group', timeline: [] });
+  seed.events.push({ id: 'event-outsider', groupId: 'group-outsider', creatorId: 'person-outsider', title: 'Private outside plan', startsAt: '2027-01-01T10:00:00Z', endsAt: '2027-01-01T11:00:00Z', location: 'Elsewhere', description: '', statusLabel: 'Plan', visibility: 'group', timeline: [] });
+  seed.notifications.push({ id: 'notification-outsider', kind: 'event_update', title: 'Outside only', body: 'Private update', eventId: 'event-outsider', groupId: 'group-outsider', read: false, createdAt: '2026-07-12T10:00:00Z' });
 
   const values = new Map();
   const storage = {
@@ -212,6 +213,25 @@ test('local actor sessions isolate family identities while sharing authorized du
   await assert.rejects(outside.rsvps.listRsvps('event-door-county'), /access/i);
   await assert.rejects(outside.thread.listMessages('event-door-county'), /access/i);
   await assert.rejects(outside.media.listMedia('event-door-county'), /access/i);
+  assert.deepEqual((await outside.notifications.listNotifications()).map((item) => item.id), ['notification-outsider']);
+  assert.deepEqual((await alex.notifications.listNotifications()).map((item) => item.id), ['notification-door-county']);
+  await assert.rejects(outside.notifications.markRead('notification-door-county'), /access/i);
+  await assert.rejects(alex.notifications.markRead('notification-outsider'), /access/i);
+  await alex.notifications.clearAll();
+  assert.equal((await outside.notifications.listNotifications())[0].read, false, 'clearing Jones updates must preserve the outside group');
+  await outside.notifications.clearAll();
+  assert.equal((await outside.notifications.listNotifications())[0].read, true);
+
+  await assert.rejects(maya.groups.updateGroup('group-jones-family', { description: 'Member edit' }), /owner or admin/i);
+  await assert.rejects(maya.groups.deleteGroup('group-jones-family'), /family owner/i);
+  await alex.groups.updateGroup('group-jones-family', { description: 'Owner-approved family plans.' });
+  await assert.rejects(noah.events.updateEvent('event-door-county', { description: 'Noah edit' }), /creator or a family owner/i);
+  await maya.events.updateEvent('event-door-county', { description: 'Maya updated the cabin plan.' });
+  await alex.events.updateEvent('event-yellowstone', { description: 'Owner clarified the road trip.' });
+  const mayaEvent = await maya.events.createEvent({ groupId: 'group-jones-family', title: 'Maya-created plan', startsAt: '2027-02-01T10:00:00Z', endsAt: '2027-02-01T11:00:00Z', location: 'Home', description: '' });
+  assert.equal(mayaEvent.creatorId, 'person-maya');
+  await assert.rejects(noah.events.deleteEvent(mayaEvent.id), /creator or a family owner/i);
+  await alex.events.deleteEvent(mayaEvent.id);
 
   const mayaRsvp = await maya.rsvps.upsertRsvp({ eventId: 'event-door-county', personId: 'person-you', personName: 'Alex Jones', status: 'declined' });
   assert.equal(mayaRsvp.personId, 'person-maya', 'caller-supplied identity must be ignored');
@@ -245,7 +265,39 @@ test('local actor sessions isolate family identities while sharing authorized du
   assert.ok((await reloadedMaya.thread.listMessages('event-door-county')).some((message) => message.id === alexMessage.id));
 });
 
-test('v3 durable messages migrate to actor-owned v4 records without changing revision', async () => {
+test('durable operations keep the actor captured at invocation across an immediate profile switch', async () => {
+  const { durableAdapter, localActorSession } = loadCompiledModules();
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const actor = localActorSession.createMemoryActorSessionStore('person-maya');
+  const service = durableAdapter.createDurableLocalLoopedInService(storage, undefined, actor);
+
+  const messagePromise = service.thread.sendMessage('event-door-county', 'Maya started this before switching.');
+  actor.setActorId('person-noah');
+  const message = await messagePromise;
+  assert.equal(message.authorId, 'person-maya');
+
+  actor.setActorId('person-maya');
+  const rsvpPromise = service.rsvps.upsertRsvp({ eventId: 'event-door-county', status: 'maybe' });
+  actor.setActorId('person-noah');
+  assert.equal((await rsvpPromise).personId, 'person-maya');
+
+  actor.setActorId('person-maya');
+  const photoPromise = service.media.uploadMedia({ eventId: 'event-door-county', fileUri: 'data:image/png;base64,iVBORw0KGgo=', caption: 'Maya switch photo', altText: 'Cabin entry' });
+  actor.setActorId('person-noah');
+  assert.equal((await photoPromise).uploadedBy, 'person-maya');
+
+  actor.setActorId('person-maya');
+  const readPromise = service.thread.listMessages('event-door-county');
+  actor.setActorId('person-noah');
+  assert.equal((await readPromise).find((item) => item.id === message.id).self, true);
+});
+
+test('v3 durable messages and events migrate to actor-owned v5 records without changing revision', async () => {
   const { durableAdapter, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   for (const message of legacy.messages) delete message.authorId;
@@ -259,8 +311,9 @@ test('v3 durable messages migrate to actor-owned v4 records without changing rev
   const messages = await service.thread.listMessages('event-door-county');
   assert.deepEqual(messages.map((message) => message.authorId), ['person-maya', 'person-you']);
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 4);
+  assert.equal(stored.version, 5);
   assert.equal(stored.revision, 19);
+  assert.ok(stored.database.events.every((event) => event.creatorId));
 });
 
 test('durable local service surfaces corrupt storage and write errors without silently resetting', async () => {
@@ -280,7 +333,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   assert.equal(corruptWrites, 1, 'explicit reset is allowed to overwrite corrupt storage');
 
   const writeFailure = new Error('storage is full');
-  let persisted = JSON.stringify({ version: 4, database: { groups: [{ id: 'group-a', name: 'A', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }] }], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
+  let persisted = JSON.stringify({ version: 5, database: { groups: [{ id: 'group-a', name: 'A', description: '', kind: 'family', badge: 'Family', tone: 'coral', memberCount: 1, members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }] }], events: [], rsvps: [], activity: [], messages: [], memories: [], media: [], notifications: [] } });
   const failing = {
     getItem: async () => persisted,
     setItem: async () => { throw writeFailure; },
@@ -292,7 +345,7 @@ test('durable local service surfaces corrupt storage and write errors without si
 
   let unsupportedWrites = 0;
   const unsupported = {
-    getItem: async () => JSON.stringify({ version: 5, database: {} }),
+    getItem: async () => JSON.stringify({ version: 6, database: {} }),
     setItem: async () => { unsupportedWrites += 1; },
     removeItem: async () => undefined,
   };
@@ -316,7 +369,7 @@ test('durable local service surfaces corrupt storage and write errors without si
   await assert.rejects(initialFailure.events.listEvents(), /initial seed write failed/);
 });
 
-test('durable local service migrates pre-role v1 members to v4 without losing user data or revision', async () => {
+test('durable local service migrates pre-role v1 members to v5 without losing user data or revision', async () => {
   const { durableAdapter, mockData } = loadCompiledModules();
   const legacy = mockData.createMockDatabase();
   for (const member of legacy.groups[0].members) delete member.role;
@@ -326,7 +379,7 @@ test('durable local service migrates pre-role v1 members to v4 without losing us
     description: 'User-created before migration', statusLabel: 'Plan', visibility: 'group', timeline: [],
   });
   legacy.messages.push({ id: 'message-legacy-custom', eventId: 'event-legacy-custom', body: 'Keep this note.', authorName: 'Alex Jones', self: true, createdAt: '2027-05-01T10:00:00Z' });
-  legacy.notifications.push({ id: 'notification-legacy-custom', kind: 'event_update', title: 'Keep', body: 'Preserved', read: false, createdAt: '2027-05-01T10:00:00Z' });
+  legacy.notifications.push({ id: 'notification-legacy-custom', kind: 'event_update', title: 'Keep', body: 'Preserved', groupId: 'group-jones-family', read: false, createdAt: '2027-05-01T10:00:00Z' });
 
   const values = new Map([[durableAdapter.durableDatabaseKey, JSON.stringify({ version: 1, revision: 7, database: legacy })]]);
   let writes = 0;
@@ -342,7 +395,7 @@ test('durable local service migrates pre-role v1 members to v4 without losing us
   assert.equal((await migrated.thread.listMessages('event-legacy-custom'))[0].body, 'Keep this note.');
   assert.ok((await migrated.notifications.listNotifications()).some((item) => item.id === 'notification-legacy-custom'));
   const stored = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(stored.version, 4);
+  assert.equal(stored.version, 5);
   assert.equal(stored.database.messages.find((message) => message.id === 'message-legacy-custom').authorId, 'person-you');
   assert.equal(stored.revision, 7);
   assert.equal(writes, 1);
@@ -350,7 +403,7 @@ test('durable local service migrates pre-role v1 members to v4 without losing us
   const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.deepEqual((await reconstructed.groups.listGroupMembers('group-jones-family')).map((member) => member.role), members.map((member) => member.role));
   assert.equal((await reconstructed.events.getEvent('event-legacy-custom')).title, 'Retained custom plan');
-  assert.equal(writes, 1, 'a migrated v4 envelope must remain stable on later reconstruction');
+  assert.equal(writes, 1, 'a migrated v5 envelope must remain stable on later reconstruction');
 
   const legacyRaw = JSON.stringify({ version: 1, revision: 7, database: legacy });
   const failedMigration = durableAdapter.createDurableLocalLoopedInService({
@@ -393,7 +446,7 @@ test('media uploads are event-scoped, accessible, attributed when remote, remova
   const migrated = durableAdapter.createDurableLocalLoopedInService(storage);
   assert.equal((await migrated.media.listMedia('event-lake-geneva'))[0].altText, legacy.media[0].caption);
   const envelope = JSON.parse(values.get(durableAdapter.durableDatabaseKey));
-  assert.equal(envelope.version, 4);
+  assert.equal(envelope.version, 5);
   assert.equal(envelope.revision, 12);
 });
 

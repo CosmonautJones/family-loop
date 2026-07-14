@@ -24,6 +24,7 @@ type GroupRow = {
 type EventRow = {
   id: string;
   group_id: string;
+  created_by: string;
   title: string;
   starts_at: string;
   ends_at: string;
@@ -131,6 +132,7 @@ function mapEvent(row: EventRow): Event {
   return {
     id: row.id,
     groupId: row.group_id,
+    creatorId: row.created_by,
     title: row.title,
     startsAt: row.starts_at,
     endsAt: row.ends_at,
@@ -404,7 +406,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async listEvents(groupId) {
         let query = supabase
           .from('loopedin_events')
-          .select('id, group_id, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
+          .select('id, group_id, created_by, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
           .order('starts_at', { ascending: true });
         if (groupId) query = query.eq('group_id', groupId);
 
@@ -415,7 +417,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async getEvent(eventId) {
         const { data, error } = await supabase
           .from('loopedin_events')
-          .select('id, group_id, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
+          .select('id, group_id, created_by, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
           .eq('id', eventId)
           .maybeSingle();
         throwIfError(error);
@@ -426,7 +428,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const { data, error } = await supabase
           .from('loopedin_events')
           .insert(eventInsert(payload, userId))
-          .select('id, group_id, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
+          .select('id, group_id, created_by, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
           .single();
         throwIfError(error);
         return mapEvent(data as EventRow);
@@ -436,7 +438,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
           .from('loopedin_events')
           .update(eventPatch(patch))
           .eq('id', eventId)
-          .select('id, group_id, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
+          .select('id, group_id, created_by, title, starts_at, ends_at, location, description, status_label, visibility, timeline, cover_url')
           .single();
         throwIfError(error);
         return mapEvent(data as EventRow);

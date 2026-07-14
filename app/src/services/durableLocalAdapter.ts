@@ -4,7 +4,7 @@ import { cloneDatabase, createMockDatabase, type MockDatabase } from './mockData
 import { createMemoryActorSessionStore, type LocalActorSessionStore } from './localActorSession';
 
 export const durableDatabaseKey = 'loopedin:local-database:v1';
-export const durableDatabaseVersion = 4;
+export const durableDatabaseVersion = 5;
 
 type DurableDatabaseEnvelope = {
   version: typeof durableDatabaseVersion;
@@ -43,7 +43,7 @@ function withStorageLock<T>(operation: () => Promise<T>): Promise<T> {
 
 function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrated: boolean } {
   const parsed = JSON.parse(raw) as { version?: number; revision?: number; database?: MockDatabase };
-  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
+  if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4 && parsed.version !== durableDatabaseVersion) throw new Error(`Unsupported local database version: ${String(parsed.version)}`);
   if (!parsed.database || collectionKeys.some((key) => !Array.isArray(parsed.database?.[key]))) {
     throw new Error('Malformed local database payload. Reset and reseed to recover.');
   }
@@ -72,6 +72,11 @@ function parseEnvelope(raw: string): { envelope: DurableDatabaseEnvelope; migrat
       ...message,
       authorId: message.authorId || knownAuthor?.id || `legacy-author:${message.authorName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
     };
+  });
+  database.events = database.events.map((event) => {
+    const group = database.groups.find((item) => item.id === event.groupId);
+    const defaultCreator = group?.members?.find((member) => member.role === 'owner') ?? group?.members?.[0];
+    return { ...event, creatorId: event.creatorId || defaultCreator?.id || 'legacy-creator' };
   });
   return {
     envelope: { version: durableDatabaseVersion, revision: parsed.revision ?? 0, database },
@@ -119,13 +124,13 @@ export function createDurableLocalLoopedInService(
     notifications: new Set(['markRead', 'clearAll']),
   };
 
-  const mutate = async <K extends keyof LoopedInService>(name: K, property: string, args: unknown[]) => {
+  const mutate = async <K extends keyof LoopedInService>(name: K, property: string, args: unknown[], invocationActor: LocalActorSessionStore) => {
     await ready;
     return withStorageLock(async () => {
       const latest = await load();
       let nextDatabase: MockDatabase | null = null;
       const latestService = createMockLoopedInService(latest.database, {
-        actorSession,
+        actorSession: invocationActor,
         onChange: async (database) => { nextDatabase = database; },
       });
       const method = latestService[name][property as keyof LoopedInService[K]] as (...values: unknown[]) => Promise<unknown>;
@@ -148,11 +153,13 @@ export function createDurableLocalLoopedInService(
       if (name === 'auth' && property === 'onAuthStateChange') return () => () => undefined;
       return (...args: unknown[]) => {
         const propertyName = String(property);
-        if (mutations[name]?.has(propertyName)) return mutate(name, propertyName, args);
+        const invocationActor = createMemoryActorSessionStore(actorSession.getActorId());
+        if (mutations[name]?.has(propertyName)) return mutate(name, propertyName, args, invocationActor);
         return ready.then(() => withStorageLock(async () => {
           const latest = await load();
           if (!committed || latest.revision !== committed.revision) build(latest);
-          const method = service[name][property as keyof LoopedInService[K]] as (...values: unknown[]) => unknown;
+          const invocationService = name === 'auth' ? service : createMockLoopedInService(latest.database, { actorSession: invocationActor });
+          const method = invocationService[name][property as keyof LoopedInService[K]] as (...values: unknown[]) => unknown;
           return method(...args);
         }));
       };

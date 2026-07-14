@@ -22,6 +22,7 @@ const members: GroupMember[] = [
 
 const trip = (event: Partial<Event> & Pick<Event, 'id' | 'title' | 'startsAt' | 'endsAt' | 'location' | 'description' | 'coverUri'>): Event => ({
   groupId: 'group-jones-family',
+  creatorId: 'person-you',
   statusLabel: 'Trip',
   visibility: 'group',
   timeline: [
@@ -32,10 +33,10 @@ const trip = (event: Partial<Event> & Pick<Event, 'id' | 'title' | 'startsAt' | 
 });
 
 const events: Event[] = [
-  trip({ id: 'event-door-county', title: 'Door County Weekend', startsAt: '2026-07-24T09:00:00-05:00', endsAt: '2026-07-26T18:00:00-05:00', location: 'Fish Creek, Wisconsin', description: 'Cabin weekend with an easy fish boil dinner and time by the water.', coverUri: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80' }),
-  trip({ id: 'event-yellowstone', title: 'Yellowstone Family Road Trip', startsAt: '2026-08-16T08:00:00-05:00', endsAt: '2026-08-23T20:00:00-06:00', location: 'Yellowstone National Park', description: 'A relaxed week of geysers, wildlife stops, and accessible boardwalks.', coverUri: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80' }),
+  trip({ id: 'event-door-county', creatorId: 'person-maya', title: 'Door County Weekend', startsAt: '2026-07-24T09:00:00-05:00', endsAt: '2026-07-26T18:00:00-05:00', location: 'Fish Creek, Wisconsin', description: 'Cabin weekend with an easy fish boil dinner and time by the water.', coverUri: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80' }),
+  trip({ id: 'event-yellowstone', creatorId: 'person-emma', title: 'Yellowstone Family Road Trip', startsAt: '2026-08-16T08:00:00-05:00', endsAt: '2026-08-23T20:00:00-06:00', location: 'Yellowstone National Park', description: 'A relaxed week of geysers, wildlife stops, and accessible boardwalks.', coverUri: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80' }),
   trip({ id: 'event-charleston', title: 'Charleston Holiday Visit', startsAt: '2026-12-20T07:30:00-06:00', endsAt: '2026-12-27T19:00:00-05:00', location: 'Charleston, South Carolina', description: 'Christmas together with one shared itinerary and plenty of downtime.', coverUri: 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?auto=format&fit=crop&w=1200&q=80' }),
-  trip({ id: 'event-lake-geneva', title: 'Lake Geneva Reunion', startsAt: '2026-06-12T10:00:00-05:00', endsAt: '2026-06-14T17:00:00-05:00', location: 'Lake Geneva, Wisconsin', description: 'Our completed summer reunion, saved with the photos and conversation.', statusLabel: 'Memory', coverUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80' }),
+  trip({ id: 'event-lake-geneva', creatorId: 'person-maya', title: 'Lake Geneva Reunion', startsAt: '2026-06-12T10:00:00-05:00', endsAt: '2026-06-14T17:00:00-05:00', location: 'Lake Geneva, Wisconsin', description: 'Our completed summer reunion, saved with the photos and conversation.', statusLabel: 'Memory', coverUri: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1200&q=80' }),
 ];
 
 const rsvps: RSVP[] = events.flatMap((event) => members.map((person, index) => ({
