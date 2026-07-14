@@ -1060,6 +1060,9 @@ test('Event Detail keeps its 320px hierarchy simple and progressively discloses 
   assert.match(detail, /Add the photographer and Unsplash photo page/);
   assert.match(detail, /setCreatorName\(''\)/);
   assert.match(detail, /setSourceUrl\(''\)/);
+  assert.match(detail, /setTimeout\(\(\) => setPhotoPreviewUri\(uri\), 350\)/);
+  assert.match(detail, /return \(\) => clearTimeout\(timeout\)/);
+  assert.match(detail, /source=\{\{ uri: photoPreviewUri \}\}/);
   assert.match(detail, /const choosePhoto = \(\) => \{[\s\S]*?setPhotoUri\(''\)[\s\S]*?input\.click\(\)/);
   assert.match(detail, /\.\.\.\(photoMode === 'link' \? \{/);
   assert.match(detail, /Use image file instead/);

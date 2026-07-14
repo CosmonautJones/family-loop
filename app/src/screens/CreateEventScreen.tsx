@@ -85,6 +85,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
             <TextInput
               {...(errors[field.key] ? { 'aria-describedby': `${field.key}-error`, 'aria-invalid': true } : { 'aria-invalid': false })}
               ref={(node) => { inputRefs.current[field.key] = node; }}
+              nativeID={`create-${field.key}-input`}
               accessibilityLabel={fieldLabels[field.key]}
               accessibilityHint={errors[field.key]}
               accessibilityLabelledBy={`${field.key}-label`}
@@ -104,6 +105,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
         <View style={styles.field}>
           <Text style={styles.label}>Notes (optional)</Text>
           <TextInput
+            nativeID="create-description-input"
             accessibilityLabel="Notes, optional"
             autoComplete="off"
             multiline

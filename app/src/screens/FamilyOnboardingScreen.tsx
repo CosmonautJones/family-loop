@@ -67,7 +67,7 @@ export function FamilyOnboardingScreen() {
     <Text style={styles.copy}>Create a private family space or join one using the invitation code you received.</Text>
     <SurfaceCard>
       <Text style={styles.cardTitle}>Join a family</Text><Text style={styles.copy}>Paste the full invitation link or just its code.</Text>
-      <Text style={styles.label}>Invitation link or code</Text><TextInput accessibilityLabel="Invitation link or code" autoCapitalize="none" autoCorrect={false} onChangeText={setInviteCode} placeholder="Paste invitation" style={styles.input} value={inviteCode} />
+      <Text style={styles.label}>Invitation link or code</Text><TextInput nativeID="family-invitation-code-input" accessibilityLabel="Invitation link or code" autoCapitalize="none" autoComplete="off" autoCorrect={false} onChangeText={setInviteCode} placeholder="Paste invitation" style={styles.input} value={inviteCode} />
       <CardAction label="Check invitation" onPress={useInviteCode} />
     </SurfaceCard>
     {entitlement.isPending ? <SurfaceCard><View accessibilityLiveRegion="polite" style={styles.center}><ActivityIndicator color={palette.plum} /><Text style={styles.copy}>Checking family creation access…</Text></View></SurfaceCard> : null}
@@ -75,8 +75,8 @@ export function FamilyOnboardingScreen() {
     {entitlement.data === true ? <SurfaceCard>
       <Text style={styles.cardTitle}>Create a family</Text>
       {!showCreate ? <CardAction label="Create family" onPress={() => { setShowCreate(true); setTimeout(() => firstField.current?.focus(), 0); }} /> : <>
-        <Text style={styles.label}>Family name</Text><TextInput ref={firstField} accessibilityLabel="Family name" onChangeText={setName} placeholder="The Jones family" style={styles.input} value={name} />
-        <Text style={styles.label}>Description (optional)</Text><TextInput accessibilityLabel="Family description" multiline onChangeText={setDescription} placeholder="Trips, plans, and memories" style={[styles.input, styles.multiline]} value={description} />
+        <Text style={styles.label}>Family name</Text><TextInput ref={firstField} nativeID="family-name-input" accessibilityLabel="Family name" autoComplete="off" onChangeText={setName} placeholder="The Jones family" style={styles.input} value={name} />
+        <Text style={styles.label}>Description (optional)</Text><TextInput nativeID="family-description-input" accessibilityLabel="Family description" autoComplete="off" multiline onChangeText={setDescription} placeholder="Trips, plans, and memories" style={[styles.input, styles.multiline]} value={description} />
         <CardAction label={create.isPending ? 'Creating family…' : 'Create family'} disabled={create.isPending || !name.trim()} onPress={async () => {
           setMessage(null);
           try { await create.mutateAsync({ creationKey: creationKey.current, name: name.trim(), description: description.trim(), kind: 'family' }); setMessage({ text: 'Family created.', tone: 'info' }); }

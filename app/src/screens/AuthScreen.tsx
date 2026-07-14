@@ -69,10 +69,10 @@ export function AuthScreen() {
         </View>
       ) : <Text style={styles.body}>Sign in to see your family's shared plans.</Text>}
 
-      {mode === 'signUp' ? <LabeledInput label="Display name" inputRef={nameInput} editable={!auth.pending} value={displayName} onChangeText={setDisplayName} autoComplete="name" invalid={Boolean(formError || auth.error)} /> : null}
-      <LabeledInput label="Email" inputRef={emailInput} editable={!auth.pending} value={email} onChangeText={setEmail} autoComplete="email" inputMode="email" autoCapitalize="none" invalid={Boolean(formError || auth.error)} />
-      <LabeledInput label="Password" inputRef={passwordInput} editable={!auth.pending} value={password} onChangeText={setPassword} autoComplete={mode === 'signUp' ? 'new-password' : 'current-password'} autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} />
-      {mode === 'signUp' ? <LabeledInput label="Confirm password" inputRef={confirmInput} editable={!auth.pending} value={confirmPassword} onChangeText={setConfirmPassword} autoComplete="new-password" autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
+      {mode === 'signUp' ? <LabeledInput nativeID="auth-display-name" label="Display name" inputRef={nameInput} editable={!auth.pending} value={displayName} onChangeText={setDisplayName} autoComplete="name" invalid={Boolean(formError || auth.error)} /> : null}
+      <LabeledInput nativeID="auth-email" label="Email" inputRef={emailInput} editable={!auth.pending} value={email} onChangeText={setEmail} autoComplete="email" inputMode="email" autoCapitalize="none" invalid={Boolean(formError || auth.error)} />
+      <LabeledInput nativeID="auth-password" label="Password" inputRef={passwordInput} editable={!auth.pending} value={password} onChangeText={setPassword} autoComplete={mode === 'signUp' ? 'new-password' : 'current-password'} autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} />
+      {mode === 'signUp' ? <LabeledInput nativeID="auth-confirm-password" label="Confirm password" inputRef={confirmInput} editable={!auth.pending} value={confirmPassword} onChangeText={setConfirmPassword} autoComplete="new-password" autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
       {formError || auth.error ? <Text nativeID="auth-error" accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{formError ?? auth.error}</Text> : null}
       {auth.confirmationRequired ? <Text accessibilityLiveRegion="polite" style={styles.success}>Check your email to confirm your account, then return to this invitation and sign in.</Text> : null}
       <Pressable accessibilityRole="button" disabled={auth.pending || (mode === 'signUp' && !inviteReady)} onPress={submit} style={[styles.button, (auth.pending || (mode === 'signUp' && !inviteReady)) && styles.buttonDisabled]}>

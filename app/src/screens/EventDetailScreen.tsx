@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
@@ -37,6 +37,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const deleteEvent = useDeleteEventMutation();
   const [messageDraft, setMessageDraft] = useState('');
   const [photoUri, setPhotoUri] = useState('');
+  const [photoPreviewUri, setPhotoPreviewUri] = useState('');
   const [photoCaption, setPhotoCaption] = useState('');
   const [photoAltText, setPhotoAltText] = useState('');
   const [creatorName, setCreatorName] = useState('');
@@ -54,6 +55,16 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
   const identity = auth.session;
   const currentMember = membersQuery.data?.find((member) => member.id === identity?.userId);
   const currentStatus = rsvpsQuery.data?.find((rsvp) => rsvp.personId === identity?.userId)?.status;
+
+  useEffect(() => {
+    const uri = photoUri.trim();
+    if (!uri) {
+      setPhotoPreviewUri('');
+      return;
+    }
+    const timeout = setTimeout(() => setPhotoPreviewUri(uri), 350);
+    return () => clearTimeout(timeout);
+  }, [photoUri]);
 
   if (!eventId) return <DetailState title="Event not found" detail="No event was selected." backLabel={backLabel} onBack={onBack} />;
   if (eventQuery.isPending || rsvpsQuery.isPending) return <DetailState title="Loading event" detail="Gathering the plan and responses…" backLabel={backLabel} onBack={onBack} />;
@@ -390,7 +401,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             {photoMode === 'file' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>{photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'}</Text></Pressable> : null}
             {photoMode === 'link' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Use image file instead</Text></Pressable> : null}
             {photoMode === 'link' ? <TextInput accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
-            {photoMode && photoUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoUri }} style={styles.preview} /> : null}
+            {photoMode && photoPreviewUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoPreviewUri }} style={styles.preview} /> : null}
             {photoMode ? <TextInput accessibilityLabel="Photo caption" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
             {photoMode ? <TextInput accessibilityLabel="Image description" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Image description (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} /> : null}
             {photoMode === 'link' ? <TextInput accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
