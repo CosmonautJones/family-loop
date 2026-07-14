@@ -7,7 +7,7 @@ LOCAL COMPLETE / EXTERNAL CONDITIONAL — forward migrations, lifecycle constrai
 ## Situation and evidence
 
 - The configured adapter already references group-scoped events, RSVPs, event messages, media, and notifications (`docs/architecture.md:50-56`).
-- Four forward migrations apply cleanly to loopback Supabase. Database lint and real Auth-session owner/member/outsider family/media matrices pass; hosted deployment remains absent.
+- Five forward migrations apply cleanly to loopback Supabase. Database lint and real Auth-session owner/member/outsider family/media matrices pass; hosted deployment remains absent.
 - Event messages are exact-event scoped and deterministic in local contract tests (`docs/architecture.md:41-46`; `evals/review-log.md:3-12`).
 - The product boundary requires private group context (`docs/architecture.md:57-61`).
 - Inference: lifecycle cascades, uniqueness, query indexes, and policy coverage must be verified against actual repository SQL and query shapes before proposing additive changes.

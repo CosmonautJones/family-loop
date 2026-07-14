@@ -4,6 +4,7 @@
 
 - Reconciled the campaign index with already-recorded source evidence: OPORD 003 loopback password recovery, OPORD 008 exact-event Realtime/reconnect cleanup, and OPORD 012 corrected warm mobile-web performance are locally complete with external conditions; OPORD 017 now names the locally proven encrypted current-user export while remaining partial overall.
 - Hosted Auth/Realtime/load/backup/export operations, physical browsers and assistive technology, long-outage and human evidence, approved lifecycle/shared-family policy, and destructive deletion/retention apply remain explicitly open. No runtime, schema, test, dependency, or remote state changed.
+- Follow-up certification audit corrected the current OPORD 006 migration count to five and the current checklist to record proven event/comment response-loss replay. Correlation/version propagation, universal deadline/rate enforcement, other write classes, hosted migration/telemetry, and production cardinality evidence remain open.
 
 ## 2026-07-14 — OPORD 005 event/comment response-loss idempotency
 
