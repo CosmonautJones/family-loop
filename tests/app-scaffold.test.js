@@ -1710,6 +1710,13 @@ test('Calendar excludes completed events before deriving its upcoming month and 
   assert.equal(completedOnly.calendarEvents.some((day) => day.highlight), false);
 });
 
+test('Calendar agenda copy can shrink before its status chip at narrow and zoomed widths', () => {
+  const calendar = read('src/screens/CalendarScreen.tsx');
+
+  assert.match(calendar, /<View style=\{styles\.listCopy\}>/);
+  assert.match(calendar, /listCopy:\s*\{\s*flex: 1,\s*minWidth: 0,/);
+});
+
 test('completed-event history is derived chronologically and keeps exact event comments and photos isolated', () => {
   const { derivedHistory, mockData, selectors } = loadCompiledModules();
   const database = mockData.createMockDatabase();

@@ -152,7 +152,7 @@
 - [x] Removing decorative tab icons and Moti card entrances preserves five labeled >=48px tabs, reduced-motion image behavior, keyboard order, Back/deep-link/reload, and 320/390/430/1280 no-overflow checks.
 - [ ] Cold disconnected reload — intentionally unsupported; no service worker/PWA shell exists.
 - [ ] Offline write queue/background sync — intentionally not implemented.
-- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, practical 200% zoom, and hosted load/reconnect — `NOT RUN`; local reduced-motion handling/emulation passes.
+- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, and hosted load/reconnect — `NOT RUN`; local reduced-motion handling and persisted Chrome 200% zoom pass.
 
 ## OPORD 013 security and incident response
 
@@ -204,7 +204,7 @@
 - [x] Card surfaces are static; platform reduced-motion state and changes disable Expo image crossfades while normal image transition durations remain covered.
 - [x] Dependency-free Chrome/CDP smoke passes 320/390/430/1280 overflow and landmark checks, five sequential tabs, exact-event deep-link/Back/reload, and invalid-field focus/visibility at a 320×500 keyboard-height proxy.
 - [x] A 200% CDP page-scale proxy reports scale 2, a 160 CSS-pixel visual viewport, and no document-width overflow from the 320 CSS-pixel layout.
-- [ ] Practical browser 200% zoom/reflow remains unverified; the CDP page-scale proxy is limited evidence and the pre-existing React Native Web warning remains advisory.
+- [x] Practical Chrome 150 browser zoom uses the persisted native zoom preference: same-window 640→320, 780→390, and 860→430 CSS layouts, DPR 1→2, visual scale 1, CSS zoom 1; owner core screens plus four-role 390px replay have no overflow, clipped control boxes or descendant control text/glyphs, or sub-48px control.
 - [ ] Physical Safari/Chrome, VoiceOver/TalkBack, physical software-keyboard behavior, and moderated older-adult testing — `NOT RUN`.
 
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.
@@ -216,7 +216,8 @@
 - [x] Coverage includes all requested frontend, backend, server/database, security, quality, release, and operations domains.
 - [x] Future orders do not claim authorization or live proof.
 - [x] Existing M4-M6 persistent-data backlog entries remain and are mapped rather than deleted.
-- [ ] iOS Safari/Android Chrome, browser screen-reader, practical browser zoom, and moderated older-adult validation — NOT RUN; local reduced-motion handling and emulation now pass under OPORD 014.
+- [x] Persisted native Chrome 200% zoom passes effective 320/390/430 under OPORD 014.
+- [ ] iOS Safari/Android Chrome, browser screen-reader, physical software-keyboard, and moderated older-adult validation — NOT RUN; local reduced-motion handling also passes.
 - [x] Responsive widths, touch targets, keyboard/history/reload, zoom/reflow, focus, and desktop-secondary gates are documented.
 - [x] Native applications and app-store delivery are not active campaign blockers.
 - [ ] Remote Supabase, deploy, backup, and restore validation — NOT RUN; safe authorized environment unavailable here.
@@ -286,7 +287,8 @@ Use this before considering a mission complete.
 - [x] Exact deep link, Back, reload, logout/restore, and outsider direct-ID denial pass.
 - [x] 320/390/430/1280 widths, one main/five tabs/one selected, >=48px actions, reduced motion, no hover-only controls, and zero console events pass.
 - [x] Semantic error/emphasis and success text use >=4.5:1 light-surface color pairs; low-contrast coral/sage text is rejected by regression coverage.
-- [ ] Practical Chrome UI 200% zoom, physical phone browsers, VoiceOver/TalkBack, and moderated older-adult use remain `NOT RUN`.
+- [x] Practical Chrome UI 200% zoom passes locally at effective 320/390/430 CSS pixels with real Auth roles and exact routes.
+- [ ] Physical phone browsers, VoiceOver/TalkBack, and moderated older-adult use remain `NOT RUN`.
 
 ## OPORD 005/006 local service and database hardening
 

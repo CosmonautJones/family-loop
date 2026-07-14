@@ -2,14 +2,14 @@
 
 ## Status
 
-PARTIAL/CONDITIONAL — local keyboard, landmark, target-size, responsive-width, form-metadata, and automated accessibility gates pass; required assistive-technology, zoom, reduced-motion, and human gates remain open.
+LOCAL COMPLETE / EXTERNAL CONDITIONAL — local keyboard, landmark, target-size, responsive-width, form-metadata, reduced-motion, native Chrome 200% zoom, and automated accessibility gates pass; physical-browser assistive-technology and human gates remain open.
 
 ## Situation and evidence
 
 - The taste bar requires phone-first, readable, thumb-friendly actions (`docs/taste-bar.md:11-21`).
 - The bottom navigation has labels and 58-point minimum height (`app/src/navigation/AppShell.tsx:63-77,114-121`), and Calendar event rows expose button roles/labels (`app/src/screens/CalendarScreen.tsx:45-50`).
-- Home typography includes 38/40 hero text and 14/20 supporting copy (`app/src/screens/HomeScreen.tsx:124-159`), but repository evidence does not establish contrast ratios, 200% zoom/reflow, screen-reader order, reduced motion, virtual-keyboard behavior, or mobile-browser accessibility.
-- Configured Chrome at 320/390/430 CSS pixels has no horizontal overflow; the 320 views expose one main, one primary heading, and no visible control under 48×48 CSS pixels. Lighthouse Accessibility scored 100. Physical Safari/Chrome, VoiceOver/TalkBack, practical 200% zoom, reduced motion, and moderated-human tests remain `NOT RUN`.
+- Home typography includes 38/40 hero text and 14/20 supporting copy (`app/src/screens/HomeScreen.tsx:124-159`). Later gates established semantic light-surface text contrast, sequential navigation, reduced-motion behavior, and invalid-field focus; physical screen-reader order remains conditional.
+- Configured Chrome at 320/390/430 CSS pixels has no horizontal overflow and no visible control under 48 CSS pixels. Persisted native 200% Chrome zoom repeats effective 320/390/430 with box/text containment across core owner screens and all four Auth roles at 390. Lighthouse Accessibility scored 100. Physical Safari/Chrome, VoiceOver/TalkBack, and moderated-human tests remain `NOT RUN`.
 
 ## Mission/objective
 
@@ -66,7 +66,7 @@ Use plain labels, minimum 48x48 CSS-pixel interactive targets, strong contrast, 
 |---|---|---|
 | Accessible names, roles, states, and targets | COMPLETE LOCALLY | Wave 5 keyboard/landmark review; 320px target audit; stable form metadata in `8703582`. |
 | Non-color-only RSVP/pending/error/auth/loading states | COMPLETE LOCALLY | Source tests, live browser states, and Lighthouse Accessibility 100. |
-| 200% text sizing preserves core action | NOT RUN | A CSS `zoom` experiment was rejected as invalid evidence; practical browser 200% zoom/reflow was not run. |
+| 200% text sizing preserves core action | COMPLETE LOCALLY | Persisted Chrome 200% browser zoom passes effective 320/390/430 CSS layouts with DPR 1→2, visual scale 1, CSS zoom 1, >=48px controls, and box/text containment. |
 | Declared WCAG AA contrast baseline | PARTIAL | Lighthouse automated checks pass; a complete measured contrast worksheet and physical-browser audit were not run. |
 | Exact-event/auth/thread regressions | COMPLETE | Root 70/70, app 58/58, TypeScript, Expo export, and configured browser scenario pass at `88d0ed9`. |
 

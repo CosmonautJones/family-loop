@@ -84,7 +84,7 @@
 - [x] Independent Run 1 RED keyboard defect corrected; Run 2 accepted at AMBER / PROCEED-WARN with zero blockers.
 - [x] Rendered keyboard order, Enter routing, one-selected/one-main semantics, and 320×844 width/overflow/navigation sanity passed.
 - [ ] Substantive lint and physical-device/screen-reader/moderated-human evidence — unproven.
-- [ ] Practical 200% zoom/reflow remains unverified; the pre-existing React Native Web warning remains advisory.
+- [x] Persisted Chrome 200% browser zoom passes at effective 320/390/430 CSS pixels with DPR 1→2, visual scale 1, CSS zoom 1, >=48px controls, and box/text containment; physical browsers/AT remain conditional.
 
 ## Wave 2 trip creation and RSVP
 

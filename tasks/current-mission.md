@@ -224,10 +224,10 @@ This mission is complete only when all authorized waves pass their acceptance an
 The 17-order dependency graph and original task intent remain unchanged. Current acceptance is now recorded criterion-by-criterion in each OPORD and summarized in `docs/opords/README.md`.
 
 - Locally closable product slices: OPORDs 001, 004, 006, 007, 008, 009, 010, and 011 are `LOCAL COMPLETE / CONDITIONAL`; their remaining conditions are external device, human, hosted, production-cardinality, or delivery gates rather than missing local core-loop behavior.
-- Partially complete slices: OPORDs 002, 003, 005, 012, 013, and 014 retain named missing criteria. OPORD 003's local password-recovery slice, OPORD 008's local exact-event realtime slice, and OPORD 010's persisted reminder preference are complete; their hosted/physical proof remains external. The largest remaining product evidence gap is assistive-technology and moderated-human validation.
+- Partially complete slices: OPORDs 003, 005, 012, and 013 retain named missing local or operational criteria. OPORDs 002 and 014 are now `LOCAL COMPLETE / EXTERNAL CONDITIONAL` after persisted native Chrome 200% proof; physical assistive-technology and moderated-human validation remain their largest external evidence gaps.
 - Operational slices: OPORD 015 has substantive lint, a least-privilege CI workflow, and local pass/failure proofs but lacks GitHub-hosted execution and required-check administration; OPORD 016 lacks hosted release/rollback; OPORD 017 has local encrypted backup/isolated restore and lifecycle dry-run evidence but lacks hosted PITR and approved export/deletion/retention apply.
 - Current local evidence includes root/app tests, substantive zero-warning lint, TypeScript, Expo web export, harness, loopback database lint, family/media E2E, read-only populated-scenario verification, secret/dependency/migration checks, and diff checks. Hosted CI remains `NOT RUN`.
-- Explicitly `NOT RUN`: hosted deployment/migrations/monitoring/backup/restore, production recovery email, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% browser zoom, and moderated older-adult use. Local reduced-motion handling and emulation pass.
+- Explicitly `NOT RUN`: hosted deployment/migrations/monitoring/backup/restore, production recovery email, physical iOS Safari and Android Chrome, VoiceOver/TalkBack, physical software-keyboard behavior, and moderated older-adult use. Local reduced-motion and practical Chrome 200% zoom/reflow pass.
 
 This reconciliation closes the documentation contradiction found by the final local release-readiness review. It does not round conditional or operational evidence up to campaign completion.
 
@@ -394,6 +394,15 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - The read-only proof preserved the canonical 4/3/3/6/6/3/38/0/3 scenario with zero outsider residue. Details are in `docs/runbooks/authenticated-encrypted-user-export.md`.
 - Local export verdict: **GREEN** for the conservative current-user scope. Shared-family scope, server audit/hosted delivery, physical devices/assistive technology, product/legal retention approval, and all account deletion behavior remain open. OPORD 017 overall remains **PARTIAL/CONDITIONAL**.
 
+## 2026-07-14 — OPORD 014 real Chrome zoom and UX closeout
+
+- A fresh configured production export at the checked-out revision ran read-only against the retained loopback scenario. Its final verifier remained exact at 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 0 reminders, 3 objects, and zero outsider residue.
+- Chrome 150 used persisted native browser zoom. Same physical windows produced 640→320, 780→390, and 860→430 CSS-pixel layouts; DPR changed 1→2 while `visualViewport.scale` and computed CSS zoom stayed 1. No CDP page scale, device emulation, or CSS zoom supplies the claim.
+- Signed-out, owner, member, and outsider sessions covered auth/recovery, Today/Updates, Calendar, invalid Create focus, Memories, Family/invite/export, Event Detail/edit/RSVP/thread/reminder/photo form, Back/deep-link/reload, and direct-route denial. Full owner sweeps also passed at effective 320 and 430; a 1280-CSS desktop 200% regression passed.
+- Strengthened >=48px, control-box, and text-glyph geometry found one P2 Calendar defect: the Yellowstone status chip painted beyond its contained row. A shrinking agenda-copy wrapper (`flex: 1; minWidth: 0`) restores containment; source and real-browser regressions cover it.
+- Final local evidence has no horizontal overflow, clipped control boxes or descendant control text/glyphs, sub-48px controls, console warning/error/exception, failed load, or functional app/backend HTTP error. The automatic optional `/favicon.ico` 404 is recorded as P3 and does not affect a user flow.
+- Practical local Chrome 200% zoom is closed. Physical iOS Safari/Android Chrome, VoiceOver/TalkBack, physical software keyboards, and moderated older-adult use remain `NOT RUN` and are not inferred.
+
 ## 2026-07-14 — OPORD 010 local per-user event reminder preference
 
 - Added the smallest reminder service contract: exact-current-user/event read, idempotent enable/upsert, and idempotent disable/delete. Memory, durable-local, and Supabase adapters share the contract; no schema, dependency, settings center, scheduler, worker, push, email, or SMS work was added.
@@ -410,7 +419,7 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 
 - A fresh disposable loopback-Supabase family exercised the full reachable web UI across owner, two members, and an outsider. The exact evidence matrix is `docs/runbooks/final-configured-browser-feature-matrix.md`.
 - Same-tab reinvitation, idempotent safe-error handling, and hidden-state text contrast defects found during the replay were corrected and independently rerun.
-- The configured local user journey is GREEN. The broader mission remains IN PROGRESS because hosted runtime configuration/export/delete/operations, physical browsers and assistive technology, practical UI zoom, and moderated human usability remain unproven.
+- The configured local user journey and practical Chrome 200% zoom are GREEN. The broader mission remains IN PROGRESS because hosted runtime configuration/export/delete/operations, physical browsers and assistive technology, and moderated human usability remain unproven.
 
 ## OPORD 016 runtime-configured immutable artifact checkpoint
 

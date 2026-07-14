@@ -49,7 +49,7 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
               onPress={() => onOpenEvent?.(item.id)}
               style={styles.listRow}
             >
-              <View>
+              <View style={styles.listCopy}>
                 <Text style={styles.listTitle}>{item.title}</Text>
                 <Text style={styles.cardCopy}>{item.detail}</Text>
               </View>
@@ -147,6 +147,10 @@ const styles = StyleSheet.create({
   list: {
     marginTop: spacing.md,
     gap: spacing.sm,
+  },
+  listCopy: {
+    flex: 1,
+    minWidth: 0,
   },
   listRow: {
     minHeight: 48,

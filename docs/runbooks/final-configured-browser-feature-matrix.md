@@ -34,9 +34,15 @@ The final all-in-one result reported the exact flags above, three event IDs with
 ## Evidence boundary
 
 - The prior authenticated Lighthouse run scored 100 Accessibility and 100 Best Practices. The final static palette inventory supplements it for error/success states that were not visible in that snapshot; neither is represented as formal WCAG certification.
-- A CDP page-scale proxy at 2.0 retained document-width containment. Practical Chrome UI 200% zoom/reflow remains `NOT RUN` because headless CDP cannot set browser UI zoom faithfully.
+- The historical CDP page-scale proxy remains limited evidence. A later Chrome 150 configured replay used the browser's persisted native zoom preference, not page/device/CSS scaling. Same physical windows produced 640→320, 780→390, and 860→430 CSS-pixel layouts while DPR doubled 1→2, `visualViewport.scale` stayed 1, and CSS zoom stayed 1. Full owner core-screen sweeps at effective 320/390/430, all four roles at 390, and a 1280-CSS desktop regression passed with >=48px controls and no control-box or descendant control-text/glyph clipping or overflow.
 - Sequential keyboard focus and a 320×500 virtual-keyboard-height proxy pass in the dedicated OPORD 014 harness. Physical software keyboards remain `NOT RUN`.
 - Hosted Supabase, deployment, production email, physical iOS Safari/Android Chrome, VoiceOver/TalkBack, moderated older-adult use, and human usability judgment remain `NOT RUN`.
+
+## Native browser zoom follow-up — 2026-07-14
+
+`scripts/check-opord14-real-browser-zoom.mjs` launches isolated Chrome profiles with `partition.default_zoom_level.x = log(2) / log(1.2)`. It rejects false zoom proof by requiring the DPR, same-window layout-width, visual-viewport-scale, and computed-CSS-zoom invariants together. The read-only configured replay covers signed-out auth/recovery, owner/member/outsider role boundaries, Today/Updates, Calendar, Create validation, Memories, Family/invite/export, exact Event Detail/edit/RSVP/thread/reminder/photo form, Back, deep link, reload, and outsider denial.
+
+The first glyph-level run exposed a real Calendar defect: the Yellowstone status chip painted beyond its otherwise-contained action row. Giving the agenda copy `flex: 1` and `minWidth: 0` restored containment; the 320/390/430 native-zoom sweep is the rendered regression. The optional `/favicon.ico` request remains a recorded P3 404 and is excluded from functional app/backend failure counts. Generated JSON and screenshots live under ignored `.codex/evidence/opord14-real-zoom/` and contain synthetic local-family content only.
 
 ## Cleanup and retained baseline
 
