@@ -6,6 +6,8 @@ import type { ButtonTone } from '../types/ui';
 export function Button({ label, tone = 'primary', onPress }: { label: string; tone?: ButtonTone; onPress?: () => void }) {
   return (
     <Pressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
       onPress={onPress}
       style={[
         styles.base,
@@ -27,8 +29,10 @@ export function Button({ label, tone = 'primary', onPress }: { label: string; to
 const styles = StyleSheet.create({
   base: {
     borderRadius: radii.pill,
+    minHeight: 48,
     paddingVertical: 11,
     paddingHorizontal: 16,
+    justifyContent: 'center',
   },
   primary: {
     backgroundColor: '#fff',

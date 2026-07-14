@@ -1,7 +1,7 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { AppBackground } from '../components/AppBackground';
 import { CalendarScreen } from '../screens/CalendarScreen';
 import { CreateEventScreen } from '../screens/CreateEventScreen';
@@ -13,16 +13,18 @@ import { gradients, palette, radii, shadow, spacing } from '../theme/tokens';
 import { useAppShellState } from './useAppShellState';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { AuthScreen, SessionStatusScreen } from '../screens/AuthScreen';
+import { useActiveGroupQuery } from '../app/queries';
 
 const tabIcons = {
   Home: 'home',
   Calendar: 'calendar',
   Create: 'add-circle',
   Memories: 'images',
-  Groups: 'people',
+  Family: 'people',
 } as const;
 
 export function AppShell() {
+  const { width } = useWindowDimensions();
   const auth = useAuthSession();
   const { tabItems, activeTab, activeSurface, activeEventId, setActiveTab, openEventDetail, closeEventDetail } = useAppShellState();
 
@@ -43,15 +45,16 @@ export function AppShell() {
   return (
     <AppBackground>
       <View style={styles.root}>
+        <ActiveFamilyLabel />
         <View style={styles.content}>
           {activeSurface === 'EventDetail' ? <EventDetailScreen eventId={activeEventId} backLabel={`Back to ${activeTab.toLowerCase()}`} onBack={closeEventDetail} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={(eventId) => openEventDetail('Home', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Calendar' ? <CalendarScreen onOpenEvent={(eventId) => openEventDetail('Calendar', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Create' ? <CreateEventScreen onCreated={(eventId) => openEventDetail('Create', eventId)} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Memories' ? <MemoriesScreen /> : null}
-          {activeSurface !== 'EventDetail' && activeTab === 'Groups' ? <GroupsScreen /> : null}
+          {activeSurface !== 'EventDetail' && activeTab === 'Family' ? <GroupsScreen /> : null}
         </View>
-        <View style={styles.navOuter}>
+        <View style={[styles.navOuter, { width: Math.max(width - (2 * spacing.md), 0) }]}>
           {auth.configured ? (
             <Pressable accessibilityRole="button" disabled={auth.pending} onPress={auth.logout} style={styles.signOut}>
               <Text style={styles.signOutText}>Sign out</Text>
@@ -64,6 +67,7 @@ export function AppShell() {
                   key={tab.label}
                   accessibilityRole="button"
                   accessibilityLabel={`${tab.label} tab`}
+                  accessibilityState={{ selected: tab.active }}
                   onPress={() => setActiveTab(tab.label)}
                   style={styles.navItem}
                 >
@@ -84,21 +88,44 @@ export function AppShell() {
   );
 }
 
+function ActiveFamilyLabel() {
+  const activeGroup = useActiveGroupQuery();
+  if (!activeGroup.data) return null;
+  return <Text style={styles.familyLabel} accessibilityLabel={`Active family: ${activeGroup.data.name}`}>{activeGroup.data.name}</Text>;
+}
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
     backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
+    width: '100%',
+    maxWidth: '100%',
+    minWidth: 0,
+    boxSizing: 'border-box',
+    paddingBottom: 150,
   },
+  familyLabel: { minHeight: 48, paddingHorizontal: spacing.lg, paddingTop: spacing.md, color: palette.plum, fontSize: 14, fontWeight: '800', textAlignVertical: 'center' },
   navOuter: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
+    position: 'absolute',
+    left: spacing.md,
+    bottom: spacing.md,
+    minWidth: 0,
+    boxSizing: 'border-box',
+    zIndex: 10,
   },
-  signOut: { alignSelf: 'flex-end', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  signOut: { alignSelf: 'flex-end', minHeight: 48, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   signOutText: { color: palette.muted, fontSize: 12, fontWeight: '800' },
   navWrap: {
+    alignSelf: 'stretch',
+    minWidth: 0,
+    boxSizing: 'border-box',
     overflow: 'hidden',
     borderRadius: radii.hero,
     borderWidth: 1,
@@ -107,12 +134,19 @@ const styles = StyleSheet.create({
     ...shadow.soft,
   },
   navRow: {
+    alignSelf: 'stretch',
+    minWidth: 0,
+    boxSizing: 'border-box',
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 8,
   },
   navItem: {
-    flex: 1,
+    flexBasis: '20%',
+    maxWidth: '20%',
+    flexGrow: 0,
+    flexShrink: 1,
+    minWidth: 0,
     minHeight: 58,
     borderRadius: radii.card,
     alignItems: 'center',
@@ -126,8 +160,9 @@ const styles = StyleSheet.create({
   },
   navText: {
     color: palette.muted,
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
+    flexShrink: 1,
   },
   navTextActive: {
     color: palette.white,

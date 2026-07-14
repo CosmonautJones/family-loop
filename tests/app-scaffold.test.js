@@ -275,6 +275,40 @@ test('App entry composes the navigation shell', () => {
   assert.doesNotMatch(content, /Lake Picnic with Family/);
 });
 
+test('web routes preserve tabs and exact event IDs while unknown hashes safely return Home', () => {
+  const { selectors } = loadCompiledModules();
+  for (const tab of selectors.appTabs) {
+    const hash = selectors.formatAppRoute({ surface: tab });
+    assert.deepEqual(selectors.parseAppRoute(hash), { surface: tab });
+  }
+  const eventRoute = { surface: 'EventDetail', eventId: 'event/family weekend', returnTab: 'Calendar' };
+  const hash = selectors.formatAppRoute(eventRoute);
+  assert.equal(hash, '#/event/event%2Ffamily%20weekend?from=calendar');
+  assert.deepEqual(selectors.parseAppRoute(hash), eventRoute);
+  assert.deepEqual(selectors.parseAppRoute('#/unknown'), { surface: 'Home' });
+  assert.deepEqual(selectors.parseAppRoute('#/event/%E0%A4%A'), { surface: 'Home' });
+});
+
+test('Family screen is service-backed with truthful states and no fixture onboarding controls', () => {
+  const family = read('src/screens/GroupsScreen.tsx');
+  const shell = read('src/navigation/AppShell.tsx');
+  assert.match(family, /useActiveGroupQuery/);
+  assert.match(family, /useActiveGroupMembersQuery/);
+  assert.match(family, /useActiveEventsQuery/);
+  assert.match(family, /Loading your family/);
+  assert.match(family, /Try again/);
+  assert.match(family, /No family members are available yet/);
+  assert.doesNotMatch(family, /features\/groups\/fixtures|Create group|friend-group/);
+  assert.match(shell, /accessibilityState=\{\{ selected: tab\.active \}\}/);
+  assert.match(shell, /function ActiveFamilyLabel\(\)/);
+  assert.ok(shell.indexOf('<ActiveFamilyLabel />') > shell.indexOf("auth.groups?.length === 0"), 'family query child renders after auth gates');
+  const shellState = read('src/navigation/useAppShellState.ts');
+  assert.match(shellState, /canGoBack: false/);
+  assert.match(shellState, /pushState\(\{ loopedIn: true, canGoBack: true \}/);
+  assert.match(shellState, /historyState\?\.loopedIn && historyState\.canGoBack/);
+  assert.doesNotMatch(shellState, /history\.length/);
+});
+
 test('mock service completes create, refetch, same-detail, and RSVP loop', async () => {
   const { selectors, mockAdapter, mockData } = loadCompiledModules();
   const seed = mockData.createEmptyMockDatabase();
@@ -484,7 +518,7 @@ test('Query and screens expose truthful event states without configured fixture 
   assert.match(create, /error/i);
   assert.match(shell, /auth\.configured && auth\.status === 'restoring'/);
   assert.match(shell, /auth\.configured && auth\.groups\?\.length === 0/);
-  for (const tab of ['Home', 'Calendar', 'Create', 'Memories', 'Groups']) {
+  for (const tab of ['Home', 'Calendar', 'Create', 'Memories', 'Family']) {
     assert.match(shell, new RegExp(`activeSurface !== 'EventDetail' && activeTab === '${tab}'`));
   }
   assert.doesNotMatch(home, /features\/home\/fixtures|home\/fixtures/);

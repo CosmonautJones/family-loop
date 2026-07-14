@@ -4,7 +4,7 @@ import { groupsOverview } from '../features/groups/fixtures';
 import { heroEvent, homeActivity, homeActivityTitle, homeMemories, homeWeekSummary } from '../features/home/fixtures';
 import { memoriesRecap } from '../features/memories/fixtures';
 import { formatEventDateRange } from '../lib/date';
-import type { Event, EventActivity, MemoryItem } from '../types/domain';
+import type { Event, EventActivity, Group, MemoryItem, Person } from '../types/domain';
 
 type HomeViewModelInput = {
   events?: Event[];
@@ -12,6 +12,44 @@ type HomeViewModelInput = {
   memories?: MemoryItem[];
   now?: Date;
 };
+
+export const appTabs = ['Home', 'Calendar', 'Create', 'Memories', 'Family'] as const;
+export type AppTab = (typeof appTabs)[number];
+export type AppRoute =
+  | { surface: AppTab }
+  | { surface: 'EventDetail'; eventId: string; returnTab: AppTab };
+
+const tabSlugs: Record<AppTab, string> = {
+  Home: 'home', Calendar: 'calendar', Create: 'create', Memories: 'memories', Family: 'family',
+};
+
+function tabFromSlug(slug: string | null): AppTab | undefined {
+  return appTabs.find((tab) => tabSlugs[tab] === slug?.toLowerCase());
+}
+
+export function parseAppRoute(hash: string): AppRoute {
+  const route = hash.replace(/^#/, '');
+  const [pathname, query = ''] = route.split('?');
+  const tab = tabFromSlug(pathname.replace(/^\//, ''));
+  if (tab) return { surface: tab };
+  const match = pathname.match(/^\/event\/([^/]+)$/);
+  if (match) {
+    try {
+      const eventId = decodeURIComponent(match[1]);
+      if (eventId) return {
+        surface: 'EventDetail',
+        eventId,
+        returnTab: tabFromSlug(new URLSearchParams(query).get('from')) ?? 'Home',
+      };
+    } catch { /* Invalid routes safely return Home. */ }
+  }
+  return { surface: 'Home' };
+}
+
+export function formatAppRoute(route: AppRoute): string {
+  if (route.surface !== 'EventDetail') return `#/${tabSlugs[route.surface]}`;
+  return `#/event/${encodeURIComponent(route.eventId)}?from=${tabSlugs[route.returnTab]}`;
+}
 
 const defaultHomeInput: HomeViewModelInput = {
   events: [heroEvent],
@@ -91,6 +129,26 @@ export function selectGroupsViewModel() {
       tone: group.tone,
     })),
     steps: groupsOverview.steps,
+  };
+}
+
+export function selectFamilyViewModel(group: Group, members: Person[], events: Event[], now = new Date()) {
+  const upcoming = [...events]
+    .filter((event) => Date.parse(event.endsAt) >= now.getTime())
+    .sort((left, right) => Date.parse(left.startsAt) - Date.parse(right.startsAt));
+  return {
+    name: group.name,
+    description: group.description,
+    memberCountLabel: `${members.length} family members`,
+    members: members.map((member) => ({
+      ...member,
+      role: member.id === 'person-you' ? 'Organizer' : 'Family member',
+    })),
+    upcomingLabel: upcoming.length === 0
+      ? 'No upcoming trips yet.'
+      : upcoming.length === 1
+        ? `1 upcoming trip · ${upcoming[0].title}`
+        : `${upcoming.length} upcoming trips · Next: ${upcoming[0].title}`,
   };
 }
 
