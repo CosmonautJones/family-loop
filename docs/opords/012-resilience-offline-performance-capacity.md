@@ -1,10 +1,10 @@
 # OPORD 012 — Resilience, Offline, Performance, and Capacity
 
 ## Status
-PARTIAL — reload/server-restart durability, mutation recovery contracts, and responsive Chrome evidence exist; agreed performance budgets, representative capacity, throttled-network, reduced-motion, and physical-device gates remain open.
+PARTIAL — representative capacity and configured disconnect/retry now pass locally, but the throttled warm-web performance budget fails and physical-device/assistive-technology gates remain open.
 
 ## Situation and evidence
-Default local mode uses a versioned AsyncStorage/browser-storage envelope with revisioned mutation coordination; hard reload and development-server restart durability passed. Configured loopback Supabase also persisted the full browser scenario across reloads. A cold disconnected reload still fails by design because no service worker/PWA shell exists. No offline write queue, representative capacity baseline, or physical/mobile-human performance evidence exists.
+Default local mode uses a versioned AsyncStorage/browser-storage envelope with revisioned mutation coordination; hard reload and development-server restart durability passed. Configured loopback Supabase also persisted the full browser scenario across reloads. A cold disconnected reload still fails by design because no service worker/PWA shell exists, and configured writes are intentionally online-only with an explicit retry. The local representative baseline covers 20 members, 100 events, 100 comments, and 50 media records. Physical/mobile-human performance evidence does not exist.
 
 ## Mission/objective
 Measure and harden the event loop for common disconnects, retries, large-but-realistic families, and slow phones/networks without creating a speculative synchronization platform.
@@ -45,10 +45,10 @@ Slow/offline states must preserve readable, plain-language event context, never 
 
 | Criterion | Disposition | Evidence |
 |---|---|---|
-| Budgets and representative volumes recorded before optimization | NOT RUN | Lighthouse snapshots exist, but no agreed cold-open/list/mutation budgets or representative volume matrix. |
-| Explicit slow/offline states; input retention; retry dedupe | PARTIAL | Draft-retention/idempotency tests pass; cold offline reload is explicitly unsupported; throttled/offline mutation journey not fully run. |
-| Identity/order after reconnect and larger fixtures | PARTIAL | Reload/server-restart and configured multi-session identity pass; reconnect and representative larger-volume test are absent. |
-| Measured budget compliance | NOT RUN | Lighthouse Accessibility/Best Practices are not performance-capacity acceptance evidence. |
+| Budgets and representative volumes recorded before optimization | COMPLETE | `docs/runbooks/resilience-performance.md` records the approved 20-member/100-event/100-comment/50-media volume and phone-web budgets. |
+| Explicit slow/offline states; input retention; retry dedupe | PARTIAL | With loopback Supabase's API gateway stopped, the exact comment draft remained and the visible retry wrote it once after recovery; hard reload still showed exactly one copy. The error text was raw `Failed to fetch`, so the plain-language requirement failed. Cold offline reload and queued writes are explicitly unsupported. |
+| Identity/order after reconnect and larger fixtures | COMPLETE | The focused capacity test preserves exact event identity/order and exact counts through durable reconstruction. A configured browser reconnect retained the draft and persisted one exact comment; the disposable event was deleted and the baseline scenario verifier returned 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 3 objects, and zero outsider residue. |
+| Measured budget compliance | PARTIAL | At 390x844, the 100-comment/50-media event opened in 333.8 ms with no horizontal overflow. A warm production-export reload under Slow 3G plus 4x CPU recorded 6,528 ms LCP and a 673 ms long task, failing the 4,000 ms LCP and 200 ms task budgets. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -68,7 +68,7 @@ Real-phone iOS Safari, Android Chrome, human usability, and production load are 
 Stop until budgets/offline semantics are decided; stop before new packages, remote load tests, indexes/migrations, PWA/service-worker work, offline write queues, background sync, or infrastructure changes.
 
 ## Risks/follow-ups
-Desktop synthetic timings may not predict mobile Safari/Chrome; retries can duplicate writes; browser cache/storage may expose private data on shared devices or be evicted unexpectedly. Persistent offline writes remain an explicit non-goal.
+Desktop synthetic timings may not predict mobile Safari/Chrome; the current bundle/font startup misses the throttled budget; browser cache/storage may expose private data on shared devices or be evicted unexpectedly. Persistent offline writes remain an explicit non-goal. The raw configured-network error is assigned to OPORD 013.
 
 ## Definition of done
 Measured targets pass, resilience behavior is executable and documented, no speculative platform is added, and review evidence names every untested environment.

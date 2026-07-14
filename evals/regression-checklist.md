@@ -99,6 +99,16 @@
 
 ## OPORD campaign documentation
 
+## OPORD 012 resilience and capacity
+
+- [x] Approved representative volume is covered: 20 members, 100 events, 100 comments, and 50 media metadata records on one exact event.
+- [x] Focused capacity test preserves exact event identity/order and reconstructs the version-6 durable-local envelope with exact counts.
+- [x] Local parallel reads stay within 250 ms and selector processing stays within the 200 ms local-processing budget.
+- [x] Warm durable-local support is explicit; configured writes are not queued offline.
+- [ ] Cold disconnected reload — intentionally unsupported; no service worker/PWA shell exists.
+- [ ] Offline write queue/background sync — intentionally not implemented.
+- [ ] Physical Safari/Chrome, VoiceOver/TalkBack, reduced motion, practical 200% zoom, and hosted load/reconnect — `NOT RUN`.
+
 ## Wave 5 mobile accessibility implementation
 
 - [x] Exactly one main landmark wraps the active screen and the fixed navigation appears before it in DOM order.

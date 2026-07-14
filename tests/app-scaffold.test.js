@@ -1480,7 +1480,9 @@ test('Home selector keeps the next event prominent and orders every later event'
 test('Home renders each additional upcoming event with its exact-ID open action', () => {
   const home = read('src/screens/HomeScreen.tsx');
 
-  assert.match(home, /appSections\.upcomingEvents\.map\(\(event\) =>/);
+  assert.match(home, /appSections\.upcomingEvents\.slice\(0, visibleUpcomingCount\)/);
+  assert.match(home, /visibleUpcomingEvents\.map\(\(event\) =>/);
+  assert.match(home, /Show \$\{Math\.min\(12,/);
   assert.match(home, /key=\{event\.id\}/);
   assert.match(home, /onOpenEvent\?\.\(event\.id\)/);
 });
@@ -1522,4 +1524,95 @@ test('Query and screens expose truthful event states without configured fixture 
   assert.doesNotMatch(calendar, /features\/calendar\/fixtures|calendar\/fixtures/);
   assert.doesNotMatch(detail, /features\/events\/fixtures|events\/fixtures/);
   assert.doesNotMatch(store, /rsvpOverrides|persistedEvents|draftEvents/);
+});
+
+test('representative family capacity preserves exact event identity and stays within local processing budgets', async (t) => {
+  const { durableAdapter, mockAdapter, mockData, selectors } = loadCompiledModules();
+  const database = mockData.createMockDatabase();
+  const group = database.groups[0];
+  const memberTemplate = group.members[0];
+  group.members = Array.from({ length: 20 }, (_, index) => ({
+    ...memberTemplate,
+    id: index === 0 ? 'person-you' : `person-capacity-${index}`,
+    name: index === 0 ? 'Alex Jones' : `Capacity Member ${index}`,
+    initials: index === 0 ? 'AJ' : `C${index}`,
+    role: index === 0 ? 'owner' : 'member',
+  }));
+  group.memberCount = group.members.length;
+
+  const eventTemplate = database.events[0];
+  database.events = Array.from({ length: 100 }, (_, index) => ({
+    ...eventTemplate,
+    id: `event-capacity-${String(index).padStart(3, '0')}`,
+    title: `Capacity plan ${index + 1}`,
+    startsAt: new Date(Date.UTC(2027, 0, 1 + index, 15)).toISOString(),
+    endsAt: new Date(Date.UTC(2027, 0, 1 + index, 17)).toISOString(),
+  }));
+  const targetEventId = database.events[0].id;
+  database.messages = Array.from({ length: 100 }, (_, index) => ({
+    id: `message-capacity-${String(index).padStart(3, '0')}`,
+    eventId: targetEventId,
+    body: `Capacity comment ${index + 1}`,
+    authorId: group.members[index % group.members.length].id,
+    authorName: group.members[index % group.members.length].name,
+    author: group.members[index % group.members.length],
+    self: index % group.members.length === 0,
+    createdAt: new Date(Date.UTC(2026, 6, 14, 12, index)).toISOString(),
+  }));
+  database.media = Array.from({ length: 50 }, (_, index) => ({
+    ...database.media[0],
+    id: `media-capacity-${String(index).padStart(2, '0')}`,
+    eventId: targetEventId,
+    caption: `Capacity photo ${index + 1}`,
+    uploadedAt: new Date(Date.UTC(2026, 6, 14, 14, index)).toISOString(),
+  }));
+  database.rsvps = group.members.map((member) => ({
+    eventId: targetEventId,
+    personId: member.id,
+    personName: member.name,
+    status: 'going',
+  }));
+
+  const service = mockAdapter.createMockLoopedInService(database);
+  const serviceStartedAt = performance.now();
+  const [members, events, messages, media] = await Promise.all([
+    service.groups.listGroupMembers(group.id),
+    service.events.listEvents(group.id),
+    service.thread.listMessages(targetEventId),
+    service.media.listMedia(targetEventId),
+  ]);
+  const serviceElapsedMs = performance.now() - serviceStartedAt;
+  const selectorStartedAt = performance.now();
+  const home = selectors.selectHomeViewModel({ events, now: new Date('2026-07-14T00:00:00Z') });
+  const detail = selectors.selectEventDetailViewModel(events[0], database.rsvps, messages);
+  const selectorElapsedMs = performance.now() - selectorStartedAt;
+
+  assert.equal(members.length, 20);
+  assert.equal(events.length, 100);
+  assert.equal(messages.length, 100);
+  assert.equal(media.length, 50);
+  assert.equal(events[0].id, targetEventId);
+  assert.equal(home.heroEvent.id, targetEventId);
+  assert.equal(home.upcomingEvents.length, 99);
+  assert.equal(detail.id, targetEventId);
+  assert.equal(detail.rsvpSummary, '20 going');
+  assert.ok(serviceElapsedMs <= 250, `parallel local reads took ${serviceElapsedMs.toFixed(1)}ms`);
+  assert.ok(selectorElapsedMs <= 200, `selectors took ${selectorElapsedMs.toFixed(1)}ms`);
+
+  const values = new Map();
+  const storage = {
+    getItem: async (key) => values.get(key) ?? null,
+    setItem: async (key, value) => { values.set(key, value); },
+    removeItem: async (key) => { values.delete(key); },
+  };
+  const durableStartedAt = performance.now();
+  const durable = durableAdapter.createDurableLocalLoopedInService(storage, () => database);
+  assert.equal((await durable.events.listEvents(group.id)).length, 100);
+  const reconstructed = durableAdapter.createDurableLocalLoopedInService(storage, () => mockData.createEmptyMockDatabase());
+  assert.equal((await reconstructed.groups.listGroupMembers(group.id)).length, 20);
+  assert.equal((await reconstructed.thread.listMessages(targetEventId)).length, 100);
+  assert.equal((await reconstructed.media.listMedia(targetEventId)).length, 50);
+  const durableElapsedMs = performance.now() - durableStartedAt;
+
+  t.diagnostic(`representative volume: 20 members, 100 events, 100 comments, 50 media; parallel reads ${serviceElapsedMs.toFixed(1)}ms; selectors ${selectorElapsedMs.toFixed(1)}ms; durable reconstruction ${durableElapsedMs.toFixed(1)}ms`);
 });

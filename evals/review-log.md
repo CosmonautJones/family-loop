@@ -304,3 +304,12 @@
 - Local-complete conditional slices: OPORDs 001, 004, 007, 009, and 011. Partial slices: 002, 003, 005, 006, 008, 010, 012, 013, and 014. Not-run operational slices: 015, 016, and 017.
 - The reconciliation explicitly preserves open gates for password recovery/production email, realtime subscriptions, reminder preference, representative query plans/performance budgets, incident tabletop, substantive lint/CI, hosted release/rollback, backup/restore/data lifecycle, physical iOS/Android, VoiceOver/TalkBack, practical 200% zoom, reduced motion, and moderated older-adult use.
 - Verification for this documentation checkpoint: root test suite (including the new evidence-contract test), harness, OPORD stale-fact scan, dependency graph checks, and diff checks. No browser scenario, application runtime, database, Storage object, user, or remote environment was mutated.
+
+## 2026-07-14 — OPORD 012 representative capacity and reconnect proof
+
+- Recorded the approved local representative volume and phone-web budgets, added a deterministic 20-member/100-event/100-comment/50-media capacity check, and limited Home to 12 later plans per increment.
+- Local Node measurements were 121.3 ms for parallel reads, 51.0 ms for Home/Event Detail selectors, and 518.0 ms for durable initialization plus reconstruction. Exact event identity, ordering, counts, and 20-person RSVP summary passed.
+- At 390x844, the production export showed no horizontal overflow and opened the exact 100-comment/50-media event in 333.8 ms. A warm Slow 3G plus 4x CPU trace recorded 6,528 ms LCP and a 673 ms long task, failing the 4,000 ms and 200 ms budgets; startup/font delivery remains open.
+- A configured loopback-Supabase outage retained the exact typed comment, exposed a visible retry, persisted one copy after recovery, and still showed exactly one copy after hard reload. The raw `Failed to fetch` message failed the calm-language criterion and is assigned to OPORD 013.
+- The disposable retry event was cancelled through the UI. The read-only scenario verifier returned the original 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 3 Storage objects, and zero outsider residue.
+- Cold disconnected reload, offline queues/background sync, hosted load/reconnect, physical phones, assistive technology, practical 200% zoom, reduced motion, and moderated older-adult use remain unsupported or `NOT RUN` as documented.

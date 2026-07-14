@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '../components/Avatar';
 import { Chip } from '../components/Chip';
@@ -9,6 +10,7 @@ import { useActiveEventsQuery, useActiveGroupHistoryQuery, useMarkAllNotificatio
 import { palette, spacing } from '../theme/tokens';
 
 export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
+  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(12);
   const eventsQuery = useActiveEventsQuery();
   const historyQuery = useActiveGroupHistoryQuery();
   const notificationsQuery = useNotificationsQuery();
@@ -16,6 +18,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
   const markAllRead = useMarkAllNotificationsReadMutation();
   const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], history: historyQuery.data ?? [] });
   const heroEvent = appSections.heroEvent;
+  const visibleUpcomingEvents = appSections.upcomingEvents.slice(0, visibleUpcomingCount);
 
   if (eventsQuery.isPending) return <ScreenState title="Loading your plans" detail="Finding what’s next for this group…" />;
   if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} onRetry={() => eventsQuery.refetch()} />;
@@ -73,7 +76,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
         {appSections.upcomingEvents.length > 0 ? <SurfaceCard>
           <Text style={styles.cardTitle}>Also coming up</Text>
           <View style={styles.upcomingList}>
-            {appSections.upcomingEvents.map((event) => (
+            {visibleUpcomingEvents.map((event) => (
               <View key={event.id} style={styles.upcomingItem}>
                 <View style={styles.upcomingCopy}>
                   <Text style={styles.listTitle}>{event.title}</Text>
@@ -83,6 +86,7 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
               </View>
             ))}
           </View>
+          {visibleUpcomingCount < appSections.upcomingEvents.length ? <CardAction label={`Show ${Math.min(12, appSections.upcomingEvents.length - visibleUpcomingCount)} more plans`} onPress={() => setVisibleUpcomingCount((count) => count + 12)} /> : null}
         </SurfaceCard> : null}
 
         {historyQuery.isPending ? <SurfaceCard><Text style={styles.cardTitle}>Loading recent family history</Text><Text style={styles.cardCopy}>Gathering comments and photos from completed events…</Text></SurfaceCard> : null}
