@@ -242,6 +242,8 @@ test('architecture workflow doc covers app structure, sample data, and contribut
   assert.match(architecture, /Expo \+ React Native Web/);
   assert.match(architecture, /phone browsers/);
   assert.match(architecture, /desktop web.+secondary/i);
+  assert.doesNotMatch(architecture, /push fanout/i);
+  assert.match(architecture, /Web Notifications API.+service workers.+future work requiring separate authorization/i);
   assert.match(architecture, /## Screen model for the MVP foundation/);
   assert.match(architecture, /## Sample data strategy/);
   assert.match(architecture, /## Recommended implementation workflow for agent\/subagent teams/);

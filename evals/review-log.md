@@ -11,7 +11,7 @@
 - Browser-specific correction: the campaign now addresses touch without hover, virtual keyboards, Back/history/deep-link/reload behavior, zoom/reflow, focus/screen readers/reduced motion, browser media selection, visit/resume updates, browser resilience, hosted artifacts, TLS/security headers/cache control, SPA fallback, and instant frontend rollback.
 - Evidence boundary: mobile Safari/Chrome hardware, assistive technology, moderated older-adult sessions, live Supabase, deployment, backup, and restore remain `NOT RUN`; this documentation-only correction does not infer implementation.
 - Automated gate: root tests PASS 23/23; app tests PASS 13/13; TypeScript PASS; harness PASS; `git diff --check` PASS. The lint command exits successfully but remains the existing honest placeholder assigned to OPORD 015.
-- Review gate: GREEN for the documentation mission, with the placeholder lint and unavailable conditional browser/human/live-environment evidence carried as explicit limitations rather than implementation claims.
+- Internal pre-external gate at initial closeout: GREEN, with placeholder lint and unavailable conditional browser/human/live-environment evidence carried as explicit limitations. This internal result was superseded by the subsequent external Run 1 RED and is not the current external review result.
 - Historical records describing the former native-first stance remain historical and are labeled superseded rather than rewritten as past responsive-web evidence.
 
 ## 2026-07-13 — FAMILY-LOOP-OPORD-001 campaign documentation

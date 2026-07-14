@@ -31,7 +31,7 @@ LoopedIn is an **event-centered responsive web app** backed by a service layer t
   - local UI/session state via a lightweight store such as Zustand
 - **Service boundary:** modular API organized around auth, groups, events, media, and notifications
 - **Persistence model:** relational schema where `group -> event -> activity/media` is the dominant traversal path
-- **Async workflows:** reminders, push fanout, recap generation, image processing, and future resurfacing jobs should run out-of-band
+- **Async workflows:** reminder and in-app notification derivation/records, recap generation, image processing, and future resurfacing jobs should run out-of-band. Browser push, the Web Notifications API, and service workers are future work requiring separate authorization.
 
 ### Architectural rule of thumb
 If a feature does not make an event easier to plan, attend, discuss, or remember, it should probably stay out of the MVP foundation.
