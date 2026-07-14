@@ -47,7 +47,7 @@
 - [x] Success uses the returned exact ID and invalidates the active family event list.
 - [x] Durable reconstruction covers the trip and RSVP plus derived Home, Calendar, and Family visibility.
 - [x] Untouched RSVP is `No response`, not a fabricated Maybe.
-- [x] Root/app 37/37, TypeScript, harness, web export, diff, and scoped browser checks pass.
+- [x] Root tests 37/37 and app-local tests 26/26, TypeScript, harness, web export, diff, and scoped browser checks pass.
 - [ ] Independent Wave 2 gate, substantive lint, and remote Supabase/RLS — pending or unproven.
 
 - Did the implementation stay inside the mission?

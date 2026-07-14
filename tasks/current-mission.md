@@ -248,7 +248,7 @@ This mission is complete only when all authorized waves pass their acceptance an
 
 - Commit `c1b135e` adds a real responsive-web family-plan form, exact-ID success routing, inline validation, retained-field retry, and truthful pending/error/no-response RSVP behavior through the existing service boundary.
 - Durable reconstruction proves the created event and RSVP feed Home, Calendar, Family, and Event Detail. No event/RSVP mirror, new dependency, or remote mutation was added.
-- Root/app tests PASS 37/37; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER.
+- Root tests PASS 37/37 and app-local tests PASS 26/26; TypeScript, harness, Expo web export, and diff check PASS. Lint remains placeholder AMBER.
 - Exact 320×844 browser evidence covers create, exact route, Going RSVP, reload retention, Back, Home/Calendar visibility, and no document overflow. 430×932 and 1280×900 width checks also passed.
 - Private review blockers and its RSVP live-region advisory were fixed before handoff.
 
