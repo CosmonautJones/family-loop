@@ -325,3 +325,15 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Authoritative final checks: root 56/56, app-local 45/45, TypeScript, harness, Expo web export, and diff check PASS. Lint exits 0 but remains a placeholder WARN.
 - Remaining remote blockers are explicit: checked-in metadata deletion is uploader/manager-scoped while Storage deletion permits any event member, and remote object/database operations are nontransactional. Remote auth/invites/RLS/private storage, physical browsers/assistive technology, deployment, backup, and restore remain `NOT RUN`.
 - Detailed evidence: `docs/runbooks/full-local-multiuser-family-e2e.md`.
+
+## Remote media repository-readiness checkpoint
+
+- A forward-only migration after initial infrastructure adds/backfills required alt text, keeps caption separate, and stores optional source/creator attribution without changing the initial migration.
+- Generic authenticated media insert/update/delete is revoked. Narrow RPCs persist, list, activate, abort, claim, and finalize incomplete operations; authorized event reads retry them. Galleries expose active rows only.
+- Storage insert requires the authenticated user's matching pending path; update is unsupported; deletion requires a claimed row and uploader/object-owner or group-manager authority. The bucket and client agree on a 1 MiB JPEG/PNG/WebP boundary, paths use random UUIDs, and event deletion is foreign-key restricted while media exists.
+- Interrupted upload or deletion steps remain hidden and queryable for retry/reconciliation instead of relying on lossy best-effort compensation.
+- Event cancellation remains fail-closed whenever media metadata exists.
+- This checkpoint changes no hosted environment. Local Supabase migration, RLS, bucket, synthetic accounts, real object operations, attack cases, and failure races now pass; hosted application and failure-injection evidence still requires a dedicated authorized project.
+- Deployment/certification procedure and current limits are in `docs/runbooks/remote-media-readiness.md`.
+- Local Supabase evidence now exceeds the original repository-only checkpoint: migration and database lint pass, and the reproducible media runner passes signup-session uploader/member/owner/outsider metadata and private-Storage behavior, manager recovery, concurrent abort/upload locking, attack cases, event FK restriction, and real PNG bytes. No hosted environment was changed.
+- Current final gates: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo web export, and diff check PASS. Lint remains a placeholder WARN.

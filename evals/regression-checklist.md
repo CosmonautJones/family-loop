@@ -7,10 +7,12 @@
 - [x] Creator/manager event controls, uploader/manager photo deletion, outsider denial, RSVP anti-spoofing, actor capture, and recipient-scoped notifications pass local service contracts.
 - [x] Home, Calendar, Family, Memories, exact event routes, one main landmark, five tabs, and 320/390/430 no-overflow behavior pass.
 - [x] Blank edit focus/recovery, valid location edit, collapsed link/file modes, and cancellation dismiss/confirm pass the rendered KISS gate.
-- [x] Final gates: root 56/56, app-local 45/45, TypeScript, harness, Expo web export, and diff check pass.
+- [x] Current final gates: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo web export, and diff check pass.
 - [ ] Multi-user PNG attachment — chooser opened for an 847-byte file, but extension file injection failed. Prior Wave 3 real 609-byte PNG evidence remains valid; service tests cover actor ownership.
 - [ ] Substantive lint — command remains a placeholder WARN.
-- [ ] Remote metadata/Storage delete-policy parity and transactional compensation — unresolved and `NOT RUN` against a live project.
+- [x] Repository remote-media contract — forward migration preserves caption/alt/attribution separately and persists pending/active/deleting cross-system operations behind narrow RPCs.
+- [x] Local Supabase media lifecycle — migration, schema lint, signup sessions, uploader/member/owner/outsider RLS, private real-PNG read/delete, manager reconciliation, abort/upload race, quota/path/direct-mutation attacks, event FK, and removed-member denial pass.
+- [ ] Hosted metadata/Storage lifecycle — remote migration, full failure injection, retry/reconciliation, content scanning, and orphan scans remain `NOT RUN` against a dedicated project.
 - [ ] Production auth/invites/RLS/private storage, physical browsers, screen readers, moderated usability, deployment, backup, and restore — `NOT RUN`.
 
 ## Wave 6 full local Jones Family journey

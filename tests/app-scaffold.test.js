@@ -7,6 +7,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 
 const appRoot = path.resolve('C:/Users/Travis/Desktop/Projects/family-loop/app');
+const repoRoot = path.dirname(appRoot);
 
 function read(rel) {
   return fs.readFileSync(path.join(appRoot, rel), 'utf8');
@@ -821,6 +822,88 @@ test('Supabase event cancellation fails closed for media and zero-row deletes', 
   assert.match(adapter, /delete\(\)\.eq\('id', eventId\)\.select\('id'\)/);
   assert.match(adapter, /data\?\.some\(\(row\) => row\.id === eventId\)/);
   assert.match(adapter, /The plan was not deleted/);
+});
+
+test('forward media migration persists an active-only, retryable object lifecycle', () => {
+  const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
+  const migrations = fs.readdirSync(migrationsDir).sort();
+  const migrationName = '20260714090000_loopedin_media_metadata_and_storage_ownership.sql';
+  assert.ok(migrations.indexOf(migrationName) > migrations.indexOf('20260705214111_loopedin_initial_infra.sql'));
+  const migration = fs.readFileSync(path.join(migrationsDir, migrationName), 'utf8');
+
+  for (const column of ['alt_text', 'source_name', 'source_url', 'creator_name', 'creator_url', 'status']) {
+    assert.match(migration, new RegExp(`add column if not exists ${column} text`));
+  }
+  assert.match(migration, /set alt_text = coalesce\([\s\S]*?caption[\s\S]*?'Shared family photo'\)/);
+  assert.match(migration, /alter column caption set default ''[\s\S]*?alter column caption set not null/);
+  assert.match(migration, /alter column alt_text set default 'Shared family photo'[\s\S]*?alter column alt_text set not null/);
+  assert.match(migration, /foreign key \(event_id\) references public\.loopedin_events\(id\) on delete restrict/);
+  assert.match(migration, /loopedin_event_media_alt_text_present[\s\S]*?btrim\(alt_text\) <> ''/);
+  assert.match(migration, /loopedin_event_media_attribution_complete/);
+  assert.match(migration, /status in \('pending', 'active', 'deleting'\)/);
+  assert.match(migration, /revoke insert, update, delete on public\.loopedin_event_media from authenticated/);
+  assert.match(migration, /loopedin_begin_media_upload[\s\S]*?'pending'/);
+  assert.match(migration, /loopedin_activate_media[\s\S]*?storage\.objects[\s\S]*?set status = 'active'/);
+  assert.match(migration, /loopedin_claim_media_deletion[\s\S]*?set status = 'deleting'/);
+  assert.match(migration, /loopedin_finalize_media_deletion[\s\S]*?Media object still exists[\s\S]*?delete from public\.loopedin_event_media/);
+  assert.match(migration, /loopedin_abort_media_upload[\s\S]*?Media object still exists[\s\S]*?status = 'pending'/);
+  assert.match(migration, /loopedin_list_media_operations[\s\S]*?status in \('pending', 'deleting'\)/);
+  assert.match(migration, /can_read_media_object[\s\S]*?security definer/);
+  assert.match(migration, /can_read_media_object[\s\S]*?storage\.allow_any_operation\(array\[[\s\S]*?'storage\.object\.delete'[\s\S]*?'storage\.object\.delete_many'/);
+  assert.match(migration, /can_delete_claimed_media_object[\s\S]*?security definer/);
+  assert.match(migration, /array_length\(storage\.foldername\(target_storage_path\), 1\) = 2/);
+  assert.match(migration, /count\(\*\)[\s\S]*?status = 'pending'[\s\S]*?>= 3/);
+  assert.match(migration, /not loopedin_private\.is_event_member\(current_media\.event_id\)/);
+  assert.match(migration, /has_pending_media_object[\s\S]*?pg_advisory_xact_lock[\s\S]*?hashtextextended\(target_storage_path, 0\)/);
+  assert.match(migration, /loopedin_abort_media_upload[\s\S]*?pg_advisory_xact_lock[\s\S]*?hashtextextended\(current_media\.storage_path, 0\)/);
+  assert.match(migration, /object\.owner_id = current_media\.uploaded_by::text/);
+  assert.match(migration, /security definer[\s\S]*?set search_path = ''/);
+  assert.match(migration, /revoke all on function public\.loopedin_begin_media_upload[\s\S]*?from public/);
+
+  assert.match(migration, /drop policy if exists "loopedin_media_update_event_members"/);
+  assert.match(migration, /drop policy if exists "loopedin_media_update_owner_or_manager"/);
+  assert.doesNotMatch(migration, /create policy "loopedin_media_update/);
+  assert.match(migration, /drop policy if exists "loopedin_media_delete_event_members"/);
+  assert.match(migration, /create policy "loopedin_media_delete_claimed"[\s\S]*?for delete to authenticated/);
+  assert.match(migration, /owner_id = \(select auth\.uid\(\)\)::text/);
+  assert.match(migration, /loopedin_private\.can_manage_group\(event\.group_id\)/);
+  assert.match(migration, /create policy "loopedin_media_insert_pending_owner"[\s\S]*?loopedin_private\.has_pending_media_object\(name\)/);
+  assert.match(migration, /create policy "media_select_active_event_member"[\s\S]*?status = 'active'/);
+  assert.match(migration, /create policy "loopedin_media_select_active_or_claimed"[\s\S]*?can_read_media_object\(name\)/);
+  assert.match(migration, /create policy "loopedin_media_delete_claimed"[\s\S]*?can_delete_claimed_media_object\(name, owner_id\)/);
+  assert.match(migration, /update storage\.buckets[\s\S]*?file_size_limit = 1048576[\s\S]*?array\['image\/jpeg', 'image\/png', 'image\/webp'\]/);
+});
+
+test('Supabase media contract validates bytes and uses persisted lifecycle RPCs', () => {
+  const adapter = read('src/services/supabaseAdapter.ts');
+  const mediaColumns = 'id, event_id, storage_path, caption, alt_text, source_name, source_url, creator_name, creator_url, uploaded_by, uploaded_at';
+
+  assert.match(adapter, /caption: row\.caption,[\s\S]*?altText: row\.alt_text/);
+  assert.match(adapter, /sourceName: row\.source_name \?\? undefined[\s\S]*?sourceUrl: row\.source_url \?\? undefined[\s\S]*?creatorName: row\.creator_name \?\? undefined[\s\S]*?creatorUrl: row\.creator_url \?\? undefined/);
+  assert.ok(adapter.includes(`.select('${mediaColumns}')`), 'list should select the complete media contract');
+  assert.doesNotMatch(adapter, /needs the media metadata migration before it can preserve/);
+
+  const beginIndex = adapter.indexOf(".rpc('loopedin_begin_media_upload'");
+  const uploadIndex = adapter.indexOf('.upload(storagePath, blob', beginIndex);
+  const activateIndex = adapter.indexOf(".rpc('loopedin_activate_media'", uploadIndex);
+  assert.ok(beginIndex >= 0 && uploadIndex > beginIndex && activateIndex > uploadIndex);
+  assert.match(adapter, /response\.body\?\.getReader[\s\S]*?byteLength > maxBrowserImageBytes[\s\S]*?reader\.cancel/);
+  assert.match(adapter, /const jpeg =[\s\S]*?const png =[\s\S]*?const webp =/);
+  assert.match(adapter, /createImageBitmap\(blob\)[\s\S]*?image\.width > 0[\s\S]*?image\.close\(\)/);
+  assert.match(adapter, /crypto\.randomUUID\(\)/);
+  assert.match(adapter, /\.upload\(storagePath, blob, \{ contentType: blob\.type, upsert: false \}\)/);
+  assert.match(adapter, /\.eq\('status', 'active'\)/);
+  assert.match(adapter, /loopedin_list_media_operations[\s\S]*?status === 'pending'[\s\S]*?loopedin_activate_media[\s\S]*?loopedin_abort_media_upload/);
+  assert.match(adapter, /status === 'pending'[\s\S]*?5 \* 60 \* 1000/);
+
+  const deleteStart = adapter.indexOf('async deleteMedia(mediaId)');
+  const deleteContract = adapter.slice(deleteStart, adapter.indexOf('\n    notifications:', deleteStart));
+  const claimIndex = deleteContract.indexOf(".rpc('loopedin_claim_media_deletion'");
+  const removeIndex = deleteContract.indexOf('.remove([claimedMedia.storage_path])');
+  const finalizeIndex = deleteContract.indexOf(".rpc('loopedin_finalize_media_deletion'");
+  assert.ok(claimIndex >= 0 && removeIndex > claimIndex && finalizeIndex > removeIndex);
+  assert.match(deleteContract, /retryable deletion state/);
+  assert.match(deleteContract, /cleanup remains retryable/);
 });
 
 test('Supabase location updates read and rewrite authoritative Plan and Logistics timeline details', () => {

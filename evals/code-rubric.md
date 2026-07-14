@@ -5,8 +5,8 @@
 - [x] `7deb3fa` keeps selected demo identity per tab and shared records in the existing durable service; the UI labels this boundary honestly.
 - [x] `93dc773` and `1311332` enforce captured-actor membership, creator/manager and uploader/manager rules, outsider denial, RSVP anti-spoofing, and recipient-scoped notifications with v6 migration coverage.
 - [x] `2b6d725`, `a52e43b`, and `0601baa` simplify Event Detail and close DST/timeline, delete, validation, media-mode, and Supabase timeline correctness gaps without new dependencies.
-- [x] Final gates are independently transcribed: root 56/56, app-local 45/45, TypeScript, harness, Expo export, and diff check pass; lint is placeholder WARN.
-- [ ] Remote parity is incomplete: Storage object deletion is broader than metadata deletion, and object/database steps lack transactional compensation.
+- [x] Current final gates are independently transcribed: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo export, and diff check pass; lint is placeholder WARN.
+- [ ] Hosted remote parity is unproven: repository and local Supabase media lifecycle policies pass, but hosted RLS, migration-data validation, and operational recovery still require authorized execution evidence.
 - [ ] Local demo actors and adapter contracts do not prove production authentication, invitations, RLS, or server synchronization.
 
 ## Wave 6 local E2E and recovery

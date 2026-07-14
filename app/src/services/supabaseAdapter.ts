@@ -10,7 +10,7 @@ import type {
   UpdateEventPayload,
 } from './api';
 import { getSupabaseClient } from './supabaseClient';
-import { validateMediaUpload } from './mediaValidation';
+import { maxBrowserImageBytes, validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
 
@@ -57,9 +57,17 @@ type MediaRow = {
   id: string;
   event_id: string;
   storage_path: string;
-  caption: string | null;
+  caption: string;
+  alt_text: string;
+  source_name: string | null;
+  source_url: string | null;
+  creator_name: string | null;
+  creator_url: string | null;
   uploaded_by: string;
   uploaded_at: string;
+  status: 'pending' | 'active' | 'deleting';
+  delete_requested_by: string | null;
+  delete_requested_at: string | null;
 };
 
 type NotificationRow = {
@@ -99,6 +107,58 @@ async function mapSession(session: Session): Promise<AuthSession> {
 
 function throwIfError(error: { message: string } | null) {
   if (error) throw new Error(error.message);
+}
+
+async function fetchValidatedMediaBlob(fileUri: string) {
+  const response = await fetch(fileUri);
+  if (!response.ok) throw new Error('The photo could not be downloaded. Check the link and try again.');
+
+  const declaredLength = Number(response.headers.get('content-length') ?? 0);
+  if (declaredLength > maxBrowserImageBytes) throw new Error('Choose an image no larger than 1 MB.');
+
+  const contentType = (response.headers.get('content-type') ?? '').split(';')[0].toLowerCase();
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+  if (response.body?.getReader) {
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      byteLength += value.byteLength;
+      if (byteLength > maxBrowserImageBytes) {
+        await reader.cancel();
+        throw new Error('Choose an image no larger than 1 MB.');
+      }
+      chunks.push(value);
+    }
+  }
+
+  const blob = chunks.length ? new Blob(chunks, { type: contentType }) : await response.blob();
+  const mime = (blob.type || contentType).toLowerCase();
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(mime)) {
+    throw new Error('Choose a JPEG, PNG, or WebP image.');
+  }
+  if (!blob.size || blob.size > maxBrowserImageBytes) throw new Error('Choose an image no larger than 1 MB.');
+
+  const signature = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
+  const jpeg = signature[0] === 0xff && signature[1] === 0xd8 && signature[2] === 0xff;
+  const png = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((byte, index) => signature[index] === byte);
+  const webp = String.fromCharCode(...signature.slice(0, 4)) === 'RIFF'
+    && String.fromCharCode(...signature.slice(8, 12)) === 'WEBP';
+  if ((mime === 'image/jpeg' && !jpeg) || (mime === 'image/png' && !png) || (mime === 'image/webp' && !webp)) {
+    throw new Error('The selected file does not contain a valid image.');
+  }
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const image = await createImageBitmap(blob);
+      const validDimensions = image.width > 0 && image.height > 0;
+      image.close();
+      if (!validDimensions) throw new Error('empty image');
+    } catch {
+      throw new Error('The selected image could not be decoded.');
+    }
+  }
+  return blob.type === mime ? blob : new Blob([blob], { type: mime });
 }
 
 function getTimeline(value: unknown): Event['timeline'] {
@@ -239,10 +299,14 @@ async function mapMedia(row: MediaRow): Promise<MediaItem> {
     id: row.id,
     eventId: row.event_id,
     uri: await createSignedMediaUrl(row.storage_path),
-    caption: row.caption ?? 'Shared moment',
-    altText: row.caption ?? 'Shared family photo',
+    caption: row.caption,
+    altText: row.alt_text,
     uploadedBy: row.uploaded_by,
     uploadedAt: row.uploaded_at,
+    sourceName: row.source_name ?? undefined,
+    sourceUrl: row.source_url ?? undefined,
+    creatorName: row.creator_name ?? undefined,
+    creatorUrl: row.creator_url ?? undefined,
   };
 }
 
@@ -279,6 +343,32 @@ function eventPatch(patch: UpdateEventPayload, timeline?: Event['timeline']) {
 
 export function createSupabaseLoopedInService(): LoopedInService {
   const supabase = getSupabaseClient();
+
+  async function reconcileMediaOperations(eventId: string) {
+    const { data, error } = await supabase.rpc('loopedin_list_media_operations', { target_event_id: eventId });
+    throwIfError(error);
+    const now = Date.now();
+
+    for (const operation of (data ?? []) as MediaRow[]) {
+      if (operation.status === 'pending') {
+        const { data: activated } = await supabase
+          .rpc('loopedin_activate_media', { target_media_id: operation.id })
+          .single();
+        if (!activated && now - new Date(operation.uploaded_at).getTime() >= 5 * 60 * 1000) {
+          await supabase.rpc('loopedin_abort_media_upload', { target_media_id: operation.id });
+        }
+        continue;
+      }
+
+      const { data: claimed } = await supabase
+        .rpc('loopedin_claim_media_deletion', { target_media_id: operation.id })
+        .single();
+      if (!claimed) continue;
+      const claimedMedia = claimed as MediaRow;
+      const { error: removeError } = await supabase.storage.from(mediaBucket).remove([claimedMedia.storage_path]);
+      if (!removeError) await supabase.rpc('loopedin_finalize_media_deletion', { target_media_id: operation.id });
+    }
+  }
 
   return {
     auth: {
@@ -575,55 +665,67 @@ export function createSupabaseLoopedInService(): LoopedInService {
     media: {
       async uploadMedia(payload: MediaUploadPayload) {
         validateMediaUpload(payload);
-        if ((payload.caption?.trim() && payload.caption.trim() !== payload.altText.trim()) || payload.sourceUrl || payload.creatorName || payload.sourceName || payload.creatorUrl) {
-          throw new Error('This Supabase project needs the media metadata migration before it can preserve captions, alt text, and attribution separately.');
-        }
         const userId = await getCurrentUserId();
-        const response = await fetch(payload.fileUri);
-        const blob = await response.blob();
+        const blob = await fetchValidatedMediaBlob(payload.fileUri);
         const extension = blob.type === 'image/png' ? 'png' : blob.type === 'image/webp' ? 'webp' : 'jpg';
-        const storagePath = `${payload.eventId}/${userId}-${Date.now()}.${extension}`;
+        const storagePath = `${payload.eventId}/${userId}/${crypto.randomUUID()}.${extension}`;
 
-        const { error: uploadError } = await supabase.storage.from(mediaBucket).upload(storagePath, blob);
-        throwIfError(uploadError);
-
-        const { data, error } = await supabase
-          .from('loopedin_event_media')
-          .insert({
-            event_id: payload.eventId,
-            storage_path: storagePath,
-            caption: payload.altText.trim(),
-            uploaded_by: userId,
+        const { data: pending, error: beginError } = await supabase
+          .rpc('loopedin_begin_media_upload', {
+            target_event_id: payload.eventId,
+            target_storage_path: storagePath,
+            target_caption: payload.caption?.trim() ?? '',
+            target_alt_text: payload.altText.trim(),
+            target_source_name: payload.sourceName?.trim() || null,
+            target_source_url: payload.sourceUrl?.trim() || null,
+            target_creator_name: payload.creatorName?.trim() || null,
+            target_creator_url: payload.creatorUrl?.trim() || null,
           })
-          .select('id, event_id, storage_path, caption, uploaded_by, uploaded_at')
           .single();
-        throwIfError(error);
+        if (beginError || !pending) throw new Error(beginError?.message ?? 'The photo upload could not be started.');
+        const pendingMedia = pending as MediaRow;
+
+        const { error: uploadError } = await supabase.storage
+          .from(mediaBucket)
+          .upload(storagePath, blob, { contentType: blob.type, upsert: false });
+        if (uploadError) {
+          const { data: recovered } = await supabase.rpc('loopedin_activate_media', { target_media_id: pendingMedia.id }).single();
+          if (recovered) return mapMedia(recovered as MediaRow);
+          const { data: aborted } = await supabase.rpc('loopedin_abort_media_upload', { target_media_id: pendingMedia.id });
+          if (aborted === true) throw new Error(`The photo file was not uploaded. No incomplete photo was kept. ${uploadError.message}`);
+          throw new Error(`The photo upload is incomplete and remains available for reconciliation. ${uploadError.message}`);
+        }
+
+        const { data, error: activationError } = await supabase
+          .rpc('loopedin_activate_media', { target_media_id: pendingMedia.id })
+          .single();
+        if (activationError || !data) throw new Error(`The photo file is safe, but activation is pending reconciliation. ${activationError?.message ?? ''}`.trim());
         return mapMedia(data as MediaRow);
       },
       async listMedia(eventId) {
+        await reconcileMediaOperations(eventId);
         const { data, error } = await supabase
           .from('loopedin_event_media')
-          .select('id, event_id, storage_path, caption, uploaded_by, uploaded_at')
+          .select('id, event_id, storage_path, caption, alt_text, source_name, source_url, creator_name, creator_url, uploaded_by, uploaded_at')
           .eq('event_id', eventId)
+          .eq('status', 'active')
           .order('uploaded_at', { ascending: false });
         throwIfError(error);
         return Promise.all(((data ?? []) as MediaRow[]).map(mapMedia));
       },
       async deleteMedia(mediaId) {
-        const { data, error } = await supabase
-          .from('loopedin_event_media')
-          .select('storage_path')
-          .eq('id', mediaId)
+        const { data: claimed, error: claimError } = await supabase
+          .rpc('loopedin_claim_media_deletion', { target_media_id: mediaId })
           .single();
-        throwIfError(error);
+        if (claimError || !claimed) throw new Error(claimError?.message ?? 'The photo was not found or you no longer have access.');
+        const claimedMedia = claimed as MediaRow;
 
-        const { error: deleteError } = await supabase.from('loopedin_event_media').delete().eq('id', mediaId);
-        throwIfError(deleteError);
+        const { error: storageError } = await supabase.storage.from(mediaBucket).remove([claimedMedia.storage_path]);
+        if (storageError) throw new Error(`The private photo remains in a retryable deletion state. ${storageError.message}`);
 
-        if (data?.storage_path) {
-          const { error: storageError } = await supabase.storage.from(mediaBucket).remove([data.storage_path]);
-          throwIfError(storageError);
-        }
+        const { data: finalized, error: finalizeError } = await supabase
+          .rpc('loopedin_finalize_media_deletion', { target_media_id: mediaId });
+        if (finalizeError || finalized !== true) throw new Error(`The private file is gone, but cleanup remains retryable. ${finalizeError?.message ?? ''}`.trim());
       },
     },
     notifications: {
