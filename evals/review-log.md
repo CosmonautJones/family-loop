@@ -1,5 +1,16 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-DATA-002 targeted RED correction
+
+- Commit reviewed: `5d10bc1`, following the immutable closeout record `79a72bb`.
+- Correctness repairs: deterministic seed events use unique stable IDs; the mock adapter explicitly sorts group event results by `startsAt`; Home preserves the next-event hero and exposes every later upcoming event in chronological order with its own exact-ID action; the August 3 draft weekday is corrected to Monday.
+- Automated verification: root `npm test` PASS (15/15); app `npm test` PASS (9/9); app `npx tsc --noEmit` PASS; harness PASS; `git diff --check` PASS. App lint passes but remains the pre-existing placeholder command.
+- Mock phone smoke: PASS in Chrome DevTools at 390x844. Default Create opened the created event's exact detail; Home showed that event under `Also coming up`; its `Open` action returned to the same detail; RSVP showed `1 going` and `Going`; Calendar showed two unique shared plans.
+- Console: no duplicate-key errors. The only observed message was the pre-existing React Native Web shadow-style deprecation warning.
+- Configured-boundary smoke: PASS at 390x844 with non-secret placeholder configuration. Only signed-out authentication UI appeared; protected shell and mock event content were absent.
+- Scope: no dependency, Auth, schema, migration, remote, environment, deployment, or later-mission work was absorbed.
+- Gate: PASS. The correction closes the targeted identity, ordering, Home discoverability, and date-label findings.
+
 ## 2026-07-13 — FAMILY-LOOP-DATA-002 Wave 3 final review
 
 - Architecture: Home and Calendar read active-group events through Query; Create uses the event mutation; Event Detail loads the exact event ID and its RSVPs; RSVP changes use the service mutation. Zustand no longer mirrors durable RSVP or event records.

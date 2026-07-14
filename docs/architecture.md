@@ -15,11 +15,13 @@ LoopedIn is currently an Expo and React Native mobile prototype. The event is th
 ## Data flow and state
 
 - `app/src/features/**/fixtures.ts` still supplies deterministic prototype content for non-migrated surfaces such as memories and groups.
-- `app/src/app/selectors.ts` converts supplied domain records into screen-ready view models. Home and Calendar receive Query-owned events; Event Detail receives the event and RSVPs loaded for its stable ID. Honest empty and not-found states do not substitute fixture events.
+- `app/src/app/selectors.ts` converts supplied domain records into screen-ready view models. Home sorts Query-owned events chronologically, keeps the next event as its hero, and projects every later upcoming event into an exact-ID list; Calendar receives the same event records. Event Detail receives the event and RSVPs loaded for its stable ID. Honest empty and not-found states do not substitute fixture events.
 - `app/src/app/queries.ts` defines stable group, event-list, event-detail, and RSVP keys plus event-create and RSVP-upsert mutations. Successful creation seeds the detail cache and invalidates the affected group's event list; RSVP success invalidates that event's RSVP list.
 - `app/src/store/useLoopedInStore.ts` owns active-group selection and transient interaction state such as staged-photo counts and reminder drafts. It no longer mirrors RSVP state or durable event drafts.
 
 The event coordination loop is Query-owned in both configured and unconfigured modes. The unconfigured adapter remains deterministic and mutable for the life of its process; that is not evidence of device- or process-restart durability.
+
+Mock seed events use unique stable IDs, and the mock adapter explicitly sorts group event reads by start time rather than relying on insertion order. This keeps Home, Calendar, and Event Detail identity-consistent as new events are created during a running process.
 
 ## Adopted data and session boundary
 

@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-DATA-002`
 
-Status: Complete (`fd08450`).
+Status: Complete (`79a72bb` closeout; `5d10bc1` targeted RED correction).
 
 ## Mission
 
@@ -194,6 +194,12 @@ The Sergeant alone may authorize an AMBER interpretation, return a wave for corr
 - Create mutation success followed by refetch failure must remain a visible error, not be concealed by optimistic fixture state.
 - Event thread, media, reminders/notifications, and derived memories remain M3-M6 in that order and must build on the event IDs established here.
 - Invitations and no-group onboarding remain separately authorized work.
+
+## Post-closeout targeted correction
+
+Commit `5d10bc1` corrected the final M2 phone-path findings without expanding the mission: seeded events now have unique stable IDs, the mock adapter explicitly sorts event results chronologically, Home preserves the next-event hero while listing every later upcoming event with an exact-ID open action, and the August 3 draft label now correctly reads Monday. This follows the immutable closeout record in `79a72bb`; it does not rewrite or replace that historical commit.
+
+The corrected verification baseline is root tests 15/15, app tests 9/9, TypeScript PASS, harness PASS, and `git diff --check` PASS. Lint passes only through the pre-existing placeholder command. At 390x844, the default mock flow opened the created event's exact detail, showed it under Home's `Also coming up`, reopened that same detail through its list action, persisted RSVP as `1 going` / `Going`, and showed two unique Calendar plans. The console had no duplicate-key errors; only the pre-existing shadow deprecation warning remained. The configured placeholder path showed only signed-out authentication UI.
 
 ## Definition of done
 

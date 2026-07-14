@@ -8,10 +8,10 @@ Move finished missions here with a short summary.
 Moved Home and Calendar event lists, Create Event, same-ID Event Detail, and RSVP state onto the existing service and TanStack Query boundary. Unconfigured development uses the same path through a deterministic process-local mock adapter; configured failures do not fall back to fixtures.
 
 ### Result
-Root tests pass 12/12, app tests pass 6/6, TypeScript and harness pass, the lint command passes but remains a placeholder, and `git diff --check` passes. Chrome DevTools at 390x844 proved Create -> exact-ID detail -> RSVP -> Calendar in unconfigured mock mode. The smoke exposed a hidden mounted Create screen; a scoped shell guard and regression test fixed it, and the clean rerun showed only Event Detail. A hard reload reset the process-local mock to seeded Home, as designed; no device-restart durability is claimed. The configured placeholder smoke showed only the signed-out gate with protected content absent. Live Supabase CRUD is `NOT RUN — ENV unavailable`.
+After the targeted RED correction, root tests pass 15/15, app tests pass 9/9, TypeScript, harness, and `git diff --check` pass; the lint command passes but remains a placeholder. Chrome DevTools at 390x844 proved Create -> exact-ID detail -> Home `Also coming up` exact-ID reopen -> RSVP (`1 going` / `Going`) -> Calendar with two unique plans in unconfigured mock mode. Seed IDs are unique and stable, adapter results are explicitly chronological, and Home retains the next-event hero while exposing all later events. The console showed no duplicate-key errors; only the pre-existing shadow deprecation warning remained. A hard reload resets the process-local mock, as designed, so no device-restart durability is claimed. The configured placeholder smoke showed only the signed-out gate with protected content absent. Live Supabase CRUD is `NOT RUN — ENV unavailable`.
 
 ### Links / commits
-Wave 1 contract: `d003aa9`; Wave 2 UI: `78923ae`; runnable-boundary repair: `c31397d`; Wave 3 closeout: `fd08450`.
+Wave 1 contract: `d003aa9`; Wave 2 UI: `78923ae`; runnable-boundary repair: `c31397d`; Wave 3 closeout: `fd08450`; immutable completion record: `79a72bb`; targeted RED correction: `5d10bc1`.
 
 ## 2026-07-13 - Persistent data M1 session gate
 
