@@ -113,9 +113,16 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       listRecentActivity: () => wait([...db.activity]),
     },
     thread: {
-      listMessages: (eventId) => wait(db.messages.filter((message) => message.eventId === eventId)),
+      listMessages: (eventId) => wait(db.messages
+        .filter((message) => message.eventId === eventId)
+        .sort((left, right) => {
+          const timeOrder = Date.parse(left.createdAt) - Date.parse(right.createdAt);
+          return timeOrder || left.id.localeCompare(right.id);
+        })),
       sendMessage: (eventId, body) => {
-        const message = { id: `message-created-${nextMessageId++}`, eventId, body, authorName: 'You', self: true, createdAt: new Date().toISOString() };
+        const trimmedBody = body.trim();
+        if (!trimmedBody) return Promise.reject(new Error('Write a message before sending.'));
+        const message = { id: `message-created-${nextMessageId++}`, eventId, body: trimmedBody, authorName: mockSession.displayName, self: true, createdAt: new Date().toISOString() };
         db.messages.push(message);
         return wait(message);
       },

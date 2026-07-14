@@ -9,6 +9,7 @@ export const queryKeys = {
   events: (groupId: string) => ['events', groupId] as const,
   event: (eventId: string) => ['event', eventId] as const,
   rsvps: (eventId: string) => ['rsvps', eventId] as const,
+  messages: (eventId: string) => ['messages', eventId] as const,
 };
 
 export function useActiveGroupQuery() {
@@ -50,6 +51,23 @@ export function useEventRsvpsQuery(eventId: string) {
     queryKey: queryKeys.rsvps(eventId),
     queryFn: () => loopedInService.rsvps.listRsvps(eventId),
     enabled: Boolean(eventId),
+  });
+}
+
+export function useEventMessagesQuery(eventId: string) {
+  return useQuery({
+    queryKey: queryKeys.messages(eventId),
+    queryFn: () => loopedInService.thread.listMessages(eventId),
+    enabled: Boolean(eventId),
+  });
+}
+
+export function useSendMessageMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventId, body }: { eventId: string; body: string }) => loopedInService.thread.sendMessage(eventId, body),
+    onSuccess: (message) => queryClient.invalidateQueries({ queryKey: queryKeys.messages(message.eventId) }),
   });
 }
 

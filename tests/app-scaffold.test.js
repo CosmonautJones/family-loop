@@ -165,6 +165,38 @@ test('mock service orders mixed-offset events by instant regardless of insertion
   assert.deepEqual(events.map((event) => event.title), ['Earlier instant', 'Later instant']);
 });
 
+test('mock thread is event-scoped, rejects blank sends, persists identity, and orders by instant with stable ties', async () => {
+  const { mockAdapter, mockData } = loadCompiledModules();
+  const seed = mockData.createEmptyMockDatabase();
+  seed.messages.push(
+    { id: 'message-z', eventId: 'event-a', body: 'Same instant z', authorName: 'Maya', self: false, createdAt: '2026-08-01T10:00:00-05:00' },
+    { id: 'message-b', eventId: 'event-b', body: 'Other event', authorName: 'Mia', self: false, createdAt: '2026-08-01T14:00:00Z' },
+    { id: 'message-a', eventId: 'event-a', body: 'Earlier', authorName: 'Mia', self: false, createdAt: '2026-08-01T14:30:00Z' },
+    { id: 'message-y', eventId: 'event-a', body: 'Same instant y', authorName: 'Maya', self: false, createdAt: '2026-08-01T15:00:00Z' },
+  );
+  const service = mockAdapter.createMockLoopedInService(seed);
+
+  await assert.rejects(service.thread.sendMessage('event-a', '   '), /write a message/i);
+  const sent = await service.thread.sendMessage('event-a', '  We will bring ice  ');
+  assert.equal(sent.body, 'We will bring ice');
+  assert.equal(sent.authorName, 'You');
+  assert.equal(sent.self, true);
+
+  const eventA = await service.thread.listMessages('event-a');
+  assert.deepEqual(eventA.filter((message) => message.id !== sent.id).map((message) => message.id), ['message-a', 'message-y', 'message-z']);
+  assert.equal(eventA.find((message) => message.id === sent.id)?.body, 'We will bring ice');
+  assert.ok(eventA.every((message) => message.eventId === 'event-a'));
+  assert.deepEqual((await service.thread.listMessages('event-b')).map((message) => message.id), ['message-b']);
+});
+
+test('thread Query contract is event-keyed and invalidates after send', () => {
+  const queries = read('src/app/queries.ts');
+  assert.match(queries, /messages: \(eventId: string\) => \['messages', eventId\]/);
+  assert.match(queries, /useEventMessagesQuery/);
+  assert.match(queries, /useSendMessageMutation/);
+  assert.match(queries, /invalidateQueries\(\{ queryKey: queryKeys\.messages\(message\.eventId\) \}\)/);
+});
+
 test('zero-event selectors stay honest and unknown detail is explicit', () => {
   const { selectors } = loadCompiledModules();
   const home = selectors.selectHomeViewModel({ events: [], activity: [], memories: [] });

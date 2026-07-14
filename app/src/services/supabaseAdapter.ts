@@ -473,7 +473,8 @@ export function createSupabaseLoopedInService(): LoopedInService {
           .from('loopedin_event_messages')
           .select('id, event_id, author_id, body, created_at')
           .eq('event_id', eventId)
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: true })
+          .order('id', { ascending: true });
         throwIfError(error);
 
         const messages = (data ?? []) as MessageRow[];
@@ -481,10 +482,12 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return messages.map((message) => mapMessage(message, profiles.get(message.author_id), message.author_id === userId));
       },
       async sendMessage(eventId, body) {
+        const trimmedBody = body.trim();
+        if (!trimmedBody) throw new Error('Write a message before sending.');
         const userId = await getCurrentUserId();
         const { data, error } = await supabase
           .from('loopedin_event_messages')
-          .insert({ event_id: eventId, author_id: userId, body })
+          .insert({ event_id: eventId, author_id: userId, body: trimmedBody })
           .select('id, event_id, author_id, body, created_at')
           .single();
         throwIfError(error);
