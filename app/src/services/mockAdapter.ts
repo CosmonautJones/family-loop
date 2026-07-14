@@ -236,6 +236,7 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
       },
     },
     thread: {
+      subscribeMessages: () => () => undefined,
       listMessages: async (eventId) => {
         const { profile } = requireEventMembership(eventId);
         return wait(db.messages

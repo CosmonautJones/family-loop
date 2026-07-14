@@ -195,6 +195,9 @@
 ## M3 event thread
 
 - [x] Messages remain isolated by exact event ID.
+- [x] One open configured thread subscribes only to its exact event; server refetch remains authoritative and duplicate-free.
+- [x] Separate member sessions receive one live comment without reload; an unrelated event and outsider receive none.
+- [x] Successful resubscription refetches a missed comment once; route/event/session cleanup removes the channel and late callbacks are inert.
 - [x] Blank sends are rejected and successful sends refetch only the selected event thread.
 - [x] Event Detail has loading/error/empty/populated thread states without fixture fallback.
 - [x] Pending send is disabled; failure retains the draft; success clears it.

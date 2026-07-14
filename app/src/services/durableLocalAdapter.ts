@@ -162,6 +162,7 @@ export function createDurableLocalLoopedInService(
   const section = <K extends keyof LoopedInService>(name: K): LoopedInService[K] => new Proxy({} as LoopedInService[K], {
     get: (_target, property) => {
       if (name === 'auth' && property === 'onAuthStateChange') return () => () => undefined;
+      if (name === 'thread' && property === 'subscribeMessages') return () => () => undefined;
       return (...args: unknown[]) => {
         const propertyName = String(property);
         const invocationActor = createMemoryActorSessionStore(actorSession.getActorId());

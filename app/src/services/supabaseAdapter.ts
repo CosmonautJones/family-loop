@@ -21,6 +21,7 @@ import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
 import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
 import { backendServiceError, userServiceError, withSafeServiceErrors } from './serviceErrors';
+import { subscribeToEventMessages } from './messageSubscription';
 
 type GroupRow = {
   id: string;
@@ -757,6 +758,9 @@ export function createSupabaseLoopedInService(): LoopedInService {
       },
     },
     thread: {
+      subscribeMessages(eventId, onChange, onStatus) {
+        return subscribeToEventMessages(supabase, eventId, onChange, onStatus);
+      },
       async listMessages(eventId) {
         const userId = await getCurrentUserId();
         const { data, error } = await supabase

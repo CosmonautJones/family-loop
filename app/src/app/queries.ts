@@ -1,4 +1,5 @@
 import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
 import { invitationFlowId } from '../features/auth/invitationRoute';
 import { loopedInService } from '../services';
@@ -229,11 +230,21 @@ export function useEventRsvpsQuery(eventId: string) {
 }
 
 export function useEventMessagesQuery(eventId: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: queryKeys.messages(eventId),
     queryFn: () => loopedInService.thread.listMessages(eventId),
     enabled: Boolean(eventId),
   });
+
+  useEffect(() => {
+    if (!eventId) return;
+    return loopedInService.thread.subscribeMessages(eventId, () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.messages(eventId), exact: true });
+    });
+  }, [eventId, queryClient]);
+
+  return query;
 }
 
 export function useEventMediaQuery(eventId: string) {

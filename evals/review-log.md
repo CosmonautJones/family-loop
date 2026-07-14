@@ -388,3 +388,14 @@
 - Final gates: app-local PASS 64/64; root PASS 86/86; focused recovery service and configured-browser E2E PASS; substantive lint PASS with zero warnings; TypeScript PASS; configured local Expo export PASS; harness PASS; secret scan PASS across 186 repository files; and diff check PASS with line-ending notices only.
 - The read-only populated-scenario verifier retained 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media rows, 38 notifications, 3 Storage objects, and zero outsider residue. Recovery auth residue, Mailpit message residue, and the temporary port 8086 listener each returned zero after cleanup.
 - Local verdict: **GREEN** for OPORD 003's implementable slice. Hosted mail/redirects/rate limits, physical browsers/assistive technology, and production operations remain `NOT RUN`.
+
+## 2026-07-14 — OPORD 008 local event realtime convergence
+
+- Added one synchronous `ThreadApi.subscribeMessages(eventId, onChange, onStatus)` contract. Supabase creates one `postgres_changes` channel filtered to `loopedin_event_messages.event_id`; memory and durable-local implementations are truthful no-ops.
+- Query owns reconciliation: change and `SUBSCRIBED` callbacks invalidate only `queryKeys.messages(eventId)` with `exact: true`. No payload is inserted into cache, so stable-ID ordered server history remains authoritative and duplicate-free.
+- Deterministic tests prove the exact filter, connected/reconnecting status mapping, one convergence callback per subscribe/change, idempotent `removeChannel`, and inert callbacks after teardown.
+- The two-client loopback RLS harness passed: Maya received Event A once, unrelated Event B and outsider received zero, resubscription converged exactly two stable-ID rows, and client channel lists returned zero after cleanup.
+- Three isolated configured-app Chrome profiles passed the rendered proof. Owner UI Send appeared once for Maya without reload; Event B and a switched route stayed isolated; stopping only `supabase_realtime_family-loop` created a genuine missed comment, restart/resubscribe recovered it once; outsider received nothing.
+- Both harnesses delete disposable events in `finally`; event cascade removed their comments/notifications. The retained verifier returned the original 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 3 Storage objects, and zero outsider residue. After browser shutdown, `realtime.subscription` was zero and the Realtime container was healthy.
+- Final gates: root PASS 87/87 (including the 65 app-scaffold tests); substantive lint and TypeScript PASS; Expo web export, harness, secret scan across 190 files, four-migration integrity, database lint, local family lifecycle, local media lifecycle, both realtime harnesses, populated-scenario verification, and diff check PASS.
+- Local verdict: **GREEN**. Hosted Realtime/RLS, physical Safari/Chrome, assistive technology, long-outage behavior, and human usability remain `NOT RUN`.

@@ -35,6 +35,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/features/auth/invitationRoute.ts'),
     path.join(appRoot, 'src/features/auth/invitationDraft.ts'),
     path.join(appRoot, 'src/services/serviceErrors.ts'),
+    path.join(appRoot, 'src/services/messageSubscription.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -53,6 +54,7 @@ function loadCompiledModules() {
     invitationRoute: require(path.join(outDir, 'features/auth/invitationRoute.js')),
     invitationDraft: require(path.join(outDir, 'features/auth/invitationDraft.js')),
     serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
+    messageSubscription: require(path.join(outDir, 'services/messageSubscription.js')),
   };
 }
 
@@ -1719,4 +1721,65 @@ test('representative family capacity preserves exact event identity and stays wi
   const durableElapsedMs = performance.now() - durableStartedAt;
 
   t.diagnostic(`representative volume: 20 members, 100 events, 100 comments, 50 media; parallel reads ${serviceElapsedMs.toFixed(1)}ms; selectors ${selectorElapsedMs.toFixed(1)}ms; durable reconstruction ${durableElapsedMs.toFixed(1)}ms`);
+});
+
+test('event message subscription is exact-key, reconnecting, and inert after cleanup', async () => {
+  const { messageSubscription } = loadCompiledModules();
+  const records = { name: '', filter: null, change: null, status: null, removed: [] };
+  const channel = {
+    on(type, filter, callback) {
+      assert.equal(type, 'postgres_changes');
+      records.filter = filter;
+      records.change = callback;
+      return this;
+    },
+    subscribe(callback) {
+      records.status = callback;
+      return this;
+    },
+  };
+  const client = {
+    channel(name) {
+      records.name = name;
+      return channel;
+    },
+    async removeChannel(removed) {
+      records.removed.push(removed);
+    },
+  };
+  let changes = 0;
+  const statuses = [];
+  const unsubscribe = messageSubscription.subscribeToEventMessages(
+    client,
+    'event-a',
+    () => { changes += 1; },
+    (status) => statuses.push(status),
+  );
+
+  assert.equal(records.name, 'event-messages:event-a');
+  assert.deepEqual(records.filter, {
+    event: '*',
+    schema: 'public',
+    table: 'loopedin_event_messages',
+    filter: 'event_id=eq.event-a',
+  });
+  records.status('SUBSCRIBED');
+  assert.equal(changes, 1, 'initial subscription reconciles server history');
+  records.change();
+  assert.equal(changes, 2, 'one matching database event requests one reconciliation');
+  records.status('CHANNEL_ERROR');
+  records.status('TIMED_OUT');
+  records.status('CLOSED');
+  records.status('SUBSCRIBED');
+  assert.equal(changes, 3, 'reconnect reconciles missed server history once');
+  assert.deepEqual(statuses, ['connected', 'reconnecting', 'reconnecting', 'reconnecting', 'connected']);
+
+  unsubscribe();
+  unsubscribe();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(records.removed, [channel], 'cleanup removes the channel once');
+  records.change();
+  records.status('SUBSCRIBED');
+  assert.equal(changes, 3, 'late callbacks cannot update an unmounted or switched event');
+  assert.equal(statuses.length, 5);
 });

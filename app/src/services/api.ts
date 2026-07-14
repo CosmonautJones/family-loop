@@ -132,7 +132,10 @@ export interface ActivityApi {
 export interface ThreadApi {
   listMessages(eventId: string): Promise<EventMessage[]>;
   sendMessage(eventId: string, body: string): Promise<EventMessage>;
+  subscribeMessages(eventId: string, onChange: () => void, onStatus?: (status: ThreadSubscriptionStatus) => void): () => void;
 }
+
+export type ThreadSubscriptionStatus = 'connected' | 'reconnecting';
 
 export interface MediaUploadPayload {
   eventId: string;

@@ -22,7 +22,11 @@ function createUnavailableSupabaseService(): LoopedInService {
     },
     groups: unavailable as LoopedInService['groups'], events: unavailable as LoopedInService['events'],
     rsvps: unavailable as LoopedInService['rsvps'], activity: unavailable as LoopedInService['activity'],
-    thread: unavailable as LoopedInService['thread'], media: unavailable as LoopedInService['media'],
+    thread: {
+      listMessages: () => Promise.reject(error),
+      sendMessage: () => Promise.reject(error),
+      subscribeMessages: () => () => undefined,
+    }, media: unavailable as LoopedInService['media'],
     notifications: unavailable as LoopedInService['notifications'],
   };
 }
