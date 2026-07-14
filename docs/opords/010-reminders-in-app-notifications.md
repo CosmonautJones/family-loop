@@ -1,10 +1,10 @@
 # OPORD 010 — Reminders and In-App Notifications
 
 ## Status
-Planned as M5 after M2 and after any M3/M4 activity it surfaces; push delivery is excluded.
+PARTIAL — recipient-scoped in-app updates are implemented and locally proven; the stated persisted reminder-preference slice is not implemented. Push/email/SMS remain excluded.
 
 ## Situation and evidence
-Event Detail currently toggles transient reminder drafts and explicitly says push is not wired (`app/src/screens/EventDetailScreen.tsx:93-100`; `docs/architecture.md:20`). Notification list/read contracts and adapters exist (`app/src/services/api.ts:103-119`; `app/src/services/supabaseAdapter.ts:549-563`), but are not evidence of live behavior. M5 calls for persisted reminder preferences and useful in-app updates (`tasks/backlog.md:12`).
+Dead transient reminder controls/state were removed because no reminder scheduling service exists. Commit `c612a75` adds privacy-safe database-generated per-recipient updates for event, RSVP, comment, and media activity. Configured browser sessions proved separate unread counts, exact-event navigation, mark-all-read, and reload persistence.
 
 ## Mission/objective
 Persist a simple per-user event reminder preference and provide a truthful in-app notification list/read loop tied back to exact events, refreshed on visit and browser-tab resume.
@@ -40,6 +40,15 @@ State reminder timing in plain, concrete words (“Morning of event”), expose 
 - Notifications load chronologically, unread state persists after refetch, and event-linked items open the exact event.
 - Errors do not clear state or substitute fixtures.
 - No UI implies push delivery.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Reminder preference survives refetch and is user/event isolated | NOT IMPLEMENTED | Reminder UI/state was deliberately removed rather than claim unsupported delivery. |
+| Chronological notifications, persisted unread, exact-event links | COMPLETE LOCALLY | `c612a75`; recipient-count E2E and configured browser mark/read/navigation proof. |
+| Errors preserve state and never substitute fixtures | COMPLETE LOCALLY | Query/error contracts and configured boundary tests. |
+| No push implication | COMPLETE | Copy and architecture explicitly scope the feature to in-app updates. |
 
 ## Validation commands/evidence
 ### Always-local

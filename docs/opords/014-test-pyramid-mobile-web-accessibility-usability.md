@@ -1,10 +1,10 @@
 # OPORD 014 — Test Pyramid, Mobile-Web Accessibility, and Usability
 
 ## Status
-Planned quality mission. Structural tests and a 390x844 Chrome smoke exist; the complete browser and human matrix has not run.
+PARTIAL/CONDITIONAL — layered automated, database, configured-browser, responsive-width, keyboard, and Lighthouse gates pass; physical devices, screen readers, practical 200% zoom, reduced motion, and moderated-human usability remain `NOT RUN`.
 
 ## Situation and evidence
-Current checks are Node tests, TypeScript, harness, and a 390x844 Chrome smoke (`evals/review-log.md:8-10`). The app test script points to the shared structural test file and lint is a placeholder (`app/package.json:11-12`). The product is an Expo/React Native Web app with phone browsers primary: iOS Safari and Android Chrome. Desktop browsers are secondary. Native binaries, app-store release, and EAS are future non-goals.
+At commit `88d0ed9`, root tests pass 70/70, app tests 58/58, TypeScript, Expo export, harness, database lint, family/media E2E, and the read-only populated-scenario verifier pass. Configured Chrome covered four isolated sessions, Back/deep-link/reload, actual file input, 320/390/430 CSS pixels, keyboard/landmarks, and Lighthouse Accessibility/Best Practices 100. Lint remains a placeholder. Physical browsers/assistive technology/human gates remain open.
 
 ## Mission/objective
 Establish the smallest credible layered quality gate for pure logic, server/database contracts, rendered responsive-web behavior, browser navigation, accessibility, and representative older-adult usability.
@@ -41,6 +41,16 @@ Test readable text, contrast, plain labels, 48x48 CSS-pixel targets, visible foc
 - Browser Back/history, deep links, reload, and virtual-keyboard flows preserve identity, intent, and recovery.
 - Essential actions remain operable with touch, keyboard, visible focus, 200% zoom/reflow, screen readers, and reduced motion; none depends on hover.
 - A secondary desktop regression passes. Human findings are anonymized and claims do not exceed the sample.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Every core-loop risk has an owned evidence layer | COMPLETE | Tests, local Supabase scripts, runbooks, regression checklist, and this OPORD matrix. |
+| Automated 320/390/430 plus physical Safari/Chrome | PARTIAL/CONDITIONAL | Configured Chrome widths pass; physical iOS Safari/Android Chrome are `NOT RUN`. |
+| Back/history, deep links, reload, virtual keyboard | PARTIAL | Back/deep-link/reload pass; a complete virtual-keyboard matrix on physical devices is `NOT RUN`. |
+| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | PARTIAL | >=48px touch, sequential keyboard, landmarks, and no-hover essentials pass; practical 200%, VoiceOver/TalkBack, and reduced motion are `NOT RUN`. |
+| Desktop regression and anonymized human findings | PARTIAL | Desktop/local export smokes pass; no moderated-human sample exists. |
 
 ## Validation commands/evidence
 ### Always-local

@@ -1,10 +1,10 @@
 # OPORD 012 — Resilience, Offline, Performance, and Capacity
 
 ## Status
-Planned hardening mission after the M1–M6 core loop; detailed targets below are inference pending measured baselines.
+PARTIAL — reload/server-restart durability, mutation recovery contracts, and responsive Chrome evidence exist; agreed performance budgets, representative capacity, throttled-network, reduced-motion, and physical-device gates remain open.
 
 ## Situation and evidence
-The unconfigured adapter is process-local and not reload durability (`docs/architecture.md:22`). Query owns migrated server state, but browser cache/storage behavior across reloads, tabs, private browsing, and storage eviction is undocumented. No offline mutation queue or capacity evidence exists; mobile-browser/human tests have not run.
+Default local mode uses a versioned AsyncStorage/browser-storage envelope with revisioned mutation coordination; hard reload and development-server restart durability passed. Configured loopback Supabase also persisted the full browser scenario across reloads. A cold disconnected reload still fails by design because no service worker/PWA shell exists. No offline write queue, representative capacity baseline, or physical/mobile-human performance evidence exists.
 
 ## Mission/objective
 Measure and harden the event loop for common disconnects, retries, large-but-realistic families, and slow phones/networks without creating a speculative synchronization platform.
@@ -40,6 +40,15 @@ Slow/offline states must preserve readable, plain-language event context, never 
 - Offline/slow states are explicit; failed writes retain user input and do not duplicate on retry.
 - Event identity and ordering remain correct under reconnect and larger fixtures.
 - Measurements demonstrate budget compliance without new dependencies or remote load.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Budgets and representative volumes recorded before optimization | NOT RUN | Lighthouse snapshots exist, but no agreed cold-open/list/mutation budgets or representative volume matrix. |
+| Explicit slow/offline states; input retention; retry dedupe | PARTIAL | Draft-retention/idempotency tests pass; cold offline reload is explicitly unsupported; throttled/offline mutation journey not fully run. |
+| Identity/order after reconnect and larger fixtures | PARTIAL | Reload/server-restart and configured multi-session identity pass; reconnect and representative larger-volume test are absent. |
+| Measured budget compliance | NOT RUN | Lighthouse Accessibility/Best Practices are not performance-capacity acceptance evidence. |
 
 ## Validation commands/evidence
 ### Always-local

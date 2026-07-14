@@ -2,12 +2,12 @@
 
 ## Status
 
-RED PENDING APPROVAL — static review may proceed; migration, RLS, index, and remote operations require a separate authorized database mission.
+PARTIAL/CONDITIONAL — forward migrations, lifecycle constraints, and loopback RLS/direct-ID matrices pass; representative-volume query-plan/index evidence and hosted migration state remain `NOT RUN`.
 
 ## Situation and evidence
 
 - The configured adapter already references group-scoped events, RSVPs, event messages, media, and notifications (`docs/architecture.md:50-56`).
-- Repository migration/RLS/bucket definitions are intended infrastructure, not live proof; Docker and verified remote deployment are absent (`docs/architecture.md:57-61`).
+- Four forward migrations apply cleanly to loopback Supabase. Database lint and real Auth-session owner/member/outsider family/media matrices pass; hosted deployment remains absent.
 - Event messages are exact-event scoped and deterministic in local contract tests (`docs/architecture.md:41-46`; `evals/review-log.md:3-12`).
 - The product boundary requires private group context (`docs/architecture.md:57-61`).
 - Inference: lifecycle cascades, uniqueness, query indexes, and policy coverage must be verified against actual repository SQL and query shapes before proposing additive changes.
@@ -59,6 +59,16 @@ Database failures must preserve truthful, recoverable UI: never substitute stale
 - Two-user tests cover same-group and different-group cases for every changed policy.
 - Each added index maps to a real filter/order/join and improves or protects an evidenced plan; redundant indexes are rejected.
 - Migration applies cleanly from the supported baseline and does not modify historical migrations.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| FK/uniqueness lifecycle integrity | COMPLETE LOCALLY | Family and media migrations plus lifecycle E2E; event deletion is restricted while media operations exist. |
+| RLS denies unauthenticated/nonmember direct IDs | COMPLETE LOCALLY | `scripts/test-local-supabase-family.ps1` and media matrix; configured outsider browser route. |
+| Same/different-group tests for changed policies | COMPLETE LOCALLY | Four real Auth sessions cover owner/member/invitee/outsider. |
+| Every added index maps to measured query plan | NOT RUN | No representative-volume before/after plan record; do not infer from schema. |
+| Clean forward apply; history unchanged | COMPLETE LOCALLY | Local reset/apply and database lint pass; migrations are additive. |
 
 ## Validation commands/evidence
 

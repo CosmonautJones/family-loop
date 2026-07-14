@@ -2,14 +2,14 @@
 
 ## Status
 
-PLANNED — audit first; remediation requires a separately approved file manifest.
+PARTIAL/CONDITIONAL — local keyboard, landmark, target-size, responsive-width, form-metadata, and automated accessibility gates pass; required assistive-technology, zoom, reduced-motion, and human gates remain open.
 
 ## Situation and evidence
 
 - The taste bar requires phone-first, readable, thumb-friendly actions (`docs/taste-bar.md:11-21`).
 - The bottom navigation has labels and 58-point minimum height (`app/src/navigation/AppShell.tsx:63-77,114-121`), and Calendar event rows expose button roles/labels (`app/src/screens/CalendarScreen.tsx:45-50`).
 - Home typography includes 38/40 hero text and 14/20 supporting copy (`app/src/screens/HomeScreen.tsx:124-159`), but repository evidence does not establish contrast ratios, 200% zoom/reflow, screen-reader order, reduced motion, virtual-keyboard behavior, or mobile-browser accessibility.
-- Real-phone Safari/Chrome and human accessibility tests have not been run. Inference: shared components and tokens are the narrowest leverage point, but only defects proven by audit are authorized for remediation.
+- Configured Chrome at 320/390/430 CSS pixels has no horizontal overflow; the 320 views expose one main, one primary heading, and no visible control under 48×48 CSS pixels. Lighthouse Accessibility scored 100. Physical Safari/Chrome, VoiceOver/TalkBack, practical 200% zoom, reduced motion, and moderated-human tests remain `NOT RUN`.
 
 ## Mission/objective
 
@@ -59,6 +59,16 @@ Use plain labels, minimum 48x48 CSS-pixel interactive targets, strong contrast, 
 - 200% text sizing does not block the core action or hide critical content on supported phone targets.
 - Measured text/control contrast meets the declared WCAG AA baseline.
 - No regression to exact-event identity, auth gating, or event/thread behavior.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Accessible names, roles, states, and targets | COMPLETE LOCALLY | Wave 5 keyboard/landmark review; 320px target audit; stable form metadata in `8703582`. |
+| Non-color-only RSVP/pending/error/auth/loading states | COMPLETE LOCALLY | Source tests, live browser states, and Lighthouse Accessibility 100. |
+| 200% text sizing preserves core action | NOT RUN | A CSS `zoom` experiment was rejected as invalid evidence; practical browser 200% zoom/reflow was not run. |
+| Declared WCAG AA contrast baseline | PARTIAL | Lighthouse automated checks pass; a complete measured contrast worksheet and physical-browser audit were not run. |
+| Exact-event/auth/thread regressions | COMPLETE | Root 70/70, app 58/58, TypeScript, Expo export, and configured browser scenario pass at `88d0ed9`. |
 
 ## Validation commands/evidence
 

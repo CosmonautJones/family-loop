@@ -2,14 +2,14 @@
 
 ## Status
 
-AMBER — existing sign-in/session gate is implemented; recovery implementation is not authorized until product/security decisions and a safe environment are approved.
+PARTIAL/CONDITIONAL — invite-first signup/sign-in, session restore/logout, and protected-content gating are implemented and locally proven; password recovery/reset and production email delivery are not implemented or tested.
 
 ## Situation and evidence
 
 - Configured builds restore Supabase sessions and gate protected content; unconfigured builds enter deterministic prototype mode (`docs/architecture.md:31-40`).
 - The shell explicitly handles restoring, signed-out/error, group loading/error, and no-group states (`app/src/navigation/AppShell.tsx:29-41`).
-- M1 evidence passed configured signed-out phone smoke, while live auth was `NOT RUN — ENV unavailable` (`evals/review-log.md:50-65`).
-- Auth expansion and credentials are currently forbidden by project policy/current mission. Account recovery behavior, redirect targets, email delivery, rate limits, and production configuration are therefore unverified.
+- Loopback Supabase browser sessions proved invite-bound signup for Maya and Jordan, owner and outsider sign-in, session restoration, reload persistence, and protected direct-route denial.
+- Account recovery/reset, production email delivery, hosted redirect origins, and provider rate limits remain unimplemented or unverified.
 
 ## Mission/objective
 
@@ -64,6 +64,18 @@ Use explicit “Accept invitation,” “Create account,” “Sign in,” and �
 - Session restore/logout are deterministic; profile bootstrap is accessible, retryable, idempotent, and limited to required display identity.
 - Protected content remains unavailable before valid authentication.
 - Existing session restore, sign-in, sign-out, group gates, and unconfigured mock mode regressions pass.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Valid intended invitation gates signup and preserves context | COMPLETE LOCALLY | `3ebb0a0`, `f04fa77`, `e68d615`; two invitees completed browser signup/acceptance. |
+| Enumeration-safe signup/sign-in/recovery responses | PARTIAL | Invite matching uses neutral responses; recovery flow does not exist. |
+| Approved reset link replaces password | NOT IMPLEMENTED / NOT RUN | Requires product/security and email-provider configuration. |
+| Invalid/expired links and network failures recover clearly | COMPLETE for invites / NOT RUN for reset | Invite lifecycle tests cover invalid, wrong-email, expiry, decline/revoke/replay; reset links are absent. |
+| Session restore/logout and minimal profile bootstrap | COMPLETE LOCALLY | Four-session browser reload and invite-signup display-name flow; monotonic auth guards in `3ebb0a0`. |
+| Protected content denied before authentication | COMPLETE | Configured signed-out and outsider direct-route browser evidence. |
+| Existing auth/group/mock regressions | COMPLETE | Root/app suites and configured browser proof at `88d0ed9`. |
 
 ## Validation commands/evidence
 

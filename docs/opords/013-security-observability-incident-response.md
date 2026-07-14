@@ -1,10 +1,10 @@
 # OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
-Planned hardening mission; repository policy definitions exist but remote enforcement and operational response are unverified.
+PARTIAL — loopback authorization/storage attack matrices and privacy-safe error/update behavior are proven; the incident runbook/tabletop, production telemetry, hosted enforcement, and external assessment are `NOT RUN`.
 
 ## Situation and evidence
-RLS is declared for messages, media, notifications, and reminders (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:241-255`), but Docker is unavailable and remote deployment is unverified (`docs/architecture.md:41`; `evals/review-log.md:74`). The configured app gates protected content (`docs/architecture.md:30`). No production telemetry or incident runbook is evidenced; this is an inference from repository inspection.
+Loopback Supabase family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; signed media URLs and update payloads are scoped/private. The configured app gates protected content. No production telemetry, external assessment, or dedicated incident-response runbook/tabletop is evidenced.
 
 ## Mission/objective
 Create a minimal, privacy-preserving verification and response baseline for authorization failures, client errors, and suspected data exposure without deploying monitoring infrastructure.
@@ -40,6 +40,15 @@ Security failures must use calm plain language and readable type, preserve safe 
 - Safe two-user tests prove group/event isolation or remain explicitly blocked/NOT RUN.
 - Runbook assigns severity, owner, evidence preservation, authorization gates, and recovery validation.
 - User-facing auth/data failures remain understandable and non-leaking.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Evidence avoids secrets/tokens/message bodies/signed URLs | PARTIAL/COMPLETE for current harnesses | Local scripts redact credentials and the verifier reports counts/IDs, not signed URLs; no formal exhaustive emitted-log test exists. |
+| Safe two-user group/event isolation | COMPLETE LOCALLY | Four-session family/browser/media RLS matrices and outsider direct-route denial. |
+| Incident severity/owner/preservation/gates/runbook | NOT RUN | No dedicated runbook/tabletop artifact. |
+| Understandable non-leaking user failures | COMPLETE LOCALLY | Neutral invite matching, configured auth/data errors, and browser checks. |
 
 ## Validation commands/evidence
 ### Always-local

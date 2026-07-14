@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted for the M0-M6 campaign; runtime adoption is staged and is not complete at M0.
+Accepted and adopted for the local and configured-Supabase runtime paths. Hosted deployment and operational acceptance remain outside this ADR and are not proven.
 
 ## Context
 
-Rendered screens currently use deterministic fixtures. The repository also contains mock and Supabase adapters, Query hooks, Zustand state, and core schema definitions. Docker is unavailable, and neither a local stack nor remote deployment has been verified.
+The original M0 context was fixture-heavy. The current runtime uses Query-owned service data for authenticated family, invitation, event, RSVP, comment, media, update, and memory paths; Zustand owns active-family UI selection only. Loopback Supabase migrations, Auth, RLS, private Storage, and multi-session browser behavior are verified locally. No hosted deployment is verified.
 
 ## Problem
 
@@ -21,6 +21,7 @@ Incremental persistence could create competing sources of truth or silently show
 5. Zustand owns transient UI state only, not durable events, RSVPs, messages, media, profiles, or memberships.
 6. Migrated surfaces explicitly represent loading, error, empty, and populated states.
 7. Session resolution gates authenticated queries.
+8. Local loopback evidence and hosted/production evidence are reported separately; local success never implies deployment, recovery email, backup, or restore readiness.
 
 ## Alternatives
 
@@ -34,18 +35,18 @@ Incremental persistence could create competing sources of truth or silently show
 - Vertical slices can migrate sequentially with one owner.
 - Failures are truthful and diagnosable, though less polished.
 - Mutations invalidate/update Query rather than durable Zustand mirrors.
-- Existing fixture screens remain until their mission.
+- Deterministic fixtures remain seed/test inputs, not a configured-backend fallback.
 
 ## Assumptions and inferences
 
 - **Assumption:** Existing service/schema code is the intended starting point and may need narrow corrections.
-- **Assumption:** Authenticated RLS with a publishable/anonymous client key is intended; it is not live-verified.
+- **Verified locally:** Authenticated RLS with the publishable/anonymous client key passed owner/member/outsider lifecycle matrices on loopback Supabase. Hosted policy state remains unverified.
 - **Inference:** The event backbone before thread/media/reminder/memory slices is the lowest-risk order.
 - **Inference:** Memories remain event-derived absent a separate durable-memory requirement.
 
 ## Non-decisions
 
-No production project, deployment workflow, secrets process, migration runner, broader Auth UX, onboarding, invitations, navigation library, push delivery system, billing, or standalone memories model is chosen or authorized. This ADR makes no live RLS, realtime, or storage claim.
+This ADR does not choose or authorize a production project, deployment workflow, secrets process, recovery-email configuration, push delivery system, billing, or a standalone memories model. Local RLS/private-Storage evidence is recorded in the review log; realtime subscriptions and every hosted operational claim remain outside the adopted boundary.
 
 ## Validation
 

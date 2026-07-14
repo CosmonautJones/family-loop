@@ -1,10 +1,10 @@
 # OPORD 017 — Backup, Restore, and Data Lifecycle
 
 ## Status
-Planned implementation mission. Production backup configuration, restores, exports, deletions, retention jobs, and object cleanup are RED pending separate approval and legal/product decisions.
+NOT RUN — local lifecycle cleanup tests exist, but backup/PITR, isolated restore, export/deletion, retention, orphan reconciliation, and RPO/RTO acceptance are not implemented or exercised.
 
 ## Situation and evidence
-Supabase migration definitions cover relational rows and a private media bucket (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:460-506`), but deployment is unverified (`docs/architecture.md:41`). No repository evidence proves PITR, object-version protection, restore drills, export, deletion, retention, or orphan reconciliation (inference).
+Forward migrations and local tests cover relational/private-object ownership and cleanup-safe media operations. The browser scenario verifier reconciles three active media rows with three private Storage objects, but that is not backup or restore evidence. No PITR, object-version protection, restore drill, export/deletion, retention, or orphan-reconciliation job exists.
 
 ## Mission/objective
 Implement and prove recoverability for database and private objects, then implement auditable user export/deletion, retention, and orphan reconciliation without weakening event/group privacy.
@@ -43,6 +43,16 @@ Export and deletion requests must explain scope, timing, grace/recovery limits, 
 - Authenticated exports are complete, scoped, encrypted, and auditable.
 - Deletion is deliberate, idempotent, cross-user safe, and reconciles rows/objects while honoring approved backup/legal retention.
 - Retention and orphan cleanup run in dry-run mode first, exclude protected data, and emit bounded reviewable plans before apply.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Encrypted DB backup/PITR and private-object strategy | NOT RUN | Requires approved hosted controls and product/legal RPO/retention decisions. |
+| Isolated restore within RTO with DB/object/RLS/core-loop integrity | NOT RUN | No restore environment or drill. |
+| Complete scoped encrypted auditable export | NOT IMPLEMENTED / NOT RUN | No export flow. |
+| Deliberate idempotent cross-user-safe deletion | NOT IMPLEMENTED / NOT RUN | Membership/media cleanup tests are not account-erasure evidence. |
+| Dry-run retention/orphan plan before apply | NOT IMPLEMENTED / NOT RUN | Scenario row/object count reconciliation is read-only proof only. |
 
 ## Validation commands/evidence
 ### Always-local

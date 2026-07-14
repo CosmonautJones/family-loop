@@ -2,14 +2,13 @@
 
 ## Status
 
-PLANNED LOCAL SERVER/SERVICE MISSION — staging deploy, credentials, and remote mutation remain RED pending separate authorization.
+PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are executable and diagnosable, but the order's general versioned error-envelope, correlation-ID, timeout/retry, and rate-limit contract is incomplete; hosted readiness is `NOT RUN`.
 
 ## Situation and evidence
 
 - `app/src/services/api.ts` defines auth, groups, events, RSVPs, activity, messages, media, and notification contracts, and adapter selection depends on Expo Supabase variables (`docs/architecture.md:50-56`).
-- Unconfigured mode is deterministic/process-local; configured failures must remain visible (`docs/architecture.md:24-29,50-56`).
-- Remote Supabase deployment is unverified, Docker is unavailable, and live event/RSVP CRUD is `NOT RUN — ENV unavailable` (`docs/architecture.md:57-61`).
-- M1-M3 local foundations and checks exist, but code availability is not proof of remote tables, policies, buckets, or auth settings (`evals/review-log.md:3-13,35-48`).
+- Default local mode is versioned and reload-durable; memory mode is explicit test-only; Supabase mode is explicit and never falls back on configured failures.
+- Loopback Supabase is available and exercised through migration, database lint, family/media E2E, and a configured four-session browser scenario. Remote deployment remains unverified.
 
 ## Mission/objective
 
@@ -63,6 +62,20 @@ Readiness must include the failure experience: configured outages, timeouts, rat
 - Environment variable names and adapter-selection behavior are documented without secret values.
 - No environment or remote state changes.
 - The next implementation order can name concrete prerequisites and stop conditions.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| PASS/FAIL/NOT RUN path per capability | COMPLETE | Campaign/index and runbooks separate durable-local, loopback Supabase, browser, and hosted evidence. |
+| Stable non-sensitive error envelope/correlation ID for all classes | PARTIAL | Domain errors and truthful configured failures exist; no universal versioned correlation-ID/rate-limit envelope. |
+| Readiness/liveness connection semantics | PARTIAL | Loopback startup/migration/lint/E2E prove readiness; no general application health endpoints. |
+| Bounded idempotent retries/no duplicate writes | PARTIAL | Invite, notification, media, and durable-local mutations have targeted idempotency/locking; no uniform retry policy. |
+| Privileged operations server-only | COMPLETE LOCALLY | Narrow security-definer RPCs and local RLS tests; service role is not shipped to client. |
+| Evidence modes never conflated | COMPLETE | Architecture, review log, and runbooks explicitly distinguish them. |
+| Environment names/adapter selection documented | COMPLETE | `docs/architecture.md`, service selector, and local runbooks. |
+| No remote state changes | COMPLETE | Local-only audit trail. |
+| Concrete next-order prerequisites | COMPLETE | Dependency registry and per-order external gates. |
 
 ## Validation commands/evidence
 

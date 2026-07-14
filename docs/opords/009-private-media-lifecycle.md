@@ -1,10 +1,10 @@
 # OPORD 009 — Private media lifecycle
 
 ## Status
-Planned as M4 after M2; remote storage/RLS is unverified and Docker is unavailable.
+LOCAL COMPLETE / CONDITIONAL — the hardened private-media lifecycle, loopback Storage/RLS matrix, and configured browser file upload pass; hosted Storage and physical camera/gallery flows remain `NOT RUN`.
 
 ## Situation and evidence
-The service already exposes upload/list/delete (`app/src/services/api.ts:92-101`) and adapters contain prototype implementations (`app/src/services/supabaseAdapter.ts:499-545`; `app/src/services/mockAdapter.ts:130-139`). Event Detail only stages counts locally and says upload is not wired (`app/src/screens/EventDetailScreen.tsx:123-133`). The migration defines private media rows, bucket, and policies (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:393-414,460-506`), not verified deployment (`docs/architecture.md:41`). M4 requires private upload/list/resolve/delete (`tasks/backlog.md:11`).
+Commit `a9769ec` adds a forward-only pending/active/deleting media lifecycle, narrow metadata RPCs, owned private Storage paths, streamed size/signature validation, retryable partial-failure states, and signed resolution. Local Auth-session RLS/Storage attack matrices pass. The configured browser scenario shared two attributed Unsplash-source files and one actual browser-selected JPEG, rendered them through signed access, and preserved them across reloads.
 
 ## Mission/objective
 Deliver an event-scoped, Query-owned private image lifecycle on Event Detail: choose, upload, list via expiring resolution, handle partial failures, and delete only with authorized confirmation.
@@ -41,6 +41,18 @@ Use a plain labeled 48x48 CSS-pixel “Add photo” action, visible upload progr
 - Delete removes authorized metadata/object or reports a recoverable partial failure without claiming completion.
 - Expired URL refresh works; configured failures have no fixture fallback.
 - No public link, new dependency, or remote change is introduced without approval.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| One event-scoped upload and refetch | COMPLETE LOCALLY | Media E2E plus three browser-shared photos and scenario verifier. |
+| Event/nonmember isolation | COMPLETE LOCALLY | Uploader/member/owner/outsider Storage/RLS matrix. |
+| Authorized delete and recoverable partial failure | COMPLETE LOCALLY | Claim/finalize lifecycle, concurrent abort/upload, manager cases, and UI delete controls. |
+| Expired resolution refresh; no fixture fallback | COMPLETE LOCALLY | Signed URLs are resolved on list/refetch; configured failures stay visible. |
+| No public link/dependency/remote mutation | COMPLETE | Private bucket/path policy; no new dependency or hosted action. |
+
+Physical iOS Safari/Android Chrome camera/gallery and hosted Storage remain `NOT RUN`.
 
 ## Validation commands/evidence
 ### Always-local

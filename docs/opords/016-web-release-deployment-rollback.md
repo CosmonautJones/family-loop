@@ -1,10 +1,10 @@
 # OPORD 016 — Web Release, Deployment, and Rollback
 
 ## Status
-Planned implementation mission. Credentials, environment creation, deploys, production promotion, and rollback are RED until separately activated and approved.
+NOT RUN — local Expo web export succeeds, but no hosted environment, immutable promotion, release verification, or rollback rehearsal is authorized or evidenced.
 
 ## Situation and evidence
-The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. Repository evidence does not show a verified web release workflow or remote Supabase deployment (`docs/architecture.md:41`). OPORD 015 supplies required CI gates.
+The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. Repository evidence shows repeatable local Expo web export only. It does not show a hosted release workflow, remote Supabase deployment, environment separation, TLS/header/cache validation, or rollback rehearsal. OPORD 015 also remains incomplete.
 
 ## Mission/objective
 Implement a controlled dev-to-staging-to-production web release path with reproducible immutable artifacts, environment separation, frontend/backend compatibility gates, TLS/security headers, observable verification, and rehearsed artifact rollback.
@@ -42,6 +42,16 @@ Every candidate passes the 320/390/430 CSS-pixel mobile-web matrix, 200% zoom/re
 - TLS, CSP/security headers, cache policy, SPA fallback/deep-link reload, and backend compatibility are verified.
 - Staging passes 320/390/430 CSS px, conditional Safari/Chrome, desktop secondary, accessibility, and configured core-loop gates before manual production approval.
 - Rollback restores a compatible artifact without destructive database reversal or stale asset mixing.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Distinct dev/staging/production identities/secrets | NOT RUN | No hosted environments authorized. |
+| Same immutable artifact from green CI | NOT RUN | Expo export passes, but CI/promotion/digest evidence is absent. |
+| TLS/headers/cache/SPA/backend compatibility | NOT RUN | No hosted target. |
+| Staging mobile/accessibility/core-loop gate | NOT RUN | Local configured Chrome is not staging or physical-device proof. |
+| Rollback without destructive DB reversal | NOT RUN | No staging rehearsal. |
 
 ## Validation commands/evidence
 ### Always-local

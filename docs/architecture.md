@@ -1,6 +1,6 @@
 # Current Architecture
 
-The planned evolution of this architecture is governed by the 17 separately authorized operations orders in `docs/opords/README.md`. Their machine-readable dependency graph and bounded task tables describe future work and evidence gates; they do not assert that planned server, database, native, security, release, or operations capabilities are live.
+The architecture is governed by the 17 operations orders in `docs/opords/README.md`. Their dependency graph remains the historical execution plan; each order now carries a 2026-07-14 acceptance disposition that distinguishes locally proven behavior from incomplete or externally gated release evidence.
 
 LoopedIn is currently a responsive web app built with Expo and React Native Web. The event is the central product object; the code should continue to favor the path from a group to its events and then to RSVP, discussion, media, and memory state.
 
@@ -16,7 +16,7 @@ LoopedIn is currently a responsive web app built with Expo and React Native Web.
 
 ## Data flow and state
 
-- `app/src/features/**/fixtures.ts` still supplies deterministic prototype content for non-migrated presentation paths. The service seed is the canonical Jones Family data for service-backed paths.
+- `app/src/features/**/fixtures.ts` supplies deterministic seed/presentation content only. Authenticated family, invitation, event, RSVP, comment, media, update, and memory records are service-backed; configured Supabase failures never substitute fixtures.
 - `app/src/app/selectors.ts` converts supplied domain records into screen-ready view models. Home sorts Query-owned events chronologically, keeps the next event as its hero, and projects every later upcoming event into an exact-ID list; Calendar receives the same event records. Event Detail receives the event and RSVPs loaded for its stable ID. Honest empty and not-found states do not substitute fixture events.
 - `app/src/app/queries.ts` defines stable group, membership, invitation, notification, event-list, event-detail, RSVP, event-message, and event-media keys plus their scoped mutations. Successful message and media mutations invalidate only the selected event's records, so refetch remains authoritative without optimistic duplicates. Membership/session transitions evict protected cached data before a newly selected family can begin its queries.
 - `app/src/store/useLoopedInStore.ts` owns active-group selection only. It restores a saved family only after validating it against the authenticated membership list; it no longer starts with a hard-coded Jones Family ID. Dead staged-photo and reminder draft state was removed; durable RSVP, event, message, media, and history records are not mirrored there.
@@ -51,7 +51,7 @@ Completed-event history is derived rather than separately persisted. Home and Me
 - The in-memory adapter is selected only by `EXPO_PUBLIC_DATA_MODE=memory` and remains the deterministic isolated-test path.
 - The Supabase adapter is selected only by `EXPO_PUBLIC_DATA_MODE=supabase`. Missing Supabase URL/key configuration produces a visible unavailable-service error; it never falls back to local Jones Family data.
 
-The durable seed contains one stable Jones Family group with five members, exactly three future trips and one completed trip relative to 2026-07-13, plus consistent RSVPs, event-scoped messages, memories, and media metadata. Seed images are Unsplash URLs with local captions. Formal attribution/domain treatment remains follow-up work for the private-media wave; these URLs are demonstration metadata, not proof of uploaded private media.
+The durable local seed contains one stable Jones Family group with five members, exactly three future trips and one completed trip relative to 2026-07-13, plus consistent RSVPs, event-scoped messages, memories, and media metadata. The configured local Supabase browser proof separately created a three-member family, trips, comments, private media, updates, and memories through the UI; it did not rely on this seed.
 
 Group membership is exposed as `GroupMember` records with `owner`, `admin`, or `member` roles through `listGroupMembers(groupId)` across memory, durable-local, and Supabase adapters. The configured Family screen reads its family, members, events, and invitations through Query and derives displayed roles from those records. Entitled initial-family creation and the email-bound invitation lifecycle use narrow atomic RPCs; owners can invite/revoke/remove/transfer, members can leave, and the database enforces exactly one owner. Raw invitation tokens are never stored server-side, and client-side drafts retain the same high-entropy token across retries until a terminal accept, decline, or revoke action.
 

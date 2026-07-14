@@ -2,16 +2,16 @@
 
 ## Status
 
-PLANNED — M2 foundations exist; this order is limited to verified core-loop hardening and does not authorize adjacent features.
+LOCAL COMPLETE / CONDITIONAL — durable event create/edit/cancel, chronology, exact-ID routing, and RSVP behavior are proven locally; DST/locale and physical/mobile-human gates remain open.
 
 ## Situation and evidence
 
 - Home and Calendar read active-group events through Query; Create, same-ID Event Detail, and RSVP use the service boundary (`docs/architecture.md:17-29`; `evals/review-log.md:35-48`).
 - Home makes the next event dominant and exposes later events by exact ID (`app/src/screens/HomeScreen.tsx:24-65`).
 - Calendar presents month markers and an upcoming agenda with exact-event actions (`app/src/screens/CalendarScreen.tsx:17-60`).
-- Mock mutation/refetch works only for the life of the process; a hard reload resets it (`docs/architecture.md:24-29`; `evals/review-log.md:42-46`).
-- Live Supabase event/RSVP CRUD is `NOT RUN — ENV unavailable`; remote deployment remains unverified (`docs/architecture.md:57-61`).
-- Recurrence, invitations, external sync, editing/deletion, and navigation migration are outside the existing M2 boundary (`tasks/backlog.md:7-15`; `docs/anti-goals.md:3-14`).
+- Default local mutations survive reload/server restart, and configured loopback Supabase mutations persist across isolated browser sessions and reloads.
+- The configured browser journey created three trips, edited one, cancelled a throwaway plan, and recorded multi-user Going/Maybe RSVPs. Remote deployment remains unverified.
+- Recurrence and external calendar sync remain explicit non-goals; edit/cancel are now implemented.
 
 ## Mission/objective
 
@@ -63,6 +63,19 @@ Show date, time, place, and current RSVP in plain language; keep primary RSVP op
 - RSVP pending prevents duplicate submission; successful refetch shows the selected state/count; failure is recoverable and event-scoped.
 - Empty, loading, error, not-found, configured signed-out, and group failure states never substitute fixtures.
 - Existing Event Detail thread/logistics behavior remains available and unchanged except where a reproduced shared-boundary defect requires approval.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Earliest upcoming hero and chronological unique IDs | COMPLETE | Selector/tests and configured two-upcoming final state; active-family race fixed in `89d8720`. |
+| Calendar and Home share exact records/IDs | COMPLETE | Browser create/edit/reload and route/Back proof. |
+| Create once; draft failure honesty; exact created ID | COMPLETE | Mutation tests and browser-created trips. |
+| RSVP duplicate prevention/refetch/recovery/event scope | COMPLETE | Query tests and multi-user browser RSVPs. |
+| Explicit empty/loading/error/not-found/auth/group states | COMPLETE | Source contracts and configured/no-family/direct-route browser proof. |
+| Thread/logistics regression | COMPLETE | Six isolated comments persisted; full automated/browser gate. |
+
+DST-boundary/locale testing, physical iOS/Android, and moderated-human use are `NOT RUN`.
 
 ## Validation commands/evidence
 

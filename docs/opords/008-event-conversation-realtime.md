@@ -1,10 +1,10 @@
 # OPORD 008 — Event conversation realtime
 
 ## Status
-Planned; separately authorize after the completed M3 thread foundation. Remote Supabase and real-phone Safari/Chrome behavior remain unverified.
+PARTIAL — durable, event-isolated multi-user comments are implemented and locally proven; realtime subscriptions, reconnect convergence, and subscription cleanup are not implemented or tested.
 
 ## Situation and evidence
-M3 already provides event-keyed Query reads/sends and exact-key refetch (`docs/architecture.md:19,32`; `evals/review-log.md:13-23`; `tasks/completed.md:9-12`). The migration declares messages in the realtime publication (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:523`), but repository definitions are not live proof (`docs/architecture.md:43`). Realtime subscriptions and presence were excluded from the completed M3 implementation, as shown by its immutable completion and review records (`tasks/completed.md:9-12`; `evals/review-log.md:13-23`).
+Event-keyed Query reads/sends and exact-key refetch are durable in local and Supabase modes. Six comments across three events/users remained isolated through reload in the configured scenario. The migration publication entry exists, but the client still has no realtime subscription/reconnect lifecycle; publication text is not proof of realtime behavior.
 
 ## Mission/objective
 Make an open Event Detail thread receive authorized inserts/updates without manual navigation while preserving chronological, duplicate-free, event-scoped Query state and recoverable connection behavior.
@@ -41,6 +41,16 @@ New messages must appear without stealing focus, moving the composer unexpectedl
 - Sending, pending, draft retention, RSVP, and local thread failures retain M3 behavior.
 - Configured failures never render fixtures.
 - Live two-user claims are made only from safe recorded evidence; otherwise acceptance remains blocked, not inferred.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Event A changes appear once only on Event A | COMPLETE on refetch/reload | Six multi-user comments and query isolation tests; realtime arrival was not tested. |
+| Reconnect convergence and cleanup | NOT IMPLEMENTED / NOT RUN | No client subscription lifecycle exists. |
+| Send/pending/draft/RSVP failure behavior | COMPLETE LOCALLY | M3 fix loops and current root/app regressions. |
+| Configured failures never render fixtures | COMPLETE | Adopted service/session boundary and configured error gates. |
+| Live claims require recorded evidence | COMPLETE | Local loopback evidence is labeled local; hosted/realtime claims remain open. |
 
 ## Validation commands/evidence
 ### Always-local

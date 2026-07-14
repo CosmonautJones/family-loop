@@ -1,10 +1,10 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-Planned implementation mission. This OPORD authorizes future repository CI work only when activated; no workflow, dependency, runtime, or remote change occurs while drafting it.
+NOT RUN — local commands pass, but substantive lint, repository CI, seeded-failure proof, and required branch checks are not implemented.
 
 ## Situation and evidence
-Local tests, TypeScript and harness checks exist (`docs/architecture.md:51-53`), but `app/package.json:11` is only `echo 'lint placeholder'`. No CI workflow is present (inference from `rg --files`). Migration SQL exists, while Docker and remote verification are unavailable (`docs/architecture.md:41`).
+Root/app tests, TypeScript, harness, Expo export, loopback database lint, and integration scripts pass locally. `app/package.json` still runs only `echo 'lint placeholder'`, and no `.github/workflows/ci.yml` exists. Loopback migration checks do not substitute for CI observed-pass/failure evidence.
 
 ## Mission/objective
 Implement a required pull-request CI workflow with substantive lint, root/app tests, TypeScript, harness, secret/dependency checks, and deterministic migration validation before code can merge.
@@ -40,6 +40,16 @@ CI must preserve the accessibility and large-text regressions defined by OPORD 0
 - Jobs use least permissions, pinned runtime/tool versions, deterministic lockfiles, cache keys from lockfiles, and no repository secrets.
 - Seeded violations prove each critical gate fails; administrators can require the stable checks.
 - No release, deploy, remote migration, or branch-protection mutation occurs without separate authorization.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Substantive reproducible lint | NOT IMPLEMENTED | Script remains `lint placeholder`. |
+| CI install/test/type/lint/harness/secret/dependency/migration jobs | NOT IMPLEMENTED | No workflow exists. |
+| Least permissions/pinned tools/deterministic caches/no secrets | NOT RUN | Requires workflow implementation/review. |
+| Seeded violations fail stable required checks | NOT RUN | No CI or disposable-branch failure matrix. |
+| No unauthorized release/remote/branch mutation | COMPLETE | Campaign remained local; this is a safety result, not CI completion. |
 
 ## Validation commands/evidence
 ### Always-local
