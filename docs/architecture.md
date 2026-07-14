@@ -55,7 +55,7 @@ The durable seed contains one stable Jones Family group with five members, exact
 
 Group membership is exposed as `GroupMember` records with `owner`, `admin`, or `member` roles through `listGroupMembers(groupId)` across mock, durable-local, and Supabase adapters. The Family screen reads the active group, its scoped members, and its events through Query and derives displayed roles from those records; it does not use group fixtures or invitation/admin mutations. Supabase membership/profile query code exists, but no remote membership or RLS behavior has been exercised.
 
-The bottom navigation renders one tablist with five tabs. Because this React Native Web build did not expose dynamic selected attributes reliably, the active tab also renders a compact visible `Selected` marker; its live accessible name was observed as `Family Selected` in the Chrome accessibility tree. Decorative background overflow is clipped at the shell boundary.
+The bottom navigation renders one tablist with five sequentially tabbable tabs. The active tab exposes native selected semantics through `aria-selected`; no extra visible selected marker is rendered. Decorative background overflow is clipped at the shell boundary.
 
 The Supabase client uses AsyncStorage for auth-session persistence. Local browser durability is not remote persistence, multi-user synchronization, authenticated authorization, deployed database/RLS, or private-storage proof. Docker is unavailable in the current environment and no remote deployment has been verified, so repository migration, RLS, realtime, and bucket definitions remain intended infrastructure rather than live proof.
 
