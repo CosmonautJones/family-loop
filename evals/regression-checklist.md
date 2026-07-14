@@ -54,6 +54,20 @@
 - [x] External final gate after `a1e68a1` — AMBER / PROCEED-WARN, zero blockers; authoritative root 39/39 and app-local 28/28 remain independently transcribed.
 - [ ] Placeholder lint, pre-existing React Native Web shadow warning, live Supabase/RLS/private storage/signed access, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
 
+## Wave 4 completed-event history and product truth
+
+- [x] Completed-event derivation uses the active family's service events and exact-event media/comments, not memory fixtures.
+- [x] Run 1 exact-event isolation defect was reproduced and fixed; records for one event cannot appear in another event's recap.
+- [x] Lake Geneva renders three photos and one comment in the completed-event history.
+- [x] Memories loading, error/retry, empty, populated, exact-route, Back, and hard-reload behavior are covered.
+- [x] Home and Memories expose the same service-backed history without introducing a second durable source of truth.
+- [x] Reminder UI and dead reminder/staged-photo transient state are absent.
+- [x] Calendar copy is truthful and its actions retain a 48px minimum target.
+- [x] Exact Chrome viewports 320×844, 390×844, 430×932, and 1280×900 have no document overflow.
+- [x] Root tests 43/43 and app-local tests 32/32; TypeScript, harness, Expo web export, and diff check pass.
+- [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers.
+- [ ] Placeholder lint, remote Supabase/RLS/private object storage, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
+
 ## OPORD campaign documentation
 
 - [x] Responsive-web correction accepted at external Run 3 AMBER / PROCEED-WARN with zero blockers.

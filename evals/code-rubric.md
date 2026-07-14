@@ -63,6 +63,17 @@
 - [x] Records correction captures each command's own TAP summary; root and app counts must never be mirrored across suites.
 - [ ] Substantive lint, live Supabase/RLS/private storage/signed access, real-device Safari/Chrome, and multi-user behavior — unverified.
 
+## Wave 4 completed-event truth
+
+- [x] Memories and Home derive completed-event history from service-backed family events rather than memory fixtures.
+- [x] Media and comments are queried and combined by exact event ID; isolation coverage prevents one completed event from borrowing another event's records.
+- [x] Memories exposes loading, error/retry, empty, and populated states and routes to the exact completed event.
+- [x] Reminder UI and dead staged-photo/reminder transient store state are removed; no unavailable scheduling or delivery is implied.
+- [x] Calendar uses truthful shared-plan language and 48px minimum actions.
+- [x] Root tests 43/43 and app-local tests 32/32, TypeScript, harness, web export, diff, and exact 320/390/430/1280 Chrome checks pass.
+- [x] Independent Run 2 — AMBER / PROCEED-WARN with zero blockers after the Run 1 exact-event isolation correction.
+- [ ] Substantive lint, live Supabase/RLS/private storage, physical Safari/Chrome devices, and multi-user behavior — unverified.
+
 - Did the implementation stay inside the mission?
 - Were unrelated changes avoided?
 

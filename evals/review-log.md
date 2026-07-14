@@ -1,5 +1,15 @@
 # Review Log
 
+## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 4 final closeout
+
+- Accepted implementation commit: `d4f4b4d`.
+- Memories and Home now derive completed-event history from service-backed family events plus exact-event media and comments. Lake Geneva renders three photos and one comment; Memories has honest loading, error/retry, empty, and populated states and opens the exact event route.
+- Independent Run 1 was **RED** because the completed-event derivation did not adequately prove exact-event media/comment isolation. The targeted correction fixed that defect and added isolation regression coverage before re-review.
+- Independent Run 2 result: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. Authoritative separate command summaries are root tests PASS 43/43 and app-local tests PASS 32/32; TypeScript, harness, Expo web export, and diff check PASS. Lint remains the known placeholder warning.
+- Exact Chrome checks at 320×844, 390×844, 430×932, and 1280×900 found no document overflow. Exact route, Back, and hard reload passed, and no reminder UI was present. Calendar retains 48px actions and truthful shared-plan copy.
+- Dead reminder and staged-photo transient state was removed. This prevents the UI from implying scheduling, delivery, or uploads outside the implemented service-backed flow.
+- Wave 4 is **COMPLETE** only for this local completed-event-history/product-truth checkpoint. The broader campaign remains **IN PROGRESS**. Remote Supabase/RLS/private object storage, multi-user behavior, and physical iOS Safari/Android Chrome were `NOT RUN` and are not inferred.
+
 ## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 3 external final gate
 
 - External review after records correction `a1e68a1`: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.

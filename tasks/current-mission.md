@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-FULL-001`
 
-Status: `IN PROGRESS — WAVE 0 COMPLETE — WAVE 1 PENDING AUTHORIZATION`
+Status: `IN PROGRESS — WAVES 0-4 COMPLETE — NEXT WAVE PENDING`
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
@@ -274,4 +274,14 @@ This mission is complete only when all authorized waves pass their acceptance an
 - The authoritative independent command summaries remain root tests PASS 39/39 and app-local tests PASS 28/28; counts are transcribed from each suite and are not mirrored.
 - Placeholder lint and the pre-existing React Native Web shadow-style warning remain advisories. Live Supabase, RLS, private object storage/signed access, multi-user behavior, and physical iOS Safari/Android Chrome remain unverified and are not inferred.
 
-Current truth: **Waves 0-3 are complete. Independent Wave 3 Run 2 accepted the corrected implementation at AMBER / PROCEED-WARN with zero blockers. No remote/live Supabase, RLS, private object storage, multi-user, or real-device capability is claimed complete.**
+## Wave 4 implementation status — truthful completed-event history
+
+- Commit `d4f4b4d` replaces fixture memories and reminder theater with service-backed completed-event history. Memories and Home derive from the active family's completed events, exact-event media, and exact-event comments; each query remains isolated by stable event ID.
+- Lake Geneva renders as the completed Jones Family example with three photos and one comment. Memories owns honest loading, error/retry, empty, and populated states and opens the exact event route; Home exposes the same completed-event recap without duplicating durable records.
+- Independent Run 1 was **RED** because completed-event media/comment derivation was not sufficiently isolated between event IDs. The targeted correction added exact-event isolation coverage and repaired the derivation before re-review.
+- Independent Run 2 accepted Wave 4 at **AMBER / PROCEED-WARN with zero blockers**. Authoritative per-command results are root tests PASS 43/43 and app-local tests PASS 32/32; TypeScript, harness, Expo web export, and diff check PASS. Lint remains the known placeholder warning.
+- Chrome checks at exact 320×844, 390×844, 430×932, and 1280×900 found no document overflow. Lake Geneva showed three photos and one comment; exact route, Back, and hard reload passed; no reminder UI remained. Calendar uses truthful shared-plan copy and 48px minimum actions.
+- Removed reminder controls and the dead staged-photo/reminder transient store state rather than implying delivery or scheduling that does not exist.
+- Wave 4 is **COMPLETE** only as the local product-truth/completed-event-history checkpoint. Remote Supabase/RLS/private object storage, multi-user behavior, and physical iOS Safari/Android Chrome remain unverified.
+
+Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the corrected implementation at AMBER / PROCEED-WARN with zero blockers. The broader campaign remains IN PROGRESS; no remote/live Supabase, RLS, private object storage, multi-user, or physical-device capability is claimed complete.**
