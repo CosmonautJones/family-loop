@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-OPORD-001`
 
-Status: Complete — documentation campaign authored; runtime execution remains separately authorized per OPORD.
+Status: Run 3 internal verification — external review gate pending; runtime execution remains separately authorized per OPORD.
 
 ## Objective
 

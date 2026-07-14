@@ -29,9 +29,9 @@ Security failures must use calm plain language and readable type, preserve safe 
 ## Execution
 | Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
 |---|---:|---|---|---|---|---|
-| O013-T1 | 1 | Security analyst | high | trust-boundary inventory, redaction spec, docs/evals | Inventory sensitive fields without reading secrets/content; define redaction and minimal metadata taxonomy. | Inventory covers tokens, bodies and signed URLs; tests prove these are absent from emitted evidence. |
-| O013-T2 | 2 | Security builder | high | authorization/redaction tests, existing error seams | Add configured-boundary and safe cross-user tests; keep errors understandable and non-leaking. | Local tests pass; live RLS is either evidenced in disposable staging or NOT RUN. |
-| O013-T3 | 3 | Incident lead/reviewer | high | incident runbook, tabletop record, review log | Define detect, preserve, escalate, authorized containment, recovery and review; run tabletop only. | Runbook names severity/owner/authority; tabletop closes with no production action. |
+| O013-T1 | 1 | Security analyst | Private / gpt-5.5 | trust-boundary inventory, redaction spec, docs/evals | Inventory sensitive fields without reading secrets/content; define redaction and minimal metadata taxonomy. | Inventory covers tokens, bodies and signed URLs; tests prove these are absent from emitted evidence. |
+| O013-T2 | 2 | Security builder | Private / gpt-5.5 | authorization/redaction tests, existing error seams | Add configured-boundary and safe cross-user tests; keep errors understandable and non-leaking. | Local tests pass; live RLS is either evidenced in disposable staging or NOT RUN. |
+| O013-T3 | 3 | Incident lead/reviewer | Sergeant / gpt-5.3-instant | incident runbook, tabletop record, review log | Define detect, preserve, escalate, authorized containment, recovery and review; run tabletop only. | Runbook names severity/owner/authority; tabletop closes with no production action. |
 
 ## Acceptance criteria
 - Logs/tests do not expose credentials, tokens, message bodies, or signed media URLs.

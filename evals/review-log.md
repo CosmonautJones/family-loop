@@ -5,11 +5,11 @@
 - Scope reviewed: one index, 17 numeric OPORDs, portable documentation-contract tests, and authorized architecture/mission/evaluation records. No runtime, dependency, environment, credential, deployment, or remote file changed.
 - Coverage spans product simplicity, accessible design, auth/recovery, users/groups/invitations, service/environment boundary, database/RLS/indexes, events/calendar/RSVP, realtime conversation, private media, notifications, memories, resilience/performance, security/observability, native/usability tests, and CI/release/backup/data lifecycle.
 - Baseline honesty: M1-M3 exist; remote Supabase remains unverified, Docker unavailable, lint a placeholder, and native/human validation not run. Future OPORDs require fresh authorization.
-- Targeted RED fix: expanded from 15 to 17 by separating CI quality, release/rollback, and backup/data lifecycle; added machine-readable acyclic dependencies and at least three bounded task-table rows per order; strengthened the executable service/server mission and first-user/group lifecycle; replaced the mutable OPORD-008 citation; and added graph/task contract tests.
-- Independent review: all 17 numbered files were checked against the heading contract, dependency graph, task ownership, path/line evidence or explicit inference, older-adult guardrails, measurable acceptance, local/conditional validation split, and RED stop conditions.
-- Automated verification after the targeted fix: root `npm test` PASS (22/22); app `npm test` PASS (13/13); app `npx tsc --noEmit` PASS; harness PASS; `git diff --check` PASS. App `npm run lint` exits successfully but remains the pre-existing placeholder and is not substantive lint proof.
+- Run 1 review result: RED — validation sections were not explicitly split and UI targets used a 44-point floor. The documentation was corrected before re-review.
+- Run 2 review result: RED — combined delivery/recovery scope, abstract task model tiers, ambiguous numeric execution order, OPORD-005 runtime authority, and insufficient parser-level tests remained. The campaign was expanded to 17 and received bounded task tables, then entered this targeted Run 3 correction.
+- Run 3 internal checks: explicit rank/model tiers, canonical topological execution order, activated OPORD-005 runtime territory, and parser-level task/dependency/order checks are being verified. External review gate: PENDING; this log does not self-certify GREEN.
 - Conditional evidence: remote Supabase, Docker-backed database, iOS/Android native, screen reader, reduced motion, moderated older-adult, deployment, backup, and restore checks were `NOT RUN` because this was a documentation-only mission without a safe authorized environment or participants.
-- Gate: GREEN for the campaign documentation. This does not certify any planned runtime capability.
+- Gate: Run 3 PENDING external review. No planned runtime capability is certified.
 
 ## 2026-07-13 — FAMILY-LOOP-DATA-003 final review
 

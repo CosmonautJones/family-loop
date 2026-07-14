@@ -30,14 +30,14 @@ Depends on: OPORD-002
 
 ## Authorized territory (files/systems)
 
-- Service adapters and any existing in-repo server/edge boundary, under an exact separately approved local manifest.
+- When this OPORD is activated, service adapters and existing in-repo server/edge runtime files named by the approved task manifest.
 - Local non-secret commands, deterministic probes, contract tests, and mock-mode tests.
 - If explicitly supplied, non-mutating metadata/connectivity checks against an approved safe environment.
-- Documentation output and review log only.
+- Documentation and review records named by the activated manifest. The current campaign-writing mission made no runtime changes; that historical limit does not remove this OPORD's future local implementation authority.
 
 ## Forbidden territory
 
-- Secrets/credential stores, `.env` creation or printing, remote writes, migrations, policy/bucket/auth setting changes, deployment, destructive commands, dependencies, and runtime edits.
+- Runtime edits outside the activated task manifest; secrets/credential stores; `.env` creation or printing; remote writes; migrations; policy/bucket/auth setting changes; deployment; destructive commands; and new dependencies without separate RED authorization.
 
 ## Older-adult usability guardrail
 
@@ -87,7 +87,7 @@ git status --short
 
 ## Stop conditions/authorization limits
 
-Stop before credential prompts, secret output, environment edits, remote writes, staging deploy, migration, dependency, or files outside the approved local manifest. Staging deployment stays RED until target, artifact, secret handling, probes, and rollback verification are separately authorized.
+Stop before credential prompts, secret output, environment edits, remote writes, staging deploy, migration, new dependency, or runtime files outside the approved local manifest. Staging deployment stays RED until target, artifact, secret handling, probes, and rollback verification are separately authorized.
 
 ## Risks/follow-ups
 

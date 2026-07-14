@@ -29,9 +29,9 @@ State reminder timing in plain, concrete words (“Morning of event”), expose 
 ## Execution
 | Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
 |---|---:|---|---|---|---|---|
-| O010-T1 | 1 | Data builder | standard | reminder/notification service, queries, focused tests | Define the minimum persisted reminder preference; add exact-user/event Query ownership and scoped invalidation. | Refetch preserves preference; tests prove user/event isolation and configured errors never select fixtures. |
-| O010-T2 | 2 | Mobile builder | standard | Event Detail, notification surface, existing navigation | Replace transient reminder claims; render loading/empty/error/populated/read states and exact-event links. | Pending/error states retain intent; deleted event is honest; no copy implies push delivery. |
-| O010-T3 | 3 | QA/reviewer | standard | tests, regression checklist, review log | Test read persistence, failure recovery and signed-out privacy; smoke at 390x844. | Local suite and phone smoke pass; live/native/human evidence is reported honestly. |
+| O010-T1 | 1 | Data builder | Private / gpt-5.5 | reminder/notification service, queries, focused tests | Define the minimum persisted reminder preference; add exact-user/event Query ownership and scoped invalidation. | Refetch preserves preference; tests prove user/event isolation and configured errors never select fixtures. |
+| O010-T2 | 2 | Mobile builder | Private / gpt-5.5 | Event Detail, notification surface, existing navigation | Replace transient reminder claims; render loading/empty/error/populated/read states and exact-event links. | Pending/error states retain intent; deleted event is honest; no copy implies push delivery. |
+| O010-T3 | 3 | QA/reviewer | Sergeant / gpt-5.3-instant | tests, regression checklist, review log | Test read persistence, failure recovery and signed-out privacy; smoke at 390x844. | Local suite and phone smoke pass; live/native/human evidence is reported honestly. |
 
 ## Acceptance criteria
 - Reminder preference survives service refetch and is isolated by user/event.

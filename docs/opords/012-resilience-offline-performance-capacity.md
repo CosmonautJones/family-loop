@@ -29,9 +29,9 @@ Slow/offline states must preserve readable, plain-language event context, never 
 ## Execution
 | Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
 |---|---:|---|---|---|---|---|
-| O012-T1 | 1 | Performance analyst | standard | fixtures, measurement scripts, docs/evals | Record volumes and baselines for cold open, Event Detail, long lists and mutation recovery; define budgets and offline contract. | Reproducible commands, device/browser metadata, volumes and budgets exist before code changes. |
-| O012-T2 | 2 | Resilience builder | standard | Query config, feature retry/error seams, selectors/lists | Fix only measured failures; retain drafts and prevent retry duplicates; preserve identity after reconnect. | Deterministic disconnect/retry/capacity tests pass without new dependencies. |
-| O012-T3 | 3 | QA/reviewer | standard | tests, regression checklist, review log | Run throttled phone smoke and compare measurements to budgets. | Budgets pass or blockers are explicit; unsupported offline actions and native gaps are documented. |
+| O012-T1 | 1 | Performance analyst | Private / gpt-5.5 | fixtures, measurement scripts, docs/evals | Record volumes and baselines for cold open, Event Detail, long lists and mutation recovery; define budgets and offline contract. | Reproducible commands, device/browser metadata, volumes and budgets exist before code changes. |
+| O012-T2 | 2 | Resilience builder | Private / gpt-5.5 | Query config, feature retry/error seams, selectors/lists | Fix only measured failures; retain drafts and prevent retry duplicates; preserve identity after reconnect. | Deterministic disconnect/retry/capacity tests pass without new dependencies. |
+| O012-T3 | 3 | QA/reviewer | Sergeant / gpt-5.3-instant | tests, regression checklist, review log | Run throttled phone smoke and compare measurements to budgets. | Budgets pass or blockers are explicit; unsupported offline actions and native gaps are documented. |
 
 ## Acceptance criteria
 - Agreed budgets and volumes are recorded before optimization.

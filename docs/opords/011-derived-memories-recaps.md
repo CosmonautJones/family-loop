@@ -29,9 +29,9 @@ Use event title and date as the primary anchor, plain copy, readable cards with 
 ## Execution
 | Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
 |---|---:|---|---|---|---|---|
-| O011-T1 | 1 | Data builder | standard | memory selectors/queries, event/media read contracts, focused tests | Define deterministic completion/order rules and derive memories from event plus media records. | Tests cover timezone/invalid dates, stable ties, zero media, deleted media and group isolation. |
-| O011-T2 | 2 | Mobile builder | standard | Memories/Home surfaces, exact-event navigation | Replace fixtures with Query loading/error/empty/populated states and preserve source-event identity. | Only authorized completed events render; empty copy is honest; exact source event opens. |
-| O011-T3 | 3 | QA/reviewer | standard | tests, docs/evals, review log | Run regression suite and phone smoke, then close out campaign evidence. | All checks pass; no free-floating records or fixture fallback remain; limitations are logged. |
+| O011-T1 | 1 | Data builder | Private / gpt-5.5 | memory selectors/queries, event/media read contracts, focused tests | Define deterministic completion/order rules and derive memories from event plus media records. | Tests cover timezone/invalid dates, stable ties, zero media, deleted media and group isolation. |
+| O011-T2 | 2 | Mobile builder | Private / gpt-5.5 | Memories/Home surfaces, exact-event navigation | Replace fixtures with Query loading/error/empty/populated states and preserve source-event identity. | Only authorized completed events render; empty copy is honest; exact source event opens. |
+| O011-T3 | 3 | QA/reviewer | Sergeant / gpt-5.3-instant | tests, docs/evals, review log | Run regression suite and phone smoke, then close out campaign evidence. | All checks pass; no free-floating records or fixture fallback remain; limitations are logged. |
 
 ## Acceptance criteria
 - Only completed authorized events derive memories.

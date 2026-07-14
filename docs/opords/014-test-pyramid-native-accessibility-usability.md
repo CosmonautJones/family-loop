@@ -29,9 +29,9 @@ Include readable text, high contrast, plain labels, 48x48-point touch targets, s
 ## Execution
 | Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
 |---|---:|---|---|---|---|---|
-| O014-T1 | 1 | QA architect | high | test matrix, tests/scripts, regression checklist | Map core-loop risks to unit, adapter, rendered, web, native and human layers; add only high-value local gaps. | Every critical risk has one owner/layer and an executable or explicitly conditional check. |
-| O014-T2 | 2 | Accessibility reviewer | high | core-loop screens, accessibility evidence | Audit labels, focus, dynamic text, contrast, targets and error announcements; apply only focused fixes. | Essential actions work with large text and non-visual labels; no broad redesign. |
-| O014-T3 | 3 | Native/usability QA | high | iOS/Android smoke records, consented research record | Run iOS/Android assistive-tech smoke and an authorized older-adult walkthrough. | Device/version evidence exists and findings are anonymized; unavailable checks remain NOT RUN and block completion. |
+| O014-T1 | 1 | QA architect | Private / gpt-5.5 | test matrix, tests/scripts, regression checklist | Map core-loop risks to unit, adapter, rendered, web, native and human layers; add only high-value local gaps. | Every critical risk has one owner/layer and an executable or explicitly conditional check. |
+| O014-T2 | 2 | Accessibility reviewer | Sergeant / gpt-5.3-instant | core-loop screens, accessibility evidence | Audit labels, focus, dynamic text, contrast, targets and error announcements; apply only focused fixes. | Essential actions work with large text and non-visual labels; no broad redesign. |
+| O014-T3 | 3 | Native/usability QA | Sergeant / gpt-5.3-instant | iOS/Android smoke records, consented research record | Run iOS/Android assistive-tech smoke and an authorized older-adult walkthrough. | Device/version evidence exists and findings are anonymized; unavailable checks remain NOT RUN and block completion. |
 
 ## Acceptance criteria
 - Every core-loop risk has an owned test layer and explicit evidence.

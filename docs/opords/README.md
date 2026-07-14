@@ -43,7 +43,9 @@ All missions use `Correctness > Safety > Scope discipline > Speed`.
 - Every mission preserves explicit loading, error, empty, pending, success, and recoverable-failure states where applicable.
 - UI missions use plain language, readable type, at least 48x48-point primary touch targets, screen-reader semantics, reduced-motion behavior, low cognitive load, and a visible recovery route.
 
-## Exact sequence and dependencies
+## Registry and dependencies
+
+Numeric OPORD IDs are stable identifiers, not execution positions. The registry stays numeric for lookup; execution follows the dependency-safe canonical order below.
 
 | Order | OPORD | Depends on | Primary outcome |
 |---:|---|---|---|
@@ -58,14 +60,16 @@ All missions use `Correctness > Safety > Scope discipline > Speed`.
 | 009 | [Private media lifecycle](009-private-media-lifecycle.md) | OPORD-006, OPORD-007 | Private image upload, display, and deletion |
 | 010 | [Reminders and in-app notifications](010-reminders-in-app-notifications.md) | OPORD-006, OPORD-007 | Useful, deduplicated event updates |
 | 011 | [Derived memories and recaps](011-derived-memories-recaps.md) | OPORD-007, OPORD-008, OPORD-009 | Completed events become memories |
-| 012 | [Resilience, offline, performance, and capacity](012-resilience-offline-performance-capacity.md) | OPORD-005 through OPORD-011 | Predictable degraded-network behavior |
+| 012 | [Resilience, offline, performance, and capacity](012-resilience-offline-performance-capacity.md) | OPORD-005, OPORD-006, OPORD-007, OPORD-008, OPORD-009, OPORD-010, OPORD-011 | Predictable degraded-network behavior |
 | 013 | [Security, observability, and incident response](013-security-observability-incident-response.md) | OPORD-005, OPORD-006, OPORD-012 | Privacy controls and operable failure signals |
-| 014 | [Test pyramid, native accessibility, and usability](014-test-pyramid-native-accessibility-usability.md) | OPORD-001 through OPORD-013 | Evidence across contracts, devices, and people |
+| 014 | [Test pyramid, native accessibility, and usability](014-test-pyramid-native-accessibility-usability.md) | OPORD-001, OPORD-002, OPORD-003, OPORD-004, OPORD-005, OPORD-006, OPORD-007, OPORD-008, OPORD-009, OPORD-010, OPORD-011, OPORD-012, OPORD-013 | Evidence across contracts, devices, and people |
 | 015 | [CI quality gates](015-ci-quality-gates.md) | OPORD-013, OPORD-014 | Enforced lint, test, security, and migration gates |
 | 016 | [Release, deployment, and rollback](016-release-deployment-rollback.md) | OPORD-015 | Controlled environment promotion and recovery |
 | 017 | [Backup, restore, and data lifecycle](017-backup-restore-data-lifecycle.md) | OPORD-006, OPORD-016 | Proven restore, retention, export, and deletion lifecycle |
 
-No later order may silently absorb an earlier order's unfinished acceptance criteria. Orders 008 and 009 may execute in either order after 007 only if their file territories are disjoint; the canonical campaign remains numeric and sequential.
+No later order may silently absorb an earlier order's unfinished acceptance criteria. The stable numeric registry does not override the dependency-safe execution order.
+
+Canonical execution order: OPORD-001 -> OPORD-002 -> OPORD-005 -> OPORD-006 -> OPORD-003 -> OPORD-004 -> OPORD-007 -> OPORD-008 -> OPORD-009 -> OPORD-010 -> OPORD-011 -> OPORD-012 -> OPORD-013 -> OPORD-014 -> OPORD-015 -> OPORD-016 -> OPORD-017
 
 Machine-readable adjacency list (the same `Depends on:` values appear in each order):
 

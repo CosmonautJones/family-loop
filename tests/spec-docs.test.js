@@ -83,12 +83,26 @@ test('engineering campaign contains exactly 17 ordered OPORDs with executable ta
     assert.match(content, /Always-local/i, `${file} must separate always-local evidence`);
     assert.match(content, /Conditional-(staging|native|human)/i, `${file} must separate conditional evidence`);
     assert.match(content, /^Depends on: (?:None|OPORD-\d{3}(?:, OPORD-\d{3})*)$/m, `${file} needs machine-readable dependencies`);
-    assert.match(content, /^\| Task ID \| Wave \| Owner \| Model\/tier \| Owned files\/systems \| Instructions \| Task acceptance \|$/m, `${file} needs the task table header`);
-    const rows = [...content.matchAll(/^\| (O\d{3}-T\d+) \| [^\n]+$/gm)];
+    const lines = content.split(/\r?\n/);
+    const header = '| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |';
+    const headerIndex = lines.indexOf(header);
+    assert.ok(headerIndex >= 0, `${file} needs the task table header`);
+    const rows = [];
+    for (const line of lines.slice(headerIndex + 2)) {
+      if (!line.startsWith('|')) break;
+      const fields = line.split('|').slice(1, -1).map((field) => field.trim());
+      assert.equal(fields.length, 7, `${file} task row needs exactly seven fields`);
+      for (const field of fields) assert.ok(field.length > 0, `${file} task fields must be populated`);
+      assert.match(fields[0], /^O\d{3}-T\d+$/, `${file} task ID should parse`);
+      assert.match(fields[1], /^[1-9]\d*$/, `${fields[0]} needs a positive wave`);
+      assert.match(fields[3], /^(?:General|Colonel|Sergeant|Private) \/ gpt-[a-z0-9.-]+$/, `${fields[0]} needs explicit rank and model`);
+      for (const fieldIndex of [4, 5, 6]) assert.ok(fields[fieldIndex].length >= 3, `${fields[0]} needs concrete task territory and acceptance`);
+      rows.push(fields);
+    }
     assert.ok(rows.length >= 3, `${file} needs at least three bounded tasks`);
     for (const row of rows) {
-      assert.equal(taskIds.has(row[1]), false, `${row[1]} must be globally unique`);
-      taskIds.add(row[1]);
+      assert.equal(taskIds.has(row[0]), false, `${row[0]} must be globally unique`);
+      taskIds.add(row[0]);
     }
   }
 });
@@ -98,25 +112,6 @@ test('OPORD dependency graph is resolvable and acyclic', () => {
   const files = fs.readdirSync(opordDir).filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file));
   const ids = new Set(files.map((file) => `OPORD-${file.slice(0, 3)}`));
   const graph = new Map();
-  const expected = new Map(Object.entries({
-    'OPORD-001': [],
-    'OPORD-002': ['OPORD-001'],
-    'OPORD-003': ['OPORD-002', 'OPORD-005', 'OPORD-006'],
-    'OPORD-004': ['OPORD-003', 'OPORD-006'],
-    'OPORD-005': ['OPORD-002'],
-    'OPORD-006': ['OPORD-005'],
-    'OPORD-007': ['OPORD-004', 'OPORD-006'],
-    'OPORD-008': ['OPORD-007'],
-    'OPORD-009': ['OPORD-006', 'OPORD-007'],
-    'OPORD-010': ['OPORD-006', 'OPORD-007'],
-    'OPORD-011': ['OPORD-007', 'OPORD-008', 'OPORD-009'],
-    'OPORD-012': ['OPORD-005', 'OPORD-006', 'OPORD-007', 'OPORD-008', 'OPORD-009', 'OPORD-010', 'OPORD-011'],
-    'OPORD-013': ['OPORD-005', 'OPORD-006', 'OPORD-012'],
-    'OPORD-014': Array.from({ length: 13 }, (_, index) => `OPORD-${String(index + 1).padStart(3, '0')}`),
-    'OPORD-015': ['OPORD-013', 'OPORD-014'],
-    'OPORD-016': ['OPORD-015'],
-    'OPORD-017': ['OPORD-006', 'OPORD-016']
-  }));
 
   for (const file of files) {
     const id = `OPORD-${file.slice(0, 3)}`;
@@ -124,12 +119,36 @@ test('OPORD dependency graph is resolvable and acyclic', () => {
     const match = content.match(/^Depends on: (None|OPORD-\d{3}(?:, OPORD-\d{3})*)$/m);
     assert.ok(match, `${file} dependency line should parse`);
     const dependencies = match[1] === 'None' ? [] : match[1].split(', ');
-    assert.deepEqual(dependencies, expected.get(id), `${file} must use the campaign dependency graph`);
     for (const dependency of dependencies) {
       assert.ok(ids.has(dependency), `${file} references missing ${dependency}`);
       assert.notEqual(dependency, id, `${file} cannot depend on itself`);
     }
     graph.set(id, dependencies);
+  }
+
+  const readme = fs.readFileSync(path.join(opordDir, 'README.md'), 'utf8');
+  const adjacency = new Map([...readme.matchAll(/^(OPORD-\d{3}): (None|OPORD-\d{3}(?:, OPORD-\d{3})*)$/gm)].map((match) => [match[1], match[2] === 'None' ? [] : match[2].split(', ')]));
+  assert.equal(adjacency.size, ids.size, 'README adjacency list must include every OPORD once');
+  const registry = new Map();
+  for (const match of readme.matchAll(/^\| (\d{3}) \| \[[^\]]+\]\((\d{3}-[a-z0-9-]+\.md)\) \| (None|OPORD-\d{3}(?:, OPORD-\d{3})*) \|/gm)) {
+    assert.equal(match[1], match[2].slice(0, 3), 'README registry ID and filename should agree');
+    registry.set(`OPORD-${match[1]}`, match[3] === 'None' ? [] : match[3].split(', '));
+  }
+  assert.equal(registry.size, ids.size, 'README registry must include every OPORD once');
+  for (const [id, dependencies] of graph) {
+    assert.deepEqual(adjacency.get(id), dependencies, `${id} README adjacency must match its document`);
+    assert.deepEqual(registry.get(id), dependencies, `${id} README registry must match its document`);
+  }
+
+  const orderMatch = readme.match(/^Canonical execution order: (OPORD-\d{3}(?: -> OPORD-\d{3})*)$/m);
+  assert.ok(orderMatch, 'README needs one machine-readable canonical execution order');
+  const order = orderMatch[1].split(' -> ');
+  assert.equal(order.length, ids.size);
+  assert.equal(new Set(order).size, ids.size, 'canonical order must include each ID once');
+  for (const id of ids) assert.ok(order.includes(id), `canonical order missing ${id}`);
+  const position = new Map(order.map((id, index) => [id, index]));
+  for (const [id, dependencies] of graph) {
+    for (const dependency of dependencies) assert.ok(position.get(dependency) < position.get(id), `${dependency} must precede ${id}`);
   }
 
   const visiting = new Set();
