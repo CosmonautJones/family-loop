@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-DATA-001`
 
-Status: Complete; final Sergeant commit pending.
+Status: Complete (`68b8869`).
 
 ## Mission
 
@@ -180,4 +180,4 @@ The Sergeant owns commits, integration, wave transitions, and final acceptance. 
 - [x] All required commands and both phone smoke paths are recorded with results.
 - [x] Review log, architecture, task history, code rubric, UX rubric, and regression checklist are current and truthful.
 - [x] Risks and follow-ups are recorded without absorbing later missions.
-- [ ] Sergeant commits the scoped, reviewable mission result.
+- [x] Sergeant committed the scoped, reviewable mission result (`68b8869`).
