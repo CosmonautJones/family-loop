@@ -12,7 +12,7 @@
 - [ ] Substantive lint — placeholder command only.
 - [ ] Actual browser hard-reload — NOT RUN; adapter reconstruction passed, but it is limited evidence.
 - [ ] Browser durability does not prove remote/multi-user/RLS/private-media behavior; Safari/no-Web-Locks cross-tab atomicity is also unproven.
-- [ ] Unsplash attribution/domain handling — follow-up in the private-media wave.
+- [x] Wave 3 URL-photo records require source URL, photographer credit, caption, and alt text; this is local attribution metadata, not proof of remote private-media handling or hotlink permanence.
 
 ## Wave 1 family membership and navigation
 
@@ -39,6 +39,18 @@
 - [x] 430×932 and 1280×900 width checks retained the trip without document overflow.
 - [x] Independent Wave 2 final gate — AMBER / PROCEED-WARN, zero blockers; authoritative counts root 37/37 and app-local 26/26.
 - [ ] Real-device Safari/Chrome and remote Supabase/RLS/multi-user behavior — NOT RUN.
+
+## Wave 3 event comments and browser photos
+
+- [x] Comments remain isolated by exact event ID; blank sends fail and failed sends retain the draft for retry.
+- [x] URL photo creation requires valid HTTP(S) image/source URLs, caption, alt text, and photographer attribution.
+- [x] Browser file selection was exercised with a real 609-byte PNG; the photo survived hard reload and could be deleted.
+- [x] Unsupported/oversized browser files fail before durable persistence; invalid URL-photo input remains visible and retryable.
+- [x] Comment, attributed URL photo, selected file, reload retention, deletion, and invalid-photo retry were exercised in Chrome.
+- [x] Exact CDP widths 320×844, 390×844, 430×932, and 1280×900 had no document overflow.
+- [x] Root tests 39/39 and app-local tests 39/39; TypeScript, harness, web export, and diff check pass.
+- [x] Independent Run 2 — AMBER / PROCEED-WARN, zero blockers after Run 1 draft-retention and file-guard fixes.
+- [ ] Placeholder lint, pre-existing React Native Web shadow warning, live Supabase/RLS/private storage/signed access, physical devices, and multi-user behavior remain warnings or `NOT RUN`.
 
 ## OPORD campaign documentation
 

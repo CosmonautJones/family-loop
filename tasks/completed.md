@@ -1,5 +1,16 @@
 # Completed Work
 
+## 2026-07-14 - FAMILY-LOOP-FULL-001 Wave 3 event comments and browser photos
+
+### Summary
+Completed durable-local, event-scoped comments and responsive-web photo sharing across `daf38d6`, `7eae2b5`, `630ad85`, and `e242761`, including attributed URL photos, browser file selection, reload retention, deletion, validation, and retry-safe drafts.
+
+### Result
+Independent Run 2 accepted AMBER / PROCEED-WARN with zero blockers after Run 1 fixes. Root and app-local tests pass 39/39 each; TypeScript, harness, Expo web export, diff check, and exact 320/390/430/1280 browser checks pass. Chrome exercised a comment, attributed URL photo, a real 609-byte PNG file selection, hard reload, deletion, invalid input, and retained retry state. Lint remains a placeholder, the React Native Web shadow warning is pre-existing, and live Supabase/RLS/private storage/signed access, multi-user behavior, and physical devices remain unverified.
+
+### Links / commits
+`daf38d6`, `7eae2b5`, `630ad85`, `e242761`.
+
 Move finished missions here with a short summary.
 
 ## 2026-07-13 - FAMILY-LOOP-FULL-001 Wave 0 durable local foundation

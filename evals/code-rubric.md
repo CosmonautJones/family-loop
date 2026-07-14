@@ -48,7 +48,19 @@
 - [x] Durable reconstruction covers the trip and RSVP plus derived Home, Calendar, and Family visibility.
 - [x] Untouched RSVP is `No response`, not a fabricated Maybe.
 - [x] Root tests 37/37 and app-local tests 26/26, TypeScript, harness, web export, diff, and scoped browser checks pass.
-- [ ] Independent Wave 2 gate, substantive lint, and remote Supabase/RLS — pending or unproven.
+- [x] Independent Wave 2 gate — AMBER / PROCEED-WARN with zero blockers.
+- [ ] Substantive lint and remote Supabase/RLS — unproven.
+
+## Wave 3 event comments and browser photos
+
+- [x] Comments and photo lists are exact-event service reads with honest loading, empty, error, and retry states.
+- [x] Comment send trims/rejects blank input, prevents duplicate submission, retains the draft on failure, and clears only after success/refetch.
+- [x] URL photos require a valid HTTP(S) image URL, caption, alt text, source URL, and photographer credit.
+- [x] Browser file selection persists a validated local image record; unsupported and oversized files fail before durable storage, and failed photo input remains retryable.
+- [x] Photo deletion is pending-safe, event-isolated, durable across reload, and does not imply remote object deletion.
+- [x] Root tests 39/39 and app-local tests 39/39, TypeScript, harness, web export, diff, and exact 320/390/430/1280 browser checks pass.
+- [x] Independent Wave 3 Run 2 — AMBER / PROCEED-WARN with zero blockers after Run 1 fixes `630ad85` and `e242761`.
+- [ ] Substantive lint, live Supabase/RLS/private storage/signed access, real-device Safari/Chrome, and multi-user behavior — unverified.
 
 - Did the implementation stay inside the mission?
 - Were unrelated changes avoided?

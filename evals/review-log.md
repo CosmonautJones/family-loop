@@ -1,5 +1,20 @@
 # Review Log
 
+## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 3 final closeout
+
+- Accepted commits: `daf38d6`, `7eae2b5`, `630ad85`, and `e242761`.
+- Independent Run 1 was **RED** because failed comment submission cleared its draft and durable browser-file input lacked explicit size/type constraints. `630ad85` preserves composer drafts through failure/retry; `e242761` validates supported image types and bounded size before durable persistence.
+- Independent Run 2 result: **AMBER / PROCEED-WARN, ZERO BLOCKERS**. Root tests PASS 39/39; app-local tests PASS 39/39; TypeScript, harness, Expo web export, and diff check PASS. Lint remains the known placeholder warning.
+- Exact CDP at 320×844, 390×844, 430×932, and 1280×900 found no document overflow. The browser journey posted a real comment, attached an attributed URL photo, selected a 609-byte PNG through the file chooser, hard-reloaded with records retained, deleted the uploaded photo, and verified invalid-photo failure with retry input retained.
+- The only console advisory was the pre-existing React Native Web shadow-style deprecation warning. Live Supabase, RLS, private object storage/signed access, real-device Safari/Chrome, and multi-user behavior were `NOT RUN` and are not inferred.
+- Wave 3 is **COMPLETE** as a durable-local comment/browser-photo checkpoint. The broader campaign remains **IN PROGRESS**.
+
+## 2026-07-14 — FAMILY-LOOP-FULL-001 Wave 3 Run 1 correction
+
+- Initial implementation commits `daf38d6` and `7eae2b5` moved event comments/photos onto service and Query boundaries, added attributed URL-photo and browser-file paths, and supplied event-isolated durable contracts.
+- Independent Run 1 returned **RED** on two targeted defects: failed comment sends lost user input, and unrestricted file reads could put unsuitable data into durable browser storage.
+- Fix commits `630ad85` and `e242761` retained failed drafts and added pre-persistence file type/size validation. Run 2 above supersedes Run 1 as final gate evidence.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 2 final closeout
 
 - Independent final result: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
