@@ -37,7 +37,8 @@
 - [x] RSVP pending/error/no-response states are truthful and announced.
 - [x] Exact 320×844 browser flow covered create, RSVP, reload, Back, Home, and Calendar without document overflow.
 - [x] 430×932 and 1280×900 width checks retained the trip without document overflow.
-- [ ] Independent Wave 2 review — pending; real-device and remote/multi-user behavior — NOT RUN.
+- [x] Independent Wave 2 final gate — AMBER / PROCEED-WARN, zero blockers; authoritative counts root 37/37 and app-local 26/26.
+- [ ] Real-device Safari/Chrome and remote Supabase/RLS/multi-user behavior — NOT RUN.
 
 ## OPORD campaign documentation
 

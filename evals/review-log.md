@@ -1,12 +1,19 @@
 # Review Log
 
+## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 2 final closeout
+
+- Independent final result: **AMBER / PROCEED-WARN, ZERO BLOCKERS**.
+- The initial G5 documentation-only blocker was corrected in `3262a33`; authoritative fresh counts are root 37/37 and app-local 26/26.
+- Runtime, TypeScript, harness, Expo web export, scoped browser journey, and diff evidence passed. Placeholder lint remains AMBER; remote Supabase/RLS, multi-user sync, and real-device Safari/Chrome remain unverified and are not inferred.
+- Wave 2 is **COMPLETE**.
+
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 2 implementation handoff
 
 - Commit `c1b135e` replaces preset-only creation with a five-field family-plan form, inline validation, pending/error/retry states, exact-ID navigation, and pending-safe, truthful RSVP controls.
 - Root tests PASS 37/37 and app-local tests PASS 26/26; TypeScript, harness, Expo web export, and diff check PASS. Lint remains the known placeholder AMBER.
 - Exact 320×844 browser flow created “Wisconsin Dells weekend,” routed to `#/event/event-created-1?from=create`, saved Going, reloaded with event and RSVP retained, returned to Create with Back, and found the trip on Home and Calendar. Client and scroll widths matched at 320, 430, and 1280.
 - Read-only Private review blockers for validation export, impossible-date normalization, and selector expectation were fixed; its RSVP live-region advisory was also fixed.
-- Wave 2 awaits independent review. Remote Supabase/RLS, multi-user sync, and real-device Safari/Chrome remain unverified.
+- This implementation handoff was superseded by the accepted final closeout above. Remote Supabase/RLS, multi-user sync, and real-device Safari/Chrome remain unverified.
 
 ## 2026-07-13 — FAMILY-LOOP-FULL-001 Wave 1 Run 3 closeout
 

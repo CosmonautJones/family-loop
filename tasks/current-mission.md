@@ -252,4 +252,10 @@ This mission is complete only when all authorized waves pass their acceptance an
 - Exact 320×844 browser evidence covers create, exact route, Going RSVP, reload retention, Back, Home/Calendar visibility, and no document overflow. 430×932 and 1280×900 width checks also passed.
 - Private review blockers and its RSVP live-region advisory were fixed before handoff.
 
-Current truth: **Wave 0 and Wave 1 are complete. Wave 2 implementation is committed and awaits independent review; it is not self-certified complete. No remote/live Supabase, RLS, or multi-user capability is claimed complete.**
+### Wave 2 independent acceptance
+
+- Independent final gate accepted Wave 2 at **AMBER / PROCEED-WARN with zero blockers** after the records-only test-count correction in `3262a33`.
+- Authoritative fresh evidence is root tests PASS 37/37 and app-local tests PASS 26/26; TypeScript, harness, Expo web export, browser journey, and diff check remain PASS.
+- Wave 2 is **COMPLETE**. Placeholder lint, real-device Safari/Chrome, and remote Supabase/RLS/multi-user behavior remain explicit warnings or unverified scope.
+
+Current truth: **Waves 0-2 are complete. Independent Wave 2 final review accepted the corrected records at AMBER / PROCEED-WARN with zero blockers. No remote/live Supabase, RLS, or multi-user capability is claimed complete.**
