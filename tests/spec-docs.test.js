@@ -45,15 +45,16 @@ test('accepted ADRs use the numeric filename convention and required sections', 
   assert.match(adr, /## Non-decisions/);
 });
 
-test('engineering campaign contains exactly 15 ordered OPORDs with the required contract', () => {
+test('engineering campaign contains exactly 17 ordered OPORDs with executable task contracts', () => {
   const opordDir = path.join(root, 'docs/opords');
   const files = fs.readdirSync(opordDir)
     .filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file))
     .sort();
 
-  assert.equal(files.length, 15);
-  assert.deepEqual(files.map((file) => file.slice(0, 3)), Array.from({ length: 15 }, (_, index) => String(index + 1).padStart(3, '0')));
-  assert.equal(new Set(files.map((file) => file.replace(/^\d{3}-/, ''))).size, 15);
+  assert.equal(files.length, 17);
+  assert.deepEqual(files.map((file) => file.slice(0, 3)), Array.from({ length: 17 }, (_, index) => String(index + 1).padStart(3, '0')));
+  assert.equal(new Set(files.map((file) => file.replace(/^\d{3}-/, ''))).size, 17);
+  assert.equal(files.includes('015-ci-release-backup-data-lifecycle.md'), false);
 
   const headings = [
     'Status',
@@ -72,6 +73,7 @@ test('engineering campaign contains exactly 15 ordered OPORDs with the required 
     'Definition of done'
   ];
 
+  const taskIds = new Set();
   for (const file of files) {
     const content = fs.readFileSync(path.join(opordDir, file), 'utf8');
     assert.match(content, /^# (?:FAMILY-LOOP-)?OPORD(?:-| )\d{3} — .+/m, `${file} needs a unique titled order`);
@@ -80,7 +82,67 @@ test('engineering campaign contains exactly 15 ordered OPORDs with the required 
     }
     assert.match(content, /Always-local/i, `${file} must separate always-local evidence`);
     assert.match(content, /Conditional-(staging|native|human)/i, `${file} must separate conditional evidence`);
+    assert.match(content, /^Depends on: (?:None|OPORD-\d{3}(?:, OPORD-\d{3})*)$/m, `${file} needs machine-readable dependencies`);
+    assert.match(content, /^\| Task ID \| Wave \| Owner \| Model\/tier \| Owned files\/systems \| Instructions \| Task acceptance \|$/m, `${file} needs the task table header`);
+    const rows = [...content.matchAll(/^\| (O\d{3}-T\d+) \| [^\n]+$/gm)];
+    assert.ok(rows.length >= 3, `${file} needs at least three bounded tasks`);
+    for (const row of rows) {
+      assert.equal(taskIds.has(row[1]), false, `${row[1]} must be globally unique`);
+      taskIds.add(row[1]);
+    }
   }
+});
+
+test('OPORD dependency graph is resolvable and acyclic', () => {
+  const opordDir = path.join(root, 'docs/opords');
+  const files = fs.readdirSync(opordDir).filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file));
+  const ids = new Set(files.map((file) => `OPORD-${file.slice(0, 3)}`));
+  const graph = new Map();
+  const expected = new Map(Object.entries({
+    'OPORD-001': [],
+    'OPORD-002': ['OPORD-001'],
+    'OPORD-003': ['OPORD-002', 'OPORD-005', 'OPORD-006'],
+    'OPORD-004': ['OPORD-003', 'OPORD-006'],
+    'OPORD-005': ['OPORD-002'],
+    'OPORD-006': ['OPORD-005'],
+    'OPORD-007': ['OPORD-004', 'OPORD-006'],
+    'OPORD-008': ['OPORD-007'],
+    'OPORD-009': ['OPORD-006', 'OPORD-007'],
+    'OPORD-010': ['OPORD-006', 'OPORD-007'],
+    'OPORD-011': ['OPORD-007', 'OPORD-008', 'OPORD-009'],
+    'OPORD-012': ['OPORD-005', 'OPORD-006', 'OPORD-007', 'OPORD-008', 'OPORD-009', 'OPORD-010', 'OPORD-011'],
+    'OPORD-013': ['OPORD-005', 'OPORD-006', 'OPORD-012'],
+    'OPORD-014': Array.from({ length: 13 }, (_, index) => `OPORD-${String(index + 1).padStart(3, '0')}`),
+    'OPORD-015': ['OPORD-013', 'OPORD-014'],
+    'OPORD-016': ['OPORD-015'],
+    'OPORD-017': ['OPORD-006', 'OPORD-016']
+  }));
+
+  for (const file of files) {
+    const id = `OPORD-${file.slice(0, 3)}`;
+    const content = fs.readFileSync(path.join(opordDir, file), 'utf8');
+    const match = content.match(/^Depends on: (None|OPORD-\d{3}(?:, OPORD-\d{3})*)$/m);
+    assert.ok(match, `${file} dependency line should parse`);
+    const dependencies = match[1] === 'None' ? [] : match[1].split(', ');
+    assert.deepEqual(dependencies, expected.get(id), `${file} must use the campaign dependency graph`);
+    for (const dependency of dependencies) {
+      assert.ok(ids.has(dependency), `${file} references missing ${dependency}`);
+      assert.notEqual(dependency, id, `${file} cannot depend on itself`);
+    }
+    graph.set(id, dependencies);
+  }
+
+  const visiting = new Set();
+  const visited = new Set();
+  function visit(id) {
+    assert.equal(visiting.has(id), false, `dependency cycle reaches ${id}`);
+    if (visited.has(id)) return;
+    visiting.add(id);
+    for (const dependency of graph.get(id)) visit(dependency);
+    visiting.delete(id);
+    visited.add(id);
+  }
+  for (const id of graph.keys()) visit(id);
 });
 
 test('OPORD index resolves dependencies and covers the full engineering scope', () => {
@@ -88,7 +150,7 @@ test('OPORD index resolves dependencies and covers the full engineering scope', 
   assert.equal(fs.existsSync(indexPath), true);
   const content = fs.readFileSync(indexPath, 'utf8');
   const links = [...content.matchAll(/\]\((\d{3}-[a-z0-9-]+\.md)\)/g)].map((match) => match[1]);
-  assert.equal(new Set(links).size, 15);
+  assert.equal(new Set(links).size, 17);
   for (const link of links) assert.equal(fs.existsSync(path.join(root, 'docs/opords', link)), true, `${link} should resolve`);
 
   for (const domain of [
@@ -96,7 +158,7 @@ test('OPORD index resolves dependencies and covers the full engineering scope', 
     'Database, RLS, migrations', 'Events, RSVP, and calendar', 'Chat and realtime',
     'Images and private object storage', 'Reminders and notifications', 'Memories and recaps',
     'Offline behavior', 'Security, privacy, observability', 'native, accessibility, and usability tests',
-    'CI, deployment, release, backup, restore'
+    'CI quality gates', 'Deployment, release, promotion, and rollback', 'Backup, restore, retention, export, and deletion'
   ]) assert.match(content, new RegExp(domain, 'i'), `coverage matrix missing ${domain}`);
 });
 

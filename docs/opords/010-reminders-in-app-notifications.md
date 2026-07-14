@@ -1,4 +1,4 @@
-# OPORD 010 — Reminders and in-app notifications
+# OPORD 010 — Reminders and In-App Notifications
 
 ## Status
 Planned as M5 after M2 and after any M3/M4 activity it surfaces; push delivery is excluded.
@@ -10,6 +10,8 @@ Event Detail currently toggles transient reminder drafts and explicitly says pus
 Persist a simple per-user event reminder preference and provide a truthful in-app notification list/read loop tied back to exact events.
 
 ## Dependencies
+Depends on: OPORD-006, OPORD-007
+
 Completed M1–M3; M4 only for media notifications; approved M5 mission; safe configured environment for live RLS evidence.
 
 ## Non-goals
@@ -25,12 +27,11 @@ Push infrastructure, OS permissions, new dependencies, remote scheduler/function
 State reminder timing in plain, concrete words (“Morning of event”), expose a 48x48-point on/off action with immediate confirmation, show unread status with text as well as color, and open the exact event with an obvious Back path. Use readable type and screen-reader state, respect reduced motion, and keep failure recovery visible.
 
 ## Execution
-1. Define the minimum persisted reminder preference and notification read model without a general settings framework.
-2. Add exact-user/event Query ownership and scoped invalidation; remove durable reminder claims from Zustand.
-3. Implement explicit loading/empty/error/populated notifications and mark-read behavior.
-4. Link event notifications to exact Event Detail; unknown/deleted events show an honest state.
-5. Test user isolation, read persistence/refetch, failure recovery, and no fixture fallback.
-6. Phone-smoke reminder and notification flows; record push as out of scope.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---:|---|---|---|---|---|
+| O010-T1 | 1 | Data builder | standard | reminder/notification service, queries, focused tests | Define the minimum persisted reminder preference; add exact-user/event Query ownership and scoped invalidation. | Refetch preserves preference; tests prove user/event isolation and configured errors never select fixtures. |
+| O010-T2 | 2 | Mobile builder | standard | Event Detail, notification surface, existing navigation | Replace transient reminder claims; render loading/empty/error/populated/read states and exact-event links. | Pending/error states retain intent; deleted event is honest; no copy implies push delivery. |
+| O010-T3 | 3 | QA/reviewer | standard | tests, regression checklist, review log | Test read persistence, failure recovery and signed-out privacy; smoke at 390x844. | Local suite and phone smoke pass; live/native/human evidence is reported honestly. |
 
 ## Acceptance criteria
 - Reminder preference survives service refetch and is isolated by user/event.
@@ -40,7 +41,14 @@ State reminder timing in plain, concrete words (“Morning of event”), expose 
 
 ## Validation commands/evidence
 ### Always-local
-Run root/app tests, TypeScript, placeholder lint labeled, harness, diff check, adapter/query isolation tests, 390x844 reminder/list/read/deep-link smoke, and configured signed-out smoke.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+```
+
+Also record adapter/query isolation tests, a 390x844 reminder/list/read/deep-link smoke, and configured signed-out smoke; label lint as the repository placeholder.
 
 ### Conditional-staging/native/human
 Run live RLS/two-user checks only with safe approval; native/human tests are currently NOT RUN.

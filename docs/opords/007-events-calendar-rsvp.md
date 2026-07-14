@@ -1,4 +1,4 @@
-# FAMILY-LOOP-OPORD-007 — Events, calendar, and RSVP
+# OPORD 007 — Events, calendar, and RSVP
 
 ## Status
 
@@ -18,6 +18,8 @@ PLANNED — M2 foundations exist; this order is limited to verified core-loop ha
 Verify and surgically harden the existing phone event loop so chronological event discovery, creation, exact-event navigation, and one-thumb RSVP remain truthful across loading, empty, error, and refetch states.
 
 ## Dependencies
+
+Depends on: OPORD-004, OPORD-006
 
 - M1 configured session gate and M2 Query/service event boundary remain unchanged.
 - OPORD-001 IA and OPORD-002 accessibility acceptance rules.
@@ -44,12 +46,12 @@ Show date, time, place, and current RSVP in plain language; keep primary RSVP op
 
 ## Execution
 
-1. Reproduce the complete mock route at 390x844: Home next event → exact detail → RSVP change → Back; Create → exact created detail → Home/Calendar discovery.
-2. Add/confirm executable cases for parsed-instant chronological ordering, stable ties, unique IDs, zero events, unknown ID, create/refetch, and event-scoped RSVP.
-3. Audit phone copy, touch targets, pending/error recovery, date/timezone labels, and calendar-to-agenda correspondence.
-4. Log failures with evidence. Obtain exact implementation authorization; do not refactor passing behavior.
-5. Apply the smallest corrections and rerun event/thread/auth regressions.
-6. If a safe configured environment exists under separate authorization, test persistence and group isolation; otherwise retain `NOT RUN`.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O007-T1 | 1 | Event-loop tester | Private / gpt-5.3-instant | Local mock app and event/RSVP tests | Reproduce Home → exact detail → RSVP → Back and Create → exact detail → Home/Calendar at 390x844; cover ordering, ties, IDs, empty, and unknown states. | Reproduction evidence is exact-ID and distinguishes process-local behavior from persistence. |
+| O007-T2 | 1 | Accessibility/product reviewer | Private / gpt-5.3-instant | Home, Calendar, Create, Event Detail (read-only), review record | Audit copy, targets, pending/error recovery, time-zone labels, and calendar/agenda correspondence. | Each defect is evidenced; passing behavior is not proposed for refactor. |
+| O007-T3 | 2 | Implementer | Private / gpt-5.3-instant | Separately approved event/RSVP manifest and focused tests | Apply only approved corrections and rerun event, thread, auth, and configured-signed-out regressions. | All local criteria pass with a narrow manifest-bound diff. |
+| O007-T4 | 3 | Staging verifier | Private / gpt-5.3-instant | Approved safe configured environment only | Under separate authorization, verify two-user persistence and group isolation; otherwise record `NOT RUN`. | No live claim without transcript evidence and no remote setup is inferred. |
 
 ## Acceptance criteria
 
@@ -64,7 +66,15 @@ Show date, time, place, and current RSVP in plain language; keep primary RSVP op
 
 ### Always-local
 
-- `npm test`; `cd app; npm test`; `cd app; npx tsc --noEmit`; harness; placeholder-qualified lint; `git diff --check` and manifest review.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
+
+- Report lint as placeholder unless changed and review the exact manifest.
 - Mock phone smoke at 390x844, including exact IDs, calendar discovery, RSVP mutation/refetch, zero/unknown states where safely injectable.
 - Configured signed-out regression at 390x844 with non-secret placeholder configuration and no submitted credentials.
 

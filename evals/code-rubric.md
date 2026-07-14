@@ -2,7 +2,8 @@
 
 ## OPORD campaign planning gate
 
-- [x] Exactly 15 sequential orders have unique filenames and an indexed dependency chain.
+- [x] Exactly 17 orders have unique filenames and a machine-checked acyclic dependency graph.
+- [x] Every order has at least three concrete, globally unique task rows with ownership and acceptance.
 - [x] Every order identifies narrow file/system territory and RED authorization boundaries.
 - [x] Required headings and engineering-domain coverage have portable executable checks.
 - [x] Mock/schema/adapter presence is separated from live server or database proof.

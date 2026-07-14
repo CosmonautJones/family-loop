@@ -4,12 +4,14 @@
 Planned; separately authorize after the completed M3 thread foundation. Remote Supabase and native behavior remain unverified.
 
 ## Situation and evidence
-M3 already provides event-keyed Query reads/sends and exact-key refetch (`docs/architecture.md:19,32`; `evals/review-log.md:3-13`). The migration declares messages in the realtime publication (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:523`), but repository definitions are not live proof (`docs/architecture.md:41`). Realtime subscriptions and presence were explicit M3 non-goals (`tasks/current-mission.md`).
+M3 already provides event-keyed Query reads/sends and exact-key refetch (`docs/architecture.md:19,32`; `evals/review-log.md:13-23`; `tasks/completed.md:9-12`). The migration declares messages in the realtime publication (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:523`), but repository definitions are not live proof (`docs/architecture.md:43`). Realtime subscriptions and presence were excluded from the completed M3 implementation, as shown by its immutable completion and review records (`tasks/completed.md:9-12`; `evals/review-log.md:13-23`).
 
 ## Mission/objective
 Make an open Event Detail thread receive authorized inserts/updates without manual navigation while preserving chronological, duplicate-free, event-scoped Query state and recoverable connection behavior.
 
 ## Dependencies
+Depends on: OPORD-007
+
 Completed M1–M3; an approved current mission; a safe configured two-user Supabase environment for live acceptance. Inference: realtime should update the existing event-message Query cache or invalidate its exact key.
 
 ## Non-goals
@@ -25,12 +27,11 @@ Auth expansion, schema/RLS edits, migration deployment, credentials, new depende
 New messages must appear without stealing focus, moving the composer unexpectedly, or requiring refresh controls smaller than 48x48 points; reconnect/error copy must be plain, persistent, and readable at large text sizes. Announce new/error state without overwhelming screen readers, respect reduced motion, and keep recovery obvious.
 
 ## Execution
-1. Specify one event-scoped subscription lifecycle and duplicate policy against the existing query key.
-2. Add a service/query seam that subscribes only while an exact event is open and cleans up on event/session change.
-3. Reconcile incoming rows by stable ID, then sort by parsed instant plus ID tie-break; refetch on ambiguous payloads or reconnect.
-4. Keep send behavior authoritative and prevent local-send/realtime double insertion.
-5. Add contract tests, mock phone smoke, configured signed-out regression, then safe two-user live proof if available.
-6. Update architecture and review evidence only after checks pass.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O008-T1 | 1 | Realtime contract designer | Private / gpt-5.3-instant | Service/query contracts and focused tests | Specify exact-event subscription lifecycle, duplicate policy, cleanup, reconnect, and parsed-instant ordering. | Contract proves isolation, deterministic reconciliation, and cleanup without runtime UI dependency. |
+| O008-T2 | 2 | Realtime implementer | Private / gpt-5.3-instant | Approved query/adapter/thread files | Implement open-event-only subscription, stable-ID reconciliation, refetch fallback, and local-send deduplication. | Mock tests and signed-out/thread regressions pass without fixture fallback. |
+| O008-T3 | 3 | Staging verifier | Private / gpt-5.3-instant | Approved safe two-user Supabase environment | Prove event isolation, reconnect convergence, and cleanup; otherwise record `NOT RUN`. | Timestamped two-user evidence exists and no publication/RLS/deploy mutation occurs. |
 
 ## Acceptance criteria
 - Event A changes appear once on Event A and never Event B.
@@ -41,7 +42,15 @@ New messages must appear without stealing focus, moving the composer unexpectedl
 
 ## Validation commands/evidence
 ### Always-local
-Run root `npm test`; in `app`, run `npm test`, `npx tsc --noEmit`, and `npm run lint` (record as placeholder per `app/package.json:11`); run `scripts/check-harness.ps1`, `git diff --check`, focused subscription tests, 390x844 mock smoke, and configured signed-out smoke.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
+
+Record lint as placeholder per `app/package.json:11`; run focused subscription tests named by the mission, 390x844 mock smoke, and configured signed-out smoke.
 
 ### Conditional-staging/native/human
 Run an approved live two-user transcript only in a safe staging environment. Native/human tests: currently NOT RUN.

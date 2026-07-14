@@ -1,8 +1,8 @@
-# FAMILY-LOOP-OPORD-005 — Service boundary and environment readiness
+# OPORD 005 — Service boundary and environment readiness
 
 ## Status
 
-PLANNED READ-ONLY AUDIT — no remote mutation, credentials, or deployment authorized.
+PLANNED LOCAL SERVER/SERVICE MISSION — staging deploy, credentials, and remote mutation remain RED pending separate authorization.
 
 ## Situation and evidence
 
@@ -13,9 +13,11 @@ PLANNED READ-ONLY AUDIT — no remote mutation, credentials, or deployment autho
 
 ## Mission/objective
 
-Produce a truthful, reproducible readiness matrix for every service capability required by the next approved mission, separating repository contract, local mock proof, configured-client behavior, and live-environment proof.
+Make the server/service boundary executable and diagnosable for the next approved mission: versioned requests, stable error envelopes and correlation IDs, bounded timeouts/retries, rate limits, explicit privileged-operation isolation, and connection/readiness probes—while separating local proof from conditional staging deployment.
 
 ## Dependencies
+
+Depends on: OPORD-002
 
 - Named next mission/capability so the audit stays narrow.
 - Existing repository tests and environment-variable documentation.
@@ -23,13 +25,13 @@ Produce a truthful, reproducible readiness matrix for every service capability r
 
 ## Non-goals
 
-- Deploying Supabase, discovering credentials, creating projects, editing environment files, fixing runtime behavior, adding dependencies, or mutating remote data.
+- Staging/production deployment, credential discovery, project creation, environment edits, dependencies, or remote mutation without separate approval.
 - Claiming production readiness or auditing unused future capabilities.
 
 ## Authorized territory (files/systems)
 
-- Read-only repository inspection of service adapters, migrations/config docs, package scripts, tests, and architecture/evals.
-- Local non-secret commands and mock-mode tests.
+- Service adapters and any existing in-repo server/edge boundary, under an exact separately approved local manifest.
+- Local non-secret commands, deterministic probes, contract tests, and mock-mode tests.
 - If explicitly supplied, non-mutating metadata/connectivity checks against an approved safe environment.
 - Documentation output and review log only.
 
@@ -39,20 +41,24 @@ Produce a truthful, reproducible readiness matrix for every service capability r
 
 ## Older-adult usability guardrail
 
-Readiness must include the failure experience: configured outages or missing data must produce plain, recoverable UI and never silently show fixtures that could mislead a user about family plans.
+Readiness must include the failure experience: configured outages, timeouts, rate limits, or missing data must produce plain, recoverable UI with a support-safe correlation ID and never silently show fixtures that could mislead a user about family plans.
 
 ## Execution
 
-1. Enumerate only the service methods used by the target mission and their callers/query keys.
-2. For each capability, record: contract present, mock implementation/tested, Supabase adapter present, repository infrastructure present, configured failure truthful, live proof status.
-3. Run local checks without loading or printing secrets.
-4. Compare migration/table/policy/bucket names statically; mark this as repository intent, not deployment proof.
-5. If a safe environment is explicitly provided, request separate authorization for exact non-mutating checks; otherwise mark live rows `NOT RUN`.
-6. Publish blockers and the smallest follow-up authorization needed.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O005-T1 | 1 | Service contract analyst | Private / gpt-5.3-instant | Service callers/adapters/server files (read-only), readiness matrix | Document request version, success shape, stable error envelope, correlation propagation, auth/privilege boundary, timeout, retry, rate limit, and connection assumptions. | Each capability separates repository, mock, configured, and live evidence; no secret is loaded or printed. |
+| O005-T2 | 1 | Service test owner | Private / gpt-5.3-instant | Focused local service/probe tests | Add probes for readiness/liveness, malformed/version mismatch, errors/correlation, timeout, retry classes/bounds, rate limiting, connection loss, and privileged denial. | Tests need no remote credentials; retries cannot duplicate writes; privileged paths reject client identity. |
+| O005-T3 | 2 | Service implementer | Private / gpt-5.3-instant | Separately approved existing service/server files | Implement smallest versioned boundary, error mapping, correlation ID, bounded timeout/retry, connection verification, rate-limit response, and server-only privileged seam. | Local probes and app contracts pass; configured failures stay visible; errors/logs expose no sensitive detail. |
+| O005-T4 | 3 | Staging operator | Private / gpt-5.3-instant | Explicitly approved staging target only | RED until separately authorized: deploy exact artifact, configure supplied secrets out-of-repo, run connection/version/probe/rate/error checks, and capture rollback reference. | Approval, target, version, and transcript exist; otherwise `NOT RUN` with no live claim. |
 
 ## Acceptance criteria
 
 - Every target capability has an evidence path and one of PASS/FAIL/NOT RUN/NOT APPLICABLE.
+- Version mismatch, validation, authentication, authorization, rate limit, timeout, dependency, and unexpected failures use a stable non-sensitive error envelope with a correlation ID.
+- Readiness verifies required connections; liveness does not depend on optional downstream systems.
+- Retries are bounded and restricted to retryable/idempotent operations; writes cannot be duplicated.
+- Privileged operations remain server-only and reject public/client credentials.
 - Mock, configured-client, repository-infrastructure, and remote-live claims are never conflated.
 - Environment variable names and adapter-selection behavior are documented without secret values.
 - No environment or remote state changes.
@@ -62,9 +68,16 @@ Readiness must include the failure experience: configured outages or missing dat
 
 ### Always-local
 
-- `npm test`; `cd app; npm test`; `cd app; npx tsc --noEmit`; harness; placeholder-qualified lint.
-- `git diff --check` and `git status --short` for documentation-only scope.
-- Static `rg` evidence for target service methods, tables, policies, and buckets.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+rg -n "health|ready|version|correlation|timeout|retry|rate|service_role|SUPABASE" app supabase tests
+git diff --check
+git status --short
+```
+
+- Report lint as placeholder unless changed; retain probe output with the readiness matrix.
 - Docker: `NOT AVAILABLE` baseline unless newly proven.
 
 ### Conditional-staging/native/human
@@ -74,7 +87,7 @@ Readiness must include the failure experience: configured outages or missing dat
 
 ## Stop conditions/authorization limits
 
-Stop before any prompt/login for credentials, secret output, environment edit, remote write, deployment, migration, or runtime correction. A failed readiness check creates a blocker/follow-up; it does not authorize repair.
+Stop before credential prompts, secret output, environment edits, remote writes, staging deploy, migration, dependency, or files outside the approved local manifest. Staging deployment stays RED until target, artifact, secret handling, probes, and rollback verification are separately authorized.
 
 ## Risks/follow-ups
 
@@ -84,4 +97,4 @@ Stop before any prompt/login for credentials, secret output, environment edit, r
 
 ## Definition of done
 
-The narrow matrix is complete and source-cited, all commands/results are honest, remote/Docker/native limits are explicit, review log is updated, and no runtime, environment, credential, or remote state changed.
+The versioned local boundary and probes meet acceptance, the readiness matrix is source-cited, commands/results are honest, remote/Docker/native limits are explicit, review log is updated, and no environment, credential, or remote state changed; staging remains separately authorized.

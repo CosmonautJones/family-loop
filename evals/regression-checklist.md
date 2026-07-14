@@ -2,7 +2,8 @@
 
 ## OPORD campaign documentation
 
-- [x] Exactly 15 numeric OPORDs are indexed in dependency order.
+- [x] Exactly 17 numeric OPORDs are indexed with resolvable, acyclic dependencies.
+- [x] The obsolete combined OPORD 015 is absent; CI, release/rollback, and backup/data lifecycle are separate executable orders 015-017.
 - [x] Every OPORD has the required mission, territory, usability, execution, acceptance, validation, stop, risk, and done sections.
 - [x] Coverage includes all requested frontend, backend, server/database, security, quality, release, and operations domains.
 - [x] Future orders do not claim authorization or live proof.

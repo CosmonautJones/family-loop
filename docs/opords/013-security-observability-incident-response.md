@@ -1,4 +1,4 @@
-# OPORD 013 — Security, observability, and incident response
+# OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
 Planned hardening mission; repository policy definitions exist but remote enforcement and operational response are unverified.
@@ -10,6 +10,8 @@ RLS is declared for messages, media, notifications, and reminders (`supabase/mig
 Create a minimal, privacy-preserving verification and response baseline for authorization failures, client errors, and suspected data exposure without deploying monitoring infrastructure.
 
 ## Dependencies
+Depends on: OPORD-005, OPORD-006, OPORD-012
+
 Approved security mission, named system owner, data classification/retention decisions, and a safe disposable Supabase environment for live RLS tests.
 
 ## Non-goals
@@ -25,11 +27,11 @@ Secrets, production logs/data, remote policy/migration deployment, new observabi
 Security failures must use calm plain language and readable type, preserve safe navigation, avoid blame, and provide a 48x48-point retry/sign-in action; internal codes may supplement but not replace understandable copy. Announce recovery state to screen readers and avoid unnecessary motion.
 
 ## Execution
-1. Inventory sensitive fields and trust boundaries without reading secrets or user content.
-2. Define redaction rules and a minimal event taxonomy containing identifiers/status, not bodies or media URLs.
-3. Add executable configured-boundary and cross-user authorization tests where safe.
-4. Write a triage runbook: detect, contain proposal, preserve evidence, escalate, communicate authorization, recover, review.
-5. Exercise a tabletop scenario; do not perform production containment.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---:|---|---|---|---|---|
+| O013-T1 | 1 | Security analyst | high | trust-boundary inventory, redaction spec, docs/evals | Inventory sensitive fields without reading secrets/content; define redaction and minimal metadata taxonomy. | Inventory covers tokens, bodies and signed URLs; tests prove these are absent from emitted evidence. |
+| O013-T2 | 2 | Security builder | high | authorization/redaction tests, existing error seams | Add configured-boundary and safe cross-user tests; keep errors understandable and non-leaking. | Local tests pass; live RLS is either evidenced in disposable staging or NOT RUN. |
+| O013-T3 | 3 | Incident lead/reviewer | high | incident runbook, tabletop record, review log | Define detect, preserve, escalate, authorized containment, recovery and review; run tabletop only. | Runbook names severity/owner/authority; tabletop closes with no production action. |
 
 ## Acceptance criteria
 - Logs/tests do not expose credentials, tokens, message bodies, or signed media URLs.
@@ -39,7 +41,15 @@ Security failures must use calm plain language and readable type, preserve safe 
 
 ## Validation commands/evidence
 ### Always-local
-Run standard checks plus focused redaction/authorization tests, a secret-pattern scan limited to changed files, 390x844 configured failure smoke, and a recorded tabletop.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opords tests app/src
+```
+
+Also run focused redaction/authorization tests, a 390x844 configured-failure smoke, and a recorded tabletop; inspect secret-scan matches rather than treating any match as proof.
 
 ### Conditional-staging/native/human
 Remote/live RLS, production telemetry, and external security assessment are NOT RUN unless separately approved.

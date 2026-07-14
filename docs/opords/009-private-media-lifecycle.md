@@ -10,6 +10,8 @@ The service already exposes upload/list/delete (`app/src/services/api.ts:92-101`
 Deliver an event-scoped, Query-owned private image lifecycle on Event Detail: choose, upload, list via expiring resolution, handle partial failures, and delete only with authorized confirmation.
 
 ## Dependencies
+Depends on: OPORD-006, OPORD-007
+
 Completed M1–M2; approved M4 manifest; existing service contract; safe configured storage environment for live RLS proof. Inference: a platform image picker may require a dependency, which is RED until separately approved.
 
 ## Non-goals
@@ -25,12 +27,11 @@ Unapproved dependencies, public bucket/URLs, schema/RLS/migration deployment, cr
 Use a plain labeled 48x48-point “Add photo” action, visible upload progress, readable failure/retry text, and a confirmatory delete action separated from viewing; never rely on icons, swipes, or long-press alone. Give screen readers meaningful image/status text, respect reduced motion, and keep recovery obvious.
 
 ## Execution
-1. Prove adapter semantics: exact event scoping, MIME/size rejection, signed resolution, metadata/storage cleanup behavior.
-2. Add exact-event media Query keys and mutation invalidation with explicit loading/empty/error/pending states.
-3. Replace staged-count copy with the narrowest authorized picker/upload path; if picker support needs a dependency, stop.
-4. Render private thumbnails without persisting signed URLs as durable identity.
-5. Add deliberate delete confirmation and recoverable partial-failure handling.
-6. Verify mock phone behavior and, if safely available, two-user member/non-member RLS and storage cleanup.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O009-T1 | 1 | Media contract tester | Private / gpt-5.3-instant | Media interfaces/adapters and focused tests | Prove event scope, MIME/size rejection, signed resolution, and metadata/object cleanup semantics. | Tests expose partial failures and never treat signed URLs as durable identity. |
+| O009-T2 | 2 | Media UI implementer | Private / gpt-5.3-instant | Approved media queries/components/Event Detail files | Add exact-event Query lifecycle, authorized picker/upload, private thumbnails, and confirmed recoverable deletion; stop for dependencies. | Mock 390x844 upload/list/delete passes with explicit loading/error/pending states. |
+| O009-T3 | 3 | Storage verifier | Private / gpt-5.3-instant | Approved safe storage/RLS environment | Verify member/nonmember isolation, expiry refresh, and storage cleanup; otherwise record `NOT RUN`. | Two-user evidence proves private scope and no public URL or unauthorized remote change. |
 
 ## Acceptance criteria
 - Upload creates one event-scoped media record and list refetch shows it.
@@ -41,7 +42,15 @@ Use a plain labeled 48x48-point “Add photo” action, visible upload progress,
 
 ## Validation commands/evidence
 ### Always-local
-Run root/app tests, `npx tsc --noEmit`, placeholder lint honestly labeled, harness, `git diff --check`, focused adapter tests, 390x844 upload/list/delete smoke, and configured signed-out smoke.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
+
+Label lint as placeholder; run focused adapter tests named by the mission, 390x844 upload/list/delete smoke, and configured signed-out smoke.
 
 ### Conditional-staging/native/human
 Live storage/RLS is required only with an approved safe environment; otherwise NOT RUN. Native picker and human usability: currently NOT RUN.

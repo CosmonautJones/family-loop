@@ -1,4 +1,4 @@
-# FAMILY-LOOP-OPORD-001 — Product simplicity and information architecture
+# OPORD 001 — Product simplicity and information architecture
 
 ## Status
 
@@ -17,6 +17,8 @@ PLANNED — documentation order only; implementation requires separate mission a
 Produce and implement the smallest mobile information architecture that lets a user identify the next event, open its single source of truth, create a plan, and reach the shared calendar without competing secondary destinations.
 
 ## Dependencies
+
+Depends on: None
 
 - M1-M3 session, event/RSVP, and thread foundations remain intact (`docs/architecture.md:31-41`).
 - Approved wireflow or written IA decision based on current phone behavior.
@@ -45,12 +47,11 @@ Keep no more than four primary choices visible at once where practical; use conc
 
 ## Execution
 
-1. Record the current Home → Event Detail → RSVP/thread, Calendar → Event Detail, and Create → same-ID Event Detail routes.
-2. At 390x844, identify duplicate, misleading, or premature destinations; distinguish observed issues from inference.
-3. Write one minimal proposed hierarchy and a before/after route table. Default to preserving Home, Calendar, Create, and Event Detail; secondary surfaces must justify primary placement.
-4. Obtain mission approval for the exact file manifest before runtime edits.
-5. Implement only the approved label/order/visibility changes, preserving exact event IDs and return-tab behavior.
-6. Add focused shell tests and update architecture/review records only after evidence exists.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O001-T1 | 1 | Product analyst | Private / gpt-5.3-instant | `docs/vision.md`, `docs/core-loop.md`, current navigation (read-only), IA evidence | Record current Home, Calendar, Create, Event Detail, RSVP, and thread routes at 390x844; distinguish observed issues from inference. | Evidence includes exact routes, duplicate/premature destinations, and no runtime edits. |
+| O001-T2 | 1 | Product designer | Private / gpt-5.3-instant | OPORD/mission IA documentation only | Produce one minimal hierarchy and before/after route table preserving exact-event identity and clear Back behavior. | Proposal keeps the event wedge dominant and justifies every primary destination. |
+| O001-T3 | 2 | Implementer | Private / gpt-5.3-instant | Separately approved navigation/screen manifest and focused tests | After approval, implement only named label/order/visibility changes; add focused shell tests and evidence records. | Exact-ID routes and auth gates regress green; diff stays within the approved manifest. |
 
 ## Acceptance criteria
 
@@ -64,13 +65,17 @@ Keep no more than four primary choices visible at once where practical; use conc
 
 ### Always-local
 
-- `npm test`
-- `cd app; npm test`
-- `cd app; npx tsc --noEmit`
-- `powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1`
-- `cd app; npm run lint` — report as placeholder unless the script substantively changes.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
+
+- Report lint as placeholder unless the script substantively changes.
 - Phone smoke at 390x844: Home → exact event → Back; Calendar → exact event → Back; Create → exact created event.
-- `git diff --check` and explicit manifest review.
+- Review the explicit manifest after commands pass.
 
 ### Conditional-staging/native/human
 

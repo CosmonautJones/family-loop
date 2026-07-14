@@ -25,7 +25,8 @@ No runtime, dependency, configuration, credential, deployment, or remote-system 
 
 ## Deliverables and acceptance
 
-- One campaign index and exactly 15 unique, sequential OPORDs.
+- One campaign index and exactly 17 unique, dependency-resolvable OPORDs.
+- Every OPORD contains a machine-readable `Depends on:` line and an executable task table with at least three bounded, uniquely identified tasks.
 - Coverage of accessibility; navigation/design/forms; auth/users/groups; API/server; database/RLS/migrations; events/calendar/RSVP; realtime chat; private media; notifications; memories; offline/performance; security/observability; testing/native usability; and CI/release/deploy/backup/restore.
 - Each order is one coherent mission with evidence, territory, usability guardrails, ordered work, measurable acceptance, local/conditional validation, stop conditions, and definition of done.
 - Portable Node tests prove count, numbering, headings, dependency links, and domain coverage.

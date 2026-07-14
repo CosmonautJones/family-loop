@@ -1,4 +1,4 @@
-# FAMILY-LOOP-OPORD-002 — Accessible design system
+# OPORD 002 — Accessible design system
 
 ## Status
 
@@ -16,6 +16,8 @@ PLANNED — audit first; remediation requires a separately approved file manifes
 Define a small, enforceable accessibility baseline for the existing event loop and repair only verified failures so older adults and assistive-technology users can understand and operate Home, Calendar, Create, Event Detail, RSVP, and thread flows.
 
 ## Dependencies
+
+Depends on: OPORD-001
 
 - Stable M1-M3 flows and approved OPORD-001 information hierarchy.
 - Access to iOS/Android accessibility tooling or an explicit `NOT RUN` record.
@@ -42,12 +44,11 @@ Use plain labels, minimum 48x48-point interactive targets, strong text/backgroun
 
 ## Execution
 
-1. Inventory interactive controls and state announcements only across the core event route.
-2. Measure contrast and target size; inspect label/role/state, focus order, text scaling, error association, and reduced-motion exposure.
-3. Log each finding with path/line, reproduction, severity, and evidence; label inferences.
-4. Approve a minimal remediation manifest.
-5. Fix shared primitives only when multiple proven failures share the same cause; otherwise patch the affected screen surgically.
-6. Add focused checks for accessible names/states where the current test stack supports them.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O002-T1 | 1 | Accessibility auditor | Private / gpt-5.3-instant | Core-loop screens/components (read-only), audit records | Inventory controls/states; measure contrast and targets; inspect labels, roles, focus, text scaling, errors, and reduced motion. | Every finding has path/line, reproduction, severity, evidence, and inference label where needed. |
+| O002-T2 | 1 | Design-system owner | Private / gpt-5.3-instant | `app/src/theme/**`, `app/src/components/**` (read-only until approval) | Map proven failures to the smallest token/component/screen remediation manifest. | Manifest contains no speculative redesign or dependency and identifies blast radius. |
+| O002-T3 | 2 | Implementer | Private / gpt-5.3-instant | Separately approved accessibility files and focused tests | Fix approved failures and add accessible-name/state checks supported by the existing stack. | AA/target/text-scale criteria pass and exact-event/session behavior regresses green. |
 
 ## Acceptance criteria
 
@@ -61,7 +62,15 @@ Use plain labels, minimum 48x48-point interactive targets, strong text/backgroun
 
 ### Always-local
 
-- Standard root/app tests, TypeScript, harness, placeholder-qualified lint, and `git diff --check`.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
+
+- Report lint as placeholder unless changed.
 - 390x844 keyboard/focus and browser accessibility-tree smoke.
 - Text-size smoke at default and 200%; contrast worksheet with measured values.
 

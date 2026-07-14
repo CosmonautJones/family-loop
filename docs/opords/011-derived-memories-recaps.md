@@ -1,4 +1,4 @@
-# OPORD 011 — Derived memories and recaps
+# OPORD 011 — Derived Memories and Recaps
 
 ## Status
 Planned as M6 after M2 and M4.
@@ -10,6 +10,8 @@ Memories are still fixture-backed (`docs/architecture.md:17,30`), while the prod
 Derive a calm, read-only memory/recap from completed authorized events and their private media, preserving exact event identity and an honest empty state.
 
 ## Dependencies
+Depends on: OPORD-007, OPORD-008, OPORD-009
+
 Completed M1–M2 and accepted OPORD 009/M4 media; approved M6 manifest. Event completion semantics must be agreed without adding a speculative status model; default inference is `endsAt < now`.
 
 ## Non-goals
@@ -25,12 +27,11 @@ New memory tables unless separately approved, schema/RLS/deploy changes, media m
 Use event title and date as the primary anchor, plain copy, readable cards with 48x48-point actions, explicit “No photos yet” copy, and a simple recovery route back to the source event; avoid gesture-only carousels and dense mosaics. Provide screen-reader summaries and respect reduced motion.
 
 ## Execution
-1. Specify deterministic completion and ordering rules, including timezone and invalid-date behavior.
-2. Derive memories from authorized event plus media records rather than copying them into a parallel durable store.
-3. Replace fixture memory reads with Query-owned loading/error/empty/populated states.
-4. Preserve privacy and exact-event navigation; do not show completed events from another group.
-5. Test zero-media, multiple-media, invalid time, deleted media, and group isolation.
-6. Phone-smoke the completed-event-to-memory path and close out campaign documentation.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---:|---|---|---|---|---|
+| O011-T1 | 1 | Data builder | standard | memory selectors/queries, event/media read contracts, focused tests | Define deterministic completion/order rules and derive memories from event plus media records. | Tests cover timezone/invalid dates, stable ties, zero media, deleted media and group isolation. |
+| O011-T2 | 2 | Mobile builder | standard | Memories/Home surfaces, exact-event navigation | Replace fixtures with Query loading/error/empty/populated states and preserve source-event identity. | Only authorized completed events render; empty copy is honest; exact source event opens. |
+| O011-T3 | 3 | QA/reviewer | standard | tests, docs/evals, review log | Run regression suite and phone smoke, then close out campaign evidence. | All checks pass; no free-floating records or fixture fallback remain; limitations are logged. |
 
 ## Acceptance criteria
 - Only completed authorized events derive memories.
@@ -41,7 +42,14 @@ Use event title and date as the primary anchor, plain copy, readable cards with 
 
 ## Validation commands/evidence
 ### Always-local
-Run root/app tests, TypeScript, placeholder lint labeled, harness, diff check, focused selector/query tests, 390x844 completed-event and empty-memory smoke, and configured signed-out smoke.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+```
+
+Also run focused selector/query tests, a 390x844 completed-event and empty-memory smoke, and configured signed-out smoke; label lint as placeholder.
 
 ### Conditional-staging/native/human
 Live RLS and human/native usability remain NOT RUN unless separately available and approved.

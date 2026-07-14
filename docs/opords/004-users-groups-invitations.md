@@ -1,4 +1,4 @@
-# FAMILY-LOOP-OPORD-004 — Users, groups, and invitations
+# OPORD 004 — Users, groups, and invitations
 
 ## Status
 
@@ -14,12 +14,14 @@ AMBER — authenticated group loading exists; invitation and membership lifecycl
 
 ## Mission/objective
 
-Define and, only after approval, implement the minimum private-group invitation loop: an existing authorized member invites one person, the invitee accepts into the intended group, and both see only group-scoped events.
+Define and, only after approval, implement the minimum safe group lifecycle: creation atomically creates the first owner; owners manage the full invitation lifecycle and member removal; ownership transfer protects the last-owner invariant; privilege escalation and cross-group attempts are denied.
 
 ## Dependencies
 
+Depends on: OPORD-003, OPORD-006
+
 - OPORD-003 authenticated identity and OPORD-005/006 environment plus RLS readiness.
-- Product-approved role matrix (at minimum inviter eligibility and member behavior).
+- Product-approved owner/member role matrix, transfer rule, and removal behavior.
 - Safe two-user non-production environment and approved invitation delivery mechanism.
 
 ## Non-goals
@@ -39,22 +41,24 @@ Define and, only after approval, implement the minimum private-group invitation 
 
 ## Older-adult usability guardrail
 
-Invitations must state in plain language who invited the person, the group name, what joining shares, and one obvious 48x48-point Accept action plus safe Decline/Back. Use readable type, screen-reader labels, reduced motion, and a clear recovery path. Avoid role jargon, ambiguous link destinations, tiny token entry, and surprise exposure of events.
+Creation and invitations must state the group name, inviter, joining impact, and next action in plain language. Use obvious 48x48-point Accept/Decline/Back and removal/transfer confirmations; explain loss of access before confirmation. Avoid role jargon, silent ownership changes, and surprise event exposure.
 
 ## Execution
 
-1. Specify group, membership, invitation, inviter, invitee, status, expiry, and audit semantics; label all unverified database assumptions.
-2. Define authorization cases: invite, view, accept, decline, revoke, duplicate, expired, already-member, wrong-account.
-3. Design the smallest no-group/invite-entry route without turning Groups into an admin dashboard.
-4. Obtain separate approval for exact schema/RLS/runtime/remote manifests.
-5. Implement contract and RLS tests before UI, then the narrow invitation path.
-6. Verify with two isolated users and exact group/event visibility; record delivery mechanism limitations.
+| Task ID | Wave | Owner | Model/tier | Owned files/systems | Instructions | Task acceptance |
+|---|---|---|---|---|---|---|
+| O004-T1 | 1 | Membership contract designer | Private / gpt-5.3-instant | Group/membership/invitation contracts and lifecycle matrix | Specify atomic group+owner creation, roles, invite pending/accept/decline/expire/revoke/replay, removal, transfer, and last-owner invariants. | Every transition names actor, precondition, atomic outcome, idempotency, and denial behavior. |
+| O004-T2 | 1 | Authorization test owner | Private / gpt-5.3-instant | Focused service/RLS tests in approved local seams | Test partial-create rollback, duplicate/wrong-account invites, removed members, last-owner removal, transfer races, self-promotion, and cross-group IDs. | Failures leave no orphan group/membership and all escalation attempts are denied. |
+| O004-T3 | 2 | Group lifecycle implementer | Private / gpt-5.3-instant | Separately approved service/query/group/invitation files and additive migration | Implement atomic creation, complete invite lifecycle, removal, and explicit ownership transfer under approved policy. | Exactly one initial owner exists; last owner cannot leave/be removed without successful transfer; invites are idempotent. |
+| O004-T4 | 3 | Multi-user verifier | Private / gpt-5.3-instant | Approved non-production database and disposable accounts | Exercise owner/member/nonmember lifecycle, removal effects, transfer, replay, escalation, and direct-ID access. | Evidence proves immediate access loss, retained integrity, and no privilege/cross-group leakage. |
 
 ## Acceptance criteria
 
-- Only an authorized group member can create/revoke an invitation under the approved role rule.
+- Group creation and initial owner membership commit atomically or both roll back.
+- Only an owner can invite/revoke/remove/transfer; members cannot self-promote or escalate peers.
 - Only the intended authenticated user can accept; replay, expiry, and duplicates are safe and explicit.
 - Acceptance creates exactly one membership and reveals only that group's authorized data.
+- Removal revokes future access; the last owner cannot leave or be removed until an atomic transfer succeeds.
 - Nonmembers cannot read group events, RSVPs, messages, or invitations through direct IDs.
 - Existing event loop and configured no-group/auth gates remain truthful.
 
@@ -62,13 +66,21 @@ Invitations must state in plain language who invited the person, the group name,
 
 ### Always-local
 
-- Standard repository checks plus focused service/query tests.
+```powershell
+npm test
+Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
+powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+git diff --check
+git status --short
+```
+
+- Run focused service/query tests named by the approved mission; report lint as placeholder unless changed.
 - 390x844 invitation comprehension and acceptance smoke.
 
 ### Conditional-staging/native/human
 
 - RLS policy tests in an approved database environment.
-- Two-user matrix covering inviter/invitee/nonmember, wrong account, expiry, replay, duplicate, revoke, and direct-ID access.
+- Multi-user matrix covering owner/member/invitee/nonmember, atomic-create failure, wrong account, expiry, replay, duplicate, revoke, removal, last-owner denial, transfer race, escalation, and direct-ID access.
 - Live two-user/RLS: `NOT RUN — safe environment unavailable` until approved.
 - Native/human tests recorded separately; lint remains placeholder unless changed.
 
