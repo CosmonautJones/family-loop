@@ -1,5 +1,13 @@
 # Completed Work
 
+## 2026-07-14 - FAMILY-LOOP-FULL-001 Wave 6 full local journey
+
+Completed the isolated, durable-local Jones Family journey through implementation/fix commit `178a69e`. Run 1 found Calendar treating completed Lake Geneva as upcoming, counting six shared plans, and selecting June; the fix filtered completed events so the agenda truthfully showed five upcoming plans. Run 2 exposed a transient avatar TypeScript error. Both were fixed, and independent Run 3 finished with zero blockers.
+
+Evidence: root 45/45, app-local 34/34, TypeScript, harness, Expo web export, and diff check passed; lint exits 0 but remains a placeholder warning. Real browser coverage included five family members, seeded and newly created trips, RSVPs, event-isolated comments, attributed URL media, actual file selection, deletion, exact routes/Back, hard reload and dev-server restart retention, four responsive widths, keyboard/landmark/tab semantics, Lighthouse accessibility 100 and best practices 100, and visible corrupt/future-envelope recovery behavior.
+
+This completes local Waves 0-6 only. In-session offline mutation was not separately exercised, and cold offline reload failed because no offline shell/service worker exists. Remote Supabase/RLS/private storage, auth/multi-user, physical mobile browsers, screen readers, deployment, backup, and restore remain `NOT RUN` pending separate authorization.
+
 ## 2026-07-14 - FAMILY-LOOP-FULL-001 Wave 3 event comments and browser photos
 
 ### Summary

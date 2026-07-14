@@ -34,3 +34,9 @@ npx expo start --web
 ```
 
 If Expo reports missing SDK peer dependencies, install them with `npx expo install ...` so versions stay aligned with SDK 53.
+
+## Local Jones Family E2E
+
+Use the reproducible browser journey in `../docs/runbooks/full-local-jones-family-e2e.md`. It intentionally uses the default durable-local mode and does not mutate Supabase or expose environment values.
+
+For a clean local run, clear site data for the local Expo origin in browser DevTools, then reload. This removes only that origin's local browser data and allows the canonical Jones Family seed to be created again. Do not clear or seed a linked remote project as part of this runbook.

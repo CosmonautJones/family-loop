@@ -1,5 +1,13 @@
 # Code Rubric
 
+## Wave 6 local E2E and recovery
+
+- [x] Commit `178a69e` preserves one service/Query-owned durable source of truth and corrects the Calendar projection without adding a dependency or remote mutation.
+- [x] Authoritative suites are recorded separately: root 45/45 and app-local 34/34; TypeScript, harness, Expo export, and diff check pass.
+- [x] Browser evidence proves real form, RSVP, comment, URL/file photo, delete, route/Back, reload/restart, responsive, keyboard, landmark, and local corruption-recovery behavior.
+- [x] Lint is labeled placeholder WARN; no substantive lint claim is made.
+- [x] Cold offline reload failure and all remote/physical-device gaps are explicit; local proof is not rounded up to production readiness.
+
 ## Wave 0 durable local service
 
 - [x] Default/unconfigured mode uses the durable AsyncStorage adapter; `memory` is an explicit isolated-test mode.

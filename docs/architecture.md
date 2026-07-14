@@ -25,6 +25,10 @@ The event coordination loop is Query-owned in every data mode. By default, and w
 
 `EXPO_PUBLIC_DATA_MODE=memory` explicitly selects the in-memory factory used for isolated automated tests. The durable adapter exposes `resetAndReseed()` only as an explicit test/development recovery seam; no production UI silently invokes it.
 
+Wave 6 exercised the default local architecture as a complete browser journey. Event creation, RSVPs, messages, URL/file media, deletion, Home/Calendar projections, Family membership, and completed-event memories all converged on the same version-3 durable envelope and survived hard reload plus development-server restart. The tested journey ended at revision 9. Malformed and future-version envelopes remain visible and are not overwritten; restoration is deliberate.
+
+Because the adapter and browser storage are local, the architecture does not require a network for reads and mutations after the application bundle has loaded. Wave 6 did **not** separately exercise an in-session offline mutation, so this is an architectural property rather than direct journey evidence. It is not an installable/offline-shell architecture: a cold disconnected reload cannot fetch the application bundle because no service worker or PWA shell is present, by design and pending separate authorization.
+
 Mock seed events use unique stable IDs, and the mock adapter explicitly sorts group event reads by start time rather than relying on insertion order. This keeps Home, Calendar, and Event Detail identity-consistent as new events are created during a running process.
 
 The Create tab owns transient form state for title, local start date/time, location, and optional notes. It validates before calling the event service, keeps fields after a failed mutation, and uses a two-hour default duration. Success seeds the returned exact-event Query key, invalidates the active family's event list, and routes to that exact ID. Events and RSVPs remain service-owned rather than mirrored in Zustand, so durable-local reconstruction feeds Home, Calendar, Family, and Event Detail consistently.

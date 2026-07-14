@@ -1,5 +1,17 @@
 # Regression Checklist
 
+## Wave 6 full local Jones Family journey
+
+- [x] Fresh local seed has five members, three future trips, and completed Lake Geneva.
+- [x] Two created exact-ID trips, RSVP changes, comments, URL media, file media, and confirmed deletion survive hard reload and Metro restart.
+- [x] Home and Calendar truthfully show five upcoming events after creation; completed Lake Geneva is excluded from upcoming and retains a three-photo/one-comment memory.
+- [x] Exact routes and Back pass at 320/390/430/1280 widths without horizontal overflow; controls are >=44px.
+- [x] Sequential keyboard navigation, one main landmark, one selected tab, and Lighthouse AX 100/BP 100 pass.
+- [x] Corrupt/future envelopes remain visible and are not silently overwritten; deliberate restoration works.
+- [ ] Cold offline reload — `NOT MET`: no service worker/offline shell; browser network error is expected and documented.
+- [ ] Remote Supabase/RLS/private storage/auth/multi-user and physical-device/assistive-technology checks — `NOT RUN`, separate authorization/environment required.
+- [x] Independent review history recorded: Run 1 Calendar RED, Run 2 transient avatar TypeScript RED, Run 3 PASS with zero blockers.
+
 ## Wave 0 durable local service
 
 - [x] Default/unconfigured mode is reload-durable local AsyncStorage, not process-only memory.

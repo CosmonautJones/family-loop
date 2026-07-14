@@ -2,7 +2,7 @@
 
 Mission ID: `FAMILY-LOOP-FULL-001`
 
-Status: `IN PROGRESS — WAVES 0-4 COMPLETE — NEXT WAVE PENDING`
+Status: `IN PROGRESS — LOCAL WAVES 0-6 COMPLETE — REMOTE/PRODUCTION GATE BLOCKED PENDING SEPARATE AUTHORIZATION`
 
 Decision charter: **Correctness > Safety > Scope discipline > Speed.**
 
@@ -302,3 +302,14 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Fresh fix evidence: root tests PASS 44/44; app-local tests PASS 33/33; TypeScript, harness, and Expo web export PASS. Lint exits 0 but remains a placeholder warning.
 - Independent Run 2 accepted Wave 5 at **AMBER / PROCEED-WARN with zero blockers**. Sequential keyboard navigation reached Home → Calendar → Create → Memories → Family, Enter routed each tab, exactly one selected tab and one main landmark rendered, and 320×844 width/overflow/fixed-navigation sanity passed. The reviewed worktree was clean.
 - Wave 5 is **COMPLETE** as the authorized responsive-web accessibility checkpoint, not as the full campaign. Placeholder lint, the pre-existing React Native Web warning, physical iOS Safari/Android Chrome, VoiceOver/TalkBack, practical 200% zoom/reflow, reduced motion, and moderated older-adult evidence remain warnings or `NOT RUN` and are not inferred.
+
+## Wave 6 implementation status — full local Jones Family journey
+
+- Implementation/fix commit `178a69e` completed the isolated browser journey and corrected Calendar to exclude completed Lake Geneva from its upcoming agenda/count and select the truthful upcoming month. Before the fix it counted six shared plans and selected June; afterward it showed the five genuinely upcoming events.
+- Authoritative automated evidence is root tests PASS 45/45 and app-local tests PASS 34/34, recorded separately. TypeScript, harness, Expo web export, and diff check PASS. Lint exits 0 but remains a placeholder WARN.
+- Fresh local data showed five Jones members, three seeded future trips, and completed Lake Geneva. The browser journey validated form errors; created exact-ID Dells and Chicago trips; Going and Maybe RSVPs; comments on both; attributed Nathan Dumlao Unsplash URL media; cancel and confirmed deletion; and a real 68-byte PNG file selection with caption and alt text.
+- Hard reload plus Metro stop/restart retained the version-3 envelope at revision 9. Home showed five upcoming events, Calendar truthfully showed five after the fix, Family showed all five members, and the Lake Geneva memory showed exactly three photos and one comment. Exact routes, Back, keyboard navigation, one main landmark, and one selected tab passed.
+- Browser checks passed at 320, 390, 430, and 1280 CSS-pixel widths with no horizontal overflow and controls at least 44px. Lighthouse accessibility and best-practices scores were both 100. The final run had zero console errors after the avatar repair; the known React Native Web warning remains non-blocking.
+- Corrupt and future-version envelopes produced visible errors without overwrite, and deliberate local restoration succeeded. In-session offline mutation was **NOT SEPARATELY EXERCISED**; the adapter is architecturally local after load, but the journey directly proved only online reload/restart durability. A cold offline reload **fails** with the browser network error because there is no service worker/offline shell. Offline-shell/PWA work remains a separately authorized non-goal, not a passed criterion.
+- Review history: Run 1 found the Calendar blocker; Run 2 found a transient avatar TypeScript blocker; Run 3 passed with zero blockers. Reproduction and recovery steps are in `docs/runbooks/full-local-jones-family-e2e.md`.
+- Local Waves 0-6 and the full local Jones Family proof are **COMPLETE**. The broader production mission remains **IN PROGRESS** and blocked at the separate remote authorization gate. Supabase/RLS/private storage, auth/multi-user behavior, physical Safari/Android devices, screen readers, practical 200% zoom, deployment, backup, and restore remain `NOT RUN`.
