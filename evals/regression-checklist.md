@@ -275,3 +275,15 @@ Use this before considering a mission complete.
 - [x] 320/390/430/1280 widths, one main/five tabs/one selected, >=48px actions, reduced motion, no hover-only controls, and zero console events pass.
 - [x] Semantic error/emphasis and success text use >=4.5:1 light-surface color pairs; low-contrast coral/sage text is rejected by regression coverage.
 - [ ] Practical Chrome UI 200% zoom, physical phone browsers, VoiceOver/TalkBack, and moderated older-adult use remain `NOT RUN`.
+
+## OPORD 005/006 local service and database hardening
+
+- [x] Configured adapter failures cross one non-sensitive service-error boundary; no fixture fallback or raw backend detail is introduced.
+- [x] Query reads retry at most once and mutations explicitly never auto-retry; visible manual retries retain intent, while response-lost insert idempotency remains explicitly unproven.
+- [x] The plan fixture contains 20 members, 100 events, 20 RSVPs, 100 comments and 50 active media rows on one exact event, 20 reminders, and normal trigger-generated notifications.
+- [x] Actual adapter query shapes use `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` with exact result bounds and a 100 ms local ceiling.
+- [x] An index candidate that benefited only an uncalled activity method was rejected; no speculative migration remains.
+- [x] Sequential scans on small or intentionally all-matching event/message/media/RSVP/reminder/member tables are documented rather than misreported as index failures.
+- [x] Synthetic rows roll back; dead fixture tuples are vacuumed and nontransactional planner statistics are refreshed from retained rows; exact baseline counts and the populated browser scenario remain unchanged.
+- [x] Four ordered migration checksums, database lint, family/media/reminder/RLS matrices, root/app tests, lint, TypeScript, harness, secret scan, and diff checks pass.
+- [ ] Response-lost manual insert dedupe, server-propagated request versions/correlation IDs, universal deadline and gateway rate enforcement, hosted plans/migrations/telemetry, and production cardinalities remain `NOT RUN`.

@@ -2,7 +2,7 @@
 
 ## Status
 
-PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are executable and diagnosable, but the order's general versioned error-envelope, correlation-ID, timeout/retry, and rate-limit contract is incomplete; hosted readiness is `NOT RUN`.
+PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are executable and diagnosable; errors are centrally sanitized, reads retry once, and writes explicitly never auto-retry. A general request-version/correlation-ID/deadline/rate-limit contract and hosted readiness remain `NOT RUN` because they require a cooperating server/gateway.
 
 ## Situation and evidence
 
@@ -68,14 +68,16 @@ Readiness must include the failure experience: configured outages, timeouts, rat
 | Criterion | Disposition | Evidence |
 |---|---|---|
 | PASS/FAIL/NOT RUN path per capability | COMPLETE | Campaign/index and runbooks separate durable-local, loopback Supabase, browser, and hosted evidence. |
-| Stable non-sensitive error envelope/correlation ID for all classes | PARTIAL | Domain errors and truthful configured failures exist; no universal versioned correlation-ID/rate-limit envelope. |
+| Stable non-sensitive error envelope/correlation ID for all classes | PARTIAL | Every configured adapter rejection is centrally mapped to a stable safe recovery category; no server-propagated request version or correlation ID exists. |
 | Readiness/liveness connection semantics | PARTIAL | Loopback startup/migration/lint/E2E prove readiness; no general application health endpoints. |
-| Bounded idempotent retries/no duplicate writes | PARTIAL | Invite, notification, media, and durable-local mutations have targeted idempotency/locking; no uniform retry policy. |
+| Bounded idempotent retries/no duplicate writes | PARTIAL | Query reads retry once and mutations explicitly never auto-retry. Invite/media/durable-local paths retain targeted idempotency or persisted lifecycle, but manual retry of a response-lost message/event insert has no idempotency key and can duplicate. Universal request deadlines remain a hosted/server policy gap. |
 | Privileged operations server-only | COMPLETE LOCALLY | Narrow security-definer RPCs and local RLS tests; service role is not shipped to client. |
 | Evidence modes never conflated | COMPLETE | Architecture, review log, and runbooks explicitly distinguish them. |
 | Environment names/adapter selection documented | COMPLETE | `docs/architecture.md`, strict runtime-config validator, lazy service/client selector, and release runbook. The exact artifact ran with local and loopback-Supabase overlays and failed closed on an invalid overlay. |
 | No remote state changes | COMPLETE | Local-only audit trail. |
 | Concrete next-order prerequisites | COMPLETE | Dependency registry and per-order external gates. |
+
+The executable matrix and the no-action rationale for client-only correlation IDs/general write timeouts are in `docs/runbooks/local-service-readiness-and-query-plans.md`.
 
 ## Validation commands/evidence
 

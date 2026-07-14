@@ -2,7 +2,7 @@
 
 ## Status
 
-PARTIAL/CONDITIONAL — forward migrations, lifecycle constraints, and loopback RLS/direct-ID matrices pass; representative-volume query-plan/index evidence and hosted migration state remain `NOT RUN`.
+LOCAL COMPLETE / EXTERNAL CONDITIONAL — forward migrations, lifecycle constraints, loopback RLS/direct-ID matrices, and rollback-safe representative query plans pass. No speculative index was retained; hosted migration and production-cardinality evidence remain `NOT RUN`.
 
 ## Situation and evidence
 
@@ -67,8 +67,10 @@ Database failures must preserve truthful, recoverable UI: never substitute stale
 | FK/uniqueness lifecycle integrity | COMPLETE LOCALLY | Family and media migrations plus lifecycle E2E; event deletion is restricted while media operations exist. |
 | RLS denies unauthenticated/nonmember direct IDs | COMPLETE LOCALLY | `scripts/test-local-supabase-family.ps1` and media matrix; configured outsider browser route. |
 | Same/different-group tests for changed policies | COMPLETE LOCALLY | Four real Auth sessions cover owner/member/invitee/outsider. |
-| Every added index maps to measured query plan | NOT RUN | No representative-volume before/after plan record; do not infer from schema. |
+| Every added index maps to measured query plan | COMPLETE LOCALLY — NO INDEX ADDED | Actual production event/message/media/RSVP/notification/reminder queries and membership helpers stayed below 1 ms at 20/100/100/50 representative volume. A candidate that benefited only an uncalled activity method was rejected, so no speculative migration remains. |
 | Clean forward apply; history unchanged | COMPLETE LOCALLY | Local reset/apply and database lint pass; migrations are additive. |
+
+`scripts/test-local-supabase-query-plans.ps1` asserts exact results, member/outsider helper outcomes, a 100 ms local bound, fixture-row rollback, dead-tuple cleanup, retained-statistics refresh, and baseline equality. Plan-by-plan evidence and legitimate small-table sequential scans are recorded in `docs/runbooks/local-service-readiness-and-query-plans.md`.
 
 ## Validation commands/evidence
 
@@ -78,6 +80,7 @@ Database failures must preserve truthful, recoverable UI: never substitute stale
 npm test
 Push-Location app; npm test; npx tsc --noEmit; npm run lint; Pop-Location
 powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test-local-supabase-query-plans.ps1
 git diff --check
 git status --short
 ```
@@ -104,4 +107,4 @@ Stop before any remote apply, production connection, destructive DDL/DML, histor
 
 ## Definition of done
 
-Only after GREEN execution: additive migration and tests pass in a disposable environment, RLS/two-user and query-plan evidence is recorded, no production/destructive action occurred, architecture/review log are updated, and unresolved live deployment remains a separate order.
+Met for the local slice: the rollback-safe plan harness and existing migrations/RLS/two-user matrices pass, no speculative index or production change remains, and unresolved hosted deployment stays a separate conditional gate.

@@ -1,5 +1,16 @@
 # Review Log
 
+## 2026-07-14 — OPORD 005/006 local readiness and query-plan gate
+
+- OPORD 005 audit rejected a client-only universal envelope: every configured adapter rejection already crosses the central safe-error mapper, while correlation propagation, health endpoints, universal deadlines, and rate enforcement require a cooperating server/gateway. The smallest explicit contract now retries reads once and never automatically retries writes.
+- The transaction fixture created 20 members, 100 events, 20 RSVPs, 100 exact-event comments, 50 exact-event active media rows, 20 reminders, and 3,800 generated notification rows. It asserted exact bounded results and captured JSON plans for actual event, message, media, RSVP, notification, reminder, and membership/helper shapes.
+- Independent review found the apparent index win belonged to uncalled `listRecentActivity()`, while the live notification screen fetches full history and did not improve. The candidate migration and local index/history entry were removed; four original migrations remain and no speculative index was committed.
+- The same review corrected the retry disposition: automatic mutation replay is disabled, but a manually retried message/event insert can duplicate if the server committed and its response was lost. That criterion remains PARTIAL.
+- Fixture rows rolled back. Because `ANALYZE` statistics are nontransactional and aborted inserts leave dead tuples, the harness vacuums/analyzes all touched tables after rollback. Exact retained SQL counts stayed 8/2/6/5/9/9/4/60/1, and the independent populated-family verifier stayed 4 identities/3 members/3 trips/6 messages/6 RSVPs/3 media/38 notifications/0 reminders/3 objects/zero outsider residue.
+- Hosted migration state, production cardinality/query telemetry, connection pools, request-version/correlation propagation, rate enforcement, and readiness endpoints remain `NOT RUN`; no hosted target was contacted.
+- Independent review Run 1 was RED on the dead-path index and manual-retry overclaims. After removing the migration/local index/history and correcting the idempotency disposition, Run 2 was **GREEN / PASS with zero blockers**.
+- Final gates pass: root and app-local tests, substantive lint, TypeScript, local-only Expo export, harness, 200-file secret scan, four ordered migration checksums, database lint, family/media/reminder RLS matrices, rollback-safe query plans, populated-scenario verification, and diff check.
+
 ## 2026-07-14 — local multi-user, security, and KISS final gate
 
 - Accepted commits: `7deb3fa`, `93dc773`, `1311332`, `2b6d725`, `a52e43b`, and `0601baa`.

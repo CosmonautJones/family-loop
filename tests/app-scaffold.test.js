@@ -257,6 +257,13 @@ test('Supabase retryable auth transport failures retain the network recovery cat
   assert.equal(serviceErrors.sanitizeServiceError(networkError), networkError, 'sanitizing an already-safe service error is idempotent');
 });
 
+test('service reads retry once while writes never retry automatically', () => {
+  const provider = read('src/app/AppProviders.tsx');
+
+  assert.match(provider, /queries:\s*\{[\s\S]*?retry: 1/);
+  assert.match(provider, /mutations:\s*\{[\s\S]*?retry: false/);
+});
+
 test('reminder preference contract is exact-user/event scoped and delivery-honest', () => {
   const api = read('src/services/api.ts');
   const adapter = read('src/services/supabaseAdapter.ts');

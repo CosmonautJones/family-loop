@@ -9,6 +9,9 @@ export function AppProviders({ children }: PropsWithChildren) {
         staleTime: 30_000,
         retry: 1,
       },
+      mutations: {
+        retry: false,
+      },
     },
   }));
 
