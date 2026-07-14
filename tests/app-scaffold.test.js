@@ -197,6 +197,21 @@ test('thread Query contract is event-keyed and invalidates after send', () => {
   assert.match(queries, /invalidateQueries\(\{ queryKey: queryKeys\.messages\(message\.eventId\) \}\)/);
 });
 
+test('Event Detail renders truthful thread states and a recoverable composer without fixture fallback', () => {
+  const detail = read('src/screens/EventDetailScreen.tsx');
+  assert.match(detail, /useEventMessagesQuery/);
+  assert.match(detail, /useSendMessageMutation/);
+  assert.match(detail, /messagesQuery\.isPending/);
+  assert.match(detail, /messagesQuery\.isError/);
+  assert.match(detail, /messagesQuery\.isSuccess && messagesQuery\.data\.length === 0/);
+  assert.match(detail, /key=\{item\.id\}/);
+  assert.match(detail, /disabled=\{sendDisabled\}/);
+  assert.match(detail, /sendMessage\.isPending/);
+  assert.match(detail, /onSuccess: \(\) => setMessageDraft\(''\)/);
+  assert.match(detail, /sendMessage\.isError/);
+  assert.doesNotMatch(detail, /eventThread|features\/events\/fixtures/);
+});
+
 test('zero-event selectors stay honest and unknown detail is explicit', () => {
   const { selectors } = loadCompiledModules();
   const home = selectors.selectHomeViewModel({ events: [], activity: [], memories: [] });

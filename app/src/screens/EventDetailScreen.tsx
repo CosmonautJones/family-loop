@@ -1,4 +1,5 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
@@ -6,7 +7,7 @@ import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { palette, spacing } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
-import { useEventQuery, useEventRsvpsQuery, useUpsertRsvpMutation } from '../app/queries';
+import { useEventMessagesQuery, useEventQuery, useEventRsvpsQuery, useSendMessageMutation, useUpsertRsvpMutation } from '../app/queries';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 
 const rsvpOptions: RSVPStatus[] = ['going', 'maybe', 'declined'];
@@ -24,6 +25,9 @@ const rsvpNotes: Record<RSVPStatus, string> = {
 export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eventId?: string; backLabel?: string; onBack?: () => void }) {
   const eventQuery = useEventQuery(eventId ?? '');
   const rsvpsQuery = useEventRsvpsQuery(eventId ?? '');
+  const messagesQuery = useEventMessagesQuery(eventId ?? '');
+  const sendMessage = useSendMessageMutation();
+  const [messageDraft, setMessageDraft] = useState('');
   const upsertRsvp = useUpsertRsvpMutation();
   const auth = useAuthSession();
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
@@ -42,11 +46,16 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     return <DetailState title="We couldn’t load this event" detail={error instanceof Error ? error.message : 'Try again in a moment.'} backLabel={backLabel} onBack={onBack} />;
   }
   if (!eventDetail) return <DetailState title="Event not found" detail="This event may have been removed or is unavailable to this group." backLabel={backLabel} onBack={onBack} />;
-  const eventThread = eventDetail.thread;
   const setRsvpStatus = (status: RSVPStatus) => {
     if (!identity || upsertRsvp.isPending) return;
     upsertRsvp.mutate({ eventId: eventDetail.id, personId: identity.userId, personName: identity.displayName, status });
   };
+  const submitMessage = () => {
+    const body = messageDraft.trim();
+    if (!body || sendMessage.isPending) return;
+    sendMessage.mutate({ eventId: eventDetail.id, body }, { onSuccess: () => setMessageDraft('') });
+  };
+  const sendDisabled = !messageDraft.trim() || sendMessage.isPending;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -128,13 +137,44 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
 
       <SurfaceCard>
         <Text style={styles.cardTitle}>Thread</Text>
-        <View style={styles.thread}>
-          {eventThread.map((item) => (
-            <View key={item.body} style={[styles.bubble, item.self && styles.selfBubble]}>
-              <Text style={[styles.bubbleText, item.self && styles.selfBubbleText]}>{item.body}</Text>
-            </View>
-          ))}
+        {messagesQuery.isPending ? <Text style={styles.cardCopy}>Loading the event conversation…</Text> : null}
+        {messagesQuery.isError ? (
+          <Text style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text>
+        ) : null}
+        {messagesQuery.isSuccess && messagesQuery.data.length === 0 ? <Text style={styles.cardCopy}>No messages yet. Start the plan here.</Text> : null}
+        {messagesQuery.isSuccess && messagesQuery.data.length > 0 ? (
+          <View style={styles.thread}>
+            {messagesQuery.data.map((item) => (
+              <View key={item.id} style={[styles.bubble, item.self && styles.selfBubble]}>
+                <Text style={[styles.bubbleAuthor, item.self && styles.selfBubbleText]}>{item.authorName}</Text>
+                <Text style={[styles.bubbleText, item.self && styles.selfBubbleText]}>{item.body}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
+        <View style={styles.composer}>
+          <TextInput
+            accessibilityLabel="Message"
+            multiline
+            onChangeText={setMessageDraft}
+            placeholder="Add a note for this event"
+            placeholderTextColor={palette.muted}
+            style={styles.composerInput}
+            value={messageDraft}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: sendDisabled }}
+            disabled={sendDisabled}
+            onPress={submitMessage}
+            style={[styles.sendButton, sendDisabled && styles.sendButtonDisabled]}
+          >
+            <Text style={styles.sendButtonText}>{sendMessage.isPending ? 'Sending…' : 'Send'}</Text>
+          </Pressable>
         </View>
+        {sendMessage.isError ? (
+          <Text style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text>
+        ) : null}
       </SurfaceCard>
     </ScrollView>
   );
@@ -170,5 +210,12 @@ const styles = StyleSheet.create({
   bubble: { maxWidth: '84%', borderRadius: 18, padding: 13, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)' },
   selfBubble: { alignSelf: 'flex-end', backgroundColor: palette.plum, borderColor: palette.plum },
   bubbleText: { color: palette.text, fontSize: 14, lineHeight: 20 },
+  bubbleAuthor: { color: palette.muted, fontSize: 12, fontWeight: '800', marginBottom: 3 },
   selfBubbleText: { color: '#fff' },
+  composer: { marginTop: spacing.md, gap: spacing.sm },
+  composerInput: { minHeight: 48, maxHeight: 120, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(32,22,28,0.14)', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
+  sendButton: { minHeight: 48, borderRadius: 16, backgroundColor: palette.plum, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
+  sendButtonDisabled: { opacity: 0.45 },
+  sendButtonText: { color: '#fff', fontSize: 15, fontWeight: '900' },
+  threadError: { color: palette.coral, fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
 });
