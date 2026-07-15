@@ -2064,3 +2064,52 @@ test('event message subscription is exact-key, reconnecting, and inert after cle
   assert.equal(changes, 3, 'late callbacks cannot update an unmounted or switched event');
   assert.equal(statuses.length, 5);
 });
+
+test('hosted family harness is exact-project, staging-acknowledged, synthetic, and cleanup-bounded', () => {
+  const harness = fs.readFileSync(path.join(repoRoot, 'tests/supabase-hosted-family-e2e.mjs'), 'utf8');
+  const wrapper = fs.readFileSync(path.join(repoRoot, 'scripts/test-hosted-supabase-family.ps1'), 'utf8');
+
+  for (const source of [harness, wrapper]) {
+    assert.match(source, /vkogznsfthirhxkqysza/);
+    assert.match(source, /lzscofbvecgpchokxhyb/);
+    assert.match(source, /AcknowledgeStagingOnly|I_ACKNOWLEDGE_LOOPEDIN_STAGING_ONLY/);
+    assert.doesNotMatch(source, /travisjohn\.jones@gmail\.com|Jones Fam/);
+  }
+  assert.match(wrapper, /& supabase projects api-keys --project-ref \$projectRef --reveal --output json/);
+  assert.doesNotMatch(wrapper, /\bnpx\b/);
+  assert.match(wrapper, /SUPABASE_PUBLISHABLE_KEY/);
+  assert.match(wrapper, /SUPABASE_SECRET_KEY/);
+  assert.match(harness, /@loopedin\.invalid/);
+  assert.match(harness, /randomPassword/);
+  assert.match(harness, /loopedin_create_group/);
+  assert.match(harness, /loopedin_match_group_invite_email/);
+  assert.match(harness, /loopedin_accept_group_invite/);
+  assert.match(harness, /loopedin_begin_media_upload/);
+  assert.match(harness, /postgres_changes/);
+  assert.match(harness, /protectedFingerprint/);
+  assert.match(harness, /protectedStateUnchanged: true/);
+  assert.match(harness, /finally/);
+  assert.match(harness, /nonzero residue/);
+});
+
+test('hosted family evidence redacts credentials and emits only bounded handoff/result fields', () => {
+  const harness = fs.readFileSync(path.join(repoRoot, 'tests/supabase-hosted-family-e2e.mjs'), 'utf8');
+  const wrapper = fs.readFileSync(path.join(repoRoot, 'scripts/test-hosted-supabase-family.ps1'), 'utf8');
+
+  assert.match(harness, /\[REDACTED_KEY\]/);
+  assert.match(harness, /\[REDACTED_TOKEN\]/);
+  assert.match(harness, /\[REDACTED_EMAIL\]/);
+  assert.match(harness, /sensitiveValues/);
+  assert.match(harness, /\\b\[0-9a-f\]\{64\}\\b/);
+  assert.match(harness, /outsider invitation acceptance/);
+  assert.match(harness, /group marker mismatch/);
+  assert.match(harness, /remainingProfiles/);
+  assert.match(harness, /remainingInvitations/);
+  assert.doesNotMatch(harness, /assert\.deepEqual\([^\n]*(?:match|invite|accept)/i);
+  assert.match(harness, /console\.log\(JSON\.stringify\(\{/);
+  assert.doesNotMatch(harness, /console\.(?:log|error)\([^\n]*(?:password|access_token|secretKey|publishableKey)/i);
+  assert.match(wrapper, /2>\$null/);
+  assert.match(wrapper, /\$rawKeys = \$null/);
+  assert.match(wrapper, /\$publishableValue = \$null/);
+  assert.match(wrapper, /\$secretValue = \$null/);
+});
