@@ -32,6 +32,8 @@ test('release build contract pins one runtime-configured artifact and disables d
   assert.ok(build.includes(".Replace('\\', '/')"), 'manifest paths must use portable forward slashes');
   assert.ok(promote.includes(".Replace('\\', '/')"), 'promotion verification must use the same portable paths');
   assert.match(build, /WaitForExit\(\$TimeoutSeconds \* 1000\)/);
+  assert.doesNotMatch(build, /Start-Process[\s\S]{0,300}-WindowStyle/);
+  assert.match(build, /if \(\$onWindows\) \{\s*\$startProcessArguments\.WindowStyle = 'Hidden'/);
   assert.match(build, /Invoke-BoundedProcess[\s\S]*300 'npm-ci'[\s\S]*300 'expo-export'/);
   assert.doesNotMatch(build, /Get-Date|generatedAt/);
   assert.doesNotMatch(build, /environmentId=\$EnvironmentId|releaseId = .*EnvironmentId/);

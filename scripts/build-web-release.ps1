@@ -58,8 +58,18 @@ function Invoke-BoundedProcess(
 ) {
   $stdoutPath = Join-Path $temporaryRoot "$Label.stdout.log"
   $stderrPath = Join-Path $temporaryRoot "$Label.stderr.log"
-  $process = Start-Process -FilePath $FilePath -ArgumentList $Arguments -WorkingDirectory $WorkingDirectory `
-    -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -WindowStyle Hidden -PassThru
+  $startProcessArguments = @{
+    FilePath = $FilePath
+    ArgumentList = $Arguments
+    WorkingDirectory = $WorkingDirectory
+    RedirectStandardOutput = $stdoutPath
+    RedirectStandardError = $stderrPath
+    PassThru = $true
+  }
+  if ($onWindows) {
+    $startProcessArguments.WindowStyle = 'Hidden'
+  }
+  $process = Start-Process @startProcessArguments
   if (-not $process.WaitForExit($TimeoutSeconds * 1000)) {
     if ($onWindows) {
       & taskkill /PID $process.Id /T /F | Out-Null
