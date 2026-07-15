@@ -1,0 +1,49 @@
+name: Encrypted hosted backup
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: encrypted-hosted-backup
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    name: Dedicated staging database and private media
+    environment: loopedin-staging-backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Create client-encrypted backup
+        shell: pwsh
+        env:
+          LOOPEDIN_STAGING_DB_PASSWORD: ${{ secrets.LOOPEDIN_STAGING_DB_PASSWORD }}
+          LOOPEDIN_STAGING_SUPABASE_SECRET_KEY: ${{ secrets.LOOPEDIN_STAGING_SUPABASE_SECRET_KEY }}
+          LOOPEDIN_BACKUP_PASSPHRASE: ${{ secrets.LOOPEDIN_BACKUP_PASSPHRASE }}
+        run: ./scripts/create-hosted-encrypted-backup.ps1 -ArtifactPath "$env:RUNNER_TEMP/loopedin-staging.flbackup" -AcknowledgeDedicatedStaging
+      - name: Verify isolated database restore before upload
+        shell: pwsh
+        env:
+          LOOPEDIN_BACKUP_PASSPHRASE: ${{ secrets.LOOPEDIN_BACKUP_PASSPHRASE }}
+        run: ./scripts/restore-hosted-encrypted-backup.ps1 -ArtifactPath "$env:RUNNER_TEMP/loopedin-staging.flbackup"
+      - name: Upload encrypted backup only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: loopedin-staging-backup-${{ github.run_id }}
+          path: ${{ runner.temp }}/loopedin-staging.flbackup
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30

@@ -5,11 +5,12 @@ export const calendarEvents = Array.from({ length: 28 }, (_, index) => ({
   highlight: [5, 10, 12, 18, 25].includes(index + 1),
 }));
 
-export const calendarAgenda: Array<{ event: Event; badge: string; tone: 'sage' | 'sky' | 'coral' }> = [
+export const calendarAgenda: { event: Event; badge: string; tone: 'sage' | 'sky' | 'coral' }[] = [
   {
     event: {
       id: 'event-lake-picnic',
       groupId: 'group-jones-family',
+      creatorId: 'person-you',
       title: 'Today · Lake picnic',
       startsAt: '2026-07-04T18:30:00-05:00',
       endsAt: '2026-07-04T20:30:00-05:00',
@@ -26,6 +27,7 @@ export const calendarAgenda: Array<{ event: Event; badge: string; tone: 'sage' |
     event: {
       id: 'event-rooftop-movie',
       groupId: 'group-dinner-club',
+      creatorId: 'person-maya',
       title: 'Jul 18 · Rooftop movie night',
       startsAt: '2026-07-18T20:00:00-05:00',
       endsAt: '2026-07-18T23:00:00-05:00',
@@ -42,6 +44,7 @@ export const calendarAgenda: Array<{ event: Event; badge: string; tone: 'sage' |
     event: {
       id: 'event-birthday-brunch',
       groupId: 'group-jones-family',
+      creatorId: 'person-you',
       title: 'Jul 25 · Family birthday brunch',
       startsAt: '2026-07-25T11:00:00-05:00',
       endsAt: '2026-07-25T13:00:00-05:00',

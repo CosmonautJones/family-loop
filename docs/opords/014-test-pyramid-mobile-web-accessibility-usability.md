@@ -1,10 +1,10 @@
 # OPORD 014 — Test Pyramid, Mobile-Web Accessibility, and Usability
 
 ## Status
-Planned quality mission. Structural tests and a 390x844 Chrome smoke exist; the complete browser and human matrix has not run.
+LOCAL COMPLETE / EXTERNAL CONDITIONAL — layered automated, database, configured-browser, responsive-width, keyboard, reduced-motion, Lighthouse, and real Chrome 200% browser-zoom gates pass; physical devices, screen readers, and moderated-human usability remain `NOT RUN`.
 
 ## Situation and evidence
-Current checks are Node tests, TypeScript, harness, and a 390x844 Chrome smoke (`evals/review-log.md:8-10`). The app test script points to the shared structural test file and lint is a placeholder (`app/package.json:11-12`). The product is an Expo/React Native Web app with phone browsers primary: iOS Safari and Android Chrome. Desktop browsers are secondary. Native binaries, app-store release, and EAS are future non-goals.
+The reconciled baseline at `88d0ed9` passed root 70/70, app 58/58, TypeScript, Expo export, harness, database lint, family/media E2E, and the populated-scenario verifier. The 2026-07-14 local accessibility pass added platform preference handling for Expo images plus a dependency-free Chrome/CDP gate. Card surfaces are intentionally static after measured Moti startup cost; image crossfades still resolve the platform reduced-motion preference. The original gate covers 320/390/430 and 1280 CSS-pixel layouts, sequential navigation focus, exact-event deep link/Back/reload, invalid-form focus in a 320x500 keyboard-height proxy, reduced-motion emulation, and a limited page-scale proxy. A later configured Chrome 150 run closes the practical local zoom gap with the persisted native browser preference: same-window controls halve 640→320, 780→390, and 860→430 CSS pixels at 200%, device-pixel ratio doubles from 1 to 2, `visualViewport.scale` remains 1, and CSS zoom remains 1. Signed-out/owner/member/outsider matrices at 390 plus full owner core-screen matrices at effective 320 and 430, and a 1280-CSS desktop 200% regression pass without overflow, clipped control boxes or descendant control text/glyphs, sub-48px controls, console events, failed requests, or app/backend HTTP failures. Physical browsers, assistive technology, and human gates remain open.
 
 ## Mission/objective
 Establish the smallest credible layered quality gate for pure logic, server/database contracts, rendered responsive-web behavior, browser navigation, accessibility, and representative older-adult usability.
@@ -42,6 +42,16 @@ Test readable text, contrast, plain labels, 48x48 CSS-pixel targets, visible foc
 - Essential actions remain operable with touch, keyboard, visible focus, 200% zoom/reflow, screen readers, and reduced motion; none depends on hover.
 - A secondary desktop regression passes. Human findings are anonymized and claims do not exceed the sample.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Every core-loop risk has an owned evidence layer | COMPLETE | Tests, local Supabase scripts, runbooks, regression checklist, and this OPORD matrix. |
+| Automated 320/390/430 plus physical Safari/Chrome | PARTIAL/CONDITIONAL | Configured Chrome widths pass; physical iOS Safari/Android Chrome are `NOT RUN`. |
+| Back/history, deep links, reload, virtual keyboard | PARTIAL/CONDITIONAL | Exact-event deep link, Back, hard reload, and invalid-field visibility at 320x500 pass in headless Chrome; physical software-keyboard matrices are `NOT RUN`. |
+| Touch/keyboard/focus/200%/screen reader/reduced motion/no-hover | LOCAL COMPLETE / EXTERNAL CONDITIONAL | >=48px primary targets, five sequential labeled tabs, focused error relationships, reduced motion, no hover-only role controls, semantic light-surface text pairs >=4.5:1, and persisted Chrome 200% browser zoom pass. VoiceOver/TalkBack are `NOT RUN`. |
+| Desktop regression and anonymized human findings | PARTIAL | The same production export passes at 1280x900; no moderated-human sample exists. |
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
@@ -51,7 +61,28 @@ powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
 git diff --check
 ```
 
-Run the 320/390/430 CSS-pixel responsive matrix, keyboard/focus smoke, 200% zoom/reflow, reduced-motion and browser navigation/deep-link/reload checks; label placeholder lint honestly.
+Build a local-only production export with dotenv disabled, serve it on loopback, and run the no-dependency Chrome gate:
+
+```powershell
+$env:EXPO_NO_DOTENV='1'; $env:EXPO_PUBLIC_DATA_MODE='local'
+Push-Location app; npx expo export --platform web --output-dir .codex/export-op14 --clear; Pop-Location
+python -m http.server 8086 --bind 127.0.0.1 --directory app/.codex/export-op14
+# In a second terminal:
+node scripts/check-opord14-mobile-accessibility.mjs http://127.0.0.1:8086
+```
+
+The script starts a disposable separate headless Chrome profile, records JSON, terminates Chrome, and removes its temporary profile. Its historical 200% measurement is a CDP page-scale proxy (`visualViewport.scale === 2`, 160 CSS-pixel visual viewport from a 320 CSS-pixel layout).
+
+For real browser zoom, build a clean configured loopback export, serve it on loopback, set the three required local-only environment variables, and run:
+
+```powershell
+$env:LOOPEDIN_LOCAL_PASSWORD = '<local synthetic password>'
+$env:LOOPEDIN_RUN_MARKER = 'family-browser-v1'
+$env:LOOPEDIN_BACKEND_URL = 'http://127.0.0.1:54321'
+node scripts/check-opord14-real-browser-zoom.mjs http://127.0.0.1:8089 .codex/evidence/opord14-real-zoom
+```
+
+That harness writes Chrome's persisted `partition.default_zoom_level.x` preference to a disposable profile. It rejects page scaling and CSS zoom by requiring device-pixel ratio 1→2, a same-window CSS viewport 780→390, `visualViewport.scale === 1`, and computed CSS zoom 1. The configured replay is read-only and re-verifies the retained scenario afterward.
 
 ### Conditional-staging/mobile-web/human
 On real phones, run iOS Safari with VoiceOver and Android Chrome with TalkBack, recording OS/browser versions; run a desktop secondary regression and a consented older-adult walkthrough. Native binaries are out of scope.
@@ -60,7 +91,7 @@ On real phones, run iOS Safari with VoiceOver and Android Chrome with TalkBack, 
 Stop before adding dependencies/device-farm services, using production data, recruiting/recording without consent, broad redesign, or declaring accessibility compliance from partial checks.
 
 ## Risks/follow-ups
-Structural tests can pass while rendered behavior fails; desktop emulation does not prove mobile Safari/Chrome; a small usability sample is directional only. A dependency-backed browser E2E mission requires measured justification and approval.
+Structural tests can pass while rendered behavior fails; desktop Chrome native zoom does not prove mobile Safari/Chrome, a physical software keyboard, or assistive technology. Headless Chrome enforces a 500-CSS-pixel minimum at 100%, so the role matrix uses 500 CSS pixels at 100% and 390 CSS pixels at true 200%; the existing unzoomed 320/390/430 gate remains the narrow-width baseline. Card surfaces do not animate. The shared reduced-motion hook defaults to reduced motion until the async platform preference resolves, preventing first-paint image motion for opted-out users; normal image crossfades remain available for subsequently mounted content. A small usability sample is directional only. A dependency-backed browser E2E mission requires measured justification and approval.
 
 ## Definition of done
 The layered matrix and critical regressions are executable, mobile Safari/Chrome and accessibility evidence is honest, desktop regression and usability limitations are recorded, and the review log is updated.

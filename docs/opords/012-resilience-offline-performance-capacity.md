@@ -1,10 +1,10 @@
 # OPORD 012 — Resilience, Offline, Performance, and Capacity
 
 ## Status
-Planned hardening mission after the M1–M6 core loop; detailed targets below are inference pending measured baselines.
+LOCAL COMPLETE / EXTERNAL CONDITIONAL — representative capacity, configured disconnect/retry, and throttled warm-web performance budgets pass locally; physical-device, assistive-technology, hosted-load, and human gates remain open.
 
 ## Situation and evidence
-The unconfigured adapter is process-local and not reload durability (`docs/architecture.md:22`). Query owns migrated server state, but browser cache/storage behavior across reloads, tabs, private browsing, and storage eviction is undocumented. No offline mutation queue or capacity evidence exists; mobile-browser/human tests have not run.
+Default local mode uses a versioned AsyncStorage/browser-storage envelope with revisioned mutation coordination; hard reload and development-server restart durability passed. Configured loopback Supabase also persisted the full browser scenario across reloads. A cold disconnected reload still fails by design because no service worker/PWA shell exists, and configured writes are intentionally online-only with an explicit retry. The local representative baseline covers 20 members, 100 events, 100 comments, and 50 media records. A focused startup correction removed a decorative icon-font dependency from the already labeled tabs and made card surfaces static, reducing the production-web artifact from 6,177,881 to 981,256 bytes. Physical/mobile-human performance evidence does not exist.
 
 ## Mission/objective
 Measure and harden the event loop for common disconnects, retries, large-but-realistic families, and slow phones/networks without creating a speculative synchronization platform.
@@ -41,6 +41,15 @@ Slow/offline states must preserve readable, plain-language event context, never 
 - Event identity and ordering remain correct under reconnect and larger fixtures.
 - Measurements demonstrate budget compliance without new dependencies or remote load.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Budgets and representative volumes recorded before optimization | COMPLETE | `docs/runbooks/resilience-performance.md` records the approved 20-member/100-event/100-comment/50-media volume and phone-web budgets. |
+| Explicit slow/offline states; input retention; retry dedupe | COMPLETE for supported contract | With loopback Supabase's API gateway stopped, the exact comment draft remained and the visible retry wrote it once after recovery; hard reload still showed exactly one copy. OPORD 013 subsequently replaced the raw transport error with calm recovery copy. Cold offline reload and queued writes remain explicitly unsupported product non-goals. |
+| Identity/order after reconnect and larger fixtures | COMPLETE | The focused capacity test preserves exact event identity/order and exact counts through durable reconstruction. A configured browser reconnect retained the draft and persisted one exact comment; the disposable event was deleted and the baseline scenario verifier returned 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media, 38 notifications, 3 objects, and zero outsider residue. |
+| Measured budget compliance | COMPLETE locally | Chrome 150 dependency-free CDP measured three consecutive 390x844 warm production-export reloads under 500 kbps/400 ms RTT plus 4x CPU at 2,200/2,208/2,368 ms LCP, 170/110/91 ms longest tasks, CLS 0.057 each, and 390/390 document width. The already-loaded exact event reached its final heading and usable RSVP controls in 646 ms. Each run recorded zero configured-backend requests. |
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
@@ -52,6 +61,14 @@ git diff --check
 
 Also record focused retry/capacity tests, before/after timings with browser and fixture volume, and a 390x844 throttled-network smoke; label lint as placeholder.
 
+The executable performance gate is:
+
+```powershell
+node scripts/check-opord12-performance.mjs http://127.0.0.1:8093
+```
+
+It exits nonzero unless each of three warm runs meets the 4,000 ms LCP, 200 ms longest-task, and 390px no-overflow budgets and the final exact-event heading plus RSVP actions become usable within one second.
+
 ### Conditional-staging/mobile-web/human
 Real-phone iOS Safari, Android Chrome, human usability, and production load are currently NOT RUN.
 
@@ -59,7 +76,7 @@ Real-phone iOS Safari, Android Chrome, human usability, and production load are 
 Stop until budgets/offline semantics are decided; stop before new packages, remote load tests, indexes/migrations, PWA/service-worker work, offline write queues, background sync, or infrastructure changes.
 
 ## Risks/follow-ups
-Desktop synthetic timings may not predict mobile Safari/Chrome; retries can duplicate writes; browser cache/storage may expose private data on shared devices or be evicted unexpectedly. Persistent offline writes remain an explicit non-goal.
+Desktop synthetic timings may not predict mobile Safari/Chrome; browser cache/storage may expose private data on shared devices or be evicted unexpectedly. Persistent offline writes remain an explicit non-goal. The raw configured-network error was corrected under OPORD 013.
 
 ## Definition of done
 Measured targets pass, resilience behavior is executable and documented, no speculative platform is added, and review evidence names every untested environment.

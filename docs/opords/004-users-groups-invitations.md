@@ -2,15 +2,14 @@
 
 ## Status
 
-AMBER — authenticated group loading exists; invitation and membership lifecycle require separate product, schema, RLS, and remote authorization.
+STAGING SYNTHETIC COMPLETE / DELIVERY CONDITIONAL — dedicated hosted staging proves entitled family creation, two live email-bound invitation acceptances, owner/member restrictions, outsider match/accept/read/write denial, and zero cleanup residue. Real invitation email delivery is not implemented, no `admin` role exists, and real-account/production proof remains open.
 
 ## Situation and evidence
 
 - Groups are the event permission boundary (`docs/architecture.md:57-61`), and configured users are gated through Query-owned group loading (`docs/architecture.md:35-40`).
-- The shell renders a truthful no-group state but offers no authorized creation/invitation path (`app/src/navigation/AppShell.tsx:33-40`).
-- Group UI remains among non-migrated fixture-backed surfaces (`docs/architecture.md:17-24`).
-- Invitations and onboarding/no-groups are explicitly deferred (`tasks/backlog.md:17-21`).
-- Inference: membership roles, invite identity, expiry, revocation, duplicate handling, and event visibility semantics need a written contract before implementation.
+- The no-family screen supports entitlement-gated initial creation and invite-link joining. Family UI lists live members/invites and exposes role-appropriate invite, revoke, remove, leave, and transfer actions.
+- Forward migrations and narrow RPCs enforce email-bound token-hash invites, idempotency, expiry/replay safety, atomic creation, and exactly one owner.
+- A four-session local browser journey proved creation, two invitation-bound joins, outsider isolation, ownership transfer and transfer-back, reload persistence, and direct-ID denial.
 
 ## Mission/objective
 
@@ -64,6 +63,20 @@ Creation and invitations must state the group name, inviter, joining impact, and
 - Nonmembers cannot read group events, RSVPs, messages, or invitations through direct IDs.
 - Existing event loop and configured no-group/auth gates remain truthful.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Atomic family + initial owner | COMPLETE LOCALLY | `a1faa25`, `de5b68d`; real owner creation and family E2E rollback/invariant cases. |
+| Owner-only invite/revoke/remove/transfer | COMPLETE LOCALLY | `ec52a77`, `079e4e6`, `1bc3421`; role UI plus RLS/RPC denial tests. |
+| Intended-user accept; replay/expiry/duplicates safe | COMPLETE LOCALLY | `f04fa77`, `e68d615`, `40b2dec`, `5bd615a`; lifecycle E2E. |
+| Exactly one membership and scoped reveal | COMPLETE LOCALLY | Four-session verifier: three members, zero outsider residue/direct access. |
+| Removal/leave and last-owner transfer invariant | COMPLETE LOCALLY | Family E2E plus clean browser transfer Avery→Maya→Avery, owner remove/reinvite, and member leave/reinvite. Fresh same-tab invitation hashes now synchronize after decline. |
+| Nonmember direct-ID denial across protected data | COMPLETE LOCALLY | Authenticated outsider browser route plus family/media RLS matrices. |
+| Existing event and no-family gates truthful | COMPLETE | Full browser lifecycle and root/app regressions. |
+
+Dedicated hosted migration/RLS and synthetic invitation acceptance/denial are `PASS`. Product-sent invitation email, a distinct `admin` role, real recipients, and production delivery remain `NOT RUN`.
+
 ## Validation commands/evidence
 
 ### Always-local
@@ -83,7 +96,7 @@ git status --short
 
 - RLS policy tests in an approved database environment.
 - Multi-user matrix covering owner/member/invitee/nonmember, atomic-create failure, wrong account, expiry, replay, duplicate, revoke, removal, last-owner denial, transfer race, escalation, and direct-ID access.
-- Live two-user/RLS: `NOT RUN — safe environment unavailable` until approved.
+- Live hosted multi-user/RLS: `PASS` for isolated `.invalid` owner/two-member/outsider staging users with exact cleanup; real-user invitation delivery remains `NOT RUN`.
 - Mobile-web browser/human tests recorded separately; lint remains placeholder unless changed.
 
 ## Stop conditions/authorization limits

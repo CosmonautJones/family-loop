@@ -1,0 +1,114 @@
+# Hosted release completion
+
+## Superseding hosted-staging checkpoint — 2026-07-15
+
+This checkpoint supersedes the inventory-only status below without deleting its historical evidence. The dedicated project and site are now mutated only as authorized; the quarantined Supabase project and the `travisjohnjones` Netlify site remain untouched.
+
+- Dedicated Supabase project `vkogznsfthirhxkqysza` records the repository's six ordered/checksummed forward migrations through `20260715123221_restrict_hosted_rpc_execute_grants`. Read-back shows every public LoopedIn table has RLS enabled, the media bucket is private, authenticated-only LoopedIn RPCs are not executable by `anon`, and only the two bounded invitation-preflight RPCs retain anonymous execution.
+- The real bootstrap state is one confirmed Auth identity/profile for Travis Jones, one `Jones Fam`, one membership with exactly one owner, and one consumed family-creation entitlement. A temporary validation event named `Testing` plus its owner RSVP also exists; it is test residue, not realistic starter content, and must be replaced before family handoff. There are no comments, media rows, or Storage objects yet.
+- GitHub Actions run `29451842237` is green for exact source `3cf45367dc858e5c58bf8b72ae28e263b310c6b4`. Its downloaded artifact identifies release `0.1.0-3cf45367dc85` and internal artifact digest `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c`; the deployment envelope reverified that digest/source pair before upload.
+- Netlify deploy `6a57fc726b558b21faf57459` contains that exact artifact and was restored unchanged to the dedicated site's staging alias at `https://loopedin-family.netlify.app` at `2026-07-15T21:35:10.572Z`. Its immutable URL is `https://6a57fc726b558b21faf57459--loopedin-family.netlify.app`; no rebuild, Git link, custom domain, Function, or Edge Function was introduced.
+- The published alias and immutable URL render the signed-out configured app over HTTPS with `loopedin-staging · Connected`, release `0.1.0-3cf45367dc85`, the expected exact-origin CSP, `no-store` runtime configuration, immutable hashed assets, and a missing-asset `404`. Chrome loaded the shell/JS/runtime successfully; the only console entry is the optional missing `/favicon.ico`, which is advisory and not counted as a clean-console pass.
+- Supabase Auth `site_url` is exactly the staging alias. Its exact allow-list contains the staging alias, all three retained immutable deploy URLs including `6a57fc726b558b21faf57459`, and future `https://app.travisjohnjones.com`; the prior localhost Site URL and empty allow-list are superseded.
+- The hosted Forgot Password form sent the same enumeration-safe confirmation and Auth logs recorded a successful recovery request plus `mail.send` for the explicitly approved address. The user must still open the message and choose a private password; no recovery token or password is retained in evidence.
+- Hardened hosted synthetic run `qa-mrml3fsl-a08c4f8e` passed two live-valid-invite outsider denials plus recipient acceptances, owner/member restrictions, outsider database/media denial, three events including one completed trip, three RSVPs, two comments, a reminder, seven notifications, private-media upload/view/delete, and exact-event Realtime. Cleanup reported zero user/profile/group/invitation/object residue and an unchanged protected non-QA hash; independent exact-ID SQL also returned zero QA entitlements/private operation maps while real-family counts stayed unchanged.
+- Exact-deploy rollback was rehearsed without database reversal: staging promoted `6a57fc726b558b21faf57459`, restored prior fixed deploy `6a57f034c398b8ce7dbe3fc8` and verified release `0.1.0-e52be53165a5`, then restored `6a57fc726b558b21faf57459` and verified final release `0.1.0-3cf45367dc85`/HTTP 200. The personal site remained outside every operation.
+- Custom SMTP remains absent, so recovery proves only staging delivery through Supabase's default sender. The product creates private invitation links but does not yet send invitation email, and its roles are `owner` and `member`, not a separate `admin`. Real-account browser completion, realistic starter content, production SMTP/invitation delivery, telemetry, backup/restore, physical devices/assistive technology, custom domain, and production promotion remain open.
+
+Audit date: 2026-07-14
+
+Branch inspected: `codex/family-loop-release-candidate`
+
+Mode: documentation-only evidence update; no additional provider mutation occurred in this mission. The previously authorized dedicated-site creation and draft upload are recorded below. No production alias, custom domain, Git link, Supabase migration, credential, DNS record, user, database row, or Storage object was created or changed by this documentation pass.
+
+## Truth boundary
+
+This runbook is the handoff from the proven local release candidate to hosted staging and, only after a separate approval, production. Historical local and hosted-CI evidence remains valid. A plan, provider login, linked project, or available feature is not deployment evidence.
+
+### Proven now
+
+- Draft PR #1 is open and mergeable in `CosmonautJones/family-loop`. GitHub Actions run `29376550310` passed `Application quality`, `Security and dependencies`, and `Migration integrity` on exact commit `3ca1db3c2d3446efc0e3301460dd0231a0ab18cd`.
+- CI uses read-only repository permission, immutable action commits, bounded jobs, a deterministic app lockfile, secret/dependency checks, migration history/checksum checks, and a disposable loopback Supabase apply/lint.
+- The environment-neutral web artifact, external `runtime-config.json`, fail-closed bootstrap, derived backend CSP, cache policy, hash-route reload, promotion, and rollback contracts pass locally. GitHub run `29383816628` built exact source `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce` into three-file artifact `0.1.0-5b957c51ddf1` with internal digest `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3`; the downloaded bytes verified independently.
+- Local Supabase proves Auth, Postgres/RLS, private Storage, Realtime, recovery mail through local Inbucket, multiple users, and backup/isolated restore. These remain local results.
+- Read-only provider inventory identifies dedicated project `vkogznsfthirhxkqysza` (`LoopedIn`) in organization `yxedrtsnkpwfryhebswc`, region `us-east-2`, status `ACTIVE_HEALTHY`, created 2026-07-14. It is distinct from quarantined project `lzscofbvecgpchokxhyb` in `us-west-2`.
+- Dedicated-project Auth inventory reports email enabled, confirmation required (`mailerAutoconfirm=false`), signup currently open, and phone disabled. All ten expected public LoopedIn table endpoints returned `404/PGRST205` with a publishable client context; this proves the expected schema is not currently exposed through the Data API, not that the database is empty.
+- Dedicated-project backup inventory reports WAL-G enabled, PITR disabled, and no usable backup-list evidence. No backup/restore capability is inferred.
+- Netlify is the selected frontend host. Dedicated site `loopedin-family` has ID `50ae6d6b-28ad-49c0-9654-c3a54899fcb5`. Draft deploy `6a56f0408614647fe35cf968` is `ready` in `deploy-preview` context with `published_at=null`; the site has `published_deploy=null`, `custom_domain=null`, and `repo_url=null`. It serves exact source `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce` and artifact `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3` only at `https://6a56f0408614647fe35cf968--loopedin-family.netlify.app`.
+- The unique draft URL passed HTTPS, root/runtime transport, runtime `no-store`, exact configured-origin CSP, immutable hashed-asset caching, missing-asset 404, release/environment headers, hash-route reload, and signed-out Chrome console/network checks. This is static transport evidence, not configured backend or core-loop evidence.
+- The protected personal-site project `travisjohnjones` retained exact ID `519f3aa3-c723-4b2a-b9dd-4761e7b0a8bf`; it was not linked, relinked, renamed, or deployed over.
+- Supabase CLI is authenticated. The linked hosted project is healthy but is **quarantined**: its remote migration history is unrelated (`001`-style and older 2026 migrations), while all five LoopedIn migrations are absent. It must not receive a push, repair, reset, seed, or test account.
+- The linked project reports WAL-G enabled, PITR disabled, and no listed physical backups. This says nothing about a future dedicated LoopedIn project.
+
+### Unproven now
+
+- No published staging/production alias, custom domain, Git link, dedicated configured Supabase environment, hosted migration, Auth redirect allowlist, custom SMTP, telemetry destination, alert, hosted backup schedule, private-object backup, or hosted restore proof exists.
+- The draft deploy is deliberately unpublished and transport-only. No authenticated API call, migration, RLS/Storage/Realtime behavior, family account, trip/comment/photo flow, mail flow, restore, telemetry alert, staging rollback, physical-device/accessibility pass, or production approval is inferred from it.
+- Remote migration history for `vkogznsfthirhxkqysza` remains unavailable pending connector registry reload. Hosted migrations are therefore `NOT RUN`; the `404/PGRST205` inventory must not be rounded up to an empty-database claim.
+- GitHub required-check protection cannot be enabled for this private repository on its current plan; the API returns the provider's GitHub Pro/public-repository requirement.
+- The ignored `app/.env.local` exists and was not read. Only the public names in `app/.env.example` were inspected: `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+- No production SMTP or telemetry variable names, vendor configuration, or scheduled hosted backup definition exists in the repository.
+
+## Hosted release ledger
+
+| Domain | Current proof | Exact next action | Acceptance evidence | Stop condition | User/provider decision? |
+|---|---|---|---|---|---|
+| Deployment | Dedicated site `loopedin-family` and unique draft deploy prove exact-artifact HTTPS/static transport; production alias/custom domain/Git link absent; `travisjohnjones` exact ID unchanged | Configure the approved dedicated Supabase staging target, then run the authenticated configured core loop against the unique draft before any published alias; record and rehearse draft rollback | Existing transport checks remain green; configured sign-in/family/trip/comment/photo/reminder/realtime/recovery flow, 320/390/430/1280 and Edge/Firefox/phone checks, backend identity, and rollback to prior deploy pass | Digest/runtime mismatch; backend incompatibility; migration/RLS/media failure; accidental personal-site, production alias, Git link, or custom-domain mutation | **Yes:** backend mutation window, staging users/mailboxes, release/rollback owners, and later separate published-staging/production approval |
+| CI | Run `29383816628` passed all four jobs on `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce`; its downloaded artifact independently matched trusted digest `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3` with no secrets/remotes | Keep exact-head artifact production green; separately authorize temporary seeded-failure PRs for each blocking class and remove seeds | Green clean run; downloaded bytes verify to the job SHA/digest; lint/test/secret/migration seeds each fail for the intended reason; no secrets or remote DB access in PR jobs | Job gains write permission unnecessarily; secrets reach PR jobs; remote migration occurs; uploaded bytes mismatch; deployed bytes are rebuilt instead of promoted | **Yes:** GitHub Pro or public repo for enforced required checks; otherwise explicitly accept manual merge control |
+| Supabase | Read-only inventory identifies dedicated healthy project `vkogznsfthirhxkqysza` in `us-east-2`, distinct from quarantined `lzscofbvecgpchokxhyb`; expected public tables are not Data-API-visible and migration history is unavailable | After connector reload, read remote migration history; obtain an approved mutation window; link only in an isolated operator checkout; apply the five forward migrations if and only if history is empty/expected; configure exact Netlify draft origins/redirects; run synthetic owner/member/outsider family/media/reminder/realtime/recovery matrix and clean state | Project identity, pre/post migration list, DB lint, exact schema checks, RLS/Storage attack matrix, Realtime convergence, Auth redirect result, cleanup counts, and app smoke are retained without secret values | Ambiguous/unexpected migration history, production/real-user data, destructive reset/repair, exposed credentials, RLS/private-media failure, or incomplete cleanup | **Yes:** plan/spend, named owner, remote mutation window, and approved synthetic identities |
+| Mail | Local recovery/invite mail and anti-enumeration pass through Inbucket; no production SMTP | Choose a transactional SMTP provider; verify sender domain; store credentials only in Supabase; configure staging Auth URLs/templates/rate limits; test invite, confirmation if enabled, known/unknown recovery parity, expiry/replay, bounce/failure visibility | SPF/DKIM and preferably DMARC status, redacted Supabase config record, delivered staging messages to approved test mailboxes, equal public recovery responses, working callback/password replacement, Auth-log handoff, and cleanup | Default Supabase SMTP used as production proof; sender domain unverified; secrets printed/committed; callback origin differs; enumeration; real-user blast | **Yes:** provider/account, sending domain/from address, DNS authority, budget, retention, and approved test recipients |
+| Backup | Encrypted local DB+private-object package and isolated restore pass; hosted target has no applicable proof | Approve RPO/RTO/retention; enable plan-appropriate hosted DB backups/PITR on dedicated staging/production; add an encrypted off-project private-Storage object copy because Supabase DB backups exclude object bytes; restore DB and objects into a disposable isolated project | Provider backup/PITR metadata, scheduled object manifest with hashes, least-privilege access record, timestamped restore point, restored counts/references/object hashes, member/outsider RLS, configured core-loop smoke, measured RPO/RTO, and approved cleanup | No isolated restore target; database-only plan presented as media recovery; cross-project key exposure; RPO/RTO miss; integrity/RLS mismatch; production restore or deletion without a new gate | **Yes:** Pro/PITR spend, proposed MVP targets (recommend 24h RPO/4h RTO), retention, off-project object store, encryption/key owner, and restore-project budget |
+| Telemetry | Redacted error boundary/tests and local incident tabletop pass; Netlify/Supabase built-in observability is unused for LoopedIn | Start with available Netlify request/deploy observability plus Supabase Reports/Logs and an external synthetic sign-in/core-loop check; define privacy-safe alerts and named incident owner. Add client error reporting only after a separate SDK/vendor/privacy decision | A controlled staging frontend failure, backend outage, Auth failure, RLS denial, and synthetic-check failure appear in the chosen consoles and page the owner; no message/photo/token/signed URL is captured; retention and alert test are recorded | PII/content/token collection; no named responder; alert cannot be triggered and cleared; production log inspection without authority; new client SDK/vendor before approval | **Yes:** incident owner/on-call route, retention, alert destination, synthetic monitor, and whether to authorize a client telemetry dependency. Supabase log drains require an eligible paid plan/add-on |
+
+## Can Netlify static hosting preserve the runtime-config and CSP contract?
+
+**Yes, without a Netlify Function or a new application backend, if each deployment is assembled as a publish envelope rather than rebuilt from source.** Netlify consumes `_headers` and `_redirects` from the publish directory. The deploy envelope can contain:
+
+1. the already-built, digest-verified Expo static artifact;
+2. one reviewed public `runtime-config.json`, outside the artifact digest and served with `Cache-Control: no-store`;
+3. generated-and-reviewed `_headers` with the exact validated Supabase origin plus exact manifest-file cache rules, and `_redirects` with no catch-all because LoopedIn deep links are fragment routes.
+
+No secret belongs in the runtime overlay; the Supabase publishable key is public client configuration. Envelope build and verification require the trusted artifact digest and source commit from the successful CI job/run, not the downloaded manifest alone. `connect-src` is exact to the validated backend plus WebSocket origin; `img-src` intentionally retains `https:` for attributed user media. Promotion means uploading or assigning the verified Netlify deploy, not asking Netlify to rebuild different bytes.
+
+Before upload, verify a fresh approved Netlify site is dedicated to LoopedIn, has no build command for this promotion, and receives the envelope directory directly as its publish directory. Stop if provider settings would rebuild it, if deployment resources contain Functions/Edge Functions, or if the target is `travisjohnjones`.
+
+Pure static hosting cannot change `runtime-config.json` or CSP independently inside an existing immutable deployment. A configuration change therefore creates a new release envelope/deployment, even when the app artifact digest is unchanged. That is the intended auditable behavior and does not require inventing a backend.
+
+Provider references:
+
+- Netlify custom headers: <https://docs.netlify.com/manage/routing/headers/>
+- Netlify redirects, rewrites, and shadowing: <https://docs.netlify.com/manage/routing/redirects/overview/> and <https://docs.netlify.com/manage/routing/redirects/rewrites-proxies/>
+- Netlify cache-control behavior: <https://docs.netlify.com/build/caching/caching-overview/>
+- Supabase custom SMTP requirements: <https://supabase.com/docs/guides/auth/auth-smtp>
+- Supabase database backup/PITR behavior and the explicit exclusion of Storage objects: <https://supabase.com/docs/guides/platform/backups>
+- Supabase Reports/Logs: <https://supabase.com/docs/guides/telemetry/reports> and <https://supabase.com/docs/guides/telemetry/logs>
+- Supabase log drains and plan requirements: <https://supabase.com/docs/guides/telemetry/log-drains>
+
+## Minimum sequential completion plan
+
+1. **Freeze a candidate.** Finish the active cross-browser fix/review loop, return to a clean tree, run the full local gate, commit, push, and require a green exact-head CI run. Record the new SHA and build digest; do not reuse historical digests for new source.
+2. **Approve the inventory.** Name staging/production owners and decide Netlify team/new LoopedIn site/domain, dedicated Supabase project/region/plan, SMTP provider/domain, incident owner/alert destination, RPO/RTO/retention/object-backup target, and GitHub enforcement posture. This is the only unavoidable human decision gate.
+3. **Complete staging configuration only.** Keep the existing unique draft on dedicated site `loopedin-family`; do not publish an alias or touch `travisjohnjones`. Inventory the approved Supabase staging project and verify its migration history is empty/expected before applying anything. Keep the unrelated project quarantined.
+4. **Certify the backend.** Apply the five migrations and run the existing synthetic multi-user/RLS/private-media/reminder/realtime/recovery suites against staging, adapted to refuse production and clean up in `finally`. Capture only identifiers, counts, digests, statuses, and timestamps.
+5. **Certify mail and telemetry.** Configure custom SMTP and exact redirect URLs. Wire provider-native telemetry/synthetic monitoring first, trigger controlled failures, prove alert receipt and safe payloads, and record incident ownership/retention.
+6. **Deploy the static envelope.** Promote the exact CI artifact with staging overlay/CSP, verify TLS/headers/cache/hash-route reload/missing-asset 404/runtime identity and the full configured browser loop, then rehearse Netlify deploy rollback without database rollback.
+7. **Prove recovery.** Verify DB backup/PITR metadata and off-project Storage-object copies; restore both into a disposable isolated project and rerun integrity/RLS/core-loop checks within approved RPO/RTO. Delete the disposable restore target only under its approved cleanup gate.
+8. **Production gate.** Present the complete staging evidence, residual physical-device/human gaps, exact deployment/backend versions, rollback point, and costs. Production resources, DNS/alias promotion, real-user mail, restore, deletion, or retention apply require a separate named approval.
+
+## Recommended MVP decisions
+
+These defaults are intentionally modest and must be accepted rather than silently assumed:
+
+- one dedicated staging Supabase project and one later production project; never reuse the quarantined linked project;
+- Netlify static publish envelope, no Netlify Function or Edge Function;
+- custom transactional SMTP through Supabase Auth, using a dedicated subdomain and `no-reply` sender;
+- 24-hour RPO, 4-hour RTO, and 30-day encrypted off-project object-backup retention for initial family use, revisited before material usage;
+- Netlify + Supabase native observability and one synthetic check first; no session replay and no message/photo contents in telemetry;
+- GitHub Pro required checks if the repository stays private; otherwise manual owner-enforced merge control is an explicit release warning, not a technical pass.
+
+## Credential and evidence rules
+
+- Never print, commit, paste into PRs, or retain service-role keys, SMTP passwords, database passwords, provider tokens, signed URLs, recovery fragments, or `.env.local` contents.
+- Public runtime configuration may contain only environment ID, `supabase` mode, HTTPS project URL, and publishable/anonymous key; it still receives change review and `no-store` delivery.
+- Provider screenshots are supplementary. Machine-readable SHA/digest/status/count/timestamp evidence is authoritative and must name the environment.
+- Preserve every historical result. Append a superseding result when the exact SHA, environment, provider setting, or test changes; never rewrite local proof as hosted proof.

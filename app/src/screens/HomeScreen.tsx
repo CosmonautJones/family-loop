@@ -1,21 +1,27 @@
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '../components/Avatar';
-import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
 import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
-import { useActiveEventsQuery } from '../app/queries';
+import { useActiveEventsQuery, useActiveGroupHistoryQuery, useMarkAllNotificationsReadMutation, useMarkNotificationReadMutation, useNotificationsQuery } from '../app/queries';
 import { palette, spacing } from '../theme/tokens';
 
 export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
+  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(12);
   const eventsQuery = useActiveEventsQuery();
-  const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], activity: [], memories: [] });
+  const historyQuery = useActiveGroupHistoryQuery();
+  const notificationsQuery = useNotificationsQuery();
+  const markRead = useMarkNotificationReadMutation();
+  const markAllRead = useMarkAllNotificationsReadMutation();
+  const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], history: historyQuery.data ?? [] });
   const heroEvent = appSections.heroEvent;
+  const visibleUpcomingEvents = appSections.upcomingEvents.slice(0, visibleUpcomingCount);
 
   if (eventsQuery.isPending) return <ScreenState title="Loading your plans" detail="Finding what’s next for this group…" />;
-  if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} />;
+  if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} onRetry={() => eventsQuery.refetch()} />;
 
   return (
     <View style={styles.root}>
@@ -24,25 +30,43 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
         <Text style={styles.eyebrow}>What’s next</Text>
         {heroEvent ? (
           <View>
-            <Text style={styles.title}>{heroEvent.title}</Text>
+            <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{heroEvent.title}</Text>
             <Text style={styles.subtitle}>{heroEvent.timeLabel} · {heroEvent.location}</Text>
             <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.description} height={260} />
             <View style={styles.heroActions}>
-              <Button label="Open event" onPress={() => onOpenEvent?.(heroEvent.id)} />
+              <CardAction label="Open event" onPress={() => onOpenEvent?.(heroEvent.id)} />
             </View>
           </View>
         ) : (
           <SurfaceCard>
             <Text style={styles.cardTitle}>No events planned yet</Text>
             <Text style={styles.cardCopy}>Create the first event for this group so everyone knows what’s next.</Text>
-            <Button label="Create event" onPress={onCreateEvent} />
+            <CardAction label="Create event" onPress={onCreateEvent} />
           </SurfaceCard>
         )}
+
+        <SurfaceCard>
+          <View style={styles.rowBetween}>
+            <View style={styles.flexCopy}><Text style={styles.cardTitle}>Updates</Text><Text style={styles.cardCopy}>The latest changes across your family.</Text></View>
+            {notificationsQuery.data?.some((item) => !item.read) ? <Chip label={`${notificationsQuery.data.filter((item) => !item.read).length} unread`} tone="coral" /> : null}
+          </View>
+          {notificationsQuery.isPending ? <View accessibilityLiveRegion="polite"><Text style={styles.cardCopy}>Loading family updates…</Text></View> : null}
+          {notificationsQuery.isError ? <View accessibilityLiveRegion="polite"><Text accessibilityRole="alert" style={styles.errorCopy}>Updates are unavailable right now.</Text><CardAction label="Retry updates" onPress={() => notificationsQuery.refetch()} /></View> : null}
+          {notificationsQuery.isSuccess && notificationsQuery.data.length === 0 ? <Text style={styles.cardCopy}>No updates yet. New comments, photos, and plan changes will appear here.</Text> : null}
+          {notificationsQuery.isSuccess ? [...notificationsQuery.data].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 3).map((item) => (
+            <View key={item.id} style={[styles.updateItem, !item.read && styles.updateUnread]}>
+              <View style={styles.flexCopy}><Text style={styles.listTitle}>{item.title}</Text><Text style={styles.cardCopy}>{item.body}</Text><Text style={styles.updateTime}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>
+              {item.eventId ? <CardAction label={`Open update: ${item.title}`} disabled={markRead.isPending} onPress={async () => { try { if (!item.read) await markRead.mutateAsync(item.id); } catch { /* Opening the event does not depend on read-state persistence. */ } onOpenEvent?.(item.eventId!); }} /> : !item.read ? <CardAction label={`Mark ${item.title} read`} disabled={markRead.isPending} onPress={() => markRead.mutate(item.id)} /> : null}
+            </View>
+          )) : null}
+          {notificationsQuery.isSuccess && notificationsQuery.data.some((item) => !item.read) ? <CardAction label={markAllRead.isPending ? 'Marking updates read…' : 'Mark all read'} disabled={markAllRead.isPending} onPress={() => markAllRead.mutate()} /> : null}
+          {markRead.isError || markAllRead.isError ? <Text accessibilityRole="alert" style={styles.errorCopy}>We couldn’t update read status. Try again.</Text> : null}
+        </SurfaceCard>
 
         {heroEvent ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
-              <Text style={styles.cardTitle}>This week</Text>
+              <Text style={styles.cardTitle}>Upcoming plans</Text>
               <Text style={styles.cardCopy}>{appSections.weekSummary}</Text>
             </View>
             <Chip label="Agenda" tone="sky" />
@@ -52,29 +76,33 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
         {appSections.upcomingEvents.length > 0 ? <SurfaceCard>
           <Text style={styles.cardTitle}>Also coming up</Text>
           <View style={styles.upcomingList}>
-            {appSections.upcomingEvents.map((event) => (
+            {visibleUpcomingEvents.map((event) => (
               <View key={event.id} style={styles.upcomingItem}>
                 <View style={styles.upcomingCopy}>
                   <Text style={styles.listTitle}>{event.title}</Text>
                   <Text style={styles.cardCopy}>{event.detail}</Text>
                 </View>
-                <Button label="Open" tone="secondary" onPress={() => onOpenEvent?.(event.id)} />
+                <CardAction label={`Open ${event.title}`} onPress={() => onOpenEvent?.(event.id)} />
               </View>
             ))}
           </View>
+          {visibleUpcomingCount < appSections.upcomingEvents.length ? <CardAction label={`Show ${Math.min(12, appSections.upcomingEvents.length - visibleUpcomingCount)} more plans`} onPress={() => setVisibleUpcomingCount((count) => count + 12)} /> : null}
         </SurfaceCard> : null}
 
-        {appSections.activity.length > 0 ? <SurfaceCard>
+        {historyQuery.isPending ? <SurfaceCard><Text style={styles.cardTitle}>Loading recent family history</Text><Text style={styles.cardCopy}>Gathering comments and photos from completed events…</Text></SurfaceCard> : null}
+        {historyQuery.isError ? <SurfaceCard><Text style={styles.cardTitle}>Recent history is unavailable</Text><Text style={styles.cardCopy}>{historyQuery.error instanceof Error ? historyQuery.error.message : 'Try again in a moment.'}</Text><CardAction label="Retry history" onPress={() => historyQuery.refetch()} /></SurfaceCard> : null}
+        {historyQuery.isSuccess && appSections.activity.length === 0 ? <SurfaceCard><Text style={styles.cardTitle}>No recent comments or photos</Text><Text style={styles.cardCopy}>New activity from completed family events will appear here.</Text></SurfaceCard> : null}
+        {historyQuery.isSuccess && appSections.activity.length > 0 ? <SurfaceCard>
           <View style={styles.rowBetween}>
             <View>
               <Text style={styles.cardTitle}>Recent activity</Text>
               <Text style={styles.cardCopy}>{appSections.recentActivityTitle}</Text>
             </View>
-            <Chip label="Live" tone="coral" />
+            <Chip label="Recent" tone="coral" />
           </View>
           <View style={styles.divider} />
           {appSections.activity.map((item) => (
-            <View key={item.title} style={styles.listItem}>
+            <View key={item.id} style={styles.listItem}>
               <View style={styles.activityMain}>
                 <Avatar uri={item.actor?.avatarUri} initials={item.actor?.initials ?? 'LI'} />
                 <View>
@@ -87,10 +115,11 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
           ))}
         </SurfaceCard> : null}
 
-        {appSections.memories.length > 0 ? <View style={styles.memoryRow}>
+        {historyQuery.isSuccess && appSections.memories.length > 0 ? <View style={styles.memoryRow}>
           {appSections.memories.map((memory) => (
-            <View key={memory.title} style={styles.memoryTile}>
+            <View key={memory.eventId} style={styles.memoryTile}>
               <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={`${memory.eyebrow} · ${memory.subtitle}`} height={172} />
+              <View style={styles.memoryAction}><CardAction label={`Open ${memory.title}`} onPress={() => onOpenEvent?.(memory.eventId)} /></View>
             </View>
           ))}
         </View> : null}
@@ -99,8 +128,12 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
   );
 }
 
-function ScreenState({ title, detail }: { title: string; detail: string }) {
-  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+function ScreenState({ title, detail, onRetry }: { title: string; detail: string; onRetry?: () => void }) {
+  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <CardAction label="Retry" onPress={onRetry} /> : null}</SurfaceCard></View>;
+}
+
+function CardAction({ label, disabled = false, onPress }: { label: string; disabled?: boolean; onPress?: () => void | Promise<unknown> }) {
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.cardAction, disabled && styles.cardActionDisabled]}><Text style={styles.cardActionText}>{label}</Text></Pressable>;
 }
 
 const styles = StyleSheet.create({
@@ -142,6 +175,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
+  flexCopy: { flex: 1, minWidth: 0 },
+  errorCopy: { color: palette.berry, fontSize: 14, lineHeight: 20 },
+  updateItem: { borderColor: palette.inkSoft, borderRadius: 12, borderWidth: 1, gap: 10, padding: 12 },
+  updateUnread: { backgroundColor: 'rgba(247,211,200,0.18)', borderColor: palette.coral },
+  updateTime: { color: palette.muted, fontSize: 12, marginTop: 5 },
+  cardAction: { alignItems: 'center', backgroundColor: palette.plum, borderColor: palette.plum, borderRadius: 14, borderWidth: 1, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  cardActionDisabled: { opacity: 0.55 },
+  cardActionText: { color: palette.white, fontSize: 15, fontWeight: '800', textAlign: 'center' },
   rowBetween: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -194,9 +235,15 @@ const styles = StyleSheet.create({
   },
   memoryRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
   },
   memoryTile: {
     flex: 1,
+    flexBasis: 240,
+  },
+  memoryAction: {
+    marginTop: 8,
+    alignItems: 'flex-start',
   },
 });

@@ -1,10 +1,10 @@
 # OPORD 010 — Reminders and In-App Notifications
 
 ## Status
-Planned as M5 after M2 and after any M3/M4 activity it surfaces; push delivery is excluded.
+STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL — dedicated hosted staging persists the member reminder and produces seven recipient-scoped in-app notifications across the synthetic family flow. Push/email/SMS remain excluded; physical-device and real-account observation remain open.
 
 ## Situation and evidence
-Event Detail currently toggles transient reminder drafts and explicitly says push is not wired (`app/src/screens/EventDetailScreen.tsx:93-100`; `docs/architecture.md:20`). Notification list/read contracts and adapters exist (`app/src/services/api.ts:103-119`; `app/src/services/supabaseAdapter.ts:549-563`), but are not evidence of live behavior. M5 calls for persisted reminder preferences and useful in-app updates (`tasks/backlog.md:12`).
+Dead transient reminder controls/state were removed because no reminder scheduling service exists. Commit `c612a75` adds privacy-safe database-generated per-recipient updates for event, RSVP, comment, and media activity. The current implementation reuses the existing `loopedin_reminder_drafts` table and self-user/event-member RLS for one fixed, truthful `Morning of event` preference; disabling deletes that user's row. Configured browser sessions proved separate unread counts, exact-event navigation, mark-all-read, preference reload persistence, and recoverable writes without claiming scheduled delivery.
 
 ## Mission/objective
 Persist a simple per-user event reminder preference and provide a truthful in-app notification list/read loop tied back to exact events, refreshed on visit and browser-tab resume.
@@ -41,6 +41,15 @@ State reminder timing in plain, concrete words (“Morning of event”), expose 
 - Errors do not clear state or substitute fixtures.
 - No UI implies push delivery.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Reminder preference survives refetch and is user/event isolated | COMPLETE LOCALLY | Durable-local v7 reconstruction plus two authenticated loopback users on the same event; each saw only their row, relogin retained both, one user's idempotent disable left the other unchanged, and outsider direct-ID insert was denied. |
+| Chronological notifications, persisted unread, exact-event links | COMPLETE LOCALLY | `c612a75`; recipient-count E2E and configured browser mark/read/navigation proof. |
+| Errors preserve state and never substitute fixtures | COMPLETE LOCALLY | Query/error contracts plus a configured 390px outage/retry: failed disable kept confirmed On state and exact retry intent, then succeeded once local Kong returned. |
+| No push implication | COMPLETE | Event Detail says this is an in-app preference and that push/email delivery are not active. |
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
@@ -50,10 +59,18 @@ powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
 git diff --check
 ```
 
-Also record adapter/query isolation tests, a 390x844 reminder/list/read/deep-link smoke, and configured signed-out smoke; label lint as the repository placeholder.
+Also run:
+
+```powershell
+.\scripts\test-local-supabase-reminders.ps1 -RunMarker family-browser-v1
+.\scripts\test-local-supabase-reminder-browser.ps1 -RunMarker family-browser-v1 -WebUrl http://127.0.0.1:8090
+.\scripts\verify-local-supabase-browser-scenario.ps1 -RunMarker family-browser-v1
+```
+
+The browser harness expects an explicitly loopback-configured static export at the supplied URL. Substantive ESLint is required; no placeholder lint claim remains.
 
 ### Conditional-staging/mobile-web/human
-Run live RLS/two-user checks only with safe approval; iOS Safari/Android Chrome and human tests are currently NOT RUN. Notifications API and service-worker delivery remain deferred.
+Loopback RLS/two-user checks and isolated hosted reminder/seven-notification checks pass. iOS Safari/Android Chrome, assistive technology, real-account, and human tests are currently `NOT RUN`. Notifications API and service-worker delivery remain deferred.
 
 ## Stop conditions/authorization limits
 Stop before Notifications API, service-worker, push/device-token work, background services, remote jobs, migrations/policies, credentials, new packages, or a notification-settings center.
@@ -62,4 +79,4 @@ Stop before Notifications API, service-worker, push/device-token work, backgroun
 Misleading delivery language, stale unread counts, deleted-event links, timezone ambiguity, and notification overload. Push delivery remains a separately scoped mission.
 
 ## Definition of done
-The narrow persisted reminder and in-app read loop passes checks and phone smoke, docs/review log are updated, and live/push limitations are explicit.
+Met locally and for isolated hosted persistence/generation. The narrow reminder/in-app loop passes service, RLS, configured 390px failure/retry, reload/deep-link, focus, target-size, no-overflow, and hosted synthetic counts. Physical/real-account evidence and push/email delivery are not claimed.

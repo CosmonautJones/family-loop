@@ -10,14 +10,14 @@ This index is planning authority only. It does not prove that a feature is deplo
 
 | Evidence | Current fact |
 |---|---|
-| Product foundation | Missions M1-M3 established session gating, Query-owned events/RSVPs, and an event-scoped thread (`tasks/completed.md`; `docs/architecture.md`). |
-| Service contract | Mock and Supabase adapters exist in `app/src/services/`; adapter presence is not live proof. |
-| Database definition | `supabase/migrations/20260705214111_loopedin_initial_infra.sql` defines tables, RLS, storage policies, and realtime publication. |
-| Remote backend | Unverified; no production project, migration deployment, credentials, or live two-user RLS result is claimed. |
-| Local backend | Docker is unavailable, so the local Supabase stack has not been exercised. |
-| Automated checks | Root tests, app structural tests, TypeScript, and the harness exist. |
-| Lint | `app/package.json` still defines a placeholder lint command; it is not substantive lint evidence. |
-| Browser/usability evidence | Prior 390x844 web smokes exist; the full 320/390/430 CSS-pixel phone matrix, iOS Safari, Android Chrome, screen-reader, reduced-motion, 200% zoom/reflow, and moderated older-adult usability sessions have not been run. |
+| Product foundation | Local Waves 0-6 and the configured local Supabase core loop are implemented. Query owns authenticated family, invitation, event, RSVP, comment, media, update, and memory data (`docs/architecture.md`; `evals/review-log.md`). |
+| Service contract | Durable-local, memory-test, and Supabase adapters are executable. Configured failures do not fall back to fixtures. |
+| Database definition | Six forward migrations define the baseline, hardened private-media lifecycle, family invitation lifecycle, recipient-scoped update generation, private event/comment idempotency, and hosted protected-RPC grant restriction. |
+| Remote backend | Dedicated staging `vkogznsfthirhxkqysza` matches all six migrations; synthetic multi-user proof passes, and real owner state now has three upcoming trips, one completed trip, four RSVPs/comments, and three private photos. Real browser/session and recipient delivery remain open. |
+| Local backend | Loopback Supabase migrations, database lint, Auth, four-session RLS, private Storage, and cleanup-safe lifecycle scripts pass independently of hosted staging. |
+| Automated checks | Root/app tests, substantive lint, TypeScript, Expo export, harness, family/media E2E, database lint, scenario verification, secret scanning, dependency policy, migration validation, and diff checks pass. PR #1 run `29451842237` passed all four jobs on `3cf45367…`; artifact digest `7a18b2f5…fc3c8c` reverified before staging upload. Administrator-required checks remain unconfigured. |
+| Lint | Exact ESLint 9 and Expo flat config run with zero warnings; clean and seeded-failure evidence is recorded under OPORD 015. |
+| Browser/usability evidence | Configured Chrome at 320/390/430 CSS pixels passed no-overflow and >=48px visible-control checks; Back/deep-link/reload, reduced-motion emulation, a full four-session scenario, and persisted native 200% browser zoom at effective 320/390/430 passed. Lighthouse Accessibility and Best Practices scored 100. Physical iOS/Android, screen readers, and moderated older-adult sessions remain `NOT RUN`. |
 
 ## Standard OPORD template
 
@@ -72,6 +72,30 @@ No later order may silently absorb an earlier order's unfinished acceptance crit
 
 Canonical execution order: OPORD-001 -> OPORD-002 -> OPORD-005 -> OPORD-006 -> OPORD-003 -> OPORD-004 -> OPORD-007 -> OPORD-008 -> OPORD-009 -> OPORD-010 -> OPORD-011 -> OPORD-012 -> OPORD-013 -> OPORD-014 -> OPORD-015 -> OPORD-016 -> OPORD-017
 
+## 2026-07-15 evidence disposition
+
+`LOCAL COMPLETE` means every product acceptance item that can be proven in the loopback repository/runtime has direct evidence. `PARTIAL/CONDITIONAL` means useful implementation exists but one or more stated acceptance items remain open. `NOT RUN` means the order's essential implementation or operational exercise has not occurred. These labels do not alter the dependency graph or erase the original mission intent.
+
+| OPORD | Disposition | Direct evidence | Open acceptance/release gates |
+|---|---|---|---|
+| 001 | LOCAL COMPLETE / CONDITIONAL | Five-tab event-centered IA, exact-ID routes, Back and reload; `1bc3421`, `89d8720`, configured browser proof | Ten-second first-time comprehension and moderated older-adult use `NOT RUN` |
+| 002 | LOCAL COMPLETE / EXTERNAL CONDITIONAL | 320/390/430 no-overflow, >=48px controls, keyboard/landmark/reduced-motion fixes, semantic contrast regression, Lighthouse Accessibility 100, and persisted native 200% Chrome zoom | Physical Safari/Chrome, VoiceOver/TalkBack, and moderated-human validation `NOT RUN` |
+| 003 | STAGING PARTIAL / EXTERNAL CONDITIONAL | Local Auth/recovery plus exact hosted redirect custody and logged recovery dispatch to the approved owner | User-observed reset, custom SMTP/rate limits, invitation delivery, physical browsers/AT `NOT RUN` |
+| 004 | STAGING SYNTHETIC COMPLETE / DELIVERY CONDITIONAL | Hosted entitled family, two live email-bound invite acceptances, owner/member restrictions, outsider denial, zero residue | Invitation email delivery, separate `admin` role, real-account/production proof `NOT RUN` |
+| 005 | PARTIAL/CONDITIONAL | Three runtime adapters, central safe error categories, read retry once/write auto-retry disabled, idempotent unchanged event/comment manual retries, loopback readiness and E2E scripts | Server-propagated version/correlation IDs, universal deadline/rate enforcement, and hosted readiness `NOT RUN` |
+| 006 | STAGING SYNTHETIC COMPLETE / PRODUCTION CONDITIONAL | Six hosted migrations, table RLS/private Storage/protected RPC grants, owner/member/outsider matrix, local query plans | Production-cardinality plans and production deployment `NOT RUN` |
+| 007 | LOCAL COMPLETE / CONDITIONAL | Durable create/edit/cancel, exact-ID Home/Calendar/detail, RSVP/refetch/reload across users; configured browser proof | DST/locale matrix and physical/mobile-human checks `NOT RUN` |
+| 008 | STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL | Local reconnect proof plus hosted exact-event Realtime/comment/outsider-denial/cleanup matrix | Physical Safari/Chrome, AT, long-outage hosted behavior, real-account observation `NOT RUN` |
+| 009 | STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL | Hosted private upload/activate/member-read/outsider-deny/claim-delete-finalize and zero object residue | Physical camera/gallery and real-family media `NOT RUN` |
+| 010 | STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL | Hosted persisted reminder and seven recipient-scoped in-app notifications plus local outage/retry proof | Physical devices and real-account observation `NOT RUN`; push/email/SMS excluded |
+| 011 | LOCAL COMPLETE / CONDITIONAL | Completed-event derived memories from exact event comments/media, empty/error/query states, browser proof | Physical-browser/human usability `NOT RUN` |
+| 012 | LOCAL COMPLETE / EXTERNAL CONDITIONAL | Representative 20/100/100/50 capacity, configured outage/draft retry once, reload persistence, and corrected dependency-free warm 390px production-export gate: all three runs pass <=4,000 ms LCP, <=200 ms longest task, and exact-event <=1 second | Cold offline reload/queued writes remain unsupported product non-goals; hosted load/reconnect, physical devices/AT, and moderated use `NOT RUN` |
+| 013 | HOSTED ENFORCEMENT AND AVAILABILITY PARTIAL | Hosted outsider denial, hardened redaction, and public HTTPS/runtime/Auth availability PASS; 30-minute no-secret schedule configured | Hosted schedule run, client-error ingestion, named production ownership, and external assessment `NOT RUN` |
+| 014 | LOCAL COMPLETE / EXTERNAL CONDITIONAL | Local integration matrices, 320/390/430/1280 Chrome, Lighthouse 100/100, keyboard/landmark/reduced-motion checks, and persisted native 200% Chrome zoom at effective 320/390/430 across real Auth roles | Physical iOS/Android, VoiceOver/TalkBack, physical software keyboards, and moderated older-adult study `NOT RUN` |
+| 015 | HOSTED CLEAN COMPLETE / ENFORCEMENT CONDITIONAL | Exact-head run `29451842237` passed all jobs; artifact digest reverified before upload | Hosted seeded-failure proof and administrator-required private-repo checks `NOT RUN` |
+| 016 | STAGING COMPLETE / PRODUCTION CONDITIONAL | Exact CI artifact on separate HTTPS Netlify staging, external config/CSP/cache, synthetic core loop, real owner starter data, exact-deploy rollback/restoration | Real authenticated browser session, physical devices, custom domain, production approval/promotion `NOT RUN` |
+| 017 | HOSTED LOGICAL BACKUP/RESTORE PASS / LIFECYCLE PARTIAL | Dedicated encrypted schemas/private bytes and isolated restore match counts/hashes/references and owner/outsider RLS; 24h RPO, 4h RTO, 30-day retention configured | Hosted scheduled run, managed PITR (free-plan unavailable), replacement cutover, destructive deletion/legal-hold apply, physical devices/AT `NOT RUN` |
+
 Machine-readable adjacency list (the same `Depends on:` values appear in each order):
 
 ```text
@@ -121,13 +145,13 @@ Each execution updates this table by linking evidence rather than changing `Plan
 
 | Capability | Repository definition | Local executable proof | Conditional staging/browser/human proof |
 |---|---|---|---|
-| Session/auth gate | Present | Mock/configured signed-out smoke exists | Live auth/recovery not run |
-| Groups/events/RSVP | Contract and UI present | Mock tests and web smoke exist | Live CRUD/RLS not run |
-| Event chat | Contract and UI present | Mock isolation/send tests exist | Live realtime/two-user not run |
-| Media | Schema/adapter present | Not yet connected end-to-end | Safari/Chrome file-input, camera/gallery, and storage-policy proof not run |
-| Notifications/reminders | Partial contract/schema | Not yet connected end-to-end | Visit/resume behavior not run; Notifications API/service workers are deferred |
-| Memories | Fixture presentation only | Fixture behavior only | Derived durable model not run |
-| Backup/restore/release | Planning only | Not run | Staging restore/release rehearsal not run |
+| Session/auth gate | Present | Local Auth, invite-bound signup/sign-in, restore/logout, protected-content gate, and full Mailpit recovery/reset pass | Hosted redirects and default-sender recovery dispatch pass; user-observed reset, custom SMTP, physical-device/AT remain open |
+| Groups/events/RSVP | Present | Four-session local creation/invite/transfer plus CRUD/RSVP/RLS pass | Hosted synthetic multi-user pass plus real owner trips/RSVP/comments/photos; real browser session and recipient delivery open |
+| Event chat | Durable scoped comments and exact-event subscription present | Multi-user isolation/reload plus genuine Realtime outage, resubscribe/refetch convergence, route teardown, and cleanup pass | Hosted synthetic comments/exact-event delivery pass; long-outage, physical-device/AT, real-account observation open |
+| Media | Hardened schema/adapter/UI present | Private Storage/RLS matrix plus URL and actual file upload pass | Hosted synthetic private lifecycle/outsider denial pass; physical camera/gallery and real-family media open |
+| Notifications/reminders | In-app updates plus persisted fixed event preference present | Recipient isolation, exact-event navigation, mark/read/clear, two-user preference isolation/relogin, outsider denial, and configured retry pass | Hosted synthetic reminder/seven notifications pass; physical/real-account observation open; push/email/SMS excluded |
+| Memories | Derived Query-backed presentation | Completed-event media/comment derivation and reload pass | Physical/mobile-human validation not run |
+| Backup/restore/release | Immutable-artifact/rollback, encrypted backup, isolated restore, and current-user encrypted export tooling present | Local recovery and scoped exports pass | Hosted release/rollback and logical DB/private-object restore pass; scheduled run, managed PITR, replacement cutover, and deletion apply remain open |
 
 ## Campaign completion rule
 

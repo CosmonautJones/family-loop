@@ -182,6 +182,25 @@ test('OPORD index resolves dependencies and covers the full engineering scope', 
   ]) assert.match(content, new RegExp(domain, 'i'), `coverage matrix missing ${domain}`);
 });
 
+test('OPORD evidence dispositions stay reconciled with the configured staging proof boundary', () => {
+  const opordDir = path.join(root, 'docs/opords');
+  const files = fs.readdirSync(opordDir).filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file));
+  const index = fs.readFileSync(path.join(opordDir, 'README.md'), 'utf8');
+
+  assert.match(index, /## 2026-07-15 evidence disposition/);
+  assert.match(index, /substantive lint[\s\S]*29451842237[\s\S]*3cf45367[\s\S]*administrator-required checks remain unconfigured/i);
+  assert.match(index, /Dedicated staging `vkogznsfthirhxkqysza`[\s\S]*synthetic (?:owner\/member\/outsider RLS|multi-user proof passes)/i);
+  assert.match(index, /(?:Hosted staging release and exact-deploy rollback pass|exact-deploy rollback\/restoration)/i);
+  assert.match(index, /Physical iOS\/Android.+NOT RUN/i);
+  assert.doesNotMatch(index, /Docker is unavailable|local Supabase stack has not been exercised/i);
+
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(opordDir, file), 'utf8');
+    assert.match(content, /^### Acceptance disposition — 2026-07-14$/m, `${file} needs current criterion-level evidence`);
+    assert.doesNotMatch(content, /Docker is unavailable|Docker and verified remote deployment are absent|Memories are still fixture-backed|upload is not wired/i, `${file} contains a stale implementation fact`);
+  }
+});
+
 test('active campaign is responsive-web and preserves renamed testing and release orders', () => {
   const opordDir = path.join(root, 'docs/opords');
   const index = fs.readFileSync(path.join(opordDir, 'README.md'), 'utf8');

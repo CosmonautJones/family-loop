@@ -1,10 +1,10 @@
 # OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
-Planned hardening mission; repository policy definitions exist but remote enforcement and operational response are unverified.
+HOSTED ENFORCEMENT AND AVAILABILITY PARTIAL — dedicated staging passes live-invite, database, role, and private-media outsider denial. A no-secret public HTTPS/runtime/Auth availability check passes and a 30-minute schedule is configured, but the schedule awaits default-branch merge. Client error ingestion, named production ownership, and external assessment remain `NOT RUN`.
 
 ## Situation and evidence
-RLS is declared for messages, media, notifications, and reminders (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:241-255`), but Docker is unavailable and remote deployment is unverified (`docs/architecture.md:41`; `evals/review-log.md:74`). The configured app gates protected content (`docs/architecture.md:30`). No production telemetry or incident runbook is evidenced; this is an inference from repository inspection.
+Loopback and dedicated hosted synthetic family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; generated credentials/tokens are redacted. The configured monitor records only public status, release/environment, latency, and bounded failures; it collects no user identifier or content. Client-error ingestion, named hosted ownership, and external assessment remain unevidenced.
 
 ## Mission/objective
 Create a minimal, privacy-preserving verification and response baseline for authorization failures, client errors, and suspected data exposure without deploying monitoring infrastructure.
@@ -41,6 +41,15 @@ Security failures must use calm plain language and readable type, preserve safe 
 - Runbook assigns severity, owner, evidence preservation, authorization gates, and recovery validation.
 - User-facing auth/data failures remain understandable and non-leaking.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Evidence avoids secrets/tokens/message bodies/signed URLs | COMPLETE LOCALLY | Executable sanitizer tests inject credentials, tokens, a signed URL, message content, storage paths, and raw database detail; emitted user errors contain none of them. Existing lifecycle verifiers report aggregates/IDs without signed access values. |
+| Safe two-user group/event isolation | COMPLETE LOCALLY | Four-session family/browser/media RLS matrices and outsider direct-route denial. |
+| Incident severity/owner/preservation/gates/runbook | COMPLETE LOCALLY | `docs/runbooks/security-incident-response.md` assigns SEV levels, conditional ownership, minimal evidence, authorization gates, recovery validation, and records a no-production-action tabletop. |
+| Understandable non-leaking user failures | COMPLETE LOCALLY | Supabase service calls are wrapped at the adapter boundary, including rejected transport promises; safe domain validation remains intact, safe service errors are idempotent, and browser recovery retains actionable network copy during a real offline request. |
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
@@ -51,16 +60,16 @@ git diff --check
 rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opords tests app/src
 ```
 
-Also run focused redaction/authorization tests, a 390x844 configured-failure smoke, and a recorded tabletop; inspect secret-scan matches rather than treating any match as proof.
+Focused executable redaction coverage includes a configured `sendMessage` transport rejection. The OPORD 012 390x844 outage was the reproducer; the local tabletop and recovery contract are recorded in `docs/runbooks/security-incident-response.md`. Inspect secret-scan matches rather than treating any match as proof.
 
 ### Conditional-staging/mobile-web/human
-Remote/live RLS, production telemetry, and external security assessment are NOT RUN unless separately approved.
+Dedicated staging live RLS/Storage denial and one public availability run are `PASS`; its schedule awaits default-branch merge. Client-error telemetry and external security assessment remain `NOT RUN`.
 
 ## Stop conditions/authorization limits
 Stop on any suspected real exposure and escalate; do not inspect more data, rotate credentials, change remote policy, notify users, or deploy containment without incident-owner authorization. Stop before vendors/dependencies.
 
 ## Risks/follow-ups
-False confidence from migration text, overcollection, missing mobile-browser failures, and unclear incident ownership. Production monitoring and external assessment are separate decisions.
+False confidence from synthetic-only hosted evidence, overcollection, missing physical-browser failures, and unnamed hosted incident ownership. Production monitoring, retention, and external assessment are separate decisions.
 
 ## Definition of done
 Minimal redaction tests and runbook are reviewable, tabletop evidence exists, live limitations are explicit, and no operational or remote action was taken without approval.

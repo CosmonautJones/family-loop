@@ -1,10 +1,10 @@
 # OPORD 011 — Derived Memories and Recaps
 
 ## Status
-Planned as M6 after M2 and M4.
+LOCAL COMPLETE / CONDITIONAL — derived completed-event memories are implemented and browser-proven; physical/mobile-human validation remains open.
 
 ## Situation and evidence
-Memories are still fixture-backed (`docs/architecture.md:17,30`), while the product requires memories derived from completed events (`docs/architecture.md:47`; `docs/anti-goals.md`). M6 calls for derived memories and closeout, excluding free-floating posts and AI recaps (`tasks/backlog.md:13`).
+Memories are Query-backed derived projections of completed events plus exact-event comments/media; no standalone memory records exist. The configured browser journey showed Lake Geneva with its persisted private photos and comments and routed back to the source event.
 
 ## Mission/objective
 Derive a calm, read-only memory/recap from completed authorized events and their private media, preserving exact event identity and an honest empty state.
@@ -41,6 +41,18 @@ Use event title and date as the primary anchor, plain copy, readable cards with 
 - No photos produces useful honest copy; deleted media disappears after refetch.
 - No fixture fallback or free-floating memory records remain on migrated surfaces.
 - Source event remains identifiable and reachable.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Only completed authorized events derive memories | COMPLETE LOCALLY | `derivedHistory.ts` isolation tests and configured member/outsider browser proof. |
+| Deterministic parsed-instant ordering/ties | COMPLETE | Pure selector tests. |
+| Honest no-photo/deleted-media refetch | COMPLETE LOCALLY | Empty-state/query tests and service-owned media reads. |
+| No fixture fallback/free-floating records | COMPLETE | Query-backed implementation and configured failure boundary. |
+| Source event identifiable/reachable | COMPLETE | Browser memory card and exact-event route. |
+
+Physical iOS/Android and moderated-human usability are `NOT RUN`.
 
 ## Validation commands/evidence
 ### Always-local

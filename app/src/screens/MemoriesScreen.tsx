@@ -1,45 +1,39 @@
-import { Image } from 'expo-image';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button } from '../components/Button';
 import { PhotoCard } from '../components/PhotoCard';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectMemoriesViewModel } from '../app/selectors';
+import { useActiveGroupHistoryQuery } from '../app/queries';
 import { palette, spacing } from '../theme/tokens';
 
-export function MemoriesScreen() {
-  const memoriesRecap = selectMemoriesViewModel();
+export function MemoriesScreen({ onOpenEvent }: { onOpenEvent?: (eventId: string) => void }) {
+  const historyQuery = useActiveGroupHistoryQuery();
+
+  if (historyQuery.isPending) return <MemoryState title="Loading family memories" detail="Gathering photos and comments from completed events…" />;
+  if (historyQuery.isError) return <MemoryState title="We couldn’t load family memories" detail={historyQuery.error instanceof Error ? historyQuery.error.message : 'Try again in a moment.'} onRetry={() => historyQuery.refetch()} />;
+
+  const memories = selectMemoriesViewModel(historyQuery.data ?? []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <PhotoCard
-        uri={memoriesRecap.coverUri}
-        title={memoriesRecap.title}
-        subtitle={`${memoriesRecap.resurfacedLabel} · ${memoriesRecap.ingredients}`}
-        height={320}
-      />
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Recap ingredients</Text>
-        <Text style={styles.cardCopy}>{memoriesRecap.ingredients}</Text>
-        <View style={styles.actionRow}>
-          <Button label="View recap" />
-          <Button label="Share to group" tone="secondary" />
-        </View>
-        <View style={styles.galleryRow}>
-          <Image source={{ uri: memoriesRecap.photoUris[0] }} style={[styles.galleryTall, styles.galleryBase]} contentFit="cover" transition={300} />
-          <View style={styles.galleryColumn}>
-            <Image source={{ uri: memoriesRecap.photoUris[1] }} style={styles.galleryBase} contentFit="cover" transition={300} />
-            <Image source={{ uri: memoriesRecap.photoUris[2] }} style={styles.galleryBase} contentFit="cover" transition={300} />
-          </View>
-        </View>
-      </SurfaceCard>
-
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Tagged moments</Text>
-        <Text style={styles.cardCopy}>{memoriesRecap.tags}</Text>
-      </SurfaceCard>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Family memories</Text>
+      <Text style={styles.cardCopy}>Completed plans stay connected to the photos and conversation your family shared.</Text>
+      {memories.length === 0 ? <SurfaceCard><Text style={styles.cardTitle}>No completed events yet</Text><Text style={styles.cardCopy}>Memories will appear after a family event ends.</Text></SurfaceCard> : null}
+      {memories.map((memory) => (
+        <SurfaceCard key={memory.id}>
+          {memory.coverUri ? <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={memory.detail} height={220} /> : null}
+          <Text style={styles.cardTitle}>{memory.title}</Text>
+          <Text style={styles.cardCopy}>{memory.detail}</Text>
+          <Text style={styles.cardCopy}>{memory.photoCount} {memory.photoCount === 1 ? 'photo' : 'photos'} · {memory.commentCount} {memory.commentCount === 1 ? 'comment' : 'comments'}</Text>
+          <View style={styles.actionRow}><Button label={`Open ${memory.title}`} onPress={() => onOpenEvent?.(memory.id)} /></View>
+        </SurfaceCard>
+      ))}
     </ScrollView>
   );
+}
+
+function MemoryState({ title, detail, onRetry }: { title: string; detail: string; onRetry?: () => void }) {
+  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <View style={styles.actionRow}><Button label="Retry" onPress={onRetry} /></View> : null}</SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({
@@ -48,6 +42,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     paddingBottom: 40,
   },
+  state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
+  title: { color: palette.text, fontSize: 32, lineHeight: 36, fontWeight: '900' },
   actionRow: {
     flexDirection: 'row',
     gap: 10,
@@ -64,25 +60,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
-  },
-  galleryRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: spacing.md,
-  },
-  galleryColumn: {
-    flex: 1,
-    gap: 8,
-  },
-  galleryBase: {
-    flex: 1,
-    minHeight: 96,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: palette.peach,
-  },
-  galleryTall: {
-    minHeight: 212,
-    flex: 1.2,
   },
 });

@@ -1,12 +1,15 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
-import { palette, radii, shadow } from '../theme/tokens';
+import { palette, shadow } from '../theme/tokens';
+import { useReducedMotion } from './useReducedMotion';
 
 export function Avatar({ uri, initials, size = 34 }: { uri?: string; initials: string; size?: number }) {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <View style={[styles.wrap, { width: size, height: size, borderRadius: size / 2 }]}>
+    <View accessible={false} style={[styles.wrap, { width: size, height: size, borderRadius: size / 2 }]}>
       {uri ? (
-        <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={220} />
+        <Image accessible={false} source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={reduceMotion ? 0 : 220} />
       ) : (
         <Text style={styles.initials}>{initials}</Text>
       )}

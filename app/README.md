@@ -1,23 +1,20 @@
 # LoopedIn Responsive Web App
 
-This Expo/React Native Web scaffold is the main LoopedIn product surface. It splits the mobile-first web foundation into theme tokens, reusable UI primitives, sample data, screens, and a lightweight navigation shell.
+This Expo/React Native Web app is the main LoopedIn product surface. Its phone-first family loop is backed by the shared service and Query boundaries, with durable local browser data as the default development mode.
 
 ## Included
 - Expo/React Native Web app shell
 - typed domain models in `src/types`
-- feature fixtures/selectors in `src/features`
+- service-backed family, event, RSVP, comment, photo, and completed-event history flows
 - app-level selectors in `src/app`
 - reusable primitives in `src/components`
 - screen modules in `src/screens`
 - lightweight navigation shell in `src/navigation`
-- create-event draft flow backed by shared event feature data
+- real trip/gathering creation, exact-event navigation, RSVP, comments, attributed URL photos, validated browser-file photos, and completed-event recaps
 
-## Intended next build-out
-- RSVP interactions with editable state
-- group switching backed by real active-group context
-- event creation persistence and edit-after-save flow
-- media upload/recap generation integration
-- production navigation/state libraries
+## Evidence boundary
+
+Default local mode is reload-durable browser storage and supports the seeded Jones Family journey. It is not evidence of live Supabase, RLS, private object storage, multi-user synchronization, or production deployment. Those capabilities require their own authorized environment and verification gates.
 
 ## Product stance
 Build and review this responsive web app mobile-first. iOS Safari and Android Chrome phone-browser ergonomics should decide screen hierarchy and action placement; desktop web remains usable. Native apps, app stores, and EAS builds are future non-goals unless separately authorized.
@@ -37,3 +34,9 @@ npx expo start --web
 ```
 
 If Expo reports missing SDK peer dependencies, install them with `npx expo install ...` so versions stay aligned with SDK 53.
+
+## Local Jones Family E2E
+
+Use the reproducible browser journey in `../docs/runbooks/full-local-jones-family-e2e.md`. It intentionally uses the default durable-local mode and does not mutate Supabase or expose environment values.
+
+For a clean local run, clear site data for the local Expo origin in browser DevTools, then reload. This removes only that origin's local browser data and allows the canonical Jones Family seed to be created again. Do not clear or seed a linked remote project as part of this runbook.

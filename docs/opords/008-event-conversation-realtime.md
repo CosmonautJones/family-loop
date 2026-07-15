@@ -1,10 +1,10 @@
 # OPORD 008 — Event conversation realtime
 
 ## Status
-Planned; separately authorize after the completed M3 thread foundation. Remote Supabase and real-phone Safari/Chrome behavior remain unverified.
+STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL — local reconnect convergence remains complete, and hardened hosted staging proves two comments, exact-event Postgres Changes delivery after a bounded post-subscribe stabilization, outsider denial, and zero cleanup residue. Physical devices, long-outage hosted behavior, and real-account observation remain open.
 
 ## Situation and evidence
-M3 already provides event-keyed Query reads/sends and exact-key refetch (`docs/architecture.md:19,32`; `evals/review-log.md:13-23`; `tasks/completed.md:9-12`). The migration declares messages in the realtime publication (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:523`), but repository definitions are not live proof (`docs/architecture.md:43`). Realtime subscriptions and presence were excluded from the completed M3 implementation, as shown by its immutable completion and review records (`tasks/completed.md:9-12`; `evals/review-log.md:13-23`).
+Event-keyed Query reads/sends and exact-key refetch are durable in local and Supabase modes. The open Event Detail now owns one exact-event subscription. Database changes and every successful subscription/reconnection invalidate only `queryKeys.messages(eventId)` with `exact: true`; the ordered server list remains authoritative, so realtime never inserts a second UI record. Route, event, and session teardown removes the channel and deactivates late callbacks.
 
 ## Mission/objective
 Make an open Event Detail thread receive authorized inserts/updates without manual navigation while preserving chronological, duplicate-free, event-scoped Query state and recoverable connection behavior.
@@ -42,6 +42,16 @@ New messages must appear without stealing focus, moving the composer unexpectedl
 - Configured failures never render fixtures.
 - Live two-user claims are made only from safe recorded evidence; otherwise acceptance remains blocked, not inferred.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Event A changes appear once only on Event A | COMPLETE LOCALLY | Separate Avery/Maya loopback Auth browser profiles: UI Send appeared once in Maya without reload; Event B and outsider remained unchanged. |
+| Reconnect convergence and cleanup | COMPLETE LOCALLY | Realtime-only outage missed one comment, container recovery resubscribed/refetched it once, route switch was inert, deterministic teardown removed one channel, and final `realtime.subscription` count was zero. |
+| Send/pending/draft/RSVP failure behavior | COMPLETE LOCALLY | M3 fix loops and current root/app regressions. |
+| Configured failures never render fixtures | COMPLETE | Adopted service/session boundary and configured error gates. |
+| Live claims require recorded evidence | COMPLETE THROUGH SYNTHETIC STAGING | Local evidence plus hosted run `qa-mrml3fsl-a08c4f8e`; physical devices, real accounts, and long hosted outages remain open. |
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
@@ -52,16 +62,16 @@ git diff --check
 git status --short
 ```
 
-Record lint as placeholder per `app/package.json:11`; run focused subscription tests named by the mission, 390x844 mock smoke, and configured signed-out smoke.
+Run the deterministic subscription test plus both loopback realtime harnesses in `docs/runbooks/local-realtime-convergence.md`. Substantive lint is active and must pass with zero warnings.
 
 ### Conditional-staging/mobile-web/human
-Run an approved live two-user transcript only in a safe staging environment. Mobile-web browser/human tests: currently NOT RUN.
+The loopback transcript and isolated hosted synthetic multi-user/exact-event transcript are complete. Physical mobile browser, assistive-technology, real-account, and human tests remain `NOT RUN`.
 
 ## Stop conditions/authorization limits
 Stop before credentials, remote deploy, publication/RLS/migration changes, new packages, destructive operations, or any need to broaden beyond event messages. Stop if a safe two-user environment is unavailable; report live acceptance as NOT RUN.
 
 ## Risks/follow-ups
-Duplicate delivery, stale subscriptions after navigation/session changes, reconnect gaps, out-of-order timestamps, and battery/network cost. Presence and richer chat remain separate follow-ups.
+Hosted Realtime/RLS parity is proven for the bounded synthetic flow after a two-second post-subscribe stabilization. Physical-device battery/network behavior and long hosted outages remain unproven; presence and richer chat remain separate follow-ups.
 
 ## Definition of done
 All acceptance criteria and declared checks pass, live evidence is honest, diff is narrow, review log is updated, and risks/NOT RUN items are recorded.

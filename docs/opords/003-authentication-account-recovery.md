@@ -2,14 +2,14 @@
 
 ## Status
 
-AMBER — existing sign-in/session gate is implemented; recovery implementation is not authorized until product/security decisions and a safe environment are approved.
+STAGING PARTIAL / EXTERNAL CONDITIONAL — local Auth/recovery remains complete; dedicated hosted Auth now has exact staging/immutable/future-production redirects and logged recovery dispatch to the approved owner address. User-observed password replacement, custom SMTP/rate limits, invitation email delivery, and physical-browser checks remain `NOT RUN`.
 
 ## Situation and evidence
 
 - Configured builds restore Supabase sessions and gate protected content; unconfigured builds enter deterministic prototype mode (`docs/architecture.md:31-40`).
 - The shell explicitly handles restoring, signed-out/error, group loading/error, and no-group states (`app/src/navigation/AppShell.tsx:29-41`).
-- M1 evidence passed configured signed-out phone smoke, while live auth was `NOT RUN — ENV unavailable` (`evals/review-log.md:50-65`).
-- Auth expansion and credentials are currently forbidden by project policy/current mission. Account recovery behavior, redirect targets, email delivery, rate limits, and production configuration are therefore unverified.
+- Loopback Supabase browser sessions proved invite-bound signup for Maya and Jordan, owner and outsider sign-in, session restoration, reload persistence, and protected direct-route denial.
+- A disposable loopback account proved the complete reset lifecycle. Hosted staging now proves exact redirect origins and default-sender recovery dispatch to the approved owner, while user-observed replacement, custom SMTP, production delivery, and provider rate limits remain unverified.
 
 ## Mission/objective
 
@@ -65,6 +65,18 @@ Use explicit “Accept invitation,” “Create account,” “Sign in,” and �
 - Protected content remains unavailable before valid authentication.
 - Existing session restore, sign-in, sign-out, group gates, and unconfigured mock mode regressions pass.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Valid intended invitation gates signup and preserves context | COMPLETE LOCALLY | `3ebb0a0`, `f04fa77`, `e68d615`; two invitees completed browser signup/acceptance. |
+| Enumeration-safe signup/sign-in/recovery responses | COMPLETE LOCALLY | Known and unknown loopback recovery requests return the same status/body and visible confirmation; only the known address receives local mail. |
+| Approved reset link replaces password | COMPLETE LOCALLY | Local Auth verification token replaced the password; old login failed and new login passed in both service and configured-browser proofs. |
+| Invalid/expired links and network failures recover clearly | COMPLETE LOCALLY | Replayed/malformed links return no session and render a new-link path; browser offline injection renders connection-specific safe copy. |
+| Session restore/logout and minimal profile bootstrap | COMPLETE LOCALLY | Four-session browser reload and invite-signup display-name flow; monotonic auth guards in `3ebb0a0`. |
+| Protected content denied before authentication | COMPLETE | Configured signed-out and outsider direct-route browser evidence. |
+| Existing auth/group/mock regressions | COMPLETE | Root/app suites, configured family verifier, and recovery-specific service/browser harnesses pass. |
+
 ## Validation commands/evidence
 
 ### Always-local
@@ -77,13 +89,13 @@ git diff --check
 git status --short
 ```
 
-- Report lint as placeholder unless changed.
-- 390x844 configured signed-out and recovery UI smoke.
+- Substantive lint is enabled and must pass with zero warnings.
+- `tests/supabase-password-recovery-e2e.mjs` and `tests/browser-password-recovery-smoke.mjs` are the token-redacting loopback proofs documented in `docs/runbooks/password-recovery-local-proof.md`.
 
 ### Conditional-staging/mobile-web/human
 
 - Safe-environment matrix: valid/invalid/expired/wrong-account invite; new/existing account; known/unknown email neutral recovery; expired/reused reset; offline failure; bootstrap retry; session restore/sign-out.
-- Live recovery: `NOT RUN — safe environment unavailable` until prerequisites exist.
+- Hosted recovery request/dispatch: `PASS` on dedicated staging. User-observed link/password replacement: `NOT RUN`; custom SMTP and physical-browser evidence remain open.
 - HTTPS browser-link tests: report iOS Safari and Android Chrome results honestly, including existing/new tab, Back/history, deep-link, and reload behavior.
 
 ## Stop conditions/authorization limits

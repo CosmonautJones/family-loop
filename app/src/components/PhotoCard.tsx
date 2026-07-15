@@ -2,11 +2,14 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 import { palette, radii, shadow } from '../theme/tokens';
+import { useReducedMotion } from './useReducedMotion';
 
 export function PhotoCard({ uri, title, subtitle, height = 220 }: { uri: string; title: string; subtitle?: string; height?: number }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <View style={[styles.card, { height }]}>
-      <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={300} />
+      <Image accessibilityLabel={[title, subtitle].filter(Boolean).join('. ')} source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={reduceMotion ? 0 : 300} />
       <LinearGradient colors={['transparent', 'rgba(36,21,26,0.82)']} style={styles.overlay} />
       <View style={styles.copy}>
         <Text style={styles.title}>{title}</Text>

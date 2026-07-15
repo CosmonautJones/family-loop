@@ -1,16 +1,35 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
+import { invitationFlowId } from '../features/auth/invitationRoute';
 import { loopedInService } from '../services';
-import type { CreateEventPayload, CreateRsvpPayload } from '../services/api';
+import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 
 export const queryKeys = {
   groups: ['groups'] as const,
   group: (groupId: string) => ['groups', groupId] as const,
+  groupMembers: (groupId: string) => ['groups', groupId, 'members'] as const,
   events: (groupId: string) => ['events', groupId] as const,
   event: (eventId: string) => ['event', eventId] as const,
   rsvps: (eventId: string) => ['rsvps', eventId] as const,
   messages: (eventId: string) => ['messages', eventId] as const,
+  media: (eventId: string) => ['media', eventId] as const,
+  invitation: (flowId: string) => ['invitation', 'current-preview', flowId] as const,
+  invitations: (groupId: string) => ['groups', groupId, 'invitations'] as const,
+  canCreateGroup: ['groups', 'can-create'] as const,
+  notifications: ['notifications'] as const,
+  reminder: (eventId: string, userId: string) => ['reminder', eventId, userId] as const,
 };
+
+const protectedQueryRoots = new Set(['event', 'events', 'rsvps', 'messages', 'media', 'notifications', 'reminder', 'profiles']);
+
+export function evictGroupScopedQueries(queryClient: QueryClient) {
+  queryClient.removeQueries({ predicate: (query) => {
+    const [root] = query.queryKey;
+    return protectedQueryRoots.has(String(root)) || (root === 'groups' && query.queryKey.length > 1);
+  } });
+}
 
 export function useActiveGroupQuery() {
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
@@ -29,6 +48,132 @@ export function useGroupsQuery(enabled = true) {
   });
 }
 
+export function useCanCreateGroupQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.canCreateGroup,
+    queryFn: () => loopedInService.groups.canCreateGroup(),
+    enabled,
+  });
+}
+
+export function useInvitationQuery(token: string | null) {
+  const flowId = token ? invitationFlowId(token) : 'none';
+  return useQuery({
+    queryKey: queryKeys.invitation(flowId),
+    queryFn: () => loopedInService.groups.validateInvitation(token!),
+    enabled: Boolean(token),
+    retry: false,
+  });
+}
+
+export function useGroupInvitationsQuery(groupId: string, enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.invitations(groupId),
+    queryFn: () => loopedInService.groups.listInvitations(groupId),
+    enabled: enabled && Boolean(groupId),
+  });
+}
+
+export function useCreateGroupMutation() {
+  const queryClient = useQueryClient();
+  const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
+  return useMutation({
+    mutationFn: (payload: CreateGroupPayload) => loopedInService.groups.createGroup(payload),
+    onSuccess: (group) => {
+      evictGroupScopedQueries(queryClient);
+      queryClient.setQueryData(queryKeys.group(group.id), group);
+      queryClient.setQueryData(queryKeys.groups, (current: (typeof group)[] | undefined) => current
+        ? [...current.filter((item) => item.id !== group.id), group]
+        : [group]);
+      setActiveGroupId(group.id);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
+  });
+}
+
+export function useAcceptInvitationMutation() {
+  const queryClient = useQueryClient();
+  const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
+  return useMutation({
+    mutationFn: (token: string) => loopedInService.groups.acceptInvitation(token),
+    onSuccess: async (result, token) => {
+      queryClient.removeQueries({ queryKey: queryKeys.invitation(invitationFlowId(token)) });
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+      if (result.groupId) {
+        setActiveGroupId(result.groupId);
+        await queryClient.invalidateQueries({ queryKey: queryKeys.group(result.groupId) });
+      }
+    },
+  });
+}
+
+export function useDeclineInvitationMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (token: string) => loopedInService.groups.declineInvitation(token),
+    onSuccess: (_result, token) => queryClient.removeQueries({ queryKey: queryKeys.invitation(invitationFlowId(token)) }),
+  });
+}
+
+export function useCreateGroupInvitationMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ email, token }: { email: string; token: string }) => loopedInService.groups.createInvitation(groupId, email, token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invitations(groupId) }),
+  });
+}
+
+export function useRevokeGroupInvitationMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (invitationId: string) => loopedInService.groups.revokeInvitation(invitationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.invitations(groupId) }),
+  });
+}
+
+export function useRemoveGroupMemberMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => loopedInService.groups.removeMember(groupId, userId),
+    onSuccess: async () => {
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
+  });
+}
+
+export function useLeaveGroupMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => loopedInService.groups.leaveGroup(groupId),
+    onSuccess: async () => {
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
+  });
+}
+
+export function useTransferGroupOwnershipMutation(groupId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => loopedInService.groups.transferOwnership(groupId, userId),
+    onSuccess: async () => {
+      evictGroupScopedQueries(queryClient);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
+  });
+}
+
+export function useActiveGroupMembersQuery() {
+  const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
+  return useQuery({
+    queryKey: queryKeys.groupMembers(activeGroupId),
+    queryFn: () => loopedInService.groups.listGroupMembers(activeGroupId),
+    enabled: Boolean(activeGroupId),
+  });
+}
+
 export function useActiveEventsQuery() {
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
   return useQuery({
@@ -36,6 +181,37 @@ export function useActiveEventsQuery() {
     queryFn: () => loopedInService.events.listEvents(activeGroupId),
     enabled: Boolean(activeGroupId),
   });
+}
+
+export function useActiveGroupHistoryQuery() {
+  const eventsQuery = useActiveEventsQuery();
+  const completedEvents = selectCompletedEvents(eventsQuery.data ?? []);
+  const messageQueries = useQueries({
+    queries: completedEvents.map((event) => ({ queryKey: queryKeys.messages(event.id), queryFn: () => loopedInService.thread.listMessages(event.id) })),
+  });
+  const mediaQueries = useQueries({
+    queries: completedEvents.map((event) => ({ queryKey: queryKeys.media(event.id), queryFn: () => loopedInService.media.listMedia(event.id) })),
+  });
+  const detailQueries = [...messageQueries, ...mediaQueries];
+  const detailPending = detailQueries.some((query) => query.isPending);
+  const detailError = detailQueries.find((query) => query.isError)?.error;
+  const history = completedEvents.map((event, index) => deriveEventHistory(
+    event,
+    messageQueries[index]?.data ?? [],
+    mediaQueries[index]?.data ?? [],
+  ));
+
+  return {
+    data: eventsQuery.isSuccess && !detailPending && !detailError ? history : undefined,
+    error: eventsQuery.error ?? detailError ?? null,
+    isPending: eventsQuery.isPending || detailPending,
+    isError: eventsQuery.isError || Boolean(detailError),
+    isSuccess: eventsQuery.isSuccess && !detailPending && !detailError,
+    refetch: async () => {
+      await eventsQuery.refetch();
+      await Promise.all([...messageQueries, ...mediaQueries].map((query) => query.refetch()));
+    },
+  };
 }
 
 export function useEventQuery(eventId: string) {
@@ -55,10 +231,65 @@ export function useEventRsvpsQuery(eventId: string) {
 }
 
 export function useEventMessagesQuery(eventId: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+  const query = useQuery({
     queryKey: queryKeys.messages(eventId),
     queryFn: () => loopedInService.thread.listMessages(eventId),
     enabled: Boolean(eventId),
+  });
+
+  useEffect(() => {
+    if (!eventId) return;
+    return loopedInService.thread.subscribeMessages(eventId, () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.messages(eventId), exact: true });
+    });
+  }, [eventId, queryClient]);
+
+  return query;
+}
+
+export function useEventMediaQuery(eventId: string) {
+  return useQuery({
+    queryKey: queryKeys.media(eventId),
+    queryFn: () => loopedInService.media.listMedia(eventId),
+    enabled: Boolean(eventId),
+  });
+}
+
+export function useEventReminderQuery(eventId: string, userId: string) {
+  return useQuery({
+    queryKey: queryKeys.reminder(eventId, userId),
+    queryFn: () => loopedInService.reminders.getPreference(eventId),
+    enabled: Boolean(eventId && userId),
+  });
+}
+
+export function useSetEventReminderMutation(userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ eventId, enabled }: { eventId: string; enabled: boolean }) => {
+      if (enabled) await loopedInService.reminders.enablePreference(eventId);
+      else await loopedInService.reminders.disablePreference(eventId);
+    },
+    onSuccess: (_result, { eventId }) => queryClient.invalidateQueries({ queryKey: queryKeys.reminder(eventId, userId), exact: true }),
+  });
+}
+
+export function useUploadMediaMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: MediaUploadPayload) => loopedInService.media.uploadMedia(payload),
+    onSuccess: (media) => queryClient.invalidateQueries({ queryKey: queryKeys.media(media.eventId) }),
+  });
+}
+
+export function useDeleteMediaMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ mediaId }: { eventId: string; mediaId: string }) => loopedInService.media.deleteMedia(mediaId),
+    onSuccess: (_result, { eventId }) => queryClient.invalidateQueries({ queryKey: queryKeys.media(eventId) }),
   });
 }
 
@@ -66,7 +297,7 @@ export function useSendMessageMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ eventId, body }: { eventId: string; body: string }) => loopedInService.thread.sendMessage(eventId, body),
+    mutationFn: ({ eventId, body, operationKey }: { eventId: string; body: string; operationKey: string }) => loopedInService.thread.sendMessage(eventId, body, operationKey),
     onSuccess: (message) => queryClient.invalidateQueries({ queryKey: queryKeys.messages(message.eventId) }),
   });
 }
@@ -83,6 +314,34 @@ export function useCreateEventMutation() {
   });
 }
 
+export function useUpdateEventMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventId, patch }: { eventId: string; patch: UpdateEventPayload }) => loopedInService.events.updateEvent(eventId, patch),
+    onSuccess: (event) => {
+      queryClient.setQueryData(queryKeys.event(event.id), event);
+      return queryClient.invalidateQueries({ queryKey: queryKeys.events(event.groupId) });
+    },
+  });
+}
+
+export function useDeleteEventMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ eventId }: { eventId: string; groupId: string }) => loopedInService.events.deleteEvent(eventId),
+    onSuccess: (_result, { eventId, groupId }) => {
+      queryClient.removeQueries({ queryKey: queryKeys.event(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: queryKeys.rsvps(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: queryKeys.messages(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: queryKeys.media(eventId), exact: true });
+      queryClient.removeQueries({ queryKey: ['reminder', eventId] });
+      return queryClient.invalidateQueries({ queryKey: queryKeys.events(groupId) });
+    },
+  });
+}
+
 export function useUpsertRsvpMutation() {
   const queryClient = useQueryClient();
 
@@ -94,7 +353,23 @@ export function useUpsertRsvpMutation() {
 
 export function useNotificationsQuery() {
   return useQuery({
-    queryKey: ['notifications'],
+    queryKey: queryKeys.notifications,
     queryFn: () => loopedInService.notifications.listNotifications(),
+  });
+}
+
+export function useMarkNotificationReadMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (notificationId: string) => loopedInService.notifications.markRead(notificationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
+  });
+}
+
+export function useMarkAllNotificationsReadMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => loopedInService.notifications.clearAll(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.notifications }),
   });
 }

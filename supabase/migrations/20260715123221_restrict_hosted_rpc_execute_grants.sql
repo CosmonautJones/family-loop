@@ -1,0 +1,18 @@
+revoke execute on function public.loopedin_abort_media_upload(uuid) from anon;
+revoke execute on function public.loopedin_accept_group_invite(text) from anon;
+revoke execute on function public.loopedin_activate_media(uuid) from anon;
+revoke execute on function public.loopedin_begin_media_upload(uuid, text, text, text, text, text, text, text) from anon;
+revoke execute on function public.loopedin_can_create_group() from anon;
+revoke execute on function public.loopedin_claim_media_deletion(uuid) from anon;
+revoke execute on function public.loopedin_create_event(uuid, text, timestamptz, timestamptz, text, text, text, text, jsonb, text, uuid) from anon;
+revoke execute on function public.loopedin_create_group(text, text, text, uuid) from anon;
+revoke execute on function public.loopedin_create_group_invite(uuid, text, text) from anon;
+revoke execute on function public.loopedin_decline_group_invite(text) from anon;
+revoke execute on function public.loopedin_finalize_media_deletion(uuid) from anon;
+revoke execute on function public.loopedin_leave_group(uuid) from anon;
+revoke execute on function public.loopedin_list_group_invites(uuid) from anon;
+revoke execute on function public.loopedin_list_media_operations(uuid) from anon;
+revoke execute on function public.loopedin_remove_group_member(uuid, uuid) from anon;
+revoke execute on function public.loopedin_revoke_group_invite(uuid) from anon;
+revoke execute on function public.loopedin_send_event_message(uuid, text, uuid) from anon;
+revoke execute on function public.loopedin_transfer_group_ownership(uuid, uuid) from anon;

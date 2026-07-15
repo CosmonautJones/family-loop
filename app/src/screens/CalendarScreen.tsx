@@ -16,14 +16,14 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>Calendar</Text>
-      <Text style={styles.title}>See the month, then drill into the moment.</Text>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Review upcoming family plans.</Text>
       <Text style={styles.subtitle}>{viewModel.calendarSummary}</Text>
 
       <SurfaceCard>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.cardTitle}>{viewModel.month} rhythm</Text>
-            <Text style={styles.cardCopy}>A month view that still feels warm and social.</Text>
+            <Text style={styles.cardTitle}>{viewModel.month}</Text>
+            <Text style={styles.cardCopy}>Dates with an event are marked with a dot.</Text>
           </View>
           <Chip label={viewModel.calendarSummary} tone="sky" />
         </View>
@@ -49,7 +49,7 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
               onPress={() => onOpenEvent?.(item.id)}
               style={styles.listRow}
             >
-              <View>
+              <View style={styles.listCopy}>
                 <Text style={styles.listTitle}>{item.title}</Text>
                 <Text style={styles.cardCopy}>{item.detail}</Text>
               </View>
@@ -57,13 +57,13 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
             </Pressable>
           ))}
         </View>
-      </SurfaceCard> : <SurfaceCard><Text style={styles.cardTitle}>No events planned yet</Text><Text style={styles.cardCopy}>Create the first event to put this group on the calendar.</Text><Button label="Create event" onPress={onCreateEvent} /></SurfaceCard>}
+      </SurfaceCard> : <SurfaceCard><Text style={styles.cardTitle}>No upcoming events planned</Text><Text style={styles.cardCopy}>Create an event to put a new plan on this group’s calendar.</Text><Button label="Create event" onPress={onCreateEvent} /></SurfaceCard>}
     </ScrollView>
   );
 }
 
 function CalendarState({ title, detail }: { title: string; detail: string }) {
-  return <View style={styles.state}><SurfaceCard><Text style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
 }
 
 const styles = StyleSheet.create({
@@ -120,13 +120,13 @@ const styles = StyleSheet.create({
   },
   day: {
     width: '12.5%',
-    minWidth: 40,
-    height: 64,
-    borderRadius: 18,
+    minWidth: 30,
+    height: 56,
+    borderRadius: 14,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: 'rgba(32,22,28,0.08)',
-    padding: 10,
+    padding: 8,
   },
   dayActive: {
     backgroundColor: 'rgba(113,54,93,0.08)',
@@ -148,7 +148,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     gap: spacing.sm,
   },
+  listCopy: {
+    flex: 1,
+    minWidth: 0,
+  },
   listRow: {
+    minHeight: 48,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

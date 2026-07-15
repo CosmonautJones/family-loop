@@ -13,6 +13,10 @@ export type Person = {
   initials: string;
 };
 
+export type GroupMember = Person & {
+  role: 'owner' | 'admin' | 'member';
+};
+
 export type Group = {
   id: GroupId;
   name: string;
@@ -21,7 +25,7 @@ export type Group = {
   badge: string;
   tone: AccentTone;
   memberCount: number;
-  members?: Person[];
+  members?: GroupMember[];
   coverUri?: string;
 };
 
@@ -56,6 +60,7 @@ export type EventMessage = {
   eventId: EventId;
   body: string;
   authorName: string;
+  authorId: PersonId;
   author?: Person;
   self: boolean;
   createdAt: string;
@@ -66,14 +71,20 @@ export type MediaItem = {
   eventId: EventId;
   uri: string;
   caption: string;
+  altText: string;
   uploadedBy: PersonId;
   uploadedAt: string;
   blurhash?: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  creatorName?: string;
+  creatorUrl?: string;
 };
 
 export type Event = {
   id: EventId;
   groupId: GroupId;
+  creatorId: PersonId;
   title: string;
   startsAt: string;
   endsAt: string;

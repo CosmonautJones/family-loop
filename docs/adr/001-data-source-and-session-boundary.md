@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted for the M0-M6 campaign; runtime adoption is staged and is not complete at M0.
+Accepted and adopted for local, loopback Supabase, and dedicated hosted-staging runtime paths. Production operational acceptance remains outside this ADR and is not inferred from staging.
 
 ## Context
 
-Rendered screens currently use deterministic fixtures. The repository also contains mock and Supabase adapters, Query hooks, Zustand state, and core schema definitions. Docker is unavailable, and neither a local stack nor remote deployment has been verified.
+The original M0 context was fixture-heavy. The current runtime uses Query-owned service data for authenticated family, invitation, event, RSVP, comment, media, update, and memory paths; Zustand owns active-family UI selection only. Loopback Supabase remains the broad browser-development proof. Dedicated hosted staging now separately verifies exact migrations, Auth redirect/recovery dispatch, synthetic multi-user RLS, private Storage, notifications/reminders, Realtime, and zero cleanup residue on the runtime-configured immutable web release.
 
 ## Problem
 
@@ -21,6 +21,8 @@ Incremental persistence could create competing sources of truth or silently show
 5. Zustand owns transient UI state only, not durable events, RSVPs, messages, media, profiles, or memberships.
 6. Migrated surfaces explicitly represent loading, error, empty, and populated states.
 7. Session resolution gates authenticated queries.
+8. Local loopback evidence and hosted/production evidence are reported separately; local success never implies deployment, recovery email, backup, or restore readiness.
+9. Release web artifacts compile only a runtime-config bootstrap. Before rendering `App`, the bootstrap fetches and validates one public, non-secret `/runtime-config.json`; service and Supabase clients are lazy and cannot be created first. Native and development builds retain the explicit compile-environment path.
 
 ## Alternatives
 
@@ -34,18 +36,19 @@ Incremental persistence could create competing sources of truth or silently show
 - Vertical slices can migrate sequentially with one owner.
 - Failures are truthful and diagnosable, though less polished.
 - Mutations invalidate/update Query rather than durable Zustand mirrors.
-- Existing fixture screens remain until their mission.
+- Deterministic fixtures remain seed/test inputs, not a configured-backend fallback.
+- One immutable web artifact can move between environments; the environment overlay is independently reviewed, served with `no-store`, and fails closed before protected UI or services exist.
 
 ## Assumptions and inferences
 
 - **Assumption:** Existing service/schema code is the intended starting point and may need narrow corrections.
-- **Assumption:** Authenticated RLS with a publishable/anonymous client key is intended; it is not live-verified.
+- **Verified locally and synthetically on hosted staging:** Authenticated RLS with the publishable client key passed owner/member/outsider family/invitation/event/comment/media matrices. Real-account, production, physical-device, telemetry, mail-delivery, and restore evidence remain separate.
 - **Inference:** The event backbone before thread/media/reminder/memory slices is the lowest-risk order.
 - **Inference:** Memories remain event-derived absent a separate durable-memory requirement.
 
 ## Non-decisions
 
-No production project, deployment workflow, secrets process, migration runner, broader Auth UX, onboarding, invitations, navigation library, push delivery system, billing, or standalone memories model is chosen or authorized. This ADR makes no live RLS, realtime, or storage claim.
+This ADR does not authorize a production project, production promotion, secrets process, custom mail provider, push delivery system, billing, or a standalone memories model. Hosted operational evidence is recorded in the release/runbook ledger and remains dated environment evidence, not part of the architectural decision itself.
 
 ## Validation
 

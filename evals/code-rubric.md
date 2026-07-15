@@ -1,5 +1,39 @@
 # Code Rubric
 
+## OPORD 017 authenticated encrypted export
+
+- [x] Export composes the existing authenticated service/RLS boundary and adds no schema, privileged endpoint, dependency, token handling, or destructive behavior.
+- [x] Current-user filtering is explicit for created events, RSVPs, comments, uploaded media, and reminders; group/member records are reduced to the current membership.
+- [x] Media URIs, event covers, and nested comment author/avatar objects are absent from plaintext; owned bytes stream through a 1 MiB/15-second bound and carry size/type/SHA-256 while unavailable reads produce truthful partial counts.
+- [x] PBKDF2-SHA256/AES-256-GCM, inner integrity, wrong-passphrase/tamper rejection, retry, and two-user mock isolation have executable coverage.
+- [x] Configured owner/member/outsider actual downloads pass pairwise foreign-ID exclusion, minimal outsider scope, 390px mobile contracts, and zero console events without changing canonical data.
+- [ ] Hosted delivery/audit, shared-family archive policy, physical devices/AT, and deletion/grace/retention apply remain external or policy-gated.
+
+## OPORD 012 focused mobile-web startup correction
+
+- [x] A dependency-free CDP gate reproduces three warm 390x844 reloads under 500 kbps/400 ms RTT plus 4x CPU and fails on LCP >4,000 ms, main-thread task >200 ms, event usability >1,000 ms, or horizontal overflow.
+- [x] The before profile exposed one 332 ms task plus a 6,177,881-byte artifact retained by decorative icon and card-animation imports; no capacity-list or service rewrite was performed.
+- [x] Removing only the redundant icons and Moti wrapper yields one 980,027-byte JS bundle with no font assets, 2,200/2,208/2,368 ms LCP, 170/110/91 ms longest tasks, and a 646 ms final event route.
+- [x] Labeled >=48px tabs, selected state, keyboard order, 320/390/430/1280 widths, reduced-motion images, Back, deep links, reload, zoom proxy, and reduced-height invalid-field focus still pass.
+- [ ] Physical iOS Safari/Android Chrome performance and assistive-technology/human evidence remain external conditional gates.
+
+## Local multi-user, authorization, and KISS closeout
+
+- [x] `7deb3fa` keeps selected demo identity per tab and shared records in the existing durable service; the UI labels this boundary honestly.
+- [x] `93dc773` and `1311332` enforce captured-actor membership, creator/manager and uploader/manager rules, outsider denial, RSVP anti-spoofing, and recipient-scoped notifications with v6 migration coverage.
+- [x] `2b6d725`, `a52e43b`, and `0601baa` simplify Event Detail and close DST/timeline, delete, validation, media-mode, and Supabase timeline correctness gaps without new dependencies.
+- [x] Current final gates are independently transcribed: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo export, and diff check pass; lint is placeholder WARN.
+- [ ] Hosted remote parity is unproven: repository and local Supabase media lifecycle policies pass, but hosted RLS, migration-data validation, and operational recovery still require authorized execution evidence.
+- [ ] Local demo actors and adapter contracts do not prove production authentication, invitations, RLS, or server synchronization.
+
+## Wave 6 local E2E and recovery
+
+- [x] Commit `178a69e` preserves one service/Query-owned durable source of truth and corrects the Calendar projection without adding a dependency or remote mutation.
+- [x] Authoritative suites are recorded separately: root 45/45 and app-local 34/34; TypeScript, harness, Expo export, and diff check pass.
+- [x] Browser evidence proves real form, RSVP, comment, URL/file photo, delete, route/Back, reload/restart, responsive, keyboard, landmark, and local corruption-recovery behavior.
+- [x] Lint is labeled placeholder WARN; no substantive lint claim is made.
+- [x] Cold offline reload failure and all remote/physical-device gaps are explicit; local proof is not rounded up to production readiness.
+
 ## Wave 0 durable local service
 
 - [x] Default/unconfigured mode uses the durable AsyncStorage adapter; `memory` is an explicit isolated-test mode.
@@ -38,6 +72,54 @@
 - Send invalidation targets only the affected event; no fixture or Zustand message mirror exists.
 
 ## Scope control
+
+## Wave 5 mobile accessibility implementation
+
+- [x] The shell exposes one main landmark; fixed navigation precedes it in DOM order and keeps all five tabs sequentially tabbable with explicit selected state.
+- [x] Primary/state titles and Event Detail sections expose level-appropriate headings.
+- [x] Invalid Create submission focuses the first invalid input and connects stable field labels to alert text with invalid/described-by semantics.
+- [x] Photo names, decorative avatars, and repeated Open/Remove action names are contextual rather than ambiguous.
+- [x] Loading/error feedback uses polite or alert/assertive semantics appropriate to urgency.
+- [x] Root tests PASS 44/44 and app-local tests PASS 33/33; TypeScript, harness, and Expo web export PASS.
+- [x] Independent Run 1 RED keyboard defect corrected; Run 2 accepted at AMBER / PROCEED-WARN with zero blockers.
+- [x] Rendered keyboard order, Enter routing, one-selected/one-main semantics, and 320×844 width/overflow/navigation sanity passed.
+- [ ] Substantive lint and physical-device/screen-reader/moderated-human evidence — unproven.
+- [x] Persisted Chrome 200% browser zoom passes at effective 320/390/430 CSS pixels with DPR 1→2, visual scale 1, CSS zoom 1, >=48px controls, and box/text containment; physical browsers/AT remain conditional.
+
+## Wave 2 trip creation and RSVP
+
+- [x] Editable title, date, time, location, and optional notes replace preset cards.
+- [x] Validation rejects blank, malformed, and impossible required values before mutation.
+- [x] Pending/error/retry behavior prevents duplicate writes and retains fields after failure.
+- [x] Success uses the returned exact ID and invalidates the active family event list.
+- [x] Durable reconstruction covers the trip and RSVP plus derived Home, Calendar, and Family visibility.
+- [x] Untouched RSVP is `No response`, not a fabricated Maybe.
+- [x] Root tests 37/37 and app-local tests 26/26, TypeScript, harness, web export, diff, and scoped browser checks pass.
+- [x] Independent Wave 2 gate — AMBER / PROCEED-WARN with zero blockers.
+- [ ] Substantive lint and remote Supabase/RLS — unproven.
+
+## Wave 3 event comments and browser photos
+
+- [x] Comments and photo lists are exact-event service reads with honest loading, empty, error, and retry states.
+- [x] Comment send trims/rejects blank input, prevents duplicate submission, retains the draft on failure, and clears only after success/refetch.
+- [x] URL photos require a valid HTTP(S) image URL, caption, alt text, source URL, and photographer credit.
+- [x] Browser file selection persists a validated local image record; unsupported and oversized files fail before durable storage, and failed photo input remains retryable.
+- [x] Photo deletion is pending-safe, event-isolated, durable across reload, and does not imply remote object deletion.
+- [x] Root tests 39/39 and app-local tests 28/28, TypeScript, harness, web export, diff, and exact 320/390/430/1280 browser checks pass.
+- [x] Independent Wave 3 Run 2 — AMBER / PROCEED-WARN with zero blockers after Run 1 fixes `630ad85` and `e242761`.
+- [x] Records correction captures each command's own TAP summary; root and app counts must never be mirrored across suites.
+- [ ] Substantive lint, live Supabase/RLS/private storage/signed access, real-device Safari/Chrome, and multi-user behavior — unverified.
+
+## Wave 4 completed-event truth
+
+- [x] Memories and Home derive completed-event history from service-backed family events rather than memory fixtures.
+- [x] Media and comments are queried and combined by exact event ID; isolation coverage prevents one completed event from borrowing another event's records.
+- [x] Memories exposes loading, error/retry, empty, and populated states and routes to the exact completed event.
+- [x] Reminder UI and dead staged-photo/reminder transient store state are removed; no unavailable scheduling or delivery is implied.
+- [x] Calendar uses truthful shared-plan language and 48px minimum actions.
+- [x] Root tests 43/43 and app-local tests 32/32, TypeScript, harness, web export, diff, and exact 320/390/430/1280 Chrome checks pass.
+- [x] Independent Run 2 — AMBER / PROCEED-WARN with zero blockers after the Run 1 exact-event isolation correction.
+- [ ] Substantive lint, live Supabase/RLS/private storage, physical Safari/Chrome devices, and multi-user behavior — unverified.
 
 - Did the implementation stay inside the mission?
 - Were unrelated changes avoided?

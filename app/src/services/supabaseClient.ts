@@ -1,17 +1,18 @@
 import 'react-native-url-polyfill/auto';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { getRuntimeConfig } from '../config/runtimeConfig';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-
-export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseKey);
+const callbackFragment = typeof window === 'undefined' ? new URLSearchParams() : new URLSearchParams(window.location.hash.slice(1));
+export const hasPasswordRecoveryCallback = callbackFragment.get('type') === 'recovery'
+  || (callbackFragment.has('error_code') && /email link|recover|expired/i.test(callbackFragment.get('error_description') ?? ''));
 
 let client: SupabaseClient | null = null;
 
 export function getSupabaseClient() {
+  const { supabaseUrl, supabasePublishableKey: supabaseKey } = getRuntimeConfig();
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY.');
+    throw new Error('Missing Supabase URL or publishable key.');
   }
 
   client ??= createClient(supabaseUrl, supabaseKey, {
@@ -19,7 +20,7 @@ export function getSupabaseClient() {
       storage: AsyncStorage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false,
+      detectSessionInUrl: typeof window !== 'undefined',
     },
   });
 

@@ -1,136 +1,111 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Button } from '../components/Button';
-import { Chip } from '../components/Chip';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { useActiveEventsQuery, useActiveGroupMembersQuery, useActiveGroupQuery, useCreateGroupInvitationMutation, useGroupInvitationsQuery, useLeaveGroupMutation, useRemoveGroupMemberMutation, useRevokeGroupInvitationMutation, useTransferGroupOwnershipMutation } from '../app/queries';
+import { selectFamilyViewModel } from '../app/selectors';
 import { SurfaceCard } from '../components/SurfaceCard';
-import { selectGroupsViewModel } from '../app/selectors';
+import { DataExportCard } from '../features/account/DataExportCard';
+import { useAuthSession } from '../features/auth/AuthSessionProvider';
+import { canSubmitInvitation, confirmInvitationDraft, invitationDraftForEmail, normalizeInvitationEmail, retainInvitationPresentation, revokeInvitationPresentation, type InvitationDraft, type InvitationPresentation } from '../features/auth/invitationDraft';
 import { palette, spacing } from '../theme/tokens';
 
+function confirmAction(title: string, detail: string) {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') return Promise.resolve(window.confirm(`${title}\n\n${detail}`));
+  return new Promise<boolean>((resolve) => Alert.alert(title, detail, [{ text: 'Cancel', style: 'cancel', onPress: () => resolve(false) }, { text: 'Continue', style: 'destructive', onPress: () => resolve(true) }], { cancelable: true, onDismiss: () => resolve(false) }));
+}
+
+function randomInvitationBytes() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return bytes;
+}
+
 export function GroupsScreen() {
-  const groupsOverview = selectGroupsViewModel();
+  const { width } = useWindowDimensions();
+  const auth = useAuthSession();
+  const groupQuery = useActiveGroupQuery();
+  const membersQuery = useActiveGroupMembersQuery();
+  const eventsQuery = useActiveEventsQuery();
+  const groupId = groupQuery.data?.id ?? '';
+  const currentMember = membersQuery.data?.find((member) => member.id === auth.session?.userId);
+  const owner = currentMember?.role === 'owner';
+  const invitations = useGroupInvitationsQuery(groupId, owner);
+  const createInvitation = useCreateGroupInvitationMutation(groupId);
+  const revokeInvitation = useRevokeGroupInvitationMutation(groupId);
+  const removeMember = useRemoveGroupMemberMutation(groupId);
+  const leaveGroup = useLeaveGroupMutation(groupId);
+  const transferOwnership = useTransferGroupOwnershipMutation(groupId);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invitePresentation, setInvitePresentation] = useState<InvitationPresentation | null>(null);
+  const [notice, setNotice] = useState<{ text: string; tone: 'error' | 'info' } | null>(null);
+  const inviteDraft = useRef<InvitationDraft | null>(null);
+  const inviteInFlight = useRef(false);
+  const loading = groupQuery.isPending || membersQuery.isPending || eventsQuery.isPending;
+  const error = groupQuery.error ?? membersQuery.error ?? eventsQuery.error;
+  const retry = () => Promise.all([groupQuery.refetch(), membersQuery.refetch(), eventsQuery.refetch()]);
 
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.eyebrow}>Groups & onboarding</Text>
-      <Text style={styles.title}>Choose your people, then start with the next event.</Text>
-      <Text style={styles.subtitle}>{groupsOverview.description}</Text>
+  if (loading) return <View style={styles.state} accessibilityLiveRegion="polite"><ActivityIndicator color={palette.plum} /><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>Loading your family…</Text></View>;
+  if (error) return <View style={styles.state} accessibilityLiveRegion="polite"><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>We couldn’t load your family.</Text><Text style={styles.cardCopy}>{error instanceof Error ? error.message : 'Please try again.'}</Text><CardAction label="Try again" onPress={retry} /></View>;
+  if (!groupQuery.data) return <View style={styles.state}><Text role="heading" {...{ 'aria-level': 1 }} style={styles.stateTitle}>No active family yet.</Text><Text style={styles.cardCopy}>Create or join a family to manage people and invitations.</Text></View>;
 
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Your groups</Text>
-        <View style={styles.list}>
-          {groupsOverview.groups.map((group) => (
-            <View key={group.name} style={styles.groupRow}>
-              <View>
-                <Text style={styles.groupName}>{group.name}</Text>
-                <Text style={styles.cardCopy}>{group.detail}</Text>
-              </View>
-              <Chip label={group.badge} tone={group.tone} />
-            </View>
-          ))}
-        </View>
-      </SurfaceCard>
+  const family = selectFamilyViewModel(groupQuery.data, membersQuery.data ?? [], eventsQuery.data ?? []);
+  const act = async (action: () => Promise<unknown>, success: string) => { setNotice(null); try { await action(); setNotice({ text: success, tone: 'info' }); } catch { setNotice({ text: 'That family action isn’t available. Try again.', tone: 'error' }); } };
+  const invite = async () => {
+    const email = normalizeInvitationEmail(inviteEmail);
+    if (!email) { setNotice({ text: 'Enter the email address your relative will use.', tone: 'error' }); return; }
+    if (!canSubmitInvitation(invitePresentation, email, inviteInFlight.current)) return;
+    const draft = invitationDraftForEmail(inviteDraft.current, email, randomInvitationBytes);
+    inviteDraft.current = draft;
+    inviteInFlight.current = true;
+    setNotice(null);
+    try {
+      await createInvitation.mutateAsync({ email: draft.email, token: draft.token });
+      const base = typeof window === 'undefined' ? 'https://loopedin.app/' : `${window.location.origin}${window.location.pathname}`;
+      setInvitePresentation(confirmInvitationDraft(draft, base));
+      setNotice({ text: 'Invitation created. Share the private link below with the invited person.', tone: 'info' });
+    } catch (cause: unknown) {
+      setInvitePresentation((current) => retainInvitationPresentation(current));
+      setNotice({ text: cause instanceof Error && /already waiting|already pending/i.test(cause.message)
+        ? 'An invitation is already pending for this email. Revoke it below, then create a new link.'
+        : 'We couldn’t confirm this invitation. Retry to safely reuse the same private link.', tone: 'error' });
+    } finally {
+      inviteInFlight.current = false;
+    }
+  };
 
-      <SurfaceCard>
-        <Text style={styles.cardTitle}>Quick start</Text>
-        <View style={styles.steps}>
-          {groupsOverview.steps.map((step, index) => (
-            <View key={step.title} style={styles.stepRow}>
-              <View style={styles.step}><Text style={styles.stepText}>{index + 1}</Text></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.groupName}>{step.title}</Text>
-                <Text style={styles.cardCopy}>{step.detail}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-        <View style={styles.actionRow}>
-          <Button label="Create group" />
-          <Button label="Try friend-group flow" tone="secondary" />
-        </View>
-      </SurfaceCard>
-    </ScrollView>
-  );
+  return <ScrollView contentContainerStyle={[styles.container, { width: Math.max(width - (2 * spacing.lg), 0) }]}>
+    <Text style={styles.eyebrow}>Your family</Text><Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{family.name}</Text><Text style={styles.subtitle}>{family.description}</Text>
+    {notice ? <Text accessibilityLiveRegion={notice.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={notice.tone === 'error' ? 'alert' : undefined} style={notice.tone === 'error' ? styles.error : styles.notice}>{notice.text}</Text> : null}
+    <SurfaceCard><Text style={styles.cardTitle}>Family at a glance</Text><Text style={styles.summary}>{family.memberCountLabel}</Text><Text style={styles.cardCopy}>{family.upcomingLabel}</Text></SurfaceCard>
+    {owner ? <SurfaceCard>
+      <Text style={styles.cardTitle}>Invite someone</Text><Text style={styles.cardCopy}>The link is private and tied to this email. LoopedIn does not send it for you yet.</Text>
+      <Text style={styles.label}>Email address</Text><TextInput nativeID="family-invite-email-input" accessibilityLabel="Invite email address" autoCapitalize="none" autoComplete="email" inputMode="email" onChangeText={(value) => { if (normalizeInvitationEmail(value) !== normalizeInvitationEmail(inviteEmail)) { inviteDraft.current = null; setInvitePresentation(null); } setInviteEmail(value); }} placeholder="relative@example.com" style={styles.input} value={inviteEmail} />
+      <CardAction label={createInvitation.isPending ? 'Creating invitation…' : invitePresentation ? 'Invitation link created' : 'Create invitation link'} disabled={!canSubmitInvitation(invitePresentation, inviteEmail, createInvitation.isPending || inviteInFlight.current)} onPress={invite} />
+      {(inviteDraft.current || invitePresentation) && !createInvitation.isPending ? <CardAction label="Cancel invitation draft" onPress={() => { inviteDraft.current = null; setInvitePresentation(null); setNotice({ text: 'Invitation draft cleared.', tone: 'info' }); }} /> : null}
+      {invitePresentation ? <View style={styles.linkBox}><Text selectable style={styles.link}>{invitePresentation.link}</Text><CardAction label="Copy invitation link" onPress={async () => { if (typeof navigator !== 'undefined' && navigator.clipboard) { await navigator.clipboard.writeText(invitePresentation.link); setNotice({ text: 'Invitation link copied.', tone: 'info' }); } else setNotice({ text: 'Select and copy the invitation link above.', tone: 'info' }); }} /></View> : null}
+      <Text style={styles.sectionTitle}>Pending invitations</Text>
+      {invitations.isPending ? <ActivityIndicator color={palette.plum} /> : null}
+      {invitations.isError ? <><Text style={styles.error}>Pending invitations are unavailable.</Text><CardAction label="Retry invitations" onPress={() => invitations.refetch()} /></> : null}
+      {invitations.isSuccess && invitations.data.filter((item) => item.status === 'pending').length === 0 ? <Text style={styles.cardCopy}>No invitations are waiting.</Text> : null}
+      {invitations.data?.filter((item) => item.status === 'pending').map((item) => <View key={item.id} style={styles.actionRow}><View style={styles.rowCopy}><Text style={styles.memberName}>{item.email}</Text><Text style={styles.role}>Pending</Text></View><CardAction label={`Revoke invitation for ${item.email}`} disabled={revokeInvitation.isPending} onPress={async () => { setNotice(null); try { await revokeInvitation.mutateAsync(item.id); const nextPresentation = revokeInvitationPresentation(invitePresentation, item.email); if (!nextPresentation) inviteDraft.current = null; setInvitePresentation(nextPresentation); setNotice({ text: 'Invitation revoked. Any displayed link for it is no longer usable.', tone: 'info' }); } catch { setNotice({ text: 'That family action isn’t available. Try again.', tone: 'error' }); } }} /></View>)}
+    </SurfaceCard> : null}
+    <SurfaceCard><Text style={styles.cardTitle}>People</Text><View style={styles.list}>{family.members.map((member) => <View key={member.id} style={styles.memberBlock}>
+      <View style={styles.memberRow} accessibilityLabel={`${member.name}, ${member.role}`}><View accessible={false} style={styles.avatar}><Text style={styles.avatarText}>{member.initials}</Text></View><View style={styles.memberCopy}><Text style={styles.memberName}>{member.name}</Text><Text style={styles.role}>{member.role}</Text></View></View>
+      {owner && member.id !== auth.session?.userId ? <View style={styles.memberActions}><CardAction label={`Transfer ownership to ${member.name}`} disabled={transferOwnership.isPending} onPress={async () => { if (await confirmAction('Transfer family ownership?', `${member.name} will control invitations and members. You will become a member.`)) await act(() => transferOwnership.mutateAsync(member.id), 'Ownership transferred.'); }} /><CardAction label={`Remove ${member.name}`} disabled={removeMember.isPending} onPress={async () => { if (await confirmAction(`Remove ${member.name}?`, 'They will immediately lose access to this family’s plans, comments, and photos.')) await act(() => removeMember.mutateAsync(member.id), `${member.name} removed.`); }} /></View> : null}
+    </View>)}</View></SurfaceCard>
+    {auth.session ? <DataExportCard session={auth.session} /> : null}
+    {!owner ? <SurfaceCard><Text style={styles.cardTitle}>Leave family</Text><Text style={styles.cardCopy}>Leaving removes your access to this family’s plans, comments, and photos.</Text><CardAction label={leaveGroup.isPending ? 'Leaving family…' : 'Leave family'} disabled={leaveGroup.isPending} onPress={async () => { if (await confirmAction(`Leave ${family.name}?`, 'You will lose access immediately. You’ll need a new invitation to return.')) await act(() => leaveGroup.mutateAsync(), 'You left the family.'); }} /></SurfaceCard> : null}
+  </ScrollView>;
+}
+
+function CardAction({ label, disabled = false, onPress }: { label: string; disabled?: boolean; onPress?: () => void | Promise<unknown> }) {
+  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.cardAction, disabled && styles.cardActionDisabled]}><Text style={styles.cardActionText}>{label}</Text></Pressable>;
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: spacing.lg,
-    gap: spacing.md,
-    paddingBottom: 40,
-  },
-  eyebrow: {
-    marginTop: 18,
-    color: palette.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.8,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  title: {
-    color: palette.text,
-    fontSize: 32,
-    lineHeight: 34,
-    fontWeight: '800',
-    marginTop: 10,
-  },
-  subtitle: {
-    color: palette.muted,
-    fontSize: 15,
-    lineHeight: 24,
-    marginTop: 10,
-    marginBottom: 8,
-  },
-  cardTitle: {
-    color: palette.text,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  cardCopy: {
-    color: palette.muted,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  list: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  groupRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  groupName: {
-    color: palette.text,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  steps: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  stepRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'flex-start',
-  },
-  step: {
-    width: 32,
-    height: 32,
-    borderRadius: 12,
-    backgroundColor: 'rgba(113,54,93,0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  stepText: {
-    color: palette.plum,
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-    marginTop: spacing.md,
-  },
+  container: { alignSelf: 'center', boxSizing: 'border-box', gap: spacing.md, maxWidth: 680, minWidth: 0, padding: spacing.lg, paddingBottom: 40 }, state: { alignItems: 'center', flex: 1, gap: spacing.md, justifyContent: 'center', minHeight: 320, padding: spacing.lg }, stateTitle: { color: palette.text, fontSize: 20, fontWeight: '800', textAlign: 'center' },
+  eyebrow: { color: palette.muted, fontSize: 11, fontWeight: '800', letterSpacing: 1.8, marginTop: 18, textTransform: 'uppercase' }, title: { color: palette.text, flexShrink: 1, fontSize: 32, fontWeight: '800', lineHeight: 38, maxWidth: '100%' }, subtitle: { color: palette.muted, flexShrink: 1, fontSize: 16, lineHeight: 24, maxWidth: '100%' },
+  cardTitle: { color: palette.text, fontSize: 20, fontWeight: '800' }, sectionTitle: { color: palette.text, fontSize: 17, fontWeight: '800', marginTop: spacing.sm }, summary: { color: palette.plum, fontSize: 17, fontWeight: '800' }, cardCopy: { color: palette.muted, fontSize: 15, lineHeight: 22 }, label: { color: palette.text, fontSize: 15, fontWeight: '800' },
+  input: { backgroundColor: palette.white, borderColor: palette.plum, borderRadius: 14, borderWidth: 1, color: palette.text, fontSize: 16, minHeight: 52, paddingHorizontal: spacing.md }, notice: { color: palette.plum, fontSize: 14, lineHeight: 20 }, error: { color: palette.berry, fontSize: 14, lineHeight: 20 },
+  cardAction: { alignItems: 'center', backgroundColor: palette.plum, borderColor: palette.plum, borderRadius: 14, borderWidth: 1, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, cardActionDisabled: { opacity: 0.55 }, cardActionText: { color: palette.white, fontSize: 15, fontWeight: '800', textAlign: 'center' },
+  linkBox: { gap: spacing.sm }, link: { color: palette.plum, flexShrink: 1, fontSize: 14, lineHeight: 21 }, list: { gap: spacing.md }, memberBlock: { borderBottomColor: palette.inkSoft, borderBottomWidth: 1, gap: spacing.sm, paddingBottom: spacing.md }, memberRow: { alignItems: 'center', flexDirection: 'row', gap: 12, minHeight: 56 }, avatar: { alignItems: 'center', backgroundColor: 'rgba(113,54,93,0.12)', borderRadius: 24, height: 48, justifyContent: 'center', width: 48 }, avatarText: { color: palette.plum, fontSize: 16, fontWeight: '800' }, memberCopy: { flex: 1 }, memberName: { color: palette.text, flexShrink: 1, fontSize: 17, fontWeight: '800' }, role: { color: palette.muted, fontSize: 14, marginTop: 2 }, memberActions: { gap: spacing.sm }, actionRow: { alignItems: 'stretch', gap: spacing.sm }, rowCopy: { minWidth: 0 },
 });

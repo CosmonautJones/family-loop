@@ -1,10 +1,10 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-Planned implementation mission. This OPORD authorizes future repository CI work only when activated; no workflow, dependency, runtime, or remote change occurs while drafting it.
+HOSTED CLEAN COMPLETE / ENFORCEMENT CONDITIONAL — exact-head run `29451842237` passed application, security/dependency, disposable migration apply/lint, and release-artifact jobs on `3cf45367…`; downloaded digest `7a18b2f5…fc3c8c` reverified before staging upload. Hosted seeded-failure proofs and administrator-required private-repository checks remain `NOT RUN`.
 
 ## Situation and evidence
-Local tests, TypeScript and harness checks exist (`docs/architecture.md:51-53`), but `app/package.json:11` is only `echo 'lint placeholder'`. No CI workflow is present (inference from `rg --files`). Migration SQL exists, while Docker and remote verification are unavailable (`docs/architecture.md:41`).
+Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. PR #1 run `29451842237` proves all four jobs on `3cf45367…`, including disposable migration reset/apply/lint and exact artifact retention. Branch enforcement is not configured or inferred from that run.
 
 ## Mission/objective
 Implement a required pull-request CI workflow with substantive lint, root/app tests, TypeScript, harness, secret/dependency checks, and deterministic migration validation before code can merge.
@@ -41,28 +41,41 @@ CI must preserve the accessibility and large-text regressions defined by OPORD 0
 - Seeded violations prove each critical gate fails; administrators can require the stable checks.
 - No release, deploy, remote migration, or branch-protection mutation occurs without separate authorization.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Substantive reproducible lint | COMPLETE LOCALLY | Exact `eslint@9.39.5` and `eslint-config-expo@9.2.0`; flat config; zero-warning command; clean pass plus seeded unused-value exit 1. User explicitly approved the dependencies. |
+| CI install/test/type/lint/harness/secret/dependency/migration jobs | HOSTED PASS | PR #1 run `29451842237` passed application, security/dependency, migration integrity, and release artifact jobs on exact commit `3cf45367…`. |
+| Least permissions/pinned tools/deterministic caches/no secrets | COMPLETE BY STATIC/LOCAL REVIEW | `contents: read`, concurrency cancellation, Node 22, exact Supabase CLI 2.109.0, immutable action SHAs, app-lock cache key, no secret references, and bounded timeouts. |
+| Seeded violations fail stable required checks | COMPLETE LOCALLY / HOSTED NOT RUN | Lint, test, synthetic secret assignment, historical migration edit, and out-of-order migration each exited 1; every seed was removed and clean reruns passed. No disposable hosted failure branch was created. |
+| No unauthorized release/remote/branch mutation | COMPLETE | Subsequent hosted Supabase/Netlify work was explicitly authorized, exact-target bounded, and recorded; branch protection and unrelated provider resources remain unchanged. |
+| Exact-head release artifact is built once and retained for promotion | HOSTED PASS | Run `29451842237` built artifact `loopedin-web-3cf45367dc858e5c58bf8b72ae28e263b310c6b4`; downloaded source and internal digest `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c` reverified before immutable staging upload. |
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
-npm ci
 npm test
 Push-Location app; npm ci; npm run lint; npm test; npx tsc --noEmit; Pop-Location
 powershell -ExecutionPolicy Bypass -File scripts/check-harness.ps1
+npm run check:secrets
+npm run check:migrations
+node scripts/check-migrations.mjs --base-ref HEAD
+Push-Location app; npm audit --package-lock-only --audit-level=high; Pop-Location
+npx supabase db lint --local --level error
 git diff --check
-rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" .github scripts app/src tests
-Get-ChildItem supabase/migrations -File | Sort-Object Name | ForEach-Object Name
 ```
 
-Capture intentional-failure evidence on a disposable branch for lint, tests, secret scanning, and migration immutability; remove seeded violations before completion.
+The current populated loopback browser scenario must not be reset for this mission. CI performs reset/apply/lint only inside its fresh disposable runner. Local intentional-failure evidence and removal details are recorded in `docs/runbooks/ci-quality-gates.md`.
 
 ### Conditional-staging/mobile-web/human
-Trigger the workflow on an approved draft PR and have an administrator enable required checks only after stable names pass. Mobile-web browser/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
+The approved draft PR clean run is complete. A repository administrator may enable the three stable required checks only after separately authorizing any hosted seeded-failure proof and reviewing the recorded run. Mobile-web browser/human checks inherit OPORD 014 and are not rerun unless CI gains those jobs.
 
 ## Stop conditions/authorization limits
-Stop before adding lint dependencies without approval, using secrets, editing runtime code outside focused lint corrections, mutating branch protection, opening/pushing a PR, or running remote migration/deploy commands.
+Stop before adding lint dependencies without approval, using secrets, editing runtime code outside focused lint corrections, mutating branch protection, opening/pushing a PR without explicit authorization, or running remote migration/deploy commands.
 
 ## Risks/follow-ups
 Supply-chain risk, noisy audit findings, platform-specific scripts, workflow permission excess, and false confidence from structural migration checks. Release work belongs to OPORD 016.
 
 ## Definition of done
-Substantive lint and all CI gates have observed pass/fail evidence, workflow permissions are reviewed, required-check instructions and exceptions are documented, and the review log is updated.
+Local implementation and one authorized GitHub-hosted clean pass are complete. Full OPORD completion additionally requires hosted seeded disposable-PR failures and administrator enforcement of the three stable required checks.

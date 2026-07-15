@@ -1,4 +1,5 @@
 import { draftEventTemplate } from './eventData';
+import type { Event, GroupMember } from '../../types/domain';
 
 export type CreateEventDraft = {
   title: string;
@@ -9,6 +10,77 @@ export type CreateEventDraft = {
   invitees: readonly string[];
   coverTreatment: string;
 };
+
+export type EventForm = {
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  description: string;
+};
+
+export type RequiredEventField = 'title' | 'date' | 'time' | 'location';
+export type EventFormErrors = Partial<Record<RequiredEventField, string>>;
+
+export function validateEventForm(form: EventForm): EventFormErrors {
+  const errors: EventFormErrors = {};
+  if (!form.title.trim()) errors.title = 'Add a name so your family can recognize the plan.';
+  if (!form.location.trim()) errors.location = 'Add the place everyone should use.';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(form.date)) errors.date = 'Use a date in YYYY-MM-DD format.';
+  if (!/^\d{2}:\d{2}$/.test(form.time)) errors.time = 'Use a time in HH:MM format.';
+  const startsAt = new Date(`${form.date}T${form.time}:00`);
+  if (!errors.date && !errors.time) {
+    const [year, month, day] = form.date.split('-').map(Number);
+    const [hour, minute] = form.time.split(':').map(Number);
+    const valid = !Number.isNaN(startsAt.getTime())
+      && startsAt.getFullYear() === year
+      && startsAt.getMonth() === month - 1
+      && startsAt.getDate() === day
+      && startsAt.getHours() === hour
+      && startsAt.getMinutes() === minute;
+    if (!valid) errors.date = 'Choose a real calendar date and time.';
+  }
+  return errors;
+}
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+export function eventToForm(event: Event): EventForm {
+  const startsAt = new Date(event.startsAt);
+  return {
+    title: event.title,
+    date: `${startsAt.getFullYear()}-${pad(startsAt.getMonth() + 1)}-${pad(startsAt.getDate())}`,
+    time: `${pad(startsAt.getHours())}:${pad(startsAt.getMinutes())}`,
+    location: event.location,
+    description: event.description,
+  };
+}
+
+export function buildEventUpdate(event: Event, form: EventForm) {
+  const originalForm = eventToForm(event);
+  const scheduleUnchanged = form.date === originalForm.date && form.time === originalForm.time;
+  const startsAt = scheduleUnchanged ? new Date(event.startsAt) : new Date(`${form.date}T${form.time}:00`);
+  const duration = Math.max(0, Date.parse(event.endsAt) - Date.parse(event.startsAt));
+  return {
+    title: form.title.trim(),
+    startsAt: scheduleUnchanged ? event.startsAt : startsAt.toISOString(),
+    endsAt: scheduleUnchanged ? event.endsAt : new Date(startsAt.getTime() + duration).toISOString(),
+    location: form.location.trim(),
+    description: form.description.trim(),
+  };
+}
+
+export function canManageEvent(event: Event, member?: GroupMember) {
+  return Boolean(member && (event.creatorId === member.id || member.role === 'owner' || member.role === 'admin'));
+}
+
+export function updateEventLocationTimeline(timeline: Event['timeline'], location: string) {
+  return timeline.map((item) => (
+    item.title === 'Plan' || item.title === 'Logistics'
+      ? { ...item, detail: `${location} · details shared with the family` }
+      : item
+  ));
+}
 
 export type CreateEventField = {
   label: string;

@@ -1,10 +1,10 @@
 # OPORD 009 — Private media lifecycle
 
 ## Status
-Planned as M4 after M2; remote storage/RLS is unverified and Docker is unavailable.
+STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL — dedicated hosted private Storage now passes begin/upload/activate, member read, outsider denial, authorized claim/delete/finalize, and zero object residue. Physical Safari/Chrome camera/gallery and real-family media remain `NOT RUN`.
 
 ## Situation and evidence
-The service already exposes upload/list/delete (`app/src/services/api.ts:92-101`) and adapters contain prototype implementations (`app/src/services/supabaseAdapter.ts:499-545`; `app/src/services/mockAdapter.ts:130-139`). Event Detail only stages counts locally and says upload is not wired (`app/src/screens/EventDetailScreen.tsx:123-133`). The migration defines private media rows, bucket, and policies (`supabase/migrations/20260705214111_loopedin_initial_infra.sql:393-414,460-506`), not verified deployment (`docs/architecture.md:41`). M4 requires private upload/list/resolve/delete (`tasks/backlog.md:11`).
+Commit `a9769ec` adds a forward-only pending/active/deleting media lifecycle, narrow metadata RPCs, owned private Storage paths, streamed size/signature validation, retryable partial-failure states, and signed resolution. Local Auth-session RLS/Storage attack matrices pass. The configured browser scenario shared two attributed Unsplash-source files and one actual browser-selected JPEG, rendered them through signed access, and preserved them across reloads.
 
 ## Mission/objective
 Deliver an event-scoped, Query-owned private image lifecycle on Event Detail: choose, upload, list via expiring resolution, handle partial failures, and delete only with authorized confirmation.
@@ -42,6 +42,18 @@ Use a plain labeled 48x48 CSS-pixel “Add photo” action, visible upload progr
 - Expired URL refresh works; configured failures have no fixture fallback.
 - No public link, new dependency, or remote change is introduced without approval.
 
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| One event-scoped upload and refetch | COMPLETE LOCALLY | Media E2E plus three browser-shared photos and scenario verifier. |
+| Event/nonmember isolation | COMPLETE LOCALLY | Uploader/member/owner/outsider Storage/RLS matrix. |
+| Authorized delete and recoverable partial failure | COMPLETE LOCALLY | Claim/finalize lifecycle, concurrent abort/upload, manager cases, and UI delete controls. |
+| Expired resolution refresh; no fixture fallback | COMPLETE LOCALLY | Signed URLs are resolved on list/refetch; configured failures stay visible. |
+| No public link/dependency/unauthorized remote mutation | COMPLETE | Private bucket/path policy, no new dependency, and only approved isolated hosted create/read/deny/delete with exact cleanup. |
+
+Hosted synthetic private Storage is `PASS`; physical iOS Safari/Android Chrome camera/gallery and real-family media remain `NOT RUN`.
+
 ## Validation commands/evidence
 ### Always-local
 ```powershell
@@ -55,7 +67,7 @@ git status --short
 Label lint as placeholder; run focused adapter tests, 320/390/430 CSS-pixel file-select/upload/list/delete smoke, browser Back/reload recovery, and configured signed-out smoke.
 
 ### Conditional-staging/mobile-web/human
-Live storage/RLS is required only with an approved safe environment; otherwise NOT RUN. Real-phone iOS Safari camera/gallery, Android Chrome camera/gallery, and human usability are currently NOT RUN.
+Approved dedicated staging live Storage/RLS is complete for the synthetic lifecycle. Real-phone iOS Safari camera/gallery, Android Chrome camera/gallery, real-family media, and human usability are currently `NOT RUN`.
 
 ## Stop conditions/authorization limits
 Stop for new dependency, credential access, bucket/policy/migration deployment, destructive remote deletion, unclear orphan-cleanup semantics, or public exposure.

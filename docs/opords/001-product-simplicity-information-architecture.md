@@ -2,7 +2,7 @@
 
 ## Status
 
-PLANNED — documentation order only; implementation requires separate mission authorization.
+LOCAL COMPLETE / CONDITIONAL — the event-centered mobile-web IA is implemented and browser-proven; first-time and moderated-human comprehension remain untested.
 
 ## Situation and evidence
 
@@ -10,7 +10,7 @@ PLANNED — documentation order only; implementation requires separate mission a
 - The shell currently presents five tabs and a separate Event Detail surface (`app/src/navigation/useAppShellState.ts:3-27`; `app/src/navigation/AppShell.tsx:47-52`).
 - Home correctly leads with the next event and offers exact-event entry (`app/src/screens/HomeScreen.tsx:24-39`), while Calendar repeats event discovery (`app/src/screens/CalendarScreen.tsx:17-60`).
 - Product guidance rejects generic dashboards and features unrelated to plan, attend, discuss, or remember (`docs/taste-bar.md:23-29`; `docs/anti-goals.md:17-22`).
-- Inference: five peer tabs may overstate unfinished Memories/Groups surfaces and weaken the event-centered hierarchy; validate with a phone walkthrough before changing navigation.
+- The five labeled tabs now expose implemented Home, Calendar, Create, Memories, and Family surfaces. Exact event IDs survive Back, deep links, and reload in configured Chrome; the full first-time comprehension claim still requires a participant walkthrough.
 
 ## Mission/objective
 
@@ -62,6 +62,16 @@ Keep no more than four primary choices visible at once where practical; use conc
 - Unfinished secondary features do not compete with the event loop or claim unsupported behavior.
 - Configured session gates remain ahead of protected navigation.
 - No out-of-scope system is changed.
+
+### Acceptance disposition — 2026-07-14
+
+| Criterion | Disposition | Evidence |
+|---|---|---|
+| Identify/open next event within ten seconds | PARTIAL/CONDITIONAL | Home hero and exact-event action passed configured browser proof; timed first-time participant test is `NOT RUN`. |
+| Same-ID detail and correct Back from Home/Calendar/Create | COMPLETE | Browser journey and route contracts; commits `1bc3421`, `89d8720`; root 70/70 and app 58/58 at `88d0ed9`. |
+| Secondary features do not make unsupported claims | COMPLETE | All five destinations are implemented; reminder/push copy was removed or bounded honestly. |
+| Session gates precede protected navigation | COMPLETE | Configured signed-out/direct-route isolation plus four isolated sessions. |
+| No out-of-scope system changed | COMPLETE | Local-only campaign record and clean scoped commits; no hosted mutation. |
 
 ## Validation commands/evidence
 
