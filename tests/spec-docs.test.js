@@ -182,13 +182,15 @@ test('OPORD index resolves dependencies and covers the full engineering scope', 
   ]) assert.match(content, new RegExp(domain, 'i'), `coverage matrix missing ${domain}`);
 });
 
-test('OPORD evidence dispositions stay reconciled with the configured local proof boundary', () => {
+test('OPORD evidence dispositions stay reconciled with the configured staging proof boundary', () => {
   const opordDir = path.join(root, 'docs/opords');
   const files = fs.readdirSync(opordDir).filter((file) => /^\d{3}-[a-z0-9-]+\.md$/.test(file));
   const index = fs.readFileSync(path.join(opordDir, 'README.md'), 'utf8');
 
-  assert.match(index, /## 2026-07-14 evidence disposition/);
-  assert.match(index, /substantive lint[\s\S]*29376063946[\s\S]*12f760d[\s\S]*administrator-required checks `NOT RUN`/i);
+  assert.match(index, /## 2026-07-15 evidence disposition/);
+  assert.match(index, /substantive lint[\s\S]*29451842237[\s\S]*3cf45367[\s\S]*administrator-required checks remain unconfigured/i);
+  assert.match(index, /Dedicated staging `vkogznsfthirhxkqysza`[\s\S]*synthetic owner\/member\/outsider RLS/i);
+  assert.match(index, /Hosted staging release and exact-deploy rollback pass/i);
   assert.match(index, /Physical iOS\/Android.+NOT RUN/i);
   assert.doesNotMatch(index, /Docker is unavailable|local Supabase stack has not been exercised/i);
 

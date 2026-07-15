@@ -1,7 +1,7 @@
 # OPORD 010 — Reminders and In-App Notifications
 
 ## Status
-LOCAL COMPLETE / CONDITIONAL — recipient-scoped in-app updates and the per-user event reminder preference are implemented and proven against loopback Supabase. Push/email/SMS remain excluded; hosted and physical-device evidence is conditional.
+STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL — dedicated hosted staging persists the member reminder and produces seven recipient-scoped in-app notifications across the synthetic family flow. Push/email/SMS remain excluded; physical-device and real-account observation remain open.
 
 ## Situation and evidence
 Dead transient reminder controls/state were removed because no reminder scheduling service exists. Commit `c612a75` adds privacy-safe database-generated per-recipient updates for event, RSVP, comment, and media activity. The current implementation reuses the existing `loopedin_reminder_drafts` table and self-user/event-member RLS for one fixed, truthful `Morning of event` preference; disabling deletes that user's row. Configured browser sessions proved separate unread counts, exact-event navigation, mark-all-read, preference reload persistence, and recoverable writes without claiming scheduled delivery.
@@ -70,7 +70,7 @@ Also run:
 The browser harness expects an explicitly loopback-configured static export at the supplied URL. Substantive ESLint is required; no placeholder lint claim remains.
 
 ### Conditional-staging/mobile-web/human
-Loopback RLS/two-user checks pass. Hosted RLS, iOS Safari/Android Chrome, assistive technology, and human tests are currently `NOT RUN`. Notifications API and service-worker delivery remain deferred.
+Loopback RLS/two-user checks and isolated hosted reminder/seven-notification checks pass. iOS Safari/Android Chrome, assistive technology, real-account, and human tests are currently `NOT RUN`. Notifications API and service-worker delivery remain deferred.
 
 ## Stop conditions/authorization limits
 Stop before Notifications API, service-worker, push/device-token work, background services, remote jobs, migrations/policies, credentials, new packages, or a notification-settings center.
@@ -79,4 +79,4 @@ Stop before Notifications API, service-worker, push/device-token work, backgroun
 Misleading delivery language, stale unread counts, deleted-event links, timezone ambiguity, and notification overload. Push delivery remains a separately scoped mission.
 
 ## Definition of done
-Met locally. The narrow persisted reminder and in-app read loop passes service, RLS, configured 390px failure/retry, reload/deep-link, focus, target-size, and no-overflow checks. Hosted/physical evidence and actual push/email delivery are not claimed.
+Met locally and for isolated hosted persistence/generation. The narrow reminder/in-app loop passes service, RLS, configured 390px failure/retry, reload/deep-link, focus, target-size, no-overflow, and hosted synthetic counts. Physical/real-account evidence and push/email delivery are not claimed.

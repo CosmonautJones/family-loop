@@ -2,7 +2,7 @@
 
 ## Status
 
-LOCAL COMPLETE / CONDITIONAL — the minimum family and invitation lifecycle is implemented and proven against loopback Supabase; hosted policy state and production delivery remain unverified.
+STAGING SYNTHETIC COMPLETE / DELIVERY CONDITIONAL — dedicated hosted staging proves entitled family creation, two live email-bound invitation acceptances, owner/member restrictions, outsider match/accept/read/write denial, and zero cleanup residue. Real invitation email delivery is not implemented, no `admin` role exists, and real-account/production proof remains open.
 
 ## Situation and evidence
 
@@ -75,7 +75,7 @@ Creation and invitations must state the group name, inviter, joining impact, and
 | Nonmember direct-ID denial across protected data | COMPLETE LOCALLY | Authenticated outsider browser route plus family/media RLS matrices. |
 | Existing event and no-family gates truthful | COMPLETE | Full browser lifecycle and root/app regressions. |
 
-Hosted migration state and production invitation delivery are `NOT RUN`; they are release gates, not local acceptance evidence.
+Dedicated hosted migration/RLS and synthetic invitation acceptance/denial are `PASS`. Product-sent invitation email, a distinct `admin` role, real recipients, and production delivery remain `NOT RUN`.
 
 ## Validation commands/evidence
 
@@ -96,7 +96,7 @@ git status --short
 
 - RLS policy tests in an approved database environment.
 - Multi-user matrix covering owner/member/invitee/nonmember, atomic-create failure, wrong account, expiry, replay, duplicate, revoke, removal, last-owner denial, transfer race, escalation, and direct-ID access.
-- Live two-user/RLS: `NOT RUN — safe environment unavailable` until approved.
+- Live hosted multi-user/RLS: `PASS` for isolated `.invalid` owner/two-member/outsider staging users with exact cleanup; real-user invitation delivery remains `NOT RUN`.
 - Mobile-web browser/human tests recorded separately; lint remains placeholder unless changed.
 
 ## Stop conditions/authorization limits

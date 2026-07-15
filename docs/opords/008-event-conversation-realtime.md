@@ -1,7 +1,7 @@
 # OPORD 008 — Event conversation realtime
 
 ## Status
-COMPLETE LOCALLY / CONDITIONAL — event-scoped realtime delivery, reconnect convergence, RLS isolation, and cleanup are implemented and proven against loopback Supabase. Hosted and physical-device evidence remains external.
+STAGING SYNTHETIC COMPLETE / DEVICE CONDITIONAL — local reconnect convergence remains complete, and hardened hosted staging proves two comments, exact-event Postgres Changes delivery after a bounded post-subscribe stabilization, outsider denial, and zero cleanup residue. Physical devices, long-outage hosted behavior, and real-account observation remain open.
 
 ## Situation and evidence
 Event-keyed Query reads/sends and exact-key refetch are durable in local and Supabase modes. The open Event Detail now owns one exact-event subscription. Database changes and every successful subscription/reconnection invalidate only `queryKeys.messages(eventId)` with `exact: true`; the ordered server list remains authoritative, so realtime never inserts a second UI record. Route, event, and session teardown removes the channel and deactivates late callbacks.
@@ -50,7 +50,7 @@ New messages must appear without stealing focus, moving the composer unexpectedl
 | Reconnect convergence and cleanup | COMPLETE LOCALLY | Realtime-only outage missed one comment, container recovery resubscribed/refetched it once, route switch was inert, deterministic teardown removed one channel, and final `realtime.subscription` count was zero. |
 | Send/pending/draft/RSVP failure behavior | COMPLETE LOCALLY | M3 fix loops and current root/app regressions. |
 | Configured failures never render fixtures | COMPLETE | Adopted service/session boundary and configured error gates. |
-| Live claims require recorded evidence | COMPLETE | `tests/supabase-realtime-e2e.mjs`, `tests/browser-realtime-e2e.mjs`, and `docs/runbooks/local-realtime-convergence.md`; hosted claims remain open. |
+| Live claims require recorded evidence | COMPLETE THROUGH SYNTHETIC STAGING | Local evidence plus hosted run `qa-mrml3fsl-a08c4f8e`; physical devices, real accounts, and long hosted outages remain open. |
 
 ## Validation commands/evidence
 ### Always-local
@@ -65,13 +65,13 @@ git status --short
 Run the deterministic subscription test plus both loopback realtime harnesses in `docs/runbooks/local-realtime-convergence.md`. Substantive lint is active and must pass with zero warnings.
 
 ### Conditional-staging/mobile-web/human
-The loopback two-user transcript is complete. Hosted two-user, physical mobile browser, assistive-technology, and human tests remain `NOT RUN`.
+The loopback transcript and isolated hosted synthetic multi-user/exact-event transcript are complete. Physical mobile browser, assistive-technology, real-account, and human tests remain `NOT RUN`.
 
 ## Stop conditions/authorization limits
 Stop before credentials, remote deploy, publication/RLS/migration changes, new packages, destructive operations, or any need to broaden beyond event messages. Stop if a safe two-user environment is unavailable; report live acceptance as NOT RUN.
 
 ## Risks/follow-ups
-Hosted Realtime/RLS parity, physical-device battery/network behavior, and long outage behavior remain unproven. Presence and richer chat remain separate follow-ups.
+Hosted Realtime/RLS parity is proven for the bounded synthetic flow after a two-second post-subscribe stabilization. Physical-device battery/network behavior and long hosted outages remain unproven; presence and richer chat remain separate follow-ups.
 
 ## Definition of done
 All acceptance criteria and declared checks pass, live evidence is honest, diff is narrow, review log is updated, and risks/NOT RUN items are recorded.

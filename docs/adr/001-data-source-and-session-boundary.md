@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted and adopted for the local and configured-Supabase runtime paths. Hosted deployment and operational acceptance remain outside this ADR and are not proven.
+Accepted and adopted for local, loopback Supabase, and dedicated hosted-staging runtime paths. Production operational acceptance remains outside this ADR and is not inferred from staging.
 
 ## Context
 
-The original M0 context was fixture-heavy. The current runtime uses Query-owned service data for authenticated family, invitation, event, RSVP, comment, media, update, and memory paths; Zustand owns active-family UI selection only. Loopback Supabase migrations, Auth, RLS, private Storage, and multi-session browser behavior are verified locally. No hosted deployment is verified.
+The original M0 context was fixture-heavy. The current runtime uses Query-owned service data for authenticated family, invitation, event, RSVP, comment, media, update, and memory paths; Zustand owns active-family UI selection only. Loopback Supabase remains the broad browser-development proof. Dedicated hosted staging now separately verifies exact migrations, Auth redirect/recovery dispatch, synthetic multi-user RLS, private Storage, notifications/reminders, Realtime, and zero cleanup residue on the runtime-configured immutable web release.
 
 ## Problem
 
@@ -42,13 +42,13 @@ Incremental persistence could create competing sources of truth or silently show
 ## Assumptions and inferences
 
 - **Assumption:** Existing service/schema code is the intended starting point and may need narrow corrections.
-- **Verified locally:** Authenticated RLS with the publishable/anonymous client key passed owner/member/outsider lifecycle matrices on loopback Supabase. Hosted policy state remains unverified.
+- **Verified locally and synthetically on hosted staging:** Authenticated RLS with the publishable client key passed owner/member/outsider family/invitation/event/comment/media matrices. Real-account, production, physical-device, telemetry, mail-delivery, and restore evidence remain separate.
 - **Inference:** The event backbone before thread/media/reminder/memory slices is the lowest-risk order.
 - **Inference:** Memories remain event-derived absent a separate durable-memory requirement.
 
 ## Non-decisions
 
-This ADR does not choose or authorize a production project, deployment workflow, secrets process, recovery-email configuration, push delivery system, billing, or a standalone memories model. Local RLS/private-Storage evidence is recorded in the review log; realtime subscriptions and every hosted operational claim remain outside the adopted boundary.
+This ADR does not authorize a production project, production promotion, secrets process, custom mail provider, push delivery system, billing, or a standalone memories model. Hosted operational evidence is recorded in the release/runbook ledger and remains dated environment evidence, not part of the architectural decision itself.
 
 ## Validation
 

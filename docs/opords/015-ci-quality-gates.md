@@ -1,10 +1,10 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-PARTIAL/CONDITIONAL — substantive lint, repository CI definitions, local clean/seeded-failure proofs, repeated clean GitHub-hosted pull-request runs, and one exact-event-head immutable release-artifact build/upload/download verification are complete. Hosted seeded-failure proofs and administrator-required branch checks remain `NOT RUN`.
+HOSTED CLEAN COMPLETE / ENFORCEMENT CONDITIONAL — exact-head run `29451842237` passed application, security/dependency, disposable migration apply/lint, and release-artifact jobs on `3cf45367…`; downloaded digest `7a18b2f5…fc3c8c` reverified before staging upload. Hosted seeded-failure proofs and administrator-required private-repository checks remain `NOT RUN`.
 
 ## Situation and evidence
-Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. Draft PR #1 run `29376063946` proves the three stable checks on commit `12f760d`, including a disposable runner migration reset/apply/lint. Branch enforcement is not configured or inferred from that run.
+Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. PR #1 run `29451842237` proves all four jobs on `3cf45367…`, including disposable migration reset/apply/lint and exact artifact retention. Branch enforcement is not configured or inferred from that run.
 
 ## Mission/objective
 Implement a required pull-request CI workflow with substantive lint, root/app tests, TypeScript, harness, secret/dependency checks, and deterministic migration validation before code can merge.
@@ -46,11 +46,11 @@ CI must preserve the accessibility and large-text regressions defined by OPORD 0
 | Criterion | Disposition | Evidence |
 |---|---|---|
 | Substantive reproducible lint | COMPLETE LOCALLY | Exact `eslint@9.39.5` and `eslint-config-expo@9.2.0`; flat config; zero-warning command; clean pass plus seeded unused-value exit 1. User explicitly approved the dependencies. |
-| CI install/test/type/lint/harness/secret/dependency/migration jobs | HOSTED PASS | Draft PR #1 run `29376063946` passed `Application quality` (`87229668121`), `Security and dependencies` (`87229668152`), and `Migration integrity` (`87229668163`) on commit `12f760d`; the latter completed disposable reset/apply/lint. |
+| CI install/test/type/lint/harness/secret/dependency/migration jobs | HOSTED PASS | PR #1 run `29451842237` passed application, security/dependency, migration integrity, and release artifact jobs on exact commit `3cf45367…`. |
 | Least permissions/pinned tools/deterministic caches/no secrets | COMPLETE BY STATIC/LOCAL REVIEW | `contents: read`, concurrency cancellation, Node 22, exact Supabase CLI 2.109.0, immutable action SHAs, app-lock cache key, no secret references, and bounded timeouts. |
 | Seeded violations fail stable required checks | COMPLETE LOCALLY / HOSTED NOT RUN | Lint, test, synthetic secret assignment, historical migration edit, and out-of-order migration each exited 1; every seed was removed and clean reruns passed. No disposable hosted failure branch was created. |
-| No unauthorized release/remote/branch mutation | COMPLETE | The authorized branch push and draft PR changed repository source/metadata only. No release, deploy, branch-protection, hosted Supabase, or repository-setting mutation occurred. |
-| Exact-head release artifact is built once and retained for promotion | HOSTED PASS | Run `29382987732` passed all four jobs on `9ef55479fb4089e6b610a9b06948399b5ca59362`. Artifact `loopedin-web-9ef55479fb4089e6b610a9b06948399b5ca59362` was downloaded and independently matched that source commit and internal digest `f3906aeaf1620bab3fd457a360d016c6448546b04ff7a7da9ad66dcef3bbc4ec`; the upload-archive digest was `4724f43f8e0d7130d6edcbf162292074ba9fbac2efe896538f677f425f58b1ae`. No secret, provider CLI, migration command, or deploy step ran. |
+| No unauthorized release/remote/branch mutation | COMPLETE | Subsequent hosted Supabase/Netlify work was explicitly authorized, exact-target bounded, and recorded; branch protection and unrelated provider resources remain unchanged. |
+| Exact-head release artifact is built once and retained for promotion | HOSTED PASS | Run `29451842237` built artifact `loopedin-web-3cf45367dc858e5c58bf8b72ae28e263b310c6b4`; downloaded source and internal digest `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c` reverified before immutable staging upload. |
 
 ## Validation commands/evidence
 ### Always-local

@@ -1,10 +1,10 @@
 # OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
-LOCAL COMPLETE / CONDITIONAL — loopback authorization/storage attack matrices, a user-safe Supabase error boundary, redaction tests, and a local incident runbook/tabletop are complete. Named production ownership, telemetry, hosted enforcement, retention decisions, and external assessment remain `NOT RUN`.
+HOSTED ENFORCEMENT PARTIAL / OBSERVABILITY CONDITIONAL — dedicated staging now passes live-invite, database, role, and private-media outsider denial with hardened secret redaction and independent GREEN review. Privacy-safe telemetry/availability alerts, named production ownership, retention decisions, and external assessment remain `NOT RUN`.
 
 ## Situation and evidence
-Loopback Supabase family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; signed media URLs and update payloads are scoped/private. The configured app gates protected content. OPORD 012 then reproduced raw `Failed to fetch` copy during a safe loopback outage. The adapter now maps rejected transport promises and backend errors to calm recovery categories, and `docs/runbooks/security-incident-response.md` records the local response baseline and tabletop. Production telemetry, named hosted ownership, and external assessment remain unevidenced.
+Loopback and dedicated hosted synthetic family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; generated harness credentials/tokens are redacted on failure; signed media URLs and update payloads are scoped/private. The configured app gates protected content and maps backend failures to calm categories. Production telemetry, named hosted ownership, retention, and external assessment remain unevidenced.
 
 ## Mission/objective
 Create a minimal, privacy-preserving verification and response baseline for authorization failures, client errors, and suspected data exposure without deploying monitoring infrastructure.
@@ -63,13 +63,13 @@ rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opord
 Focused executable redaction coverage includes a configured `sendMessage` transport rejection. The OPORD 012 390x844 outage was the reproducer; the local tabletop and recovery contract are recorded in `docs/runbooks/security-incident-response.md`. Inspect secret-scan matches rather than treating any match as proof.
 
 ### Conditional-staging/mobile-web/human
-Remote/live RLS, production telemetry, and external security assessment are NOT RUN unless separately approved.
+Dedicated staging live RLS/Storage denial is `PASS`; production telemetry and external security assessment remain `NOT RUN` unless separately approved.
 
 ## Stop conditions/authorization limits
 Stop on any suspected real exposure and escalate; do not inspect more data, rotate credentials, change remote policy, notify users, or deploy containment without incident-owner authorization. Stop before vendors/dependencies.
 
 ## Risks/follow-ups
-False confidence from local-only evidence, overcollection, missing physical-browser failures, and unnamed hosted incident ownership. Production monitoring, retention, and external assessment are separate decisions.
+False confidence from synthetic-only hosted evidence, overcollection, missing physical-browser failures, and unnamed hosted incident ownership. Production monitoring, retention, and external assessment are separate decisions.
 
 ## Definition of done
 Minimal redaction tests and runbook are reviewable, tabletop evidence exists, live limitations are explicit, and no operational or remote action was taken without approval.

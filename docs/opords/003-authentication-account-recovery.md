@@ -2,14 +2,14 @@
 
 ## Status
 
-LOCAL COMPLETE / EXTERNAL CONDITIONAL — invite-first signup/sign-in, session restore/logout, protected-content gating, and enumeration-safe password recovery are implemented and proven against loopback Supabase Auth and Mailpit. Hosted redirects, production email delivery/rate limits, and physical-browser checks remain `NOT RUN`.
+STAGING PARTIAL / EXTERNAL CONDITIONAL — local Auth/recovery remains complete; dedicated hosted Auth now has exact staging/immutable/future-production redirects and logged recovery dispatch to the approved owner address. User-observed password replacement, custom SMTP/rate limits, invitation email delivery, and physical-browser checks remain `NOT RUN`.
 
 ## Situation and evidence
 
 - Configured builds restore Supabase sessions and gate protected content; unconfigured builds enter deterministic prototype mode (`docs/architecture.md:31-40`).
 - The shell explicitly handles restoring, signed-out/error, group loading/error, and no-group states (`app/src/navigation/AppShell.tsx:29-41`).
 - Loopback Supabase browser sessions proved invite-bound signup for Maya and Jordan, owner and outsider sign-in, session restoration, reload persistence, and protected direct-route denial.
-- A disposable loopback account proved neutral known/unknown requests, local email receipt, valid reset, old/new password behavior, replay/invalid denial, reload, and cleanup. Production email delivery, hosted redirect origins, and provider rate limits remain unverified.
+- A disposable loopback account proved the complete reset lifecycle. Hosted staging now proves exact redirect origins and default-sender recovery dispatch to the approved owner, while user-observed replacement, custom SMTP, production delivery, and provider rate limits remain unverified.
 
 ## Mission/objective
 
@@ -95,7 +95,7 @@ git status --short
 ### Conditional-staging/mobile-web/human
 
 - Safe-environment matrix: valid/invalid/expired/wrong-account invite; new/existing account; known/unknown email neutral recovery; expired/reused reset; offline failure; bootstrap retry; session restore/sign-out.
-- Hosted recovery: `NOT RUN — named safe hosted environment unavailable` until prerequisites exist.
+- Hosted recovery request/dispatch: `PASS` on dedicated staging. User-observed link/password replacement: `NOT RUN`; custom SMTP and physical-browser evidence remain open.
 - HTTPS browser-link tests: report iOS Safari and Android Chrome results honestly, including existing/new tab, Back/history, deep-link, and reload behavior.
 
 ## Stop conditions/authorization limits

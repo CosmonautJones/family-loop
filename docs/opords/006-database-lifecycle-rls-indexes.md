@@ -2,12 +2,12 @@
 
 ## Status
 
-LOCAL COMPLETE / EXTERNAL CONDITIONAL — forward migrations, lifecycle constraints, loopback RLS/direct-ID matrices, and rollback-safe representative query plans pass. No speculative index was retained; hosted migration and production-cardinality evidence remain `NOT RUN`.
+STAGING SYNTHETIC COMPLETE / PRODUCTION CONDITIONAL — all six reviewed forward migrations match dedicated hosted staging, every LoopedIn table has RLS, private Storage is enforced, protected RPC anonymous grants are removed, and the owner/member/outsider matrix passes. Production-cardinality plans and production deployment remain `NOT RUN`.
 
 ## Situation and evidence
 
 - The configured adapter already references group-scoped events, RSVPs, event messages, media, and notifications (`docs/architecture.md:50-56`).
-- Five forward migrations apply cleanly to loopback Supabase. Database lint and real Auth-session owner/member/outsider family/media matrices pass; hosted deployment remains absent.
+- Six forward migrations apply cleanly locally and match dedicated hosted staging. Database lint and Auth-session owner/member/outsider family/media matrices pass locally and synthetically on hosted staging; production deployment remains absent.
 - Event messages are exact-event scoped and deterministic in local contract tests (`docs/architecture.md:41-46`; `evals/review-log.md:3-12`).
 - The product boundary requires private group context (`docs/architecture.md:57-61`).
 - Inference: lifecycle cascades, uniqueness, query indexes, and policy coverage must be verified against actual repository SQL and query shapes before proposing additive changes.
@@ -92,7 +92,7 @@ git status --short
 - Migration apply/reset and policy tests in approved disposable environment only.
 - Query plans before/after with representative row counts.
 - Two-user CRUD/direct-ID matrix.
-- If Docker/safe remote remains unavailable: `NOT RUN` and do not claim acceptance completion.
+- If Docker/safe remote is unavailable for a future change: `NOT RUN` for that change and do not inherit this dated staging result.
 - Lint remains placeholder; browser/human UI tests are not database proof.
 
 ## Stop conditions/authorization limits
@@ -107,4 +107,4 @@ Stop before any remote apply, production connection, destructive DDL/DML, histor
 
 ## Definition of done
 
-Met for the local slice: the rollback-safe plan harness and existing migrations/RLS/two-user matrices pass, no speculative index or production change remains, and unresolved hosted deployment stays a separate conditional gate.
+Met for local and dedicated synthetic staging: rollback-safe plans, six migrations, RLS/private Storage, protected RPC grants, and multi-user denial pass. Production-cardinality evidence and production deployment remain conditional gates.

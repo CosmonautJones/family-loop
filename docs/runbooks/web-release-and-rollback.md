@@ -1,6 +1,6 @@
 # Web release and rollback
 
-This runbook proves the repository-local part of OPORD 016. It creates immutable Expo web artifacts from exact Git commits, promotes them through a digest-addressed local release store, serves host-neutral security/cache/SPA behavior on loopback, and rehearses rollback. It does not deploy, configure DNS/TLS, touch hosted Supabase, or claim staging/production evidence.
+This runbook defines the repository-local release controls and records their hosted staging application. It creates immutable Expo web artifacts from exact Git commits, promotes them through a digest-addressed local release store, serves host-neutral security/cache/SPA behavior on loopback, and rehearses rollback. The dated staging checkpoint below records separately authorized Netlify/Supabase work; production/custom-domain work is not inferred.
 
 CI now defines one exact-event-head artifact build/upload, and repository tooling can assemble those verified bytes into a target-neutral Netlify static publish envelope. The envelope path remains local/provider-neutral: no project is linked, no Function exists, and no deploy command or credential is used.
 
@@ -99,8 +99,8 @@ Before any hosted action, name dev/staging/production identifiers, host/DNS/TLS 
 ## Remaining external gates
 
 - Required-check enforcement and seeded hosted CI failures; clean hosted CI and exact artifact upload already pass for the candidate.
-- Published staging/production aliases, custom domain/DNS ownership, secret custody, release/rollback operators, and maintenance window.
-- Configured backend migrations/compatibility and authenticated core loop, monitoring, mail, backups/restore, and a real staging rollback.
+- Production/custom-domain alias, DNS ownership, named long-term release/rollback operators, and maintenance window.
+- Real-account configured core loop, monitoring, custom mail/invitation delivery, and hosted backups/restore.
 - Physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% zoom, and moderated older-adult use.
 
 No production approval is implied by the local rehearsal.
@@ -108,6 +108,13 @@ No production approval is implied by the local rehearsal.
 ## 2026-07-14 Netlify draft transport evidence
 
 - Dedicated site `loopedin-family` has ID `50ae6d6b-28ad-49c0-9654-c3a54899fcb5`. Draft deploy `6a56f0408614647fe35cf968` serves only at `https://6a56f0408614647fe35cf968--loopedin-family.netlify.app`; the production alias, custom domain, and Git link are absent.
+
+## 2026-07-15 hosted staging and rollback evidence
+
+- Exact-head run `29451842237` produced source `3cf45367dc858e5c58bf8b72ae28e263b310c6b4`, release `0.1.0-3cf45367dc85`, and artifact digest `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c`. The downloaded artifact and deployment envelope reverified before upload.
+- Immutable deploy `6a57fc726b558b21faf57459` is published at `https://loopedin-family.netlify.app` with external `loopedin-staging` Supabase config, exact-origin CSP, runtime `no-store`, immutable hashed assets, and no Netlify build/Function/Edge Function/Git link.
+- Rollback restored prior fixed deploy `6a57f034c398b8ce7dbe3fc8` and release `0.1.0-e52be53165a5`, then restored `6a57fc726b558b21faf57459` and release `0.1.0-3cf45367dc85`; HTTP 200 was verified after each alias change and no database reversal occurred.
+- Custom domain, production, real-account completion, telemetry, custom mail, backup/restore, and physical-device evidence remain open. The personal site was not changed.
 - The draft used exact source `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce` and artifact `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3` without a provider rebuild.
 - HTTPS, root shell, runtime config, browser/CDN `no-store`, exact configured-origin CSP, manifest-verified immutable hashed asset, missing-asset 404, release/environment headers, fragment-route reload, and signed-out Chrome console/network checks passed.
 - This is transport-only evidence. The draft did not prove hosted Supabase migrations, authenticated backend compatibility, family/trip/comment/photo/reminder/realtime/recovery flows, mail, backups/restore, telemetry, staging rollback, physical devices/assistive technology, production publication, or custom-domain behavior.
