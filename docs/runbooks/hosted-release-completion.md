@@ -1,5 +1,16 @@
 # Hosted release completion
 
+## Superseding hosted-staging checkpoint — 2026-07-15
+
+This checkpoint supersedes the inventory-only status below without deleting its historical evidence. The dedicated project and site are now mutated only as authorized; the quarantined Supabase project and the `travisjohnjones` Netlify site remain untouched.
+
+- Dedicated Supabase project `vkogznsfthirhxkqysza` records the repository's six ordered/checksummed forward migrations through `20260715123221_restrict_hosted_rpc_execute_grants`. Read-back shows every public LoopedIn table has RLS enabled, the media bucket is private, authenticated-only LoopedIn RPCs are not executable by `anon`, and only the two bounded invitation-preflight RPCs retain anonymous execution.
+- The real bootstrap state is one confirmed Auth identity/profile for Travis Jones, one `Jones Fam`, one membership with exactly one owner, and one consumed family-creation entitlement. A temporary validation event named `Testing` plus its owner RSVP also exists; it is test residue, not realistic starter content, and must be replaced before family handoff. There are no comments, media rows, or Storage objects yet.
+- Netlify deploy `6a56f0408614647fe35cf968` was restored unchanged to the dedicated site's staging alias at `https://loopedin-family.netlify.app` at `2026-07-15T20:00:24.333Z`. It remains exact source `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce`, release `0.1.0-5b957c51ddf1`, and artifact digest `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3`; no rebuild, Git link, custom domain, Function, or Edge Function was introduced.
+- The published alias rendered the signed-out configured app over HTTPS with `loopedin-staging · Connected`. Supabase Auth `site_url` is now exactly the staging alias, and the exact allow-list contains the staging alias, immutable deploy URL, and future `https://app.travisjohnjones.com`; the prior localhost Site URL and empty allow-list are superseded.
+- The hosted Forgot Password form sent the same enumeration-safe confirmation and Auth logs recorded a successful recovery request plus `mail.send` for the explicitly approved address. The user must still open the message and choose a private password; no recovery token or password is retained in evidence.
+- Custom SMTP remains absent, so this proves only staging delivery through Supabase's default sender. Production SMTP/provider custody, realistic starter content, multi-user invite acceptance, full hosted browser core loop, private-photo lifecycle, Realtime, telemetry, backup/restore, rollback rehearsal, physical devices/assistive technology, custom domain, and production promotion remain open.
+
 Audit date: 2026-07-14
 
 Branch inspected: `codex/family-loop-release-candidate`

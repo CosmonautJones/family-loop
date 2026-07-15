@@ -1433,6 +1433,24 @@ test('Supabase event cancellation fails closed for media and zero-row deletes', 
   assert.match(adapter, /The plan was not deleted/);
 });
 
+test('hosted RPC grants keep authenticated operations unavailable to anonymous callers', () => {
+  const migration = fs.readFileSync(
+    path.join(repoRoot, 'supabase', 'migrations', '20260715123221_restrict_hosted_rpc_execute_grants.sql'),
+    'utf8',
+  );
+  for (const signature of [
+    'loopedin_create_group\\(text, text, text, uuid\\)',
+    'loopedin_create_event\\(uuid, text, timestamptz, timestamptz, text, text, text, text, jsonb, text, uuid\\)',
+    'loopedin_send_event_message\\(uuid, text, uuid\\)',
+    'loopedin_begin_media_upload\\(uuid, text, text, text, text, text, text, text\\)',
+    'loopedin_accept_group_invite\\(text\\)',
+  ]) {
+    assert.match(migration, new RegExp(`revoke execute on function public\\.${signature} from anon;`));
+  }
+  assert.doesNotMatch(migration, /loopedin_validate_group_invite[\s\S]*?from anon/);
+  assert.doesNotMatch(migration, /loopedin_match_group_invite_email[\s\S]*?from anon/);
+});
+
 test('forward media migration persists an active-only, retryable object lifecycle', () => {
   const migrationsDir = path.join(repoRoot, 'supabase', 'migrations');
   const migrations = fs.readdirSync(migrationsDir).sort();

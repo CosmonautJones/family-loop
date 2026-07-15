@@ -77,6 +77,8 @@ The initial infrastructure migration already defines `loopedin_reminder_drafts` 
 
 The forward-only `20260714120000_loopedin_group_invitation_lifecycle.sql` migration adds entitled atomic family creation, hashed email-bound invitations, acceptance/decline/revoke, membership removal/leave, ownership transfer, and deferred exactly-one-owner enforcement while revoking generic family mutations. `20260714130000_loopedin_in_app_update_generation.sql` generates privacy-safe per-recipient update rows for material event changes, RSVP changes, comments, and activated media, excluding the actor and non-members. The local four-session database E2E passed; hosted migration and policy certification remain separately gated.
 
+The hosted project uses current Data API defaults that grant `anon` direct function execution even after a `PUBLIC` revoke. Forward migration `20260715123221_restrict_hosted_rpc_execute_grants.sql` removes that direct grant from authenticated-only LoopedIn RPCs. Anonymous execution remains limited to invitation validation and email matching, whose implementations disclose only bounded invitation context and enforce token/email checks.
+
 A rollback-safe 20-member, 100-event, 100-comment, 50-media plan harness measures the production event/message/media/RSVP/notification/reminder queries and membership helpers. Every path remained below 1 ms locally. An exploratory notification index benefited only an uncalled activity method and did not improve the live full-history notification query, so it was rejected and no migration remains. The full evidence and hosted limits are in `docs/runbooks/local-service-readiness-and-query-plans.md`.
 
 ## Product and implementation constraints
