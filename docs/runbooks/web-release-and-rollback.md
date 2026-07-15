@@ -67,7 +67,7 @@ The loopback server is an executable policy reference, not production hosting co
 | Surface | Required policy |
 |---|---|
 | TLS | HTTPS only; valid chain/name/renewal; redirect HTTP; add HSTS only after HTTPS and subdomain ownership are proven. |
-| CSP | Derive `connect-src` only from the validated exact runtime backend origin and its WebSocket equivalent; never use a wildcard. |
+| CSP | Derive `connect-src` only from the validated exact runtime backend origin and its WebSocket equivalent. Add that same validated origin to `img-src` so private signed media can render; retain self, data/blob images, and HTTPS images. Never use a wildcard or an unrelated HTTP origin. |
 | Runtime config | Serve `/runtime-config.json` outside the immutable artifact with `no-store`; protect changes with the same review/approval as promotion. It contains public client configuration only. |
 | HTML/manifest | `no-cache` so aliases and entrypoints revalidate after promotion or rollback. |
 | Hashed JS/fonts/assets | One year plus `immutable`; filenames must be content addressed. |

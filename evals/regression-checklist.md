@@ -292,6 +292,17 @@ Use this before considering a mission complete.
 - [x] Practical Chrome UI 200% zoom passes locally at effective 320/390/430 CSS pixels with real Auth roles and exact routes.
 - [ ] Physical phone browsers, VoiceOver/TalkBack, and moderated older-adult use remain `NOT RUN`.
 
+## Edge and Firefox configured core loop
+
+- [x] Installed Edge 150 and stock Firefox 151 run one read-only semantic matrix through native CDP and WebDriver BiDi respectively.
+- [x] Signed-out validation/recovery, owner core/session restore, member role safety, outsider denial, Back/deep-link/reload, notifications, invitation/export reachability, reminder/thread/gallery, and private signed-image rendering pass.
+- [x] 390/430 widths have no document/body overflow or clipped controls; visible controls are at least 48px in both dimensions; authenticated shells have exactly five tabs, one selected tab, and one main landmark.
+- [x] Both browser runs finish with zero console warnings/errors, failed requests, or app/backend HTTP errors.
+- [x] Browser failure evidence redacts URL query, fragment, and user information; generated matrix files contain no signed tokens or secret-looking values.
+- [x] Release CSP permits private images only from the exact validated runtime backend origin and does not add unrelated HTTP origins or wildcards.
+- [x] Exact source `31c74466e6faba2e9824cc5c7046c2fbfad5c269` rebuilt as three-file release `0.1.0-31c74466e6fa` with SHA-256 `a8c41774b3cb4bbedc8cc53eb14af95a3f23227d9627e9778df58b568c0ef740`; both engines reran against those bytes.
+- [ ] Safari, physical phone browsers, VoiceOver/TalkBack, physical software-keyboard behavior, and moderated older-adult testing remain `NOT RUN`.
+
 ## OPORD 005/006 local service and database hardening
 
 - [x] Configured adapter failures cross one non-sensitive service-error boundary; no fixture fallback or raw backend detail is introduced.

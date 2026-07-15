@@ -44,6 +44,16 @@ The final all-in-one result reported the exact flags above, three event IDs with
 
 The first glyph-level run exposed a real Calendar defect: the Yellowstone status chip painted beyond its otherwise-contained action row. Giving the agenda copy `flex: 1` and `minWidth: 0` restored containment; the 320/390/430 native-zoom sweep is the rendered regression. The optional `/favicon.ico` request remains a recorded P3 404 and is excluded from functional app/backend failure counts. Generated JSON and screenshots live under ignored `.codex/evidence/opord14-real-zoom/` and contain synthetic local-family content only.
 
+## Edge and Firefox configured follow-up — 2026-07-14
+
+One dependency-free semantic matrix now drives installed Edge 150.0.4078.65 through CDP and stock Firefox 151.0.1 through native WebDriver BiDi. Both browsers passed signed-out validation/recovery, owner session restore and complete core surfaces, member role-safe Family/Event Detail, outsider no-family/direct-route denial, exact-event Back/deep-link/reload, and 390/430 responsive checks. Authenticated surfaces retained one main landmark, five tabs, one selected tab, >=48px controls in both dimensions, and no overflow, console warning/error, failed request, or app/backend HTTP error.
+
+The first cross-browser run exposed a real release-server CSP defect: the validated loopback Supabase origin was allowed for API connections but not images, so both browsers blocked a private signed family photo. `img-src` now receives only that already validated runtime backend origin alongside the existing self/data/blob/HTTPS sources. Focused policy coverage proves an unrelated HTTP origin remains absent. Both browser reruns render the private image and are green; failure evidence strips URL queries, fragments, and user information before logging.
+
+Rendered Today, Event Detail, Memories, and Family screenshots at 390/430 show no browser-specific hierarchy, clipping, or control regression. Firefox's native thin scrollbar is the only visible engine difference. Safari and physical-device/assistive-technology gaps remain unchanged.
+
+The exact source was `31c74466e6faba2e9824cc5c7046c2fbfad5c269`. Its three-file release `0.1.0-31c74466e6fa` has SHA-256 `a8c41774b3cb4bbedc8cc53eb14af95a3f23227d9627e9778df58b568c0ef740`. Five matrices per browser passed, and independent review closed **GREEN** after three diagnostic/evidence hardening loops.
+
 ## Cleanup and retained baseline
 
 The disposable family, accounts, rows, private objects, and recovery account were removed. Realtime subscriptions returned to zero. The independent retained `family-browser-v1` verifier still passed exactly: 4 identities, 3 members, 3 trips, 6 messages, 6 RSVPs, 3 media rows, 38 notifications, 0 reminders, 3 Storage objects, and zero outsider residue.
