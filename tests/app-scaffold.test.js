@@ -934,7 +934,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   const signUpStart = adapter.indexOf('async signUp');
   const matchRpc = adapter.indexOf("rpc('loopedin_match_group_invite_email'", signUpStart);
   assert.ok(matchRpc > signUpStart && matchRpc < adapter.indexOf('supabase.auth.signUp', signUpStart));
-  assert.match(adapter.slice(matchRpc, adapter.indexOf('supabase.auth.signUp', signUpStart)), /target_token: token, target_email: email\.trim\(\)/);
+  assert.match(adapter.slice(matchRpc, adapter.indexOf('supabase.auth.signUp', signUpStart)), /target_token: invitationTokenToHex\(token\), target_email: email\.trim\(\)/);
   const authListener = adapter.slice(adapter.indexOf('onAuthStateChange(listener)'), adapter.indexOf('async refreshSession'));
   assert.match(authListener, /resolveWithFallback\(mapSession\(session\), sessionWithoutProfile\(session\)\)/);
   assert.doesNotMatch(authListener, /catch\([\s\S]*?listener\(null\)/);
@@ -1439,11 +1439,24 @@ test('hosted RPC grants keep authenticated operations unavailable to anonymous c
     'utf8',
   );
   for (const signature of [
+    'loopedin_abort_media_upload\\(uuid\\)',
+    'loopedin_accept_group_invite\\(text\\)',
+    'loopedin_activate_media\\(uuid\\)',
+    'loopedin_begin_media_upload\\(uuid, text, text, text, text, text, text, text\\)',
+    'loopedin_can_create_group\\(\\)',
+    'loopedin_claim_media_deletion\\(uuid\\)',
     'loopedin_create_group\\(text, text, text, uuid\\)',
     'loopedin_create_event\\(uuid, text, timestamptz, timestamptz, text, text, text, text, jsonb, text, uuid\\)',
+    'loopedin_create_group_invite\\(uuid, text, text\\)',
+    'loopedin_decline_group_invite\\(text\\)',
+    'loopedin_finalize_media_deletion\\(uuid\\)',
+    'loopedin_leave_group\\(uuid\\)',
+    'loopedin_list_group_invites\\(uuid\\)',
+    'loopedin_list_media_operations\\(uuid\\)',
+    'loopedin_remove_group_member\\(uuid, uuid\\)',
+    'loopedin_revoke_group_invite\\(uuid\\)',
     'loopedin_send_event_message\\(uuid, text, uuid\\)',
-    'loopedin_begin_media_upload\\(uuid, text, text, text, text, text, text, text\\)',
-    'loopedin_accept_group_invite\\(text\\)',
+    'loopedin_transfer_group_ownership\\(uuid, uuid\\)',
   ]) {
     assert.match(migration, new RegExp(`revoke execute on function public\\.${signature} from anon;`));
   }

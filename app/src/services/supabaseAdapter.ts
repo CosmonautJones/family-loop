@@ -462,7 +462,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const name = displayName.trim();
         if (!name || name.length > 80) throw userServiceError('Enter a display name between 1 and 80 characters.');
         const token = invitationTokenToHex(invitationToken);
-        const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: token, target_email: email.trim() });
+        const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: invitationTokenToHex(token), target_email: email.trim() });
         if (invitationError || !isReadyInvitationEmailMatch(invitation)) throw userServiceError('This invitation can’t be used. Ask the person who invited you for a new link.');
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
