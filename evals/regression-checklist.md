@@ -142,7 +142,7 @@
 - [x] GitHub-hosted clean run `29376063946` passed `Application quality`, `Security and dependencies`, and `Migration integrity` on commit `12f760d`, including disposable migration reset/apply/lint.
 - [ ] Hosted seeded-failure runs and administrator-required branch checks remain `NOT RUN`; no repository setting was changed.
 - [x] All CI jobs check out the same exact event head; release artifact waits for the three quality jobs, invokes the exact-commit build once, verifies source commit, emits digest/commit outputs, and uploads through immutable `actions/upload-artifact` without secrets, provider CLI, deploy, or remote database access.
-- [x] Hosted run `29382987732` passed all four jobs and its downloaded exact-head artifact independently matched commit `9ef55479fb4089e6b610a9b06948399b5ca59362` plus the trusted internal digest.
+- [x] Hosted run `29383816628` passed all four jobs and its downloaded exact-head artifact independently matched commit `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce` plus trusted digest `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3`.
 
 ## OPORD 012 resilience and capacity
 
@@ -178,8 +178,10 @@
 - [x] Exact artifact `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d` ran unchanged under distinct local-demo and loopback-Supabase IDs; config was external/no-store and exact backend origin drove CSP.
 - [x] Runtime-config rehearsal restored artifact plus overlay after invalid-config proof; final performance budgets remained green at 3,252/2,712/2,668 ms LCP and 178/115/94 ms longest task.
 - [ ] Identical artifact promotion and compatibility across distinct hosted backends remains `NOT RUN`; the loopback overlay used the same local Supabase stack as existing configured proof.
-- [x] Branch head `12f760d` has a green GitHub-hosted CI run (`29376063946`); that run did not build or promote the historical release artifact.
-- [ ] Named host/environments/operators, artifact-from-CI linkage, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
+- [x] GitHub run `29383816628` passed all four jobs for exact source `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce`; downloaded artifact digest `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3` verified independently.
+- [x] Dedicated site `loopedin-family` draft `6a56f0408614647fe35cf968` passed transport-only HTTPS/root/runtime no-store/exact CSP/hashed-cache/missing-404/release-environment/hash-reload/signed-out Chrome checks; production alias/custom domain/Git link are absent and `travisjohnjones` exact ID is unchanged.
+- [x] Read-only inventory distinguishes dedicated Supabase `vkogznsfthirhxkqysza` (`us-east-2`, healthy) from quarantined `lzscofbvecgpchokxhyb` (`us-west-2`); expected tables are not Data-API-visible, but migration history/emptiness is not inferred.
+- [ ] Configured Supabase migrations/backend/core loop, staging operators/rollback, SMTP, telemetry, backups/restore, physical phones/AT/human checks, published staging/production alias, custom domain, and production approval remain `NOT RUN`.
 - [x] Target-neutral Netlify publish-envelope builder/verifier requires trusted CI digest/commit inputs and rejects tampered/self-consistent untrusted bytes, duplicate/unsafe/unsupported entries, invalid identity/version/epoch, invalid/secret-like overlays, drifted `_headers`/`_redirects`, and partial output; preview and envelope share one runtime/CSP policy.
 - [x] Generated static envelope contains no Function/Edge Function, site/team link, install/build command, secret, or deploy action; runtime config is browser/CDN `no-store`, only manifest-verified hashed assets are immutable, shell/manifests revalidate, fragment deep links reload at `/`, and the lack of a catch-all preserves missing-asset 404s.
 

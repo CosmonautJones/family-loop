@@ -98,12 +98,20 @@ Before any hosted action, name dev/staging/production identifiers, host/DNS/TLS 
 
 ## Remaining external gates
 
-- GitHub-hosted green required checks tied to the candidate commit.
-- Named host, staging/production endpoints, DNS/TLS ownership, secret custody, release/rollback operators, and maintenance window.
-- Hosted header/TLS/cache/SPA verification, configured backend compatibility, monitoring, and a real staging promotion/rollback.
+- Required-check enforcement and seeded hosted CI failures; clean hosted CI and exact artifact upload already pass for the candidate.
+- Published staging/production aliases, custom domain/DNS ownership, secret custody, release/rollback operators, and maintenance window.
+- Configured backend migrations/compatibility and authenticated core loop, monitoring, mail, backups/restore, and a real staging rollback.
 - Physical iOS Safari and Android Chrome, VoiceOver/TalkBack, practical 200% zoom, and moderated older-adult use.
 
 No production approval is implied by the local rehearsal.
+
+## 2026-07-14 Netlify draft transport evidence
+
+- Dedicated site `loopedin-family` has ID `50ae6d6b-28ad-49c0-9654-c3a54899fcb5`. Draft deploy `6a56f0408614647fe35cf968` serves only at `https://6a56f0408614647fe35cf968--loopedin-family.netlify.app`; the production alias, custom domain, and Git link are absent.
+- The draft used exact source `5b957c51ddf127b30e6515c8b3d44fa20e46e1ce` and artifact `a6b6b282affa349de88ef25916577ea2c41de62da2b4c7433eec4e6a6eabb0a3` without a provider rebuild.
+- HTTPS, root shell, runtime config, browser/CDN `no-store`, exact configured-origin CSP, manifest-verified immutable hashed asset, missing-asset 404, release/environment headers, fragment-route reload, and signed-out Chrome console/network checks passed.
+- This is transport-only evidence. The draft did not prove hosted Supabase migrations, authenticated backend compatibility, family/trip/comment/photo/reminder/realtime/recovery flows, mail, backups/restore, telemetry, staging rollback, physical devices/assistive technology, production publication, or custom-domain behavior.
+- Protected personal site `travisjohnjones` retained exact ID `519f3aa3-c723-4b2a-b9dd-4761e7b0a8bf` and was unchanged.
 
 ## 2026-07-14 runtime-config evidence
 
