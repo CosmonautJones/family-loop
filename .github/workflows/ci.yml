@@ -13,6 +13,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-artifact:
+    name: Release artifact
+    needs: [application-quality, security-and-dependencies, migration-integrity]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      artifact_sha256: ${{ steps.release.outputs.artifact_sha256 }}
+      source_commit: ${{ steps.release.outputs.source_commit }}
+    steps:
+      - name: Check out exact event head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Use Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Build exact release artifact once
+        id: release
+        shell: pwsh
+        env:
+          SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          $artifact = Join-Path $env:RUNNER_TEMP 'loopedin-web-artifact'
+          ./scripts/build-web-release.ps1 -OutputPath $artifact -SourceRevision $env:SOURCE_REVISION
+          $manifest = Get-Content -Raw (Join-Path $artifact 'release-manifest.json') | ConvertFrom-Json
+          if ($manifest.sourceCommit -ne $env:SOURCE_REVISION) { throw 'Release artifact source commit does not match the event head.' }
+          "artifact_sha256=$($manifest.artifactSha256)" >> $env:GITHUB_OUTPUT
+          "source_commit=$($manifest.sourceCommit)" >> $env:GITHUB_OUTPUT
+          "### Release artifact`n- Commit: ``$($manifest.sourceCommit)```n- SHA-256: ``$($manifest.artifactSha256)``" >> $env:GITHUB_STEP_SUMMARY
+      - name: Upload exact release artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: loopedin-web-${{ steps.release.outputs.source_commit }}
+          path: ${{ runner.temp }}/loopedin-web-artifact
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
   application-quality:
     name: Application quality
     runs-on: ubuntu-latest
@@ -21,6 +62,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Use Node.js 22
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -54,6 +96,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - name: Use Node.js 22
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -75,6 +118,7 @@ jobs:
       - name: Check out repository history
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Use Node.js 22

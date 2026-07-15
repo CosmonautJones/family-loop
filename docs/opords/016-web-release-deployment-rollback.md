@@ -1,10 +1,10 @@
 # OPORD 016 — Web Release, Deployment, and Rollback
 
 ## Status
-PARTIAL/CONDITIONAL — reproducible environment-neutral artifacts, external validated runtime configuration, digest-addressed promotion, host-neutral security/cache/SPA policy, mobile-web candidate smoke, invalid-config fail-closed behavior, and artifact/config rollback are implemented and rehearsed on loopback. Hosted environments, TLS, backend compatibility, staging/production promotion, and manual production approval remain `NOT RUN`.
+PARTIAL/CONDITIONAL — reproducible environment-neutral artifacts, external validated runtime configuration, digest-addressed promotion, host-neutral security/cache/SPA policy, a target-neutral static Vercel deployment-envelope builder/verifier, mobile-web candidate smoke, invalid-config fail-closed behavior, and artifact/config rollback are implemented locally. CI defines one exact-head artifact build/upload, but its first hosted artifact execution, hosted environments, TLS, backend compatibility, staging/production promotion, and manual production approval remain `NOT RUN`.
 
 ## Situation and evidence
-The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. OPORD 015 now has one green hosted branch-head run (`29376063946` on `12f760d`), but required-check enforcement and hosted artifact construction remain open. Repository tooling builds an exact environment-neutral Git archive, promotes verified digest-addressed artifacts through an atomic local alias, serves a strict external public runtime overlay plus derived CSP/security/cache/SPA policy, and rehearses rollback. One exact candidate ran against a local-demo overlay and loopback-Supabase overlay without changing its digest. It does not show a hosted artifact build/promotion, remote Supabase deployment, TLS, or production approval.
+The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. GitHub-hosted application/security/migration checks are green through run `29381271843` on `02ae226`; required-check enforcement remains unavailable. Repository tooling builds an exact environment-neutral Git archive, promotes verified digest-addressed artifacts through an atomic local alias, and now assembles verified artifact bytes plus one reviewed public runtime overlay into a target-neutral Vercel static envelope. Preview and envelope use one shared validator/security-policy source; no Function, project link, secret, provider call, or deploy command is introduced. The first hosted artifact job and every hosted promotion remain unproven until observed.
 
 ## Mission/objective
 Implement a controlled dev-to-staging-to-production web release path with reproducible immutable artifacts, environment separation, frontend/backend compatibility gates, TLS/security headers, observable verification, and rehearsed artifact rollback.
@@ -48,7 +48,7 @@ Every candidate passes the 320/390/430 CSS-pixel mobile-web matrix, 200% zoom/re
 | Criterion | Disposition | Evidence |
 |---|---|---|
 | Distinct dev/staging/production identities/secrets | PARTIAL/CONDITIONAL | External overlays carry distinct validated IDs and only public configuration; candidate identity is environment-neutral. Local-demo and loopback-Supabase IDs passed, but no hosted environments/custodians are named. |
-| Same immutable artifact from green CI | LOCAL COMPLETE / CONDITIONAL | Exact commit `522aed7217ea` produced digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`; the same stored bytes ran under both overlays. Branch head `12f760d` passed hosted CI, but that run did not build or promote the historical artifact; hosted artifact linkage and staging promotion remain `NOT RUN`. |
+| Same immutable artifact from green CI | LOCAL COMPLETE / HOSTED PENDING | Exact commit `522aed7217ea` produced digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`; the same stored bytes ran under both overlays. CI now defines one exact-event-head build, manifest commit check, digest output, and pinned artifact upload. Focused local tests pass, but hosted artifact linkage is not claimed until that job completes; staging promotion remains `NOT RUN`. |
 | TLS/headers/cache/SPA/backend compatibility | PARTIAL/CONDITIONAL | Runtime config is `no-store`; exact backend origin drives CSP; unsafe config fails closed; immutable assets, revalidated entrypoints, extensionless fallback, and exact-event reload pass. TLS and hosted backend compatibility remain `NOT RUN`. |
 | Staging mobile/accessibility/core-loop gate | PARTIAL/CONDITIONAL | The promoted local candidate passes 320/390/430/1280, reduced motion, navigation, focus, deep-link/Back/reload, and 200% scale-proxy checks. This is not staging, physical-device, screen-reader, or moderated-human evidence. |
 | Rollback without destructive DB reversal | LOCAL COMPLETE / CONDITIONAL | The local alias and overlay moved baseline/local → candidate/local → candidate/loopback → invalid/fail-closed → baseline/local. Release/environment headers and policy were restored; no database reversal occurred. Staging authority remains `NOT RUN`. |
@@ -67,6 +67,15 @@ git status --short
 Build twice from the same green commit where tooling permits and compare manifests; inspect environment references without printing secrets; verify SPA fallback and cache/header configuration.
 
 Repository-local commands and the exact evidence procedure are in `docs/runbooks/web-release-and-rollback.md`.
+
+Build and validate a provider-neutral static deployment envelope only from a downloaded/verified artifact and a separately reviewed public overlay:
+
+```powershell
+node scripts/build-vercel-deployment-envelope.mjs --artifact <artifact-path> --runtime-config <runtime-config-path> --output <new-envelope-path> --expected-artifact-sha256 <trusted-ci-output> --expected-source-commit <trusted-ci-output>
+node scripts/verify-vercel-deployment-envelope.mjs --envelope <new-envelope-path> --expected-artifact-sha256 <trusted-ci-output> --expected-source-commit <trusted-ci-output>
+```
+
+These commands do not link or deploy a Vercel project. The expected digest and commit must come from the successful CI job/run, never from the downloaded manifest alone. Promotion must consume this verified envelope without rebuilding application bytes. Before any Vercel upload, verify a fresh approved project uses Framework Preset `Other`, no project-level build/install command, and root (`.`) output; inherited project settings are a stop condition.
 
 ### Conditional-staging/mobile-web/human
 With explicit authorization, deploy the immutable artifact to staging, verify TLS/headers/cache/fallback/backend compatibility, run real-phone iOS Safari and Android Chrome plus desktop smoke, rehearse rollback, then request separate production approval. Native builds, app stores, and EAS are out of scope.

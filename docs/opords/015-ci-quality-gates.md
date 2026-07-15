@@ -1,7 +1,7 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-PARTIAL/CONDITIONAL — substantive lint, repository CI definitions, local clean/seeded-failure proofs, and one clean GitHub-hosted pull-request run are complete. Hosted seeded-failure proofs and administrator-required branch checks remain `NOT RUN`.
+PARTIAL/CONDITIONAL — substantive lint, repository CI definitions, local clean/seeded-failure proofs, and repeated clean GitHub-hosted pull-request runs are complete. CI now also defines one exact-event-head immutable release-artifact build/upload with digest output and no deployment credentials or remote calls; its first hosted execution remains pending. Hosted seeded-failure proofs and administrator-required branch checks remain `NOT RUN`.
 
 ## Situation and evidence
 Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. Draft PR #1 run `29376063946` proves the three stable checks on commit `12f760d`, including a disposable runner migration reset/apply/lint. Branch enforcement is not configured or inferred from that run.
@@ -50,6 +50,7 @@ CI must preserve the accessibility and large-text regressions defined by OPORD 0
 | Least permissions/pinned tools/deterministic caches/no secrets | COMPLETE BY STATIC/LOCAL REVIEW | `contents: read`, concurrency cancellation, Node 22, exact Supabase CLI 2.109.0, immutable action SHAs, app-lock cache key, no secret references, and bounded timeouts. |
 | Seeded violations fail stable required checks | COMPLETE LOCALLY / HOSTED NOT RUN | Lint, test, synthetic secret assignment, historical migration edit, and out-of-order migration each exited 1; every seed was removed and clean reruns passed. No disposable hosted failure branch was created. |
 | No unauthorized release/remote/branch mutation | COMPLETE | The authorized branch push and draft PR changed repository source/metadata only. No release, deploy, branch-protection, hosted Supabase, or repository-setting mutation occurred. |
+| Exact-head release artifact is built once and retained for promotion | LOCAL COMPLETE / HOSTED PENDING | All four jobs check out `${{ github.event.pull_request.head.sha || github.sha }}`. `Release artifact` waits for application/security/migration success, invokes `build-web-release.ps1` once, verifies the manifest commit, publishes digest/commit outputs, and uploads the exact directory through pinned `actions/upload-artifact`. It has no secrets, provider CLI, migration command, or deploy step. Hosted execution is not claimed until a run completes. |
 
 ## Validation commands/evidence
 ### Always-local

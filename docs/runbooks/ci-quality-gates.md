@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-The workflow, local equivalents, and one clean GitHub-hosted pull-request run are implemented and observed. Draft PR #1 run `29376063946` passed all three stable checks on commit `12f760d`. No GitHub repository setting, deployment, or hosted Supabase resource was changed, so required-check enforcement and hosted seeded-failure proofs remain `NOT RUN`.
+The workflow, local equivalents, and repeated clean GitHub-hosted pull-request runs are implemented and observed. Draft PR #1 run `29381271843` passed the three established checks on commit `02ae226`. A fourth `Release artifact` job is now defined locally; its first hosted execution remains pending. No GitHub repository setting, deployment, or hosted Supabase resource was changed, so required-check enforcement and hosted seeded-failure proofs remain `NOT RUN`.
 
 ## Stable checks
 
@@ -13,6 +13,8 @@ The first authorized pull-request run passed these exact check names; require th
 - `Migration integrity`
 
 The workflow grants only `contents: read`, cancels stale same-ref runs, uses bounded timeouts, references no repository secrets, and does not deploy or mutate a remote database. Root tests deliberately have no `npm ci` step because the repository root has no lockfile or runtime dependencies. App installation and caching use `app/package-lock.json`.
+
+All four jobs check out the exact pull-request head SHA (or push SHA). `Release artifact` waits for the application, security, and migration jobs to succeed, then runs `build-web-release.ps1` once, verifies the manifest's source commit, publishes only the commit/digest as job outputs, and uploads that directory for 14 days through immutable `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02`. It has no secrets, provider CLI, migration command, deployment, or remote backend step. A later separately authorized deployment must download and verify these bytes against the trusted job outputs; it must not rebuild them.
 
 ## Pinned tool inventory
 

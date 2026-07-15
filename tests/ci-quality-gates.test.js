@@ -9,7 +9,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
 
 test('CI exposes stable least-privilege quality checks', () => {
   const workflow = fs.readFileSync(path.join(repoRoot, '.github', 'workflows', 'ci.yml'), 'utf8');
-  for (const name of ['Application quality', 'Security and dependencies', 'Migration integrity']) {
+  for (const name of ['Release artifact', 'Application quality', 'Security and dependencies', 'Migration integrity']) {
     assert.match(workflow, new RegExp(`name: ${name}`));
   }
   assert.match(workflow, /^permissions:\n  contents: read$/m);
@@ -17,7 +17,7 @@ test('CI exposes stable least-privilege quality checks', () => {
   assert.match(workflow, /working-directory: app\n[\s\S]*?npm run lint/);
   assert.equal(workflow.match(/run: npm ci/g)?.length, 1);
   assert.match(workflow, /npm audit --package-lock-only --audit-level=high/);
-  assert.equal(workflow.match(/persist-credentials: false/g)?.length, 3);
+  assert.equal(workflow.match(/persist-credentials: false/g)?.length, 4);
   assert.match(workflow, /check:secrets/);
   assert.match(workflow, /check:migrations/);
   assert.match(workflow, /supabase db reset --local/);

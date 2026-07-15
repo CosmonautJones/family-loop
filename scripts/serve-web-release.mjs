@@ -1,6 +1,7 @@
 import { createReadStream, readFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { parseRuntimeConfig, securityHeaders } from './web-release-policy.mjs';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 2) {
@@ -41,55 +42,12 @@ function currentRelease() {
 }
 
 function validatedRuntimeConfig() {
-  const value = JSON.parse(readFileSync(runtimeConfigPath, 'utf8'));
-  if (!value || Array.isArray(value) || typeof value !== 'object') throw new Error('Runtime config is not an object.');
-  const allowed = new Set(['schemaVersion', 'environmentId', 'dataMode', 'supabaseUrl', 'supabasePublishableKey']);
-  if (Object.keys(value).some((key) => !allowed.has(key))) throw new Error('Runtime config has an unsupported field.');
-  if (value.schemaVersion !== 1 || !/^[a-z0-9][a-z0-9-]{0,62}$/.test(value.environmentId ?? '')) throw new Error('Runtime config identity is invalid.');
-  if (value.dataMode === 'local') {
-    if ('supabaseUrl' in value || 'supabasePublishableKey' in value) throw new Error('Local config contains backend fields.');
-    return value;
-  }
-  if (value.dataMode !== 'supabase' || typeof value.supabaseUrl !== 'string' || typeof value.supabasePublishableKey !== 'string') {
-    throw new Error('Runtime config mode is invalid.');
-  }
-  const url = new URL(value.supabaseUrl);
-  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-  if (!(url.protocol === 'https:' || (url.protocol === 'http:' && loopback)) || url.username || url.password || url.search || url.hash || (url.pathname !== '/' && url.pathname !== '')) {
-    throw new Error('Runtime config URL is invalid.');
-  }
-  const key = value.supabasePublishableKey;
-  let publishable = key.startsWith('sb_publishable_') && key.length >= 24;
-  if (!publishable && key.split('.').length === 3) {
-    try { publishable = JSON.parse(Buffer.from(key.split('.')[1], 'base64url').toString('utf8')).role === 'anon'; } catch { publishable = false; }
-  }
-  if (!publishable || key.startsWith('sb_secret_') || /service[_-]?role/i.test(key)) throw new Error('Runtime config key is invalid.');
-  return value;
+  return parseRuntimeConfig(JSON.parse(readFileSync(runtimeConfigPath, 'utf8')));
 }
 
 function runtimeState() {
   try { return { config: validatedRuntimeConfig(), valid: true }; }
   catch { return { config: null, valid: false }; }
-}
-
-function securityHeaders(releaseId, config) {
-  const connectSources = ["'self'"];
-  const imageSources = ["'self'", 'data:', 'blob:', 'https:'];
-  if (config?.dataMode === 'supabase') {
-    const backend = new URL(config.supabaseUrl);
-    connectSources.push(backend.origin, `${backend.protocol === 'https:' ? 'wss:' : 'ws:'}//${backend.host}`);
-    imageSources.push(backend.origin);
-  }
-  return {
-    'Content-Security-Policy': `default-src 'self'; base-uri 'self'; connect-src ${connectSources.join(' ')}; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; img-src ${imageSources.join(' ')}; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'`,
-    'Cross-Origin-Opener-Policy': 'same-origin',
-    'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'X-LoopedIn-Release': releaseId,
-    'X-LoopedIn-Environment': config?.environmentId ?? 'unavailable',
-  };
 }
 
 const server = createServer((request, response) => {
