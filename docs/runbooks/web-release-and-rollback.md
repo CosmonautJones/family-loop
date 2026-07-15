@@ -2,7 +2,7 @@
 
 This runbook proves the repository-local part of OPORD 016. It creates immutable Expo web artifacts from exact Git commits, promotes them through a digest-addressed local release store, serves host-neutral security/cache/SPA behavior on loopback, and rehearses rollback. It does not deploy, configure DNS/TLS, touch hosted Supabase, or claim staging/production evidence.
 
-CI now defines one exact-event-head artifact build/upload, and repository tooling can assemble those verified bytes into a target-neutral Vercel static deployment envelope. The envelope path remains local/provider-neutral: no project is linked, no Function exists, and no deploy command or credential is used.
+CI now defines one exact-event-head artifact build/upload, and repository tooling can assemble those verified bytes into a target-neutral Netlify static publish envelope. The envelope path remains local/provider-neutral: no project is linked, no Function exists, and no deploy command or credential is used.
 
 ## Release model
 
@@ -12,7 +12,7 @@ The build operates on `git archive` output for the requested commit, runs `npm c
 
 Before `App` renders or a service/client is created, the web root fetches `/runtime-config.json` with `no-store` and validates its exact schema. `local` accepts no backend fields. `supabase` requires an HTTPS URL (HTTP only for loopback) and a publishable/anonymous key; unknown fields, unsafe IDs/URLs, and secret/service-role-looking keys fail closed to an accessible unavailable state. The config is never logged. Native and local development retain their explicit compile-environment path.
 
-The loopback server and Vercel envelope import the same dependency-free `web-release-policy.mjs`, so runtime validation and derived CSP cannot silently diverge. The envelope verifier separately checks the release manifest, sorted paths, byte counts, file hashes, canonical artifact digest, unsupported filesystem entries, public overlay, generated Vercel policy, and the overlay/config digests before promotion.
+The loopback server and Netlify envelope import the same dependency-free `web-release-policy.mjs`, so runtime validation and derived CSP cannot silently diverge. The envelope verifier separately checks the release manifest, sorted paths, byte counts, file hashes, canonical artifact digest, unsupported filesystem entries, public overlay, generated `_headers`/`_redirects` policy, and the overlay/policy digests before promotion.
 
 ## Build and verify
 
@@ -26,18 +26,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-web-release.ps
 
 Scan the result for any known environment endpoint/project identifier without printing keys. Artifacts and overlays are disposable/ignored; tracked evidence records only non-secret IDs, commit, and digest.
 
-## Static Vercel deployment envelope (no deployment)
+## Static Netlify publish envelope (no deployment)
 
 Download the CI artifact without rebuilding it, prepare one reviewed public `runtime-config.json`, then run:
 
 ```powershell
-node scripts/build-vercel-deployment-envelope.mjs --artifact <downloaded-artifact> --runtime-config <reviewed-runtime-config> --output <new-empty-envelope-path> --expected-artifact-sha256 <trusted-ci-output> --expected-source-commit <trusted-ci-output>
-node scripts/verify-vercel-deployment-envelope.mjs --envelope <new-envelope-path> --expected-artifact-sha256 <trusted-ci-output> --expected-source-commit <trusted-ci-output>
+node scripts/build-netlify-deployment-envelope.mjs --artifact <downloaded-artifact> --runtime-config <reviewed-runtime-config> --output <new-empty-envelope-path> --expected-artifact-sha256 <trusted-ci-output> --expected-source-commit <trusted-ci-output>
+node scripts/verify-netlify-deployment-envelope.mjs --envelope <new-envelope-path> --expected-artifact-sha256 <trusted-ci-output> --expected-source-commit <trusted-ci-output>
 ```
 
-Take both expected values from the successful CI job/run, not from the downloaded manifest. The output contains the original artifact and release manifest, canonical public runtime config, synchronized `vercel.json`, and `deployment-envelope.json` with source commit plus artifact/config digests. `vercel.json` supplies the release/environment/security headers, `no-store` runtime config, exact manifest-listed immutable content-addressed assets, no-cache shell paths, and an extensionless/non-static SPA fallback. Missing scripts, JSON, images, and reserved static paths therefore remain 404 candidates rather than HTML fallbacks. Cache rules carry one value per matching cache path; the global security rule does not also set `Cache-Control`.
+Take both expected values from the successful CI job/run, not from the downloaded manifest. The output contains the original artifact and release manifest, canonical public runtime config, synchronized `_headers` and `_redirects`, and `deployment-envelope.json` with source commit plus artifact/config/policy digests. `_headers` supplies the release/environment/security headers, browser and Netlify-CDN `no-store` runtime config, exact manifest-listed immutable content-addressed assets, and no-cache shell/manifests. LoopedIn routes use URL fragments, so `_redirects` intentionally has no catch-all rewrite: `/#/event/...` reloads `index.html` at `/`, while missing scripts, JSON, images, and static resources remain 404 rather than being masked by HTML.
 
-The envelope is target-neutral: there is no org/project ID, Function, install/build command, provider token, or deployment action. Before an authorized upload, the release owner must verify a fresh approved Vercel project uses Framework Preset `Other`, has no inherited project-level build or install command, and serves root (`.`) as its output. Stop if those settings differ or if deployment resources contain anything except static assets; this repository does not claim that `framework: null` overrides unknown dashboard settings.
+The envelope is target-neutral: there is no team/site ID, Function, install/build command, provider token, or deployment action. Before an authorized upload, the release owner must create or name a dedicated LoopedIn staging site and upload the verified envelope directory directly as the publish directory without rebuilding it. Never link, relink, rename, or deploy over the existing personal-site project `travisjohnjones`. Stop if provider settings would run a build, alter the generated files, or add Functions/Edge Functions.
 
 Changing runtime config or CSP creates a new envelope even when the application artifact digest is unchanged. A future authorized staging job must verify the envelope, deploy those exact files, and record the resulting deployment identity; it must not run the application build again.
 
@@ -90,7 +90,7 @@ The loopback server is an executable policy reference, not production hosting co
 | Runtime config | Serve `/runtime-config.json` outside the immutable artifact with `no-store`; protect changes with the same review/approval as promotion. It contains public client configuration only. |
 | HTML/manifest | `no-cache` so aliases and entrypoints revalidate after promotion or rollback. |
 | Hashed JS/fonts/assets | One year plus `immutable`; filenames must be content addressed. |
-| SPA fallback | Extensionless routes return `index.html`; missing files with extensions stay 404. Hash deep links remain supported. |
+| SPA routing | LoopedIn uses fragment routes, so `/#/...` requests the no-cache root shell and reloads without a rewrite. Do not add a catch-all; unknown paths and missing assets must stay 404. |
 | Promotion | One reviewed digest is promoted unchanged; a named human records environment, operator, source commit, release ID, digest, approval, and timestamp. |
 | Rollback | A named release authority swaps the alias to the last compatible digest; validate core loop and cache behavior; keep database recovery forward-only. |
 

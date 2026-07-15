@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-The workflow, local equivalents, and repeated clean GitHub-hosted pull-request runs are implemented and observed. Draft PR #1 run `29381271843` passed the three established checks on commit `02ae226`. A fourth `Release artifact` job is now defined locally; its first hosted execution remains pending. No GitHub repository setting, deployment, or hosted Supabase resource was changed, so required-check enforcement and hosted seeded-failure proofs remain `NOT RUN`.
+The workflow, local equivalents, and repeated clean GitHub-hosted pull-request runs are implemented and observed. Draft PR #1 run `29382987732` passed all four jobs on exact commit `9ef55479fb4089e6b610a9b06948399b5ca59362`; the downloaded release artifact independently matched that commit and its trusted internal digest. No GitHub repository setting, deployment, or hosted Supabase resource was changed, so required-check enforcement and hosted seeded-failure proofs remain `NOT RUN`.
 
 ## Stable checks
 

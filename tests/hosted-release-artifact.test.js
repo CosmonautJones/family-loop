@@ -7,8 +7,8 @@ import { join, resolve } from 'node:path';
 import test from 'node:test';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
-const builder = join(repositoryRoot, 'scripts/build-vercel-deployment-envelope.mjs');
-const verifier = join(repositoryRoot, 'scripts/verify-vercel-deployment-envelope.mjs');
+const builder = join(repositoryRoot, 'scripts/build-netlify-deployment-envelope.mjs');
+const verifier = join(repositoryRoot, 'scripts/verify-netlify-deployment-envelope.mjs');
 
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -62,7 +62,7 @@ function builderArgs(artifact, runtimeConfig, envelope, manifest) {
   ];
 }
 
-test('builds and verifies a target-neutral static Vercel envelope from one immutable artifact', (t) => {
+test('builds and verifies a target-neutral static Netlify publish envelope from one immutable artifact', (t) => {
   const temporary = mkdtempSync(join(tmpdir(), 'loopedin-hosted-release-'));
   t.after(() => rmSync(temporary, { recursive: true, force: true }));
   const { artifact, manifest } = writeArtifact(temporary);
@@ -74,22 +74,45 @@ test('builds and verifies a target-neutral static Vercel envelope from one immut
 
   assert.equal(readFileSync(join(envelope, 'index.html'), 'utf8'), '<main>LoopedIn</main>\n');
   assert.deepEqual(JSON.parse(readFileSync(join(envelope, 'runtime-config.json'), 'utf8')), JSON.parse(readFileSync(runtimeConfig, 'utf8')));
-  const vercel = JSON.parse(readFileSync(join(envelope, 'vercel.json'), 'utf8'));
-  const serialized = JSON.stringify(vercel);
-  assert.equal(vercel.framework, null);
-  assert.deepEqual(vercel.rewrites, [{ source: '/:path((?!_expo/static/|assets/)(?!.*\\.[^/]+$).*)', destination: '/index.html' }]);
-  assert.doesNotMatch(serialized, /projectId|orgId|function|buildCommand|installCommand|secret|service.role/i);
-  assert.match(serialized, /connect-src 'self' https:\/\/loopedin-staging\.supabase\.co wss:\/\/loopedin-staging\.supabase\.co/);
-  assert.match(serialized, /img-src 'self' data: blob: https: https:\/\/loopedin-staging\.supabase\.co/);
-  assert.match(serialized, /runtime-config\.json[\s\S]*no-store/);
-  assert.match(serialized, /_expo\/static\/js\/index-abcdef12\.js[\s\S]*max-age=31536000, immutable/);
-  assert.doesNotMatch(serialized, /"source":"\/_expo\/static\/\(\.\*\)"/);
+  const headers = readFileSync(join(envelope, '_headers'), 'utf8');
+  const redirects = readFileSync(join(envelope, '_redirects'), 'utf8');
+  assert.doesNotMatch(`${headers}\n${redirects}`, /projectId|orgId|function|buildCommand|installCommand|secret|service.role/i);
+  assert.match(headers, /connect-src 'self' https:\/\/loopedin-staging\.supabase\.co wss:\/\/loopedin-staging\.supabase\.co/);
+  assert.match(headers, /img-src 'self' data: blob: https: https:\/\/loopedin-staging\.supabase\.co/);
+  assert.match(headers, /\/runtime-config\.json\n  Cache-Control: no-store/);
+  assert.match(headers, /\/\n  Cache-Control: no-cache\n  Netlify-CDN-Cache-Control: no-cache/);
+  assert.match(headers, /\/_expo\/static\/js\/index-abcdef12\.js\n  Cache-Control: public, max-age=31536000, immutable/);
+  assert.match(headers, /\/index\.html\n  Cache-Control: no-cache/);
+  assert.doesNotMatch(headers, /\/_expo\/static\/\*\n  Cache-Control: public/);
+  assert.equal(redirects, '# LoopedIn uses hash routes; no catch-all rewrite is needed, so missing assets remain 404.\n');
+  assert.doesNotMatch(redirects, /^\/\*/m);
   const deployment = JSON.parse(readFileSync(join(envelope, 'deployment-envelope.json'), 'utf8'));
   assert.equal(deployment.artifactSha256, manifest.artifactSha256);
   assert.equal(deployment.sourceCommit, manifest.sourceCommit);
   assert.equal(deployment.environmentId, 'loopedin-staging');
   assert.match(deployment.runtimeConfigSha256, /^[0-9a-f]{64}$/);
-  assert.match(deployment.vercelConfigSha256, /^[0-9a-f]{64}$/);
+  assert.match(deployment.headersSha256, /^[0-9a-f]{64}$/);
+  assert.match(deployment.redirectsSha256, /^[0-9a-f]{64}$/);
+});
+
+test('rejects drifted Netlify headers and redirects', (t) => {
+  const temporary = mkdtempSync(join(tmpdir(), 'loopedin-hosted-release-'));
+  t.after(() => rmSync(temporary, { recursive: true, force: true }));
+  const { artifact, manifest } = writeArtifact(temporary);
+  const runtimeConfig = writeRuntimeConfig(temporary);
+  const envelope = join(temporary, 'envelope');
+  execFileSync(process.execPath, builderArgs(artifact, runtimeConfig, envelope, manifest), { encoding: 'utf8' });
+
+  writeFileSync(join(envelope, '_headers'), '/*\n  Cache-Control: public\n');
+  const headersResult = spawnSync(process.execPath, [verifier, '--envelope', envelope, '--expected-artifact-sha256', manifest.artifactSha256, '--expected-source-commit', manifest.sourceCommit], { encoding: 'utf8' });
+  assert.notEqual(headersResult.status, 0);
+  assert.match(headersResult.stderr, /Netlify headers/i);
+
+  execFileSync(process.execPath, builderArgs(artifact, runtimeConfig, join(temporary, 'second-envelope'), manifest), { encoding: 'utf8' });
+  writeFileSync(join(temporary, 'second-envelope', '_redirects'), '/* /index.html 200\n');
+  const redirectsResult = spawnSync(process.execPath, [verifier, '--envelope', join(temporary, 'second-envelope'), '--expected-artifact-sha256', manifest.artifactSha256, '--expected-source-commit', manifest.sourceCommit], { encoding: 'utf8' });
+  assert.notEqual(redirectsResult.status, 0);
+  assert.match(redirectsResult.stderr, /Netlify redirects/i);
 });
 
 test('rejects tampered artifact bytes without publishing a deployment envelope', (t) => {
@@ -210,6 +233,6 @@ test('CI builds the exact event head once and uploads it without deployment cred
   assert.equal((job.match(/build-web-release\.ps1/g) ?? []).length, 1);
   assert.match(job, /artifact_sha256/);
   assert.match(job, /actions\/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02/);
-  assert.doesNotMatch(job, /secrets\.|service.role|SUPABASE_|vercel|run:.*deploy|db push/i);
+  assert.doesNotMatch(job, /secrets\.|service.role|SUPABASE_|vercel|netlify|run:.*deploy|db push/i);
   assert.equal((workflow.match(/ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/g) ?? []).length, 4);
 });

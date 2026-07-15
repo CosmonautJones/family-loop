@@ -75,28 +75,31 @@ export function verifyArtifact(artifactPath, expectedArtifactSha256, expectedSou
   return manifest;
 }
 
-export function buildVercelConfig(manifest, config) {
-  const fallbackSource = '/:path((?!_expo/static/|assets/)(?!.*\\.[^/]+$).*)';
-  const cacheHeaders = manifest.files.map((file) => {
+function headerBlock(path, headers) {
+  return `${path}\n${Object.entries(headers).map(([key, value]) => `  ${key}: ${value}`).join('\n')}\n`;
+}
+
+function cachePolicy(value) {
+  return { 'Cache-Control': value, 'Netlify-CDN-Cache-Control': value };
+}
+
+export function buildNetlifyFiles(manifest, config) {
+  const cacheBlocks = manifest.files.map((file) => {
     const immutable = (file.path.startsWith('_expo/static/') || file.path.startsWith('assets/')) && /(?:^|[-.])[0-9a-f]{8,}(?:[.-]|$)/.test(file.path.split('/').at(-1));
-    return {
-      source: `/${file.path}`,
-      headers: [{ key: 'Cache-Control', value: immutable ? 'public, max-age=31536000, immutable' : 'no-cache' }],
-    };
+    return headerBlock(`/${file.path}`, cachePolicy(immutable ? 'public, max-age=31536000, immutable' : 'no-cache'));
   });
-  return {
-    $schema: 'https://openapi.vercel.sh/vercel.json',
-    framework: null,
-    headers: [
-      { source: '/(.*)', headers: Object.entries(securityHeaders(manifest.releaseId, config)).map(([key, value]) => ({ key, value })) },
-      { source: '/runtime-config.json', headers: [{ key: 'Cache-Control', value: 'no-store' }] },
-      { source: '/release-manifest.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
-      { source: '/deployment-envelope.json', headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
-      { source: fallbackSource, headers: [{ key: 'Cache-Control', value: 'no-cache' }] },
-      ...cacheHeaders,
-    ],
-    rewrites: [{ source: fallbackSource, destination: '/index.html' }],
-  };
+  const headers = [
+    headerBlock('/*', securityHeaders(manifest.releaseId, config)),
+    headerBlock('/', cachePolicy('no-cache')),
+    headerBlock('/runtime-config.json', cachePolicy('no-store')),
+    headerBlock('/release-manifest.json', cachePolicy('no-cache')),
+    headerBlock('/deployment-envelope.json', cachePolicy('no-cache')),
+    headerBlock('/_headers', cachePolicy('no-cache')),
+    headerBlock('/_redirects', cachePolicy('no-cache')),
+    ...cacheBlocks,
+  ].join('\n');
+  const redirects = '# LoopedIn uses hash routes; no catch-all rewrite is needed, so missing assets remain 404.\n';
+  return { headers, redirects };
 }
 
 function writeJson(path, value) {
@@ -105,15 +108,18 @@ function writeJson(path, value) {
 
 export function verifyEnvelope(envelopePath, expectedArtifactSha256, expectedSourceCommit) {
   const root = resolve(envelopePath);
-  const extras = ['runtime-config.json', 'vercel.json', 'deployment-envelope.json'];
+  const extras = ['runtime-config.json', '_headers', '_redirects', 'deployment-envelope.json'];
   const manifest = verifyArtifact(root, expectedArtifactSha256, expectedSourceCommit, extras);
   const config = parseRuntimeConfig(jsonFile(join(root, 'runtime-config.json')));
-  const vercelPath = join(root, 'vercel.json');
+  const headersPath = join(root, '_headers');
+  const redirectsPath = join(root, '_redirects');
   const deploymentPath = join(root, 'deployment-envelope.json');
-  const vercelBytes = readFileSync(vercelPath);
+  const headersBytes = readFileSync(headersPath);
+  const redirectsBytes = readFileSync(redirectsPath);
   const runtimeBytes = readFileSync(join(root, 'runtime-config.json'));
-  const expectedVercel = buildVercelConfig(manifest, config);
-  if (JSON.stringify(jsonFile(vercelPath)) !== JSON.stringify(expectedVercel)) throw new Error('Vercel configuration does not match the runtime config.');
+  const expectedNetlify = buildNetlifyFiles(manifest, config);
+  if (headersBytes.toString('utf8') !== expectedNetlify.headers) throw new Error('Netlify headers do not match the verified artifact and runtime config.');
+  if (redirectsBytes.toString('utf8') !== expectedNetlify.redirects) throw new Error('Netlify redirects do not match the hash-route policy.');
   const deployment = jsonFile(deploymentPath);
   const expectedDeployment = {
     schemaVersion: 1,
@@ -122,7 +128,8 @@ export function verifyEnvelope(envelopePath, expectedArtifactSha256, expectedSou
     artifactSha256: manifest.artifactSha256,
     environmentId: config.environmentId,
     runtimeConfigSha256: sha256(runtimeBytes),
-    vercelConfigSha256: sha256(vercelBytes),
+    headersSha256: sha256(headersBytes),
+    redirectsSha256: sha256(redirectsBytes),
   };
   if (JSON.stringify(deployment) !== JSON.stringify(expectedDeployment)) throw new Error('Deployment envelope manifest is invalid.');
   return expectedDeployment;
@@ -137,12 +144,13 @@ export function buildEnvelope(artifactPath, runtimeConfigPath, outputPath, expec
   if (output === artifact || output.startsWith(`${artifact}${sep}`) || artifact.startsWith(`${output}${sep}`)) throw new Error('Deployment envelope output path is unsafe.');
   const manifest = verifyArtifact(artifact, expectedArtifactSha256, expectedSourceCommit);
   const config = parseRuntimeConfig(jsonFile(runtimePath));
-  const temporary = mkdtempSync(join(dirname(output), '.loopedin-vercel-envelope-'));
+  const temporary = mkdtempSync(join(dirname(output), '.loopedin-netlify-envelope-'));
   try {
     cpSync(artifact, temporary, { recursive: true });
     writeJson(join(temporary, 'runtime-config.json'), config);
-    const vercel = buildVercelConfig(manifest, config);
-    writeJson(join(temporary, 'vercel.json'), vercel);
+    const netlify = buildNetlifyFiles(manifest, config);
+    writeFileSync(join(temporary, '_headers'), netlify.headers, { encoding: 'utf8', flag: 'wx' });
+    writeFileSync(join(temporary, '_redirects'), netlify.redirects, { encoding: 'utf8', flag: 'wx' });
     writeJson(join(temporary, 'deployment-envelope.json'), {
       schemaVersion: 1,
       releaseId: manifest.releaseId,
@@ -150,7 +158,8 @@ export function buildEnvelope(artifactPath, runtimeConfigPath, outputPath, expec
       artifactSha256: manifest.artifactSha256,
       environmentId: config.environmentId,
       runtimeConfigSha256: sha256(readFileSync(join(temporary, 'runtime-config.json'))),
-      vercelConfigSha256: sha256(readFileSync(join(temporary, 'vercel.json'))),
+      headersSha256: sha256(readFileSync(join(temporary, '_headers'))),
+      redirectsSha256: sha256(readFileSync(join(temporary, '_redirects'))),
     });
     verifyEnvelope(temporary, expectedArtifactSha256, expectedSourceCommit);
     renameSync(temporary, output);
@@ -171,7 +180,7 @@ if (invokedPath === fileURLToPath(import.meta.url)) {
   try {
     const args = argumentsMap(process.argv.slice(2));
     if (!args.get('--artifact') || !args.get('--runtime-config') || !args.get('--output') || !args.get('--expected-artifact-sha256') || !args.get('--expected-source-commit') || args.size !== 5) {
-      throw new Error('Usage: node scripts/build-vercel-deployment-envelope.mjs --artifact <path> --runtime-config <path> --output <path> --expected-artifact-sha256 <sha256> --expected-source-commit <sha>');
+      throw new Error('Usage: node scripts/build-netlify-deployment-envelope.mjs --artifact <path> --runtime-config <path> --output <path> --expected-artifact-sha256 <sha256> --expected-source-commit <sha>');
     }
     const result = buildEnvelope(args.get('--artifact'), args.get('--runtime-config'), args.get('--output'), args.get('--expected-artifact-sha256'), args.get('--expected-source-commit'));
     process.stdout.write(`Deployment envelope: ${resolve(args.get('--output'))}\nArtifact SHA-256: ${result.artifactSha256}\n`);

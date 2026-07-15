@@ -142,7 +142,7 @@
 - [x] GitHub-hosted clean run `29376063946` passed `Application quality`, `Security and dependencies`, and `Migration integrity` on commit `12f760d`, including disposable migration reset/apply/lint.
 - [ ] Hosted seeded-failure runs and administrator-required branch checks remain `NOT RUN`; no repository setting was changed.
 - [x] All CI jobs check out the same exact event head; release artifact waits for the three quality jobs, invokes the exact-commit build once, verifies source commit, emits digest/commit outputs, and uploads through immutable `actions/upload-artifact` without secrets, provider CLI, deploy, or remote database access.
-- [ ] First hosted release-artifact execution/download verification remains pending; repository definition and focused local tests are not rounded up to hosted artifact proof.
+- [x] Hosted run `29382987732` passed all four jobs and its downloaded exact-head artifact independently matched commit `9ef55479fb4089e6b610a9b06948399b5ca59362` plus the trusted internal digest.
 
 ## OPORD 012 resilience and capacity
 
@@ -180,8 +180,8 @@
 - [ ] Identical artifact promotion and compatibility across distinct hosted backends remains `NOT RUN`; the loopback overlay used the same local Supabase stack as existing configured proof.
 - [x] Branch head `12f760d` has a green GitHub-hosted CI run (`29376063946`); that run did not build or promote the historical release artifact.
 - [ ] Named host/environments/operators, artifact-from-CI linkage, DNS/TLS, secret custody, configured staging backend, physical phones/AT/human checks, hosted promotion/rollback, and production approval remain `NOT RUN`.
-- [x] Target-neutral Vercel envelope builder/verifier requires trusted CI digest/commit inputs and rejects tampered/self-consistent untrusted bytes, duplicate/unsafe/unsupported entries, invalid identity/version/epoch, invalid/secret-like overlays, drifted Vercel policy, and partial output; preview and envelope share one runtime/CSP policy.
-- [x] Generated static envelope contains no Function, project/org link, install/build command, secret, or deploy action; runtime config is `no-store`, hashed assets immutable, shell paths revalidated, and extensionless routes rewrite to `index.html`.
+- [x] Target-neutral Netlify publish-envelope builder/verifier requires trusted CI digest/commit inputs and rejects tampered/self-consistent untrusted bytes, duplicate/unsafe/unsupported entries, invalid identity/version/epoch, invalid/secret-like overlays, drifted `_headers`/`_redirects`, and partial output; preview and envelope share one runtime/CSP policy.
+- [x] Generated static envelope contains no Function/Edge Function, site/team link, install/build command, secret, or deploy action; runtime config is browser/CDN `no-store`, only manifest-verified hashed assets are immutable, shell/manifests revalidate, fragment deep links reload at `/`, and the lack of a catch-all preserves missing-asset 404s.
 
 ## OPORD 017 local backup, restore, and data lifecycle
 
