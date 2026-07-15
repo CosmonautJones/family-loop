@@ -324,3 +324,16 @@ Use this before considering a mission complete.
 - [x] Synthetic rows roll back; dead fixture tuples are vacuumed and nontransactional planner statistics are refreshed from retained rows; exact baseline counts and the populated browser scenario remain unchanged.
 - [x] Five ordered migration checksums, database lint, family/media/reminder/RLS matrices, root/app tests, lint, TypeScript, harness, secret scan, and diff checks pass.
 - [ ] Server-propagated request versions/correlation IDs, universal deadline and gateway rate enforcement, response-loss idempotency outside the documented targeted write contracts, hosted plans/migrations/telemetry, and production cardinalities remain `NOT RUN`.
+
+## Hosted owner data and operations
+
+- [x] Exact approved owner/family baseline is required before real starter writes.
+- [x] Three upcoming trips, one completed trip, four owner RSVPs/comments, and three private attributed photos exist remotely.
+- [x] Re-running the starter seed preserves exact counts and image hashes.
+- [x] Private upload recovery handles lost upload/activation responses without deleting an active object.
+- [x] Public HTTPS/runtime/Auth availability check passes without secrets or user telemetry.
+- [x] Hosted database/Auth/Storage metadata and private bytes are client-encrypted and hashed.
+- [x] Isolated restore matches counts, object hashes, references, owner access, and outsider denial.
+- [x] Repository secret names exist; values are absent from source, logs, evidence, and chat.
+- [ ] Availability and daily backup schedules require a hosted run after default-branch merge.
+- [ ] Managed PITR, replacement-project cutover, client-error ingestion, SMTP, physical devices, and production remain open.

@@ -2113,3 +2113,95 @@ test('hosted family evidence redacts credentials and emits only bounded handoff/
   assert.match(wrapper, /\$publishableValue = \$null/);
   assert.match(wrapper, /\$secretValue = \$null/);
 });
+
+test('real owner starter seed is exact-project, explicitly acknowledged, idempotent, and attribution-preserving', () => {
+  const seed = fs.readFileSync(path.join(repoRoot, 'scripts/seed-hosted-owner-starter.mjs'), 'utf8');
+  const wrapper = fs.readFileSync(path.join(repoRoot, 'scripts/seed-hosted-owner-starter.ps1'), 'utf8');
+
+  for (const source of [seed, wrapper]) {
+    assert.match(source, /vkogznsfthirhxkqysza/);
+    assert.match(source, /lzscofbvecgpchokxhyb/);
+    assert.match(source, /AcknowledgeRealOwnerData|I_ACKNOWLEDGE_LOOPEDIN_REAL_OWNER_STARTER_DATA/);
+    assert.doesNotMatch(source, /travisjohn\.jones@gmail\.com|Jones Fam/);
+  }
+  assert.match(seed, /admin\/generate_link/);
+  assert.match(seed, /type: 'magiclink'/);
+  assert.match(seed, /token_hash: tokenHash/);
+  assert.match(seed, /target_operation_key: definition\.operationKey/);
+  assert.match(seed, /target_operation_key: definition\.commentKey/);
+  assert.match(seed, /expected exactly one approved owner identity/);
+  assert.match(seed, /family membership baseline changed/);
+  assert.match(seed, /validation event marker mismatch/);
+  assert.match(seed, /images\.unsplash\.com/);
+  assert.match(seed, /sourceUrl: 'https:\/\/unsplash\.com\/photos\//);
+  assert.match(seed, /loopedin_begin_media_upload/);
+  assert.match(seed, /loopedin_activate_media/);
+  assert.match(seed, /loopedin_abort_media_upload/);
+  assert.match(seed, /row\.status === 'active'/);
+  assert.match(seed, /validation event RSVP marker mismatch/);
+  assert.match(seed, /check validation reminders/);
+  assert.match(seed, /check validation notifications/);
+});
+
+test('real owner starter seed redacts ephemeral auth and clears provider keys', () => {
+  const seed = fs.readFileSync(path.join(repoRoot, 'scripts/seed-hosted-owner-starter.mjs'), 'utf8');
+  const wrapper = fs.readFileSync(path.join(repoRoot, 'scripts/seed-hosted-owner-starter.ps1'), 'utf8');
+
+  assert.match(seed, /sensitiveValues\.add\(tokenHash\)/);
+  assert.match(seed, /sensitiveValues\.add\(verified\.access_token\)/);
+  assert.match(seed, /\[REDACTED_TOKEN\]/);
+  assert.match(seed, /\[REDACTED_EMAIL\]/);
+  assert.match(seed, /\[REDACTED_KEY\]/);
+  assert.doesNotMatch(seed, /console\.(?:log|error)\([^\n]*(?:access_token|refresh_token|tokenHash|secretKey|publishableKey)/i);
+  assert.match(wrapper, /2>\$null/);
+  assert.match(wrapper, /\$rawKeys = \$null/);
+  assert.match(wrapper, /\$publishableValue = \$null/);
+  assert.match(wrapper, /\$secretValue = \$null/);
+});
+
+test('hosted availability monitor is no-secret, exact-target, and privacy-safe', () => {
+  const monitor = fs.readFileSync(path.join(repoRoot, 'scripts/check-hosted-availability.mjs'), 'utf8');
+  const workflow = fs.readFileSync(path.join(repoRoot, '.github/workflows/availability.yml'), 'utf8');
+
+  assert.match(monitor, /https:\/\/loopedin-family\.netlify\.app/);
+  assert.match(monitor, /vkogznsfthirhxkqysza/);
+  assert.match(monitor, /runtime-config\.json/);
+  assert.match(monitor, /auth\/v1\/health/);
+  assert.match(monitor, /missing static asset no longer returns 404/);
+  assert.doesNotMatch(monitor, /SUPABASE_SECRET|service_role|authorization/i);
+  assert.doesNotMatch(workflow, /secrets\.|pull_request|push:/);
+  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.match(workflow, /cron: '17,47 \* \* \* \*'/);
+  assert.match(workflow, /node scripts\/check-hosted-availability\.mjs/);
+});
+
+test('hosted backup packages protected schemas and private bytes under client encryption', () => {
+  const backup = fs.readFileSync(path.join(repoRoot, 'scripts/create-hosted-encrypted-backup.ps1'), 'utf8');
+  const restore = fs.readFileSync(path.join(repoRoot, 'scripts/restore-hosted-encrypted-backup.ps1'), 'utf8');
+  const workflow = fs.readFileSync(path.join(repoRoot, '.github/workflows/encrypted-backup.yml'), 'utf8');
+
+  for (const source of [backup, restore]) assert.match(source, /vkogznsfthirhxkqysza/);
+  assert.match(backup, /lzscofbvecgpchokxhyb/);
+  for (const schema of ['public', 'loopedin_private', 'auth', 'storage']) assert.match(backup, new RegExp(`--schema=${schema}`));
+  assert.match(backup, /storage\/v1\/object\/authenticated/);
+  assert.match(backup, /local-backup-crypto\.mjs'\) encrypt/);
+  assert.match(backup, /Get-FileHash -Algorithm SHA256/);
+  assert.match(backup, /-Filter '\*\.sql'/);
+  assert.match(backup, /postgres@sha256:178f0976/);
+  assert.match(backup, /fingerprintBefore/);
+  assert.match(backup, /supabase_migrations/);
+  assert.match(restore, /local-backup-crypto\.mjs'\) decrypt/);
+  assert.match(restore, /disposable Docker database; primary was never a restore target/);
+  assert.match(restore, /--network none/);
+  assert.match(restore, /Backup image identity mismatch/);
+  assert.match(restore, /Restored migration history mismatch/);
+  assert.match(restore, /Restored member RLS scope mismatch/);
+  assert.match(restore, /mediaWithoutObject/);
+  assert.match(restore, /outsiderEvents/);
+  assert.match(workflow, /cron: '23 5 \* \* \*'/);
+  assert.match(workflow, /retention-days: 30/);
+  assert.match(workflow, /environment: loopedin-staging-backup/);
+  assert.ok(workflow.indexOf('Verify isolated database restore before upload') < workflow.indexOf('Upload encrypted backup only'));
+  assert.doesNotMatch(workflow, /pull_request|push:/);
+  assert.doesNotMatch(backup + restore, /console\.|Write-Host|service_role/);
+});

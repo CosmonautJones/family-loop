@@ -189,8 +189,8 @@ test('OPORD evidence dispositions stay reconciled with the configured staging pr
 
   assert.match(index, /## 2026-07-15 evidence disposition/);
   assert.match(index, /substantive lint[\s\S]*29451842237[\s\S]*3cf45367[\s\S]*administrator-required checks remain unconfigured/i);
-  assert.match(index, /Dedicated staging `vkogznsfthirhxkqysza`[\s\S]*synthetic owner\/member\/outsider RLS/i);
-  assert.match(index, /Hosted staging release and exact-deploy rollback pass/i);
+  assert.match(index, /Dedicated staging `vkogznsfthirhxkqysza`[\s\S]*synthetic (?:owner\/member\/outsider RLS|multi-user proof passes)/i);
+  assert.match(index, /(?:Hosted staging release and exact-deploy rollback pass|exact-deploy rollback\/restoration)/i);
   assert.match(index, /Physical iOS\/Android.+NOT RUN/i);
   assert.doesNotMatch(index, /Docker is unavailable|local Supabase stack has not been exercised/i);
 
