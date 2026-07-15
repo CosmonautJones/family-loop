@@ -117,7 +117,10 @@ test('release preview swaps aliases while retaining SPA, security, and cache con
   }));
   const configured = await fetch(`http://127.0.0.1:${port}/event/exact-id`);
   assert.equal(configured.headers.get('x-loopedin-environment'), 'rehearsal-supabase');
-  assert.match(configured.headers.get('content-security-policy'), /connect-src 'self' http:\/\/127\.0\.0\.1:54321 ws:\/\/127\.0\.0\.1:54321/);
+  const configuredPolicy = configured.headers.get('content-security-policy');
+  assert.match(configuredPolicy, /connect-src 'self' http:\/\/127\.0\.0\.1:54321 ws:\/\/127\.0\.0\.1:54321/);
+  assert.match(configuredPolicy, /img-src 'self' data: blob: https: http:\/\/127\.0\.0\.1:54321/);
+  assert.doesNotMatch(configuredPolicy, /http:\/\/192\.0\.2\.1/);
 
   pointTo('b'.repeat(64), 'candidate');
   const candidate = await fetch(`http://127.0.0.1:${port}/event/exact-id`);

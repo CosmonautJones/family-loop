@@ -74,12 +74,14 @@ function runtimeState() {
 
 function securityHeaders(releaseId, config) {
   const connectSources = ["'self'"];
+  const imageSources = ["'self'", 'data:', 'blob:', 'https:'];
   if (config?.dataMode === 'supabase') {
     const backend = new URL(config.supabaseUrl);
     connectSources.push(backend.origin, `${backend.protocol === 'https:' ? 'wss:' : 'ws:'}//${backend.host}`);
+    imageSources.push(backend.origin);
   }
   return {
-    'Content-Security-Policy': `default-src 'self'; base-uri 'self'; connect-src ${connectSources.join(' ')}; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; img-src 'self' data: blob: https:; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'`,
+    'Content-Security-Policy': `default-src 'self'; base-uri 'self'; connect-src ${connectSources.join(' ')}; font-src 'self' data:; form-action 'self'; frame-ancestors 'none'; img-src ${imageSources.join(' ')}; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'`,
     'Cross-Origin-Opener-Policy': 'same-origin',
     'Permissions-Policy': 'camera=(), geolocation=(), microphone=()',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
