@@ -2,7 +2,7 @@
 
 ## Scope
 
-This runbook covers the recoverable account-deletion request, immediate server-access shutdown, cancellation, and legal-hold records introduced by migration `20260716033000_account_deletion_grace_state.sql`. It does not perform permanent deletion.
+This runbook covers the recoverable account-deletion request, immediate server-access shutdown, cancellation, legal holds, and the local-only permanent-purge proof introduced by migrations `20260716033000_account_deletion_grace_state.sql` and `20260716213000_permanent_account_purge_boundary.sql`. It does not authorize hosted or production deletion.
 
 ## User path
 
@@ -44,6 +44,8 @@ Reason codes and operator references are bounded identifiers, not free-form case
 supabase db reset --local
 supabase db lint --local --level error
 ./scripts/test-local-supabase-account-lifecycle.ps1
+node --test tests/account-purge-contract.test.js tests/account-purge-journal.test.js
+./scripts/test-local-supabase-account-purge.ps1
 npm test
 Push-Location app
 npm run lint
@@ -52,7 +54,7 @@ npx tsc --noEmit
 Pop-Location
 ```
 
-The destructive lifecycle test refuses non-loopback Supabase. It uses synthetic users and cleans its exact rows/objects. Never test deletion with the real Travis account.
+Both destructive lifecycle tests refuse non-loopback Supabase. They use synthetic users and clean their exact rows/objects. Never test deletion with the real Travis account.
 
 ## Hosted staging verification
 
@@ -70,16 +72,14 @@ The hosted-only wrapper hard-locks the linked CLI, API URL, acknowledgement, and
 
 Hosted serialization races were not duplicated; the local destructive harness remains the evidence for request-versus-transfer and request-versus-family-creation serialization. The hosted run is automated synthetic evidence, not a deletion request for Travis or Jones Fam.
 
-## Permanent-purge gate
+## Local permanent-purge operator
 
-Do not call the lifecycle complete until all of the following exist and pass:
+`scripts/invoke-account-purge.ps1` is hard-locked to loopback HTTP and requires `LOOPEDIN_PURGE_CONFIRM=LOCAL_ONLY_ACCOUNT_PURGE`. Supply its journal as an external `.lpjournal` path outside the repository and provide the passphrase only through `LOOPEDIN_PURGE_JOURNAL_PASSPHRASE`. Never print or persist the service key or passphrase.
 
-1. An append-only deletion/legal-hold journal outside the database being restored, retained beyond the maximum backup lifetime.
-2. Mandatory journal replay/reconciliation before a restored environment can receive traffic.
-3. A leased, retryable state machine that rechecks deadline, ownership, and legal holds on every attempt.
-4. Storage object capture/removal/absence verification, followed by transactional contribution cleanup and Auth deletion last.
-5. Idempotent success for already-missing rows, objects, and Auth users.
-6. Failure-injection proof at each phase and a pre-request-backup restore proving the account remains denied.
-7. A documented custody/anonymization decision for preserved plans whose original creator leaves.
+The operator leases and prepares a frozen digest, checkpoints the encrypted chained journal, removes outbound and inbound invitation identity/token/delivery associations, deletes the exact real Storage paths, verifies absence, finalizes relational cleanup, deletes Auth last, and records a scrubbed completion tombstone. A retry resumes from the authenticated journal and database state, including when database completion committed before its journal checkpoint. `recover-head` requires an existing authenticated stale head and accepts only a strict authenticated appended-tail extension; it refuses a missing/current head, truncation, or corruption. Restore traffic remains blocked until the journal itself durably records `restore_reconciled`; caller-supplied reconciliation IDs cannot open traffic.
 
-Until those gates pass, `pending` is a recoverable access-disabled state, not proof of permanent erasure.
+The local E2E injects stops after prepare, object deletion, relational finalization, Auth deletion, and database completion before the completion checkpoint. All five retries converge, shared family/event rows survive with neutral creators, inbound invitation associations and dependent delivery rows are absent, outsiders remain denied, and replay adds no duplicate evidence.
+
+## Remaining production gate
+
+Do not call hosted deletion complete until an independently reviewed hosted operator, external journal custody/retention, mandatory restore-time reconciliation, authorized synthetic hosted purge, backup-expiry evidence, security notices, and rollback/cutover controls pass. The repository proof is automated local evidence only; no hosted project, real family account, or production identity was purged.

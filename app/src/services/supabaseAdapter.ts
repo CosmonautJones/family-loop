@@ -39,7 +39,7 @@ type GroupRow = {
 type EventRow = {
   id: string;
   group_id: string;
-  created_by: string;
+  created_by: string | null;
   title: string;
   starts_at: string;
   ends_at: string;
