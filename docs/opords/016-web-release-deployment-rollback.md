@@ -1,7 +1,7 @@
 # OPORD 016 — Web Release, Deployment, and Rollback
 
 ## Status
-STAGING COMPLETE / PRODUCTION CONDITIONAL — exact CI artifact `7a18b2f5…fc3c8c` from `3cf45367…` is published on the separate LoopedIn Netlify site as immutable deploy `6a57fc726b558b21faf57459` and staging release `0.1.0-3cf45367dc85`. HTTPS/runtime/CSP/cache/404/browser transport, configured hosted synthetic core loop, exact-deploy rollback/restoration, and Auth redirect custody pass. Custom domain, physical devices, real-account completion, and production promotion remain open.
+STAGING COMPLETE / PRODUCTION CONDITIONAL — exact artifact `e41dd172…e0d38` from `08006e5e…fa619` is published on the separate LoopedIn Netlify site as deploy `6a58428caebae3fadaf3906b` and staging release `0.1.0-08006e5e83a8`. HTTPS/runtime/CSP/cache/404, hosted core-loop/readiness gates, exact-deploy rollback/restoration, and Auth redirect custody pass. Custom domain, physical devices, real-account completion, and production promotion remain open.
 
 ## Situation and evidence
 The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. GitHub run `29451842237` passed all jobs on exact source `3cf45367dc858e5c58bf8b72ae28e263b310c6b4`; artifact digest is `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c`. The verified envelope is immutable deploy `6a57fc726b558b21faf57459` on dedicated site `loopedin-family` (`50ae6d6b-28ad-49c0-9654-c3a54899fcb5`) and is published at `https://loopedin-family.netlify.app`. Custom domain and Git link remain absent. Personal site `travisjohnjones` (`519f3aa3-c723-4b2a-b9dd-4761e7b0a8bf`) retained the same exact identity and was not changed.
@@ -88,3 +88,11 @@ CDN cache skew, schema/app version skew, secret leakage, irreversible data chang
 
 ## Definition of done
 Environment separation, reproducible immutable web artifacts, secure hosting, staging promotion, manual production gate, release evidence, and successful staging artifact rollback are implemented; production changes only under separately recorded approval. The repository-local artifact and rollback slice is complete, but this full definition remains unmet until the named hosted gates pass.
+
+## Superseding release disposition — 2026-07-16
+
+- Immutable app source: `08006e5e83a8dd85cfeb30f6fb26f8df103fa619`; release: `0.1.0-08006e5e83a8`; artifact digest: `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`.
+- The separately verified Netlify envelope is deploy `6a58428caebae3fadaf3906b` at `https://loopedin-family.netlify.app`. Advisor review required and the release model preserves separate identities for immutable app bytes and the environment-specific Netlify envelope/deploy.
+- Rollback selected exact prior deploy `6a583390d6997d709c864c56`; restoration selected `6a58428caebae3fadaf3906b`; HTTP 200 passed after both alias changes. No database migration was reversed.
+- Hosted signed-out widths 320, 390, and 430 CSS px were observed. Local native browser-zoom evidence remains applicable, but native hosted 200% observation, physical iPhone Safari/Android Chrome, VoiceOver/TalkBack, physical software-keyboard behavior, and moderated use remain unproven.
+- Production requires an isolated Supabase project and redirect allow-list, an explicit plan/organization/region decision, exact-artifact approval, and custom-domain action. `app.travisjohnjones.com` is not production evidence.

@@ -50,3 +50,14 @@ An exploratory candidate on `(user_id, created_at DESC)` improved the adapter's 
 - Migration checksums protect all historical files. Do not edit an applied migration.
 - If a hosted plan regresses, capture the hosted plan and table statistics before proposing another index; representative local data is not production cardinality evidence.
 - Hosted migration state, connection-pool saturation, slow-query telemetry, rate limits, correlation IDs, and production alerting remain `NOT RUN` without a named authorized target.
+
+## 2026-07-15 hosted staging readiness checkpoint
+
+The local query-plan proof above remains historical local evidence. A separate hosted readiness path is now green on the dedicated LoopedIn staging project:
+
+- Repository and hosted migration history match at seven reviewed migrations.
+- Cold and warm synthetic drills `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463`, plus final exact-deploy drill `qa-mrmw9a6b-dcce7de2`, passed three members, three events, three RSVPs, two comments, seven notifications, private-media create/delete, cross-user and outsider denial, protected-state comparison, Realtime observation, and zero residue.
+- Realtime review first found a **MEDIUM** Query race at head `d1b8b59`: readiness invalidation could be coalesced into a stale in-flight query. Exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` cancels that exact in-flight query before refetching the active exact query. Independent review of the fixed head was **GREEN** with zero blocker, high, or medium findings.
+- Privacy-safe telemetry run `29466991186` and availability run `29466990331` are GREEN. Telemetry accepts only the bounded operation/category/release envelope, derives the environment server-side, enforces authenticated reporting and rate limiting, and stores no content or user identifier in event rows.
+
+Do **not** infer a new local Realtime fixture pass from this checkpoint. The attempted retained local rerun could not start because the retained local Auth fixture contained no `@loopedin.test` accounts; it made no remote change. The new readiness and reconciliation behavior is proven by focused Query coverage and the hosted cold/warm/final drills, not by a completed rerun of that local fixture. Hosted connection-pool saturation, slow-query plans/cardinalities, universal deadlines, server-propagated correlation, and production alerting remain unproven.

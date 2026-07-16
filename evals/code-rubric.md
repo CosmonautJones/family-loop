@@ -1,5 +1,15 @@
 # Code Rubric
 
+## 2026-07-15 exact hosted staging release
+
+- [x] Exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` produced release `0.1.0-08006e5e83a8` with artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`; immutable Netlify deploy `6a58428caebae3fadaf3906b` is the published staging alias.
+- [x] Hosted cold/warm/final synthetic drills pass the bounded family lifecycle, Realtime observation, private-media create/delete, outsider denial, protected-state comparison, and zero-residue cleanup.
+- [x] Realtime first-head review correctly reported a MEDIUM stale-query race at `d1b8b59`; the exact release cancels the exact in-flight query and refetches only an active observer. Independent fixed-head review is GREEN with zero blocker/high/medium findings.
+- [x] Availability `29466990331`, privacy-safe telemetry `29466991186`, and encrypted backup/isolated-restore `29465195044` are GREEN. The restore proves seven migrations, exact counts/object hashes/references, RLS, and the core loop with measured 16.719-second RPO and 6.107-second RTO.
+- [x] Exact rollback to the prior Netlify deploy and restoration of the candidate passed without destructive database reversal.
+- [ ] Managed PITR, observed scheduled cadence, hosted LCP/performance, authoritative hosted native 200% zoom, physical devices/assistive technology, production SMTP/invite delivery, and production promotion remain unproven.
+- [ ] The retained local Realtime fixture was not rerun because it lacked `@loopedin.test` Auth accounts; hosted cold/warm/final and focused Query tests supply the new proof instead.
+
 ## OPORD 017 authenticated encrypted export
 
 - [x] Export composes the existing authenticated service/RLS boundary and adds no schema, privileged endpoint, dependency, token handling, or destructive behavior.

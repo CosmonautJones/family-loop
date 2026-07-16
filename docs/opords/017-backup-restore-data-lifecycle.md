@@ -1,7 +1,7 @@
 # OPORD 017 — Backup, Restore, and Data Lifecycle
 
 ## Status
-HOSTED LOGICAL BACKUP/RESTORE PASS; LIFECYCLE PARTIAL — the dedicated project has client-encrypted database/private-object backup tooling, 24-hour RPO/4-hour RTO/30-day retention targets, repository secrets, and a real isolated hosted-snapshot restore drill with count/hash/reference/RLS evidence. The daily workflow awaits default-branch merge. Managed PITR, replacement cutover, deletion apply, and legal-hold operations remain open.
+HOSTED LOGICAL BACKUP/RESTORE PASS; LIFECYCLE PARTIAL — the dedicated project has client-encrypted database/private-object backup tooling, 24-hour RPO/4-hour RTO/30-day retention targets, protected environment secrets, and a GREEN workflow-dispatch isolated restore with count/hash/reference/RLS evidence. First cron observation, managed PITR, replacement cutover, deletion apply, and legal-hold operations remain open.
 
 ## Situation and evidence
 The hosted drill encrypted the dedicated `public`, `loopedin_private`, `auth`, and `storage` schemas plus private object bytes, then restored them into an isolated disposable database and reconciled counts, hashes, references, and owner/outsider RLS. The free plan has no managed restore points/PITR, so daily logical backup is the active control. Export/deletion apply and legal-hold jobs still do not exist.
@@ -81,4 +81,10 @@ Database/object point-in-time mismatch, backups conflicting with erasure duties,
 ## Definition of done
 Backup/PITR and private-object protection are configured, an isolated restore drill passes RPO/RTO/integrity/RLS checks, export/deletion and retention/orphan flows have scoped executable evidence, and every production/destructive action has explicit authorization and audit history.
 
-Hosted logical recoverability, conservative authenticated current-user export, and non-destructive planning pass. The OPORD remains partial because the scheduled workflow still needs a hosted run, managed PITR is unavailable, and replacement cutover, deliberate deletion, legal hold, and retention/orphan apply remain open.
+Hosted logical recoverability, conservative authenticated current-user export, and non-destructive planning pass. The OPORD remains partial because the first cron trigger is unobserved, managed PITR is unavailable, and replacement cutover, deliberate deletion, legal hold, and retention/orphan apply remain open.
+
+## Superseding hosted backup disposition — 2026-07-16
+
+Workflow-dispatch run `29465195044` was GREEN against dedicated staging; it is not evidence that the cron trigger has fired. The encrypted artifact is `8362712936`, with recorded encrypted SHA-256 prefix `9c75…`, uploaded zip SHA-256 prefix `3d266…`, and expiry 2026-08-15. The snapshot contained one profile, one family, one membership, four events, four RSVPs, four messages, three media rows, one Auth user, and three private objects. It recorded all seven migrations, measured RPO 16.719 seconds and isolated RTO 6.107 seconds, matched all three object hashes/references, and proved owner access plus outsider 0/0/0 denial.
+
+Restore recovered the telemetry schema/configuration while intentionally restoring zero short-lived telemetry event and limiter rows. The 24-hour RPO, four-hour RTO, and 30-day encrypted artifact retention remain the documented initial targets; one fast drill is not a production-cutover guarantee. Managed PITR, first observed cron trigger, replacement-project cutover, destructive lifecycle apply/legal hold, and production restore remain open.

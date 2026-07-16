@@ -1,10 +1,10 @@
 # OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
-HOSTED ENFORCEMENT AND AVAILABILITY PARTIAL — dedicated staging passes live-invite, database, role, and private-media outsider denial. A no-secret public HTTPS/runtime/Auth availability check passes and a 30-minute schedule is configured, but the schedule awaits default-branch merge. Client error ingestion, named production ownership, and external assessment remain `NOT RUN`.
+STAGING OBSERVABILITY PASS / PRODUCTION CONDITIONAL — dedicated staging passes authorization/private-media denial, no-secret availability, privacy-safe authenticated error ingestion, rate limiting, retention, and hourly aggregate monitoring. Named production ownership, production alerting, and external assessment remain `NOT RUN`.
 
 ## Situation and evidence
-Loopback and dedicated hosted synthetic family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; generated credentials/tokens are redacted. The configured monitor records only public status, release/environment, latency, and bounded failures; it collects no user identifier or content. Client-error ingestion, named hosted ownership, and external assessment remain unevidenced.
+Loopback and dedicated hosted synthetic family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; generated credentials/tokens are redacted. Public availability and locked authenticated error reporting record only bounded operational fields and aggregates; they collect no family content or behavioral analytics. Named production ownership/routing and external assessment remain unevidenced.
 
 ## Mission/objective
 Create a minimal, privacy-preserving verification and response baseline for authorization failures, client errors, and suspected data exposure without deploying monitoring infrastructure.
@@ -63,7 +63,7 @@ rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opord
 Focused executable redaction coverage includes a configured `sendMessage` transport rejection. The OPORD 012 390x844 outage was the reproducer; the local tabletop and recovery contract are recorded in `docs/runbooks/security-incident-response.md`. Inspect secret-scan matches rather than treating any match as proof.
 
 ### Conditional-staging/mobile-web/human
-Dedicated staging live RLS/Storage denial and one public availability run are `PASS`; its schedule awaits default-branch merge. Client-error telemetry and external security assessment remain `NOT RUN`.
+Dedicated staging live RLS/Storage denial, public availability, bounded error ingestion, hourly aggregate monitoring, and a controlled alert are `PASS`. Production monitoring ownership/routing and external security assessment remain `NOT RUN`.
 
 ## Stop conditions/authorization limits
 Stop on any suspected real exposure and escalate; do not inspect more data, rotate credentials, change remote policy, notify users, or deploy containment without incident-owner authorization. Stop before vendors/dependencies.
@@ -73,3 +73,10 @@ False confidence from synthetic-only hosted evidence, overcollection, missing ph
 
 ## Definition of done
 Minimal redaction tests and runbook are reviewable, tabletop evidence exists, live limitations are explicit, and no operational or remote action was taken without approval.
+
+## Superseding staging disposition — 2026-07-16
+
+- Locked telemetry stores only server time/environment plus bounded operation, category, and immutable release. Event retention is 30 days; identifier-bearing limiter state is 24 hours; the hourly monitor emits aggregates only. No content, email, name, title, comment, media path, URL, token, stack, user agent, IP, session replay, or behavioral analytics is collected.
+- Hosted ingestion proof accepted five authenticated reports, rate-limited the sixth, and denied anonymous and invalid payloads. Normal monitor runs `29465130680`, `29465174337`, and final `29466991186` were GREEN. Controlled `force_alert` run `29465157215` failed as designed to prove the alert path.
+- Initial runs `29464425396` and `29465087407` failed because the operator wired the protected environment secret incorrectly; the wiring was corrected without exposing the value. These are configuration evidence, not product incidents.
+- Final no-secret availability run `29466990331` is GREEN. Production ownership/routing, real SMTP and password recovery completion, physical-device/AT checks, and external assessment remain open.

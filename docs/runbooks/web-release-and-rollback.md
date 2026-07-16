@@ -120,6 +120,14 @@ No production approval is implied by the local rehearsal.
 - This is transport-only evidence. The draft did not prove hosted Supabase migrations, authenticated backend compatibility, family/trip/comment/photo/reminder/realtime/recovery flows, mail, backups/restore, telemetry, staging rollback, physical devices/assistive technology, production publication, or custom-domain behavior.
 - Protected personal site `travisjohnjones` retained exact ID `519f3aa3-c723-4b2a-b9dd-4761e7b0a8bf` and was unchanged.
 
+## 2026-07-16 hosted staging and rollback evidence
+
+- Source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` produced release `0.1.0-08006e5e83a8` and immutable app digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`. The runtime overlay/CSP remained a separate environment-specific envelope, per advisor review.
+- Verified deploy `6a58428caebae3fadaf3906b` is published at `https://loopedin-family.netlify.app`. Dedicated staging uses seven migrations through `20260716002122`; release/backend compatibility, final availability run `29466990331`, and final synthetic run `qa-mrmw9a6b-dcce7de2` are GREEN.
+- Rollback selected prior deploy `6a583390d6997d709c864c56` and returned HTTP 200. Restoration selected candidate deploy `6a58428caebae3fadaf3906b` and returned HTTP 200. The database remained forward-only; no migration reversal was attempted.
+- Hosted signed-out views at exact 320, 390, and 430 CSS-pixel widths were observed. Local native browser-zoom evidence remains dated local evidence; native hosted 200% zoom, physical iPhone/Android, VoiceOver/TalkBack, physical keyboard, and moderated checks are not complete.
+- Production/custom domain remains gated by a separate isolated production Supabase project and redirect configuration, exact-artifact approval, real SMTP/password completion, approved family recipients, physical-device checks, and explicit production authorization. The personal Netlify site remains outside scope.
+
 ## 2026-07-14 runtime-config evidence
 
 - Exact source `522aed7217ea` produced release `0.1.0-522aed7217ea`: three files, one 986,099-byte JavaScript bundle, digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`.

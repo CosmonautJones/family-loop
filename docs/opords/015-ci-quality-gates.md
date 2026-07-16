@@ -1,7 +1,7 @@
 # OPORD 015 — CI Quality Gates
 
 ## Status
-HOSTED CLEAN COMPLETE / ENFORCEMENT CONDITIONAL — exact-head run `29451842237` passed application, security/dependency, disposable migration apply/lint, and release-artifact jobs on `3cf45367…`; downloaded digest `7a18b2f5…fc3c8c` reverified before staging upload. Hosted seeded-failure proofs and administrator-required private-repository checks remain `NOT RUN`.
+HOSTED CLEAN COMPLETE / ENFORCEMENT CONDITIONAL — PR #4 passed exact-head checks and independent GREEN review; default-branch run `29466733884` is GREEN after merge `2a4b259…`. Hosted seeded-failure proofs and administrator-required private-repository checks remain `NOT RUN`.
 
 ## Situation and evidence
 Root/app tests, TypeScript, substantive Expo/TypeScript lint, harness, Expo export, loopback database lint, integration scripts, repository secret scanning, dependency policy, and deterministic migration checks pass locally. PR #1 run `29451842237` proves all four jobs on `3cf45367…`, including disposable migration reset/apply/lint and exact artifact retention. Branch enforcement is not configured or inferred from that run.
@@ -79,3 +79,7 @@ Supply-chain risk, noisy audit findings, platform-specific scripts, workflow per
 
 ## Definition of done
 Local implementation and one authorized GitHub-hosted clean pass are complete. Full OPORD completion additionally requires hosted seeded disposable-PR failures and administrator enforcement of the three stable required checks.
+
+## Superseding hosted proof — 2026-07-16
+
+PR #4 was exact-head GREEN and received independent GREEN review before merge. Merge commit `2a4b259…` then passed default-branch CI run `29466733884`. The deployed application artifact remains tied to its immutable source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` and digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`; the merge-run result is recorded separately and does not relabel rebuilt bytes as the staging artifact. Private-repository required-check enforcement and disposable hosted seeded-failure PRs remain unproven.

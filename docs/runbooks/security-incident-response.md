@@ -34,3 +34,11 @@ Scenario: during a configured loopback-Supabase comment retry, the browser displ
 - Containment exercise: stopped at the local adapter boundary and added category-based sanitization for network, session, access, conflict, rate-limit, and unknown failures.
 - Recovery validation: injected synthetic sensitive values and a rejected `sendMessage` transport promise; tests proved calm network copy, preserved safe validation copy, and no sensitive substring emission.
 - Outcome: local tabletop closed with no production action. Hosted telemetry, response ownership, retention, and external assessment remain `NOT RUN` pending named authority and environment.
+
+## Hosted staging telemetry checkpoint — 2026-07-16
+
+Staging now has a deliberately narrow incident signal. Authenticated clients may report only bounded operation/category/release tuples; the server supplies environment and time. Event rows expire after 30 days, per-user limiter state after 24 hours, and hourly maintenance produces aggregate counts. No email, family/user identifier in event rows, message/title/comment/media content, path, URL, token, stack, user agent, IP, session replay, or behavioral analytics is accepted.
+
+Hosted proof accepted five synthetic events, rejected the sixth at the rate limit, and denied anonymous and invalid submissions. Normal monitor runs `29465130680`, `29465174337`, and `29466991186` were GREEN. Controlled alert run `29465157215` failed intentionally; this is alert-path evidence, not an unresolved incident. Initial runs `29464425396` and `29465087407` failed because the operator configured the protected secret incorrectly; the wiring was corrected without printing or retaining the value.
+
+For a suspected issue, preserve only the workflow/run ID, environment, release, operation/category aggregate, and time window. Do not query event rows to reconstruct user behavior. Production incident ownership and routing, external assessment, and any notification to users remain separately authorized and unproven.

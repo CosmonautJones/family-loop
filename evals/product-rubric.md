@@ -61,3 +61,9 @@ Delay public social, AI, direct messaging, billing, admin, and heavy settings un
 ## Product verdict
 
 LoopedIn's phone-browser event page now works as a simple local source of truth for two independently selected family members: plan, RSVP, thread, photos, and recap stay together. The final KISS review found the hierarchy clear and recoverable at 320/390/430px, consistent with Nielsen minimalist/control/error-recovery heuristics and observable WCAG 2.2 behavior. This is not a usability or accessibility certification. The next risk is replacing the deliberately local actor chooser with authorized remote auth/invites and aligning private-storage policies without expanding the event-centered wedge.
+
+## 2026-07-15 staging product checkpoint
+
+The product verdict above is superseded for staging: LoopedIn now runs at `https://loopedin-family.netlify.app` against an isolated hosted backend. The final synthetic family drill `qa-mrmw9a6b-dcce7de2` proved three members coordinating three events with RSVPs, two comments, seven notifications, private media, Realtime convergence, outsider denial, and zero synthetic residue. The real approved owner account retains four realistic trips, four RSVPs, four comments, and three private attributed photos.
+
+Phone-focused shell checks at 320/390/430 CSS pixels, Back, deep-link reload, and signed-out session restoration are green. This is still **staging-operational, not family-production-ready**: real delivered invitations/SMTP, the owner's private password-recovery completion, another explicitly approved real recipient, physical phone/assistive-technology checks, authoritative hosted native 200% zoom, dedicated production infrastructure, and explicit production promotion remain open. No score is raised on the basis of synthetic or desktop-emulated evidence alone.

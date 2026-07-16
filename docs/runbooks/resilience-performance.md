@@ -93,3 +93,15 @@ With the loopback Supabase API gateway stopped, the configured comment draft rem
 - Cold offline reload: unsupported by product decision.
 - Configured offline write queue/background sync: not implemented by product decision.
 - Hosted load, hosted reconnect, and production monitoring evidence: `NOT RUN`; no remote authorization was granted.
+
+## 2026-07-15 superseding hosted staging checkpoint
+
+Hosted availability and reconnect evidence now exists for the exact staging release; the local performance measurements above remain the latest LCP/long-task evidence.
+
+- Exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619`, release `0.1.0-08006e5e83a8`, artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`, and Netlify deploy `6a58428caebae3fadaf3906b` are live at `https://loopedin-family.netlify.app`.
+- Cold and warm hosted drills `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463` passed after Realtime readiness was tied to the provider's exact PostgreSQL-changes readiness event. Final deployed drill `qa-mrmw9a6b-dcce7de2` again observed Realtime and completed with protected state unchanged and zero synthetic residue.
+- Availability workflow run `29466990331` and privacy-safe telemetry run `29466991186` are GREEN. The public shell, runtime configuration, Auth endpoint, exact release identity, and missing-asset 404 checks passed.
+- Hosted Chrome checks at 320, 390, and 430 CSS pixels found no horizontal overflow; sign-in controls were at least 48 CSS pixels high. Back, an exact-event deep-link reload, and the signed-out session shell passed with a clean console and six successful shell/bundle/runtime requests.
+- Exact prior-deploy-to-candidate alias rollback was exercised without database reversal, then the candidate was restored and reverified.
+
+Hosted LCP, longest-task, CLS, representative hosted load, and authoritative native 200% browser zoom were **not remeasured** for this artifact. Physical iPhone Safari, Android Chrome, VoiceOver, TalkBack, physical-keyboard behavior, and moderated older-adult use remain `NOT RUN`.
