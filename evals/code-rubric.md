@@ -1,5 +1,15 @@
 # Code Rubric
 
+## 2026-07-16 hosted lifecycle/export release
+
+- [x] Immutable artifact `a45838479634`/`aceefccf…95e6` is staging deploy `6a5863f6aebae3714ef3906c`; exact rollback/restoration passes without database reversal.
+- [x] Migration history matches eight repository versions through `20260716033000`; historical-rename CI remains enforced and main run `29471863503` is GREEN.
+- [x] Hosted synthetic lifecycle proves grace, authorization shutdown, legal holds, recovery, expiry, outsider isolation, protected-state equality, and zero residue.
+- [x] Hosted browser export proves three actual encrypted downloads, scope/count/hash integrity, one private PNG, wrong-passphrase/tamper denial, outsider emptiness, 390px layout, and clean browser signals.
+- [x] Harnesses hard-lock the dedicated project, validate synthetic markers before destructive cleanup, redact credentials, use fresh browser profiles, and add no dependency/schema/application behavior.
+- [x] Independent delta review closed a secret-bearing failure-output risk, false-green export counts, Auth-discovery gaps, cancellation-media overclaim, and fail-open Storage cleanup ordering; final re-review is GREEN with zero findings.
+- [ ] Final branch CI, permanent purge/external journal, SMTP, physical devices/AT, and production promotion remain open.
+
 ## 2026-07-15 exact hosted staging release
 
 - [x] Exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` produced release `0.1.0-08006e5e83a8` with artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`; immutable Netlify deploy `6a58428caebae3fadaf3906b` is the published staging alias.
