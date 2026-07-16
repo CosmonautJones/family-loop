@@ -30,6 +30,7 @@ function createUnavailableSupabaseService(): LoopedInService {
     }, media: unavailable as LoopedInService['media'],
     notifications: unavailable as LoopedInService['notifications'],
     reminders: unavailable as LoopedInService['reminders'],
+    accounts: unavailable as LoopedInService['accounts'],
   };
 }
 

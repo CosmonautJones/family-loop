@@ -39,6 +39,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/services/serviceErrors.ts'),
     path.join(appRoot, 'src/services/messageSubscription.ts'),
     path.join(appRoot, 'src/app/queryReconciliation.ts'),
+    path.join(appRoot, 'src/app/protectedQueries.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -61,6 +62,7 @@ function loadCompiledModules() {
     serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
     messageSubscription: require(path.join(outDir, 'services/messageSubscription.js')),
     queryReconciliation: require(path.join(outDir, 'app/queryReconciliation.js')),
+    protectedQueries: require(path.join(outDir, 'app/protectedQueries.js')),
   };
 }
 
@@ -1043,7 +1045,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.match(queries, /queryKeys\.notifications/);
   assert.match(queries, /invitationFlowId\(token\)/);
   assert.doesNotMatch(queries, /queryKeys\.invitation\(token\)/);
-  assert.match(queries, /evictGroupScopedQueries\(queryClient\)/);
+  assert.match(queries, /evictProtectedQueries\(queryClient\)/);
 });
 
 test('active group initialization is persisted-or-empty and transition eviction precedes observation', () => {
@@ -1065,12 +1067,12 @@ test('active group initialization is persisted-or-empty and transition eviction 
   assert.match(queries, /enabled: Boolean\(activeGroupId\)/);
   assert.doesNotMatch(provider, /previousActiveGroupId/);
   const transition = provider.slice(provider.indexOf('const nextActiveGroupId'), provider.indexOf('const login'));
-  const evictIndex = transition.indexOf('evictGroupScopedQueries(queryClient)');
+  const evictIndex = transition.indexOf('evictProtectedQueries(queryClient)');
   const setIndex = transition.indexOf('setActiveGroupId(nextActiveGroupId)');
   assert.ok(evictIndex >= 0 && evictIndex < setIndex, 'old protected queries are evicted before the new group becomes observable');
-  assert.equal(transition.indexOf('evictGroupScopedQueries(queryClient)', setIndex), -1, 'no post-transition effect can remove newly observed queries');
+  assert.equal(transition.indexOf('evictProtectedQueries(queryClient)', setIndex), -1, 'no post-transition effect can remove newly observed queries');
   const createSuccess = queries.slice(queries.indexOf('export function useCreateGroupMutation'), queries.indexOf('export function useAcceptInvitationMutation'));
-  assert.ok(createSuccess.indexOf('evictGroupScopedQueries(queryClient)') < createSuccess.indexOf('setActiveGroupId(group.id)'));
+  assert.ok(createSuccess.indexOf('evictProtectedQueries(queryClient)') < createSuccess.indexOf('setActiveGroupId(group.id)'));
 });
 
 test('latest-resolution guard deterministically rejects stale restore and auth-event results', async () => {
@@ -2197,6 +2199,26 @@ test('message reconciliation replaces a stale initial fetch after Postgres readi
   queryClient.clear();
 });
 
+test('lifecycle status failure eviction removes populated protected caches only', () => {
+  const { protectedQueries } = loadCompiledModules();
+  const appRequire = createRequire(path.join(appRoot, 'package.json'));
+  const { QueryClient } = appRequire('@tanstack/query-core');
+  const queryClient = new QueryClient();
+  const protectedKeys = [
+    ['groups'], ['event', 'event-a'], ['events', 'group-a'], ['rsvps', 'event-a'],
+    ['messages', 'event-a'], ['media', 'event-a'], ['notifications'], ['reminder', 'event-a', 'user-a'],
+    ['profiles'], ['invitation', 'current-preview', 'flow-a'],
+  ];
+  for (const key of protectedKeys) queryClient.setQueryData(key, { private: true });
+  queryClient.setQueryData(['account-deletion-status'], { safe: true });
+
+  protectedQueries.evictProtectedQueries(queryClient);
+
+  for (const key of protectedKeys) assert.equal(queryClient.getQueryData(key), undefined, `${key[0]} cache survived lifecycle status failure`);
+  assert.deepEqual(queryClient.getQueryData(['account-deletion-status']), { safe: true });
+  queryClient.clear();
+});
+
 test('hosted family harness is exact-project, staging-acknowledged, synthetic, and cleanup-bounded', () => {
   const harness = fs.readFileSync(path.join(repoRoot, 'tests/supabase-hosted-family-e2e.mjs'), 'utf8');
   const wrapper = fs.readFileSync(path.join(repoRoot, 'scripts/test-hosted-supabase-family.ps1'), 'utf8');
@@ -2305,7 +2327,7 @@ test('hosted availability monitor is no-secret, exact-target, and privacy-safe',
   assert.match(monitor, /missing static asset no longer returns 404/);
   assert.doesNotMatch(monitor, /SUPABASE_SECRET|service_role|authorization/i);
   assert.doesNotMatch(workflow, /secrets\.|pull_request|push:/);
-  assert.match(workflow, /permissions:\n  contents: read/);
+  assert.match(workflow, /permissions:\r?\n  contents: read/);
   assert.match(workflow, /cron: '17,47 \* \* \* \*'/);
   assert.match(workflow, /node scripts\/check-hosted-availability\.mjs/);
 });

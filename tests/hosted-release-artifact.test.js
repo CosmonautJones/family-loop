@@ -225,7 +225,7 @@ test('rejects duplicate manifest paths even when its internal digest is self-con
 });
 
 test('CI builds the exact event head once and uploads it without deployment credentials or remotes', () => {
-  const workflow = readFileSync(join(repositoryRoot, '.github/workflows/ci.yml'), 'utf8');
+  const workflow = readFileSync(join(repositoryRoot, '.github/workflows/ci.yml'), 'utf8').replace(/\r\n/g, '\n');
   const job = workflow.match(/  release-artifact:\n([\s\S]*?)(?=\n  [a-z][a-z-]+:\n|$)/)?.[0] ?? '';
   assert.notEqual(job, '', 'release-artifact job must exist');
   assert.match(job, /ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);

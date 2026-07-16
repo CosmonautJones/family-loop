@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { evictGroupScopedQueries, useGroupsQuery } from '../../app/queries';
+import { useAccountDeletionStatusQuery, useGroupsQuery } from '../../app/queries';
+import { evictProtectedQueries } from '../../app/protectedQueries';
 import { isServiceConfigured, loopedInService } from '../../services';
-import type { AuthSession } from '../../services/api';
+import type { AccountDeletionStatus, AuthSession } from '../../services/api';
 import { hasPasswordRecoveryCallback } from '../../services/supabaseClient';
 import type { GroupMember } from '../../types/domain';
 import { useLoopedInStore } from '../../store/useLoopedInStore';
@@ -13,6 +14,9 @@ type RecoveryStatus = 'idle' | 'loading' | 'requested' | 'ready' | 'complete' | 
 
 type AuthSessionContextValue = {
   configured: boolean;
+  deletionStatus: AccountDeletionStatus | null;
+  deletionStatusError: string | null;
+  deletionStatusPending: boolean;
   error: string | null;
   groupError: string | null;
   groups: { id: string }[] | undefined;
@@ -38,6 +42,7 @@ type AuthSessionContextValue = {
 const AuthSessionContext = createContext<AuthSessionContextValue | null>(null);
 
 export function AuthSessionProvider({ children }: PropsWithChildren) {
+  const configured = isServiceConfigured();
   const queryClient = useQueryClient();
   const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
@@ -53,7 +58,9 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   const previousUserId = useRef<string | null | undefined>(undefined);
   const sessionResolution = useRef(createLatestResolutionGuard());
   const operationResolution = useRef(createLatestResolutionGuard());
-  const groupsQuery = useGroupsQuery(status === 'authenticated');
+  const deletionStatusQuery = useAccountDeletionStatusQuery(configured && status === 'authenticated');
+  const deletionStatusResolved = !configured || status !== 'authenticated' || deletionStatusQuery.isSuccess;
+  const groupsQuery = useGroupsQuery(status === 'authenticated' && deletionStatusResolved && !deletionStatusQuery.data);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -115,17 +122,24 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   }, [applySession]);
 
   useEffect(() => {
-    if (isServiceConfigured()) return;
+    if (configured) return;
     loopedInService.auth.listLocalProfiles()
       .then(setLocalProfiles)
       .catch((cause: unknown) => setError(cause instanceof Error ? cause.message : 'Unable to load local profiles.'));
-  }, []);
+  }, [configured]);
+
+  useEffect(() => {
+    if (!deletionStatusQuery.data && !deletionStatusQuery.isError) return;
+    void queryClient.cancelQueries();
+    evictProtectedQueries(queryClient);
+    setActiveGroupId('');
+  }, [deletionStatusQuery.data, deletionStatusQuery.isError, queryClient, setActiveGroupId]);
 
   useEffect(() => {
     if (groupsQuery.data === undefined) return;
     const nextActiveGroupId = groupsQuery.data.some((group) => group.id === activeGroupId) ? activeGroupId : groupsQuery.data[0]?.id ?? '';
     if (nextActiveGroupId === activeGroupId) return;
-    evictGroupScopedQueries(queryClient);
+    evictProtectedQueries(queryClient);
     setActiveGroupId(nextActiveGroupId);
   }, [activeGroupId, groupsQuery.data, queryClient, setActiveGroupId]);
 
@@ -257,7 +271,10 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
 
   return (
     <AuthSessionContext.Provider value={{
-      configured: isServiceConfigured(),
+      configured,
+      deletionStatus: deletionStatusQuery.data ?? null,
+      deletionStatusError: deletionStatusQuery.error instanceof Error ? deletionStatusQuery.error.message : null,
+      deletionStatusPending: configured && status === 'authenticated' && deletionStatusQuery.isPending,
       confirmationRequired,
       invitationToken,
       setInvitationToken,

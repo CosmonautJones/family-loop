@@ -2,6 +2,7 @@ import type { Event, EventActivity, EventMessage, Group, GroupMember, MediaItem,
 import type {
   AuthSession,
   AuthSignUpResult,
+  AccountDeletionStatus,
   CreatedGroupInvitation,
   CreateEventPayload,
   CreateGroupPayload,
@@ -174,6 +175,15 @@ async function mapSession(session: Session): Promise<AuthSession> {
 
 function throwIfError(error: { message: string } | null) {
   if (error) throw backendServiceError(error);
+}
+
+function mapAccountDeletionStatus(value: unknown): AccountDeletionStatus | null {
+  if (value === null) return null;
+  const row = value as Partial<AccountDeletionStatus>;
+  if (row.status !== 'pending' || !row.requestedAt || !row.purgeAfter || !row.backupExpiresAfter) {
+    throw backendServiceError(new Error('Invalid account deletion status.'));
+  }
+  return row as AccountDeletionStatus;
 }
 
 function invitationTokenToHex(token: string) {
@@ -390,7 +400,7 @@ async function countMembers(groupIds: string[]) {
 
 async function createSignedMediaUrl(storagePath: string) {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.storage.from(mediaBucket).createSignedUrl(storagePath, 60 * 60);
+  const { data, error } = await supabase.storage.from(mediaBucket).createSignedUrl(storagePath, 3600);
   throwIfError(error);
   return data?.signedUrl ?? storagePath;
 }
@@ -961,6 +971,32 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const userId = await getCurrentUserId();
         const { error } = await supabase.from('loopedin_reminder_drafts').delete().eq('event_id', eventId).eq('user_id', userId);
         throwIfError(error);
+      },
+    },
+    accounts: {
+      async getDeletionStatus() {
+        const { data, error } = await supabase.rpc('loopedin_get_account_deletion_status');
+        throwIfError(error);
+        return mapAccountDeletionStatus(data);
+      },
+      async requestDeletion(password) {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData.user?.email) throw userServiceError('Sign in again before deleting your account.');
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: userData.user.email, password });
+        if (signInError) throw userServiceError('Your password was not recognized. Your account was not changed.');
+        const { data, error } = await supabase.rpc('loopedin_request_account_deletion');
+        if (error?.message.includes('Transfer ownership')) throw userServiceError('Transfer ownership of every family before deleting your account.');
+        if (error?.message.includes('Sign in again')) throw userServiceError('Sign in again before deleting your account.');
+        throwIfError(error);
+        const status = mapAccountDeletionStatus(data);
+        if (!status) throw backendServiceError(new Error('Missing account deletion status.'));
+        return status;
+      },
+      async cancelDeletion() {
+        const { data, error } = await supabase.rpc('loopedin_cancel_account_deletion');
+        if (error?.message.includes('recovery period')) throw userServiceError('The 30-day recovery period has ended.');
+        throwIfError(error);
+        if (data !== true) throw backendServiceError(new Error('Account deletion cancellation failed.'));
       },
     },
   };

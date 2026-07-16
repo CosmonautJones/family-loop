@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 test('CI exposes stable least-privilege quality checks', () => {
-  const workflow = fs.readFileSync(path.join(repoRoot, '.github', 'workflows', 'ci.yml'), 'utf8');
+  const workflow = fs.readFileSync(path.join(repoRoot, '.github', 'workflows', 'ci.yml'), 'utf8').replace(/\r\n/g, '\n');
   for (const name of ['Release artifact', 'Application quality', 'Security and dependencies', 'Migration integrity']) {
     assert.match(workflow, new RegExp(`name: ${name}`));
   }

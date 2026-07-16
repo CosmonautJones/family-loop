@@ -14,6 +14,7 @@ import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { AuthScreen, SessionStatusScreen } from '../screens/AuthScreen';
 import { FamilyOnboardingScreen } from '../screens/FamilyOnboardingScreen';
 import { useActiveGroupQuery } from '../app/queries';
+import { AccountDeletionRecoveryScreen } from '../screens/AccountDeletionRecoveryScreen';
 
 export function AppShell() {
   const { width } = useWindowDimensions();
@@ -25,6 +26,13 @@ export function AppShell() {
     return <SessionStatusScreen loading title="Restoring your plans" detail="Connecting to your private family space…" />;
   }
   if (auth.status === 'signedOut' || auth.status === 'error') return <AuthScreen />;
+  if (auth.deletionStatusPending) {
+    return <SessionStatusScreen loading title="Checking account access" detail="Confirming your private family access…" />;
+  }
+  if (auth.deletionStatusError) {
+    return <SessionStatusScreen title="We couldn't check account access" detail={auth.deletionStatusError} />;
+  }
+  if (auth.deletionStatus) return <AppBackground><AccountDeletionRecoveryScreen /></AppBackground>;
   if (auth.invitationToken) return <AppBackground><FamilyOnboardingScreen /></AppBackground>;
   if (auth.groupsPending) {
     return <SessionStatusScreen loading title="Loading your groups" detail="Finding the plans shared with you…" />;
