@@ -382,5 +382,7 @@ Use this before considering a mission complete.
 - [x] Authenticated owner/member calls cannot execute finalize; only the service role can, with trusted-actor and exact-state revalidation.
 - [x] Prepared same-key retries are cooled, counted, and bounded; missing-length/chunked bodies are capped at 2 KiB before JSON parsing.
 - [x] The UI says provider accepted/queued and never claims delivery.
+- [x] Main CI, independent re-review, post-rotation encrypted backup/isolated restore, all-nine remote migration history, active JWT-verified function, exact-origin preflight, and anonymous denial are GREEN.
+- [x] Provider credentials are absent and the current staging web remains on `ce4`; the deployed function therefore stays fail-closed until the reviewed web/provider release is ready.
 - [ ] Disable Resend click/open tracking and prove deployed provider acceptance/delivery.
 - [ ] Prove inbox receipt, separate-user confirmation/acceptance, and Supabase Auth confirmation/recovery SMTP.
