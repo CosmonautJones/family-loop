@@ -345,7 +345,7 @@ Use this before considering a mission complete.
 - [x] Cold `qa-mrmvkrsu-77c50f7e`, warm `qa-mrmvneb6-75962463`, and exact deployed `qa-mrmw9a6b-dcce7de2` family drills pass Realtime observation, private-media lifecycle, role/outsider denial, protected-state comparison, and zero cleanup residue.
 - [x] Final drill counts are three members, three events, three RSVPs, two comments, and seven notifications.
 - [x] Availability workflow `29466990331` and privacy-safe telemetry workflow `29466991186` are GREEN.
-- [x] Backup run `29465195044` restores seven migrations and exact rows/object hashes/references into an isolated database; RLS/core loop pass at measured 16.719-second RPO and 6.107-second RTO.
+- [x] Backup run `29465195044` restores seven migrations and exact rows/Storage metadata into an isolated database, reconstructs and hash-verifies object bytes separately, and passes RLS/core-loop checks. Its 16.719-second snapshot age and 6.107-second isolated drill duration are observations, not operational RPO/RTO proof.
 - [x] Netlify alias rollback to the exact prior deploy and restoration of the candidate pass without database reversal.
 - [x] Hosted 320/390/430 CSS-pixel widths have no horizontal overflow and sign-in controls are at least 48 CSS pixels high; Back, deep-link reload, and signed-out shell restoration pass with clean console/network evidence.
 - [x] Realtime MEDIUM Query race at `d1b8b59` is fixed in exact release source; independent review is GREEN with zero blocker/high/medium findings.

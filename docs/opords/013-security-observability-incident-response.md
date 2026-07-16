@@ -1,7 +1,7 @@
 # OPORD 013 — Security, Observability, and Incident Response
 
 ## Status
-STAGING OBSERVABILITY PASS / PRODUCTION CONDITIONAL — dedicated staging passes authorization/private-media denial, no-secret availability, privacy-safe authenticated error ingestion, rate limiting, retention, and hourly aggregate monitoring. Named production ownership, production alerting, and external assessment remain `NOT RUN`.
+STAGING OBSERVABILITY PASS / PRODUCTION CONDITIONAL — dedicated staging passes authorization/private-media denial, no-secret availability, privacy-safe authenticated error ingestion, rate limiting, retention, and manually exercised aggregate monitoring with an hourly schedule configured. The first scheduled telemetry run, named production ownership/routing, production alerting, and external assessment remain `NOT RUN`.
 
 ## Situation and evidence
 Loopback and dedicated hosted synthetic family/media matrices use real Auth sessions to test owner/member/outsider and direct-mutation attacks. Raw invite tokens are hash-only server-side; generated credentials/tokens are redacted. Public availability and locked authenticated error reporting record only bounded operational fields and aggregates; they collect no family content or behavioral analytics. Named production ownership/routing and external assessment remain unevidenced.
@@ -63,7 +63,7 @@ rg -n "service_role|SUPABASE_SERVICE|BEGIN (RSA|OPENSSH) PRIVATE KEY" docs/opord
 Focused executable redaction coverage includes a configured `sendMessage` transport rejection. The OPORD 012 390x844 outage was the reproducer; the local tabletop and recovery contract are recorded in `docs/runbooks/security-incident-response.md`. Inspect secret-scan matches rather than treating any match as proof.
 
 ### Conditional-staging/mobile-web/human
-Dedicated staging live RLS/Storage denial, public availability, bounded error ingestion, hourly aggregate monitoring, and a controlled alert are `PASS`. Production monitoring ownership/routing and external security assessment remain `NOT RUN`.
+Dedicated staging live RLS/Storage denial, public availability, bounded error ingestion, manually dispatched aggregate monitoring, and a controlled alert are `PASS`. The hourly telemetry schedule is configured but not yet observed. Production monitoring ownership/routing and external security assessment remain `NOT RUN`.
 
 ## Stop conditions/authorization limits
 Stop on any suspected real exposure and escalate; do not inspect more data, rotate credentials, change remote policy, notify users, or deploy containment without incident-owner authorization. Stop before vendors/dependencies.

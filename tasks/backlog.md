@@ -5,7 +5,10 @@
 - Provision a separate production Supabase project after the user selects the organization, region, and any required paid plan; never repurpose staging or the quarantined unrelated project.
 - Configure production SMTP and prove real invitation and password-recovery delivery. Complete the approved owner's password replacement privately; never request or record the password.
 - Send invitations only to additional addresses the user explicitly supplies.
-- Observe the scheduled availability, telemetry, and encrypted-backup jobs on their real cadence; managed PITR is still unproven and requires either provider capability or an explicitly accepted limitation.
+- Continue availability observation and capture the first scheduled telemetry and encrypted-backup runs; managed PITR is still unproven and requires either provider capability or an explicitly accepted limitation.
+- Prove the encrypted current-user export on hosted staging and production without exposing the passphrase or another family member's data.
+- Implement and prove the approved deletion lifecycle: immediate access disablement, 30-day grace, ownership transfer before owner deletion, permanent row/object purge, backup expiry, explicit legal-hold records, and dry-run-first retention/orphan apply.
+- Assign named production telemetry ownership, alert routing, and incident response while keeping the existing privacy-safe aggregate-only boundary.
 - Run authoritative hosted native 200% zoom plus physical iPhone Safari, Android Chrome, VoiceOver, and TalkBack checks. Hosted 320/390/430 CSS-width checks are already green but do not substitute for these gates.
 - Attach and verify `app.travisjohnjones.com` and promote the exact proven artifact only after explicit production approval. Preserve the personal site and provide its link change separately.
 - Re-run the real-family flow with an explicitly approved second recipient, then record production artifact, migration, operator, timestamp, rollback target, and nondestructive rollback evidence.
