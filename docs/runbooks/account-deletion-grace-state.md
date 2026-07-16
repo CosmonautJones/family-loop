@@ -2,7 +2,7 @@
 
 ## Scope
 
-This runbook covers the recoverable account-deletion request, immediate server-access shutdown, cancellation, and legal-hold records introduced by migration `20260716033000_account_deletion_grace_state.sql`. It does not perform permanent deletion.
+This runbook covers the recoverable account-deletion request, immediate server-access shutdown, cancellation, and legal-hold records introduced by migration `20260716043940_account_deletion_grace_state.sql`. It does not perform permanent deletion.
 
 ## User path
 

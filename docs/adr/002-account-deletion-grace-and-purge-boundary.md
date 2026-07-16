@@ -59,7 +59,7 @@ This ADR does not choose the external journal provider, legal-hold retention per
 
 ## Evidence links
 
-- [`account lifecycle migration`](../../supabase/migrations/20260716033000_account_deletion_grace_state.sql)
+- [`account lifecycle migration`](../../supabase/migrations/20260716043940_account_deletion_grace_state.sql)
 - [`account lifecycle E2E`](../../tests/supabase-account-lifecycle-e2e.mjs)
 - [`account lifecycle runbook`](../runbooks/account-deletion-grace-state.md)
 - [`OPORD 017`](../opords/017-backup-restore-data-lifecycle.md)
