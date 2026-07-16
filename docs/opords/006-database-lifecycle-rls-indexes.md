@@ -2,12 +2,12 @@
 
 ## Status
 
-STAGING SYNTHETIC COMPLETE / PRODUCTION CONDITIONAL — all six reviewed forward migrations match dedicated hosted staging, every LoopedIn table has RLS, private Storage is enforced, protected RPC anonymous grants are removed, and the owner/member/outsider matrix passes. Production-cardinality plans and production deployment remain `NOT RUN`.
+STAGING SYNTHETIC COMPLETE / PRODUCTION CONDITIONAL — all seven reviewed forward migrations match dedicated hosted staging, every LoopedIn table has RLS, private Storage is enforced, protected RPC anonymous grants are removed, and the owner/member/outsider matrix passes. Production-cardinality plans and production deployment remain `NOT RUN`.
 
 ## Situation and evidence
 
 - The configured adapter already references group-scoped events, RSVPs, event messages, media, and notifications (`docs/architecture.md:50-56`).
-- Six forward migrations apply cleanly locally and match dedicated hosted staging. Database lint and Auth-session owner/member/outsider family/media matrices pass locally and synthetically on hosted staging; production deployment remains absent.
+- Seven forward migrations apply cleanly locally and match dedicated hosted staging. Database lint and Auth-session owner/member/outsider family/media matrices pass locally and synthetically on hosted staging; production deployment remains absent.
 - Event messages are exact-event scoped and deterministic in local contract tests (`docs/architecture.md:41-46`; `evals/review-log.md:3-12`).
 - The product boundary requires private group context (`docs/architecture.md:57-61`).
 - Inference: lifecycle cascades, uniqueness, query indexes, and policy coverage must be verified against actual repository SQL and query shapes before proposing additive changes.
@@ -107,4 +107,8 @@ Stop before any remote apply, production connection, destructive DDL/DML, histor
 
 ## Definition of done
 
-Met for local and dedicated synthetic staging: rollback-safe plans, six migrations, RLS/private Storage, protected RPC grants, and multi-user denial pass. Production-cardinality evidence and production deployment remain conditional gates.
+Met for local and dedicated synthetic staging: rollback-safe plans, seven migrations, RLS/private Storage, protected RPC grants, and multi-user denial pass. Production-cardinality evidence and production deployment remain conditional gates.
+
+## Superseding staging disposition — 2026-07-16
+
+Dedicated project `vkogznsfthirhxkqysza` has exactly seven repository migrations; latest is `20260716002122_privacy_safe_error_telemetry`. The additive migration introduces locked `loopedin_telemetry` ingestion/maintenance boundaries without relaxing family RLS or private Storage. Hosted proof denied anonymous and invalid telemetry calls, accepted five authenticated bounded reports, and rate-limited the sixth. Final family run `qa-mrmw9a6b-dcce7de2` passed three members, three events, three RSVPs, two comments, seven notifications, private-media create/read/deny/delete, Realtime, outsider denial, and zero synthetic residue. Production migration apply and production-cardinality plans remain `NOT RUN`.

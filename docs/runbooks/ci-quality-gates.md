@@ -92,3 +92,11 @@ The current Expo SDK 53 tree reports 11 moderate transitive advisories in build/
 5. Record the administrator, activation time, and any exception owner/expiry in the review log when enforcement is enabled.
 
 Stop if a check name differs, a job requests secrets or write permission, a migration job reaches a non-loopback database, a dependency exception lacks owner/expiry, or a workflow change introduces deployment behavior.
+
+## Superseding hosted clean proof — 2026-07-16
+
+PR #4 passed its exact-head application, security/dependency, migration, and release checks and received independent GREEN review before merge. Merge commit `2a4b259…` then passed default-branch run `29466733884`. The deployed immutable artifact is independently identified as source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619`, release `0.1.0-08006e5e83a8`, and digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`; the merge-run SHA and artifact source remain separate evidence fields.
+
+Operational workflows are not substitutes for required code checks. Final availability run `29466990331` and normal telemetry run `29466991186` were GREEN. Controlled telemetry alert run `29465157215` is an expected failure. Earlier telemetry runs `29464425396` and `29465087407` document corrected operator secret-wiring failures and did not expose the secret. Backup run `29465195044` was a successful `workflow_dispatch`; it does not prove cron execution.
+
+Administrator-enforced private-repository checks and disposable hosted seeded-failure PRs remain `NOT RUN`.

@@ -53,3 +53,14 @@ In that authorized environment:
 - root/app tests, TypeScript, harness, lint status, web export, and diff check from the same commit.
 
 Until that evidence exists, describe remote media as repository-ready and locally contract-tested—not deployed, private-storage certified, transactional, or production-ready.
+
+## 2026-07-15 superseding hosted staging checkpoint
+
+The dedicated LoopedIn staging project is now deployed and the remote-media slice is **GREEN for the exercised synthetic staging path**. This does not remove the content-scanning warning above or make a production claim.
+
+- Exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619`, release `0.1.0-08006e5e83a8`, and artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38` are published as Netlify deploy `6a58428caebae3fadaf3906b` at `https://loopedin-family.netlify.app`.
+- Cold and warm predeploy family drills `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463`, followed by final deployed drill `qa-mrmw9a6b-dcce7de2`, passed private media create, authorized view/delete, outsider denial, protected-state comparison, and cleanup with zero synthetic residue. The final drill also passed three-member event/RSVP/comment/notification behavior and observed Realtime delivery.
+- Hosted encrypted backup run `29465195044` restored Storage metadata into an isolated disposable database and reconstructed all three retained private object bytes in a temporary directory for hash/reference verification. Seven-migration history, owner visibility, outsider denial, and post-restore core-loop checks matched; a working isolated Storage service was not rehydrated, and the primary database was never a restore target.
+- The real approved owner starter state retains three active private attributed photos. No additional invitation recipient or personal account was invented for this proof.
+
+Still unproven are hostile-byte decode/re-encode or malware scanning, every failure seam listed in the original certification gate, physical Safari/Chrome behavior, and production-project media behavior. Production promotion therefore remains blocked even though the exercised staging media lifecycle is green.

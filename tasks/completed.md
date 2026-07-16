@@ -1,5 +1,21 @@
 # Completed Work
 
+## 2026-07-15 - Dedicated hosted staging operational checkpoint
+
+### Summary
+
+Published exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` as release `0.1.0-08006e5e83a8`, artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`, and immutable Netlify deploy `6a58428caebae3fadaf3906b` at `https://loopedin-family.netlify.app`. Dedicated staging now matches all seven reviewed repository migrations.
+
+### Result
+
+Cold/warm/final hosted drills passed Realtime, family roles, events, RSVPs, comments, notifications, private media, outsider denial, state preservation, and zero-residue cleanup. Availability `29466990331`, privacy-safe telemetry `29466991186`, and encrypted isolated restore `29465195044` are GREEN. The drill matched seven migrations, row counts, reconstructed private-object hashes, references, owner/outsider RLS, and the core loop, and recorded a 16.719-second snapshot age plus 6.107-second isolated drill duration; operational RPO/RTO remain unproven targets. Exact Netlify rollback and candidate restoration passed without database reversal. Hosted 320/390/430 CSS-width, Back, deep-link reload, and signed-out shell checks passed. Independent review closed the first-head MEDIUM Realtime Query race in the exact release and returned GREEN with zero blocker/high/medium findings.
+
+This completes the dedicated staging operational checkpoint, not production readiness. SMTP/delivered invitations, private real-password recovery completion, dedicated production Supabase, hosted encrypted export proof, deletion/retention/legal-hold apply, scheduled telemetry/backup observation, named production telemetry ownership, physical devices/AT, authoritative hosted native 200% zoom, managed PITR, custom domain, and production approval remain in the backlog.
+
+### Links / commits
+
+Exact release source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619`; final drill `qa-mrmw9a6b-dcce7de2`; cold/warm drills `qa-mrmvkrsu-77c50f7e`, `qa-mrmvneb6-75962463`; Netlify deploy `6a58428caebae3fadaf3906b`.
+
 ## 2026-07-14 - FAMILY-LOOP-FULL-001 local multi-user and KISS checkpoint
 
 Completed the bounded local checkpoint across `7deb3fa`, `93dc773`, `1311332`, `2b6d725`, `a52e43b`, and `0601baa`. Two tabs selected Alex/Maya independently through the explicitly demo-only `sessionStorage` actor chooser and converged on shared plans, distinct RSVPs/comments, viewer-relative authorship, reload-safe identity, and permitted plan/photo controls. Outsider, spoofing, TOCTOU, ownership, notification-recipient, and failure-rollback contracts pass locally.

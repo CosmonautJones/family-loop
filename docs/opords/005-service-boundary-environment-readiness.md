@@ -2,13 +2,13 @@
 
 ## Status
 
-PARTIAL/CONDITIONAL — the adapter boundary and loopback environment are executable and diagnosable; errors are centrally sanitized, reads retry once, writes never auto-retry, and unchanged manual retries of response-lost event/comment commits are idempotent. A general request-version/correlation-ID/deadline/rate-limit contract and hosted readiness remain `NOT RUN` because they require a cooperating server/gateway.
+STAGING READINESS PASS / PRODUCTION CONDITIONAL — the adapter boundary, safe error categories, hosted availability, and readiness-aware Realtime/refetch behavior are executable and observed on dedicated staging. A general request-version/correlation-ID/deadline/rate-limit contract and production readiness remain `NOT RUN`.
 
 ## Situation and evidence
 
 - `app/src/services/api.ts` defines auth, groups, events, RSVPs, activity, messages, media, and notification contracts. Development/native selection uses Expo variables; immutable web releases validate a public runtime overlay before lazy adapter/client creation.
 - Default local mode is versioned and reload-durable; memory mode is explicit test-only; Supabase mode is explicit and never falls back on configured failures.
-- Loopback Supabase is available and exercised through migration, database lint, family/media E2E, and a configured four-session browser scenario. Remote deployment remains unverified.
+- Loopback Supabase is available and exercised through migration, database lint, family/media E2E, and a configured four-session browser scenario. Dedicated staging availability/readiness now passes; production remains unverified.
 
 ## Mission/objective
 
@@ -113,3 +113,10 @@ Stop before credential prompts, secret output, environment edits, remote writes,
 ## Definition of done
 
 The versioned local boundary and probes meet acceptance, the readiness matrix is source-cited, commands/results are honest, remote/Docker/mobile-browser limits are explicit, review log is updated, and no environment, credential, or remote state changed; staging remains separately authorized.
+
+## Superseding staging disposition — 2026-07-16
+
+- Dedicated staging availability run `29466990331` is GREEN for the HTTPS shell, no-store runtime configuration, exact backend identity, Auth health, release metadata, and missing-asset behavior.
+- Cold run `qa-mrmuexxo-586c4751` was RED when an insert immediately after `SUBSCRIBED` exposed that transport subscription was not yet reliable Postgres-change readiness. The scoped fix adds a system-event refetch plus cancellation/refetch query regression coverage. Cold/warm runs `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463`, then final run `qa-mrmw9a6b-dcce7de2`, were GREEN.
+- Staging release `0.1.0-08006e5e83a8` and Supabase migration history through `20260716002122` are compatible in the final hosted checks. The older conditional-staging command language above remains the authorization baseline for future environments, not a claim that production is ready.
+- Still open: server-propagated request/correlation IDs, universal deadlines/gateway rate enforcement, real SMTP/password completion, physical devices/assistive technology, and a separate production environment.

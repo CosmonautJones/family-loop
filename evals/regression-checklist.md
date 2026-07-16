@@ -337,3 +337,17 @@ Use this before considering a mission complete.
 - [x] Repository secret names exist; values are absent from source, logs, evidence, and chat.
 - [ ] Availability and daily backup schedules require a hosted run after default-branch merge.
 - [ ] Managed PITR, replacement-project cutover, client-error ingestion, SMTP, physical devices, and production remain open.
+
+## 2026-07-15 final hosted staging closeout
+
+- [x] Source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619`, release `0.1.0-08006e5e83a8`, artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`, and Netlify deploy `6a58428caebae3fadaf3906b` agree at `https://loopedin-family.netlify.app`.
+- [x] Hosted migration history exactly matches all seven repository migrations.
+- [x] Cold `qa-mrmvkrsu-77c50f7e`, warm `qa-mrmvneb6-75962463`, and exact deployed `qa-mrmw9a6b-dcce7de2` family drills pass Realtime observation, private-media lifecycle, role/outsider denial, protected-state comparison, and zero cleanup residue.
+- [x] Final drill counts are three members, three events, three RSVPs, two comments, and seven notifications.
+- [x] Availability workflow `29466990331` and privacy-safe telemetry workflow `29466991186` are GREEN.
+- [x] Backup run `29465195044` restores seven migrations and exact rows/Storage metadata into an isolated database, reconstructs and hash-verifies object bytes separately, and passes RLS/core-loop checks. Its 16.719-second snapshot age and 6.107-second isolated drill duration are observations, not operational RPO/RTO proof.
+- [x] Netlify alias rollback to the exact prior deploy and restoration of the candidate pass without database reversal.
+- [x] Hosted 320/390/430 CSS-pixel widths have no horizontal overflow and sign-in controls are at least 48 CSS pixels high; Back, deep-link reload, and signed-out shell restoration pass with clean console/network evidence.
+- [x] Realtime MEDIUM Query race at `d1b8b59` is fixed in exact release source; independent review is GREEN with zero blocker/high/medium findings.
+- [ ] Do not mark a retained local Realtime rerun green: the local Auth fixture had no `@loopedin.test` accounts. Hosted drills and focused Query coverage are the accepted evidence.
+- [ ] Production SMTP and delivered invitations, real private password recovery, dedicated production Supabase, physical iPhone Safari/Android Chrome/VoiceOver/TalkBack, authoritative hosted native 200% zoom, observed schedule cadence, managed PITR, custom domain, and explicit production promotion remain open.

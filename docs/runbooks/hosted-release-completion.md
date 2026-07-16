@@ -1,5 +1,19 @@
 # Hosted release completion
 
+## Superseding hosted-staging checkpoint — 2026-07-16
+
+This section supersedes the 2026-07-15 current-state claims below while preserving them as dated evidence. It does not declare production.
+
+- Exact application source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` identifies release `0.1.0-08006e5e83a8` and artifact digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`. The separately verified environment envelope is Netlify deploy `6a58428caebae3fadaf3906b` at `https://loopedin-family.netlify.app`.
+- Dedicated Supabase staging `vkogznsfthirhxkqysza` has exactly seven repository migrations through `20260716002122_privacy_safe_error_telemetry`. The quarantined project remains untouched.
+- PR #4 passed exact-head CI and independent GREEN review. Merge `2a4b259…` passed main run `29466733884`; final availability run `29466990331` and normal telemetry run `29466991186` are GREEN.
+- Privacy-safe telemetry accepted five bounded authenticated reports, rate-limited the sixth, and denied anonymous/invalid calls. It retains bounded event rows for 30 days and limiter identity for 24 hours, emits aggregate monitor output, derives environment server-side, and stores no family content or generic tracking data. Controlled alert run `29465157215` failed as designed. Earlier runs `29464425396` and `29465087407` exposed operator secret-wiring errors that were corrected without disclosure.
+- Final synthetic run `qa-mrmw9a6b-dcce7de2` passed three members, three events, three RSVPs, two comments, seven notifications, private media create/view/outsider-deny/delete, Realtime convergence, and zero residue. Earlier cold run `qa-mrmuexxo-586c4751` timed out and exposed the `SUBSCRIBED` versus Postgres-ready race; the system-event plus cancel/refetch correction passed cold/warm runs `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463`.
+- Backup workflow-dispatch run `29465195044` restored all seven migrations and Storage metadata into an isolated database, reconstructed and hash-verified private object bytes in a temporary directory, and recorded a 16.719-second observed snapshot age plus 6.107-second isolated drill duration. Artifact `8362712936` expires 2026-08-15; telemetry configuration restored and transient event/limiter rows were zero. This is not operational RPO/RTO, a cron-trigger observation, a working Storage-service rehydration, or managed PITR proof.
+- Exact frontend rollback selected `6a583390d6997d709c864c56`, then restored `6a58428caebae3fadaf3906b`; HTTP 200 passed after both changes and no database reversal occurred.
+- Signed-out hosted layouts at 320, 390, and 430 CSS px were observed. Native hosted 200% zoom, physical iPhone Safari/Android Chrome, VoiceOver/TalkBack, physical software keyboard, and moderated use remain unproven.
+- Production blockers remain: real SMTP/invitation delivery and owner password completion; approved recipient emails beyond Travis; a separate production Supabase plan/organization/region and redirect allow-list; hosted encrypted current-user export proof; deletion grace, ownership transfer, permanent purge, legal-hold records, and retention/orphan apply; first scheduled telemetry/backup observations; named production telemetry ownership/routing; managed PITR or an accepted limitation; physical-device/AT checks; custom domain; and explicit production approval. Advisor review also requires immutable app digest/runtime-envelope separation, retention outside ingestion, hourly aggregates, redirect isolation, and a separate production gate; those controls govern promotion.
+
 ## Superseding hosted-staging checkpoint — 2026-07-15
 
 This checkpoint supersedes the inventory-only status below without deleting its historical evidence. The dedicated project and site are now mutated only as authorized; the quarantined Supabase project and the `travisjohnjones` Netlify site remain untouched.

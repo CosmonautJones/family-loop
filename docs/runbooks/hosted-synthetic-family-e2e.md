@@ -42,3 +42,11 @@ The run rotates all four random passwords in memory, signs in independently, sna
 - Hardened run `qa-mrmkwxgi-c0dca50f` reached the Realtime assertion after those new invitation and cleanup controls, then was **RED** because an insert sent immediately after `SUBSCRIBED` missed the provider's cold-start change window. Cleanup completed, and exact-ID SQL returned zero QA users, profiles, groups, entitlements, private operation maps, or Storage objects.
 - The harness now waits two seconds after `SUBSCRIBED`, matching the application's initial subscribed-state refresh before later human writes. Run `qa-mrml3fsl-a08c4f8e` was **GREEN** with the complete family/media/Realtime matrix, `protectedStateUnchanged=true`, and residue `{users:0, profiles:0, groups:0, invitations:0, objects:0}`.
 - Independent SQL after the hardened GREEN run returned zero exact QA users, profiles, groups, entitlements, event/message operation-map rows, and private objects. Real state remained one Jones Fam, one member, one validation event, and one RSVP.
+
+## Readiness regression and final run — 2026-07-16
+
+- Cold run `qa-mrmuexxo-586c4751` was **RED** at the bounded Realtime check. It established that client `SUBSCRIBED` confirms transport subscription but not necessarily immediate Postgres-change delivery on a cold tenant. Cleanup completed; the failure was retained rather than relabeled as flaky success.
+- The scoped correction has the channel's system subscription event invalidate/refetch authoritative messages, and the query layer cancels an older message read before the newest refetch so stale completion cannot overwrite the newest set. Focused regression coverage accompanies the change.
+- Readiness-aware cold/warm runs `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463` were **GREEN**.
+- Final release run `qa-mrmw9a6b-dcce7de2` was **GREEN** with 3 members, 3 events, 3 RSVPs, 2 comments, 7 notifications, private media create/member-view/outsider-deny/authorized-delete, exact-event Realtime, outsider database denial, `protectedStateUnchanged=true`, and zero synthetic residue.
+- This remains synthetic staging proof. Real SMTP/invitation delivery, the owner's password completion and real browser journey, additional approved recipients, physical devices/assistive technology, and production remain unproven.

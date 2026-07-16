@@ -1,5 +1,15 @@
 # Review Log
 
+## 2026-07-15 — Exact staging release, Realtime fix loop, and operations closeout
+
+- Initial Realtime review of head `d1b8b59` was **MEDIUM/RED**: treating channel subscription as PostgreSQL-change readiness allowed a readiness invalidation to coalesce into a stale in-flight Query result.
+- Exact source `08006e5e83a8dd85cfeb30f6fb26f8df103fa619` waits for the provider's PostgreSQL-changes readiness event, cancels the exact in-flight query, and refetches only an active exact observer. Independent fixed-head review was **GREEN** with zero blocker, high, or medium findings.
+- CI artifact release `0.1.0-08006e5e83a8`, digest `e41dd1727d11888e0259a97c442f13e815243472dfcd437334c00c53b9ee0d38`, was wrapped in the separately verified Netlify runtime envelope for deploy `6a58428caebae3fadaf3906b` and published at `https://loopedin-family.netlify.app`.
+- Hosted cold/warm drills `qa-mrmvkrsu-77c50f7e` and `qa-mrmvneb6-75962463` and final exact-deploy drill `qa-mrmw9a6b-dcce7de2` passed the bounded family matrix, Realtime, private media, outsider denial, protected-state comparison, and zero residue.
+- Availability `29466990331` and privacy-safe telemetry `29466991186` are GREEN. Encrypted backup/restore `29465195044` is GREEN with seven migrations, exact counts/reconstructed-object hashes/references, owner/outsider RLS, a 16.719-second observed snapshot age, and a 6.107-second isolated drill duration; operational RPO/RTO are not inferred.
+- Exact Netlify alias rollback to the prior deploy and restoration to the candidate passed without database reversal. Hosted 320/390/430 CSS-pixel shell, Back, deep-link reload, and signed-out session checks passed with clean console/network evidence.
+- Evidence boundary: the retained local Realtime fixture could not rerun because no `@loopedin.test` Auth accounts existed; no local pass is claimed. Hosted LCP, authoritative native 200% zoom, physical devices/AT, observed schedule cadence, managed PITR, SMTP/delivered invitations, dedicated production Supabase, custom domain, and production approval remain open.
+
 ## 2026-07-15 — Published staging alias, Auth redirects, and recovery delivery
 
 - Exact-head CI run `29451842237` passed all four jobs on `3cf45367dc858e5c58bf8b72ae28e263b310c6b4`; downloaded artifact digest `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c` reverified before upload. Immutable deploy `6a57fc726b558b21faf57459` passed HTTPS/runtime/CSP/cache/404/signed-out rendering, was added to the Auth allow-list, and is the final staging alias release `0.1.0-3cf45367dc85`.
