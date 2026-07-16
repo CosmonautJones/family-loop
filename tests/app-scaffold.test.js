@@ -1022,7 +1022,9 @@ test('configured service maps the accepted family lifecycle RPC contract without
   const signUpStart = adapter.indexOf('async signUp');
   const matchRpc = adapter.indexOf("rpc('loopedin_match_group_invite_email'", signUpStart);
   assert.ok(matchRpc > signUpStart && matchRpc < adapter.indexOf('supabase.auth.signUp', signUpStart));
-  assert.match(adapter.slice(matchRpc, adapter.indexOf('supabase.auth.signUp', signUpStart)), /target_token: invitationTokenToHex\(token\), target_email: email\.trim\(\)/);
+  const signUpPreflight = adapter.slice(signUpStart, adapter.indexOf('supabase.auth.signUp', signUpStart));
+  assert.equal((signUpPreflight.match(/invitationTokenToHex\(/g) ?? []).length, 1, 'invited signup must convert the canonical token exactly once');
+  assert.match(signUpPreflight, /target_token: token, target_email: email\.trim\(\)/);
   const authListener = adapter.slice(adapter.indexOf('onAuthStateChange(listener)'), adapter.indexOf('async refreshSession'));
   assert.match(authListener, /resolveWithFallback\(mapSession\(session\), sessionWithoutProfile\(session\)\)/);
   assert.doesNotMatch(authListener, /catch\([\s\S]*?listener\(null\)/);
