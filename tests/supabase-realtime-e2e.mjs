@@ -33,14 +33,17 @@ const signIn = async (supabase, name) => {
   return data.user;
 };
 const subscribe = (supabase, eventId, onChange) => new Promise((resolve, reject) => {
-  const timeout = setTimeout(() => reject(new Error(`Channel did not subscribe for ${eventId}`)), 10_000);
+  const timeout = setTimeout(() => reject(new Error(`Postgres Changes did not become ready for ${eventId}`)), 30_000);
   const channel = supabase.channel(`proof:${eventId}:${crypto.randomUUID()}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'loopedin_event_messages', filter: `event_id=eq.${eventId}` }, onChange)
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
+    .on('system', {}, (payload) => {
+      if (payload.extension === 'postgres_changes' && payload.status === 'ok') {
         clearTimeout(timeout);
         resolve(channel);
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      }
+    })
+    .subscribe((status) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
         clearTimeout(timeout);
         reject(new Error(`Channel failed with ${status}`));
       }

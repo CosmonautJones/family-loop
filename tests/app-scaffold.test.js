@@ -2089,12 +2089,17 @@ test('representative family capacity preserves exact event identity and stays wi
 
 test('event message subscription is exact-key, reconnecting, and inert after cleanup', async () => {
   const { messageSubscription } = loadCompiledModules();
-  const records = { name: '', filter: null, change: null, status: null, removed: [] };
+  const records = { name: '', filter: null, change: null, system: null, status: null, removed: [] };
   const channel = {
     on(type, filter, callback) {
-      assert.equal(type, 'postgres_changes');
-      records.filter = filter;
-      records.change = callback;
+      if (type === 'postgres_changes') {
+        records.filter = filter;
+        records.change = callback;
+      } else {
+        assert.equal(type, 'system');
+        assert.deepEqual(filter, {});
+        records.system = callback;
+      }
       return this;
     },
     subscribe(callback) {
@@ -2128,15 +2133,25 @@ test('event message subscription is exact-key, reconnecting, and inert after cle
     filter: 'event_id=eq.event-a',
   });
   records.status('SUBSCRIBED');
-  assert.equal(changes, 1, 'initial subscription reconciles server history');
+  assert.equal(changes, 0, 'channel join alone is not Postgres readiness');
+  records.system({ extension: 'system', status: 'ok' });
+  assert.equal(changes, 0, 'unrelated system readiness is ignored');
+  records.system({ extension: 'postgres_changes', status: 'error' });
+  records.system({ extension: 'postgres_changes', status: 'ok' });
+  assert.equal(changes, 1, 'Postgres readiness reconciles server history');
   records.change();
   assert.equal(changes, 2, 'one matching database event requests one reconciliation');
   records.status('CHANNEL_ERROR');
   records.status('TIMED_OUT');
   records.status('CLOSED');
   records.status('SUBSCRIBED');
-  assert.equal(changes, 3, 'reconnect reconciles missed server history once');
-  assert.deepEqual(statuses, ['connected', 'reconnecting', 'reconnecting', 'reconnecting', 'connected']);
+  assert.equal(changes, 2, 'channel rejoin still waits for Postgres readiness');
+  records.system({ extension: 'postgres_changes', status: 'ok' });
+  assert.equal(changes, 3, 'Postgres reconnect reconciles missed server history once');
+  assert.deepEqual(statuses, [
+    'reconnecting', 'reconnecting', 'connected', 'reconnecting',
+    'reconnecting', 'reconnecting', 'reconnecting', 'connected',
+  ]);
 
   unsubscribe();
   unsubscribe();
@@ -2144,8 +2159,9 @@ test('event message subscription is exact-key, reconnecting, and inert after cle
   assert.deepEqual(records.removed, [channel], 'cleanup removes the channel once');
   records.change();
   records.status('SUBSCRIBED');
+  records.system({ extension: 'postgres_changes', status: 'ok' });
   assert.equal(changes, 3, 'late callbacks cannot update an unmounted or switched event');
-  assert.equal(statuses.length, 5);
+  assert.equal(statuses.length, 8);
 });
 
 test('hosted family harness is exact-project, staging-acknowledged, synthetic, and cleanup-bounded', () => {
@@ -2169,6 +2185,9 @@ test('hosted family harness is exact-project, staging-acknowledged, synthetic, a
   assert.match(harness, /loopedin_accept_group_invite/);
   assert.match(harness, /loopedin_begin_media_upload/);
   assert.match(harness, /postgres_changes/);
+  assert.match(harness, /\.on\('system'/);
+  assert.match(harness, /payload\.extension === 'postgres_changes'/);
+  assert.doesNotMatch(harness, /setTimeout\(resolve, 2000\)/);
   assert.match(harness, /protectedFingerprint/);
   assert.match(harness, /protectedStateUnchanged: true/);
   assert.match(harness, /finally/);
