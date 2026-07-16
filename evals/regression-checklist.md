@@ -363,3 +363,12 @@ Use this before considering a mission complete.
 - [x] Exact frontend rollback/restoration passes without database reversal and the personal Netlify site remains untouched.
 - [ ] Signed-out Auth still has no main landmark; hosted authenticated native 200% zoom and physical iPhone/Android/VoiceOver/TalkBack remain `NOT RUN`.
 - [ ] Permanent purge/external journal, SMTP/security notices and delivered recovery/invites, production backend/domain/promotion, and leaked-password protection remain blocking.
+
+## 2026-07-16 hosted copied invitation
+
+- [x] Exact release `0.1.0-ce4b0c56d30b`/Netlify deploy `6a58e22e48d42235e0ea40e0` passes run `iqa-mrnli3aw-18956cda` using the exact invitation URL displayed by the hosted owner UI.
+- [x] A clean existing-recipient profile opens and reloads the copied deep link, signs in, accepts through the UI, restores the authenticated session after reload, and sees the consumed link become unavailable.
+- [x] Synthetic cleanup handles a lost family-create response through exact owner/name/description discovery and leaves zero marked residue.
+- [x] Independent review closed the owner-UI provenance and response-loss cleanup findings and returned **GREEN** for this bounded path.
+- [ ] No real email was sent; new-account invitation acceptance and delivered invitation email proof remain `NOT RUN`.
+- [ ] Hosted browser handling for expired and revoked invitation links remains `NOT RUN`.
