@@ -12,6 +12,7 @@ import type {
   GroupActionStatus,
   GroupInvitation,
   GroupInvitationPreview,
+  InvitationEmailResult,
   MediaUploadPayload,
   NotificationItem,
   ReminderPreference,
@@ -643,6 +644,16 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const result = rpcResult;
         if (!result.invitationId || !result.expiresAt || (result.code !== 'created' && result.code !== 'existing')) throw userServiceError('That family action isn’t available.');
         return { invitationId: result.invitationId, expiresAt: result.expiresAt, status: result.code };
+      },
+      async emailInvitation(invitationId, token, deliveryKey): Promise<InvitationEmailResult> {
+        if (!isCanonicalInvitationToken(token)) throw userServiceError('That invitation email isn’t available. The private link still works.');
+        const { data, error } = await supabase.functions.invoke('send-group-invitation', {
+          body: { invitationId, token, deliveryKey },
+        });
+        if (error || data?.status !== 'provider_accepted') {
+          throw userServiceError('We couldn’t queue the invitation email. The private link still works.');
+        }
+        return { status: 'providerAccepted' };
       },
       async listInvitations(groupId) {
         const { data, error } = await supabase.rpc('loopedin_list_group_invites', { target_group_id: groupId });

@@ -57,6 +57,10 @@ export interface CreatedGroupInvitation {
   expiresAt: string;
 }
 
+export interface InvitationEmailResult {
+  status: 'providerAccepted';
+}
+
 export type GroupActionStatus = 'joined' | 'declined' | 'revoked' | 'removed' | 'not_member' | 'left' | 'transferred' | 'already_owner';
 
 export interface GroupActionResult {
@@ -74,6 +78,7 @@ export interface GroupsApi {
   acceptInvitation(token: string): Promise<GroupActionResult>;
   declineInvitation(token: string): Promise<GroupActionResult>;
   createInvitation(groupId: string, email: string, token: string): Promise<CreatedGroupInvitation>;
+  emailInvitation?(invitationId: string, token: string, deliveryKey: string): Promise<InvitationEmailResult>;
   listInvitations(groupId: string): Promise<GroupInvitation[]>;
   revokeInvitation(invitationId: string): Promise<GroupActionResult>;
   removeMember(groupId: string, userId: string): Promise<GroupActionResult>;

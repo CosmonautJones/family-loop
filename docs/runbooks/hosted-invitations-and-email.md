@@ -33,8 +33,12 @@ Authenticated Management API readback for dedicated staging `vkogznsfthirhxkqysz
 
 These are automated configuration readbacks, not delivery proof. The browser signup intentionally tells a new user to confirm email, return to the original family invitation, and sign in; it does not currently attach the family hash to the Auth confirmation redirect.
 
-## Delivery blocker
+## Delivery implementation checkpoint
 
-The Family screen truthfully says LoopedIn does not send the copied link. No Edge Function, trusted server route, Auth-admin family sender, or transactional mail provider call exists. Therefore there is no failed family-email delivery to repair yet. The smallest production path needs an owner-authorized server-side sender that receives the recipient and plaintext token once, verifies the token hash against the pending invitation, sends through configured SMTP/provider infrastructure, never persists or logs the plaintext token, rate-limits abuse, and records only bounded delivery status. That design preserves hash-only database storage and requires separate security review.
+The repository now contains a separately triggered owner-only invitation-email action, a private metadata-only delivery ledger, a caller-scoped prepare RPC, a service-role-only finalize RPC, and a text-only Resend Edge Function. Prepare owns the authorization decision; finalize receives the trusted caller identity from the function and revalidates account, delivery, invitation, token, expiry, status, and current ownership. Stable provider idempotency, counted/cooled retries, per-invitation and actor/family bounds, fail-closed stale operations, and a streamed 2 KiB request cap protect the copied-link flow. Provider failure does not revoke the link, and the UI never claims delivery.
 
-Before delivery can be proven, an operator must configure an authenticated SMTP provider and sender identity, complete any DNS verification/billing gate, enable required security notices, and explicitly approve one recipient address. Provider logs must show accepted/delivered status, and a clean separate browser must confirm and accept the family invitation. Until then, SMTP and real delivered invitation acceptance are `NOT RUN`.
+Hosted configuration requires `LOOPEDIN_APP_ORIGIN`, `RESEND_INVITATION_API_KEY`, and `RESEND_INVITATION_FROM`. Supabase Auth SMTP remains a separate requirement for confirmation and recovery mail. Resend click and open tracking must be disabled in provider settings; the text-only API request does not prove that provider setting.
+
+- Automated: focused core/static/orchestration tests and local Supabase invitation-email E2E pass, including service-only finalization, streamed size enforcement, counted replay, stale-operation, aggregate-rate, private-ledger, and provider-failure/link-preservation checks.
+- Manually observed: none for the sender.
+- Still unproven: Edge Function deployment/secrets, verified sender identity, provider tracking settings, accepted/delivered provider status, inbox receipt, new-account confirmation, and clean-browser invitation acceptance. No real email was sent.

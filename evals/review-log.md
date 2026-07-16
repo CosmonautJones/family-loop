@@ -623,3 +623,14 @@
 - The fix captures the exact canonical URL displayed after the owner presses `Create invitation link` on hosted staging. Cleanup now discovers at most one exact run-marked family through the marked owner and requires matching name/description before deletion.
 - Superseding run `iqa-mrnli3aw-18956cda` used exact release `0.1.0-ce4b0c56d30b` at Netlify deploy `6a58e22e48d42235e0ea40e0`. A clean recipient profile opened that exact copied URL, reloaded the deep link, signed in as the existing invited user, accepted through the UI, restored its session after reload, and then observed the consumed link as unavailable; cleanup left zero marked residue.
 - Final independent verdict: **GREEN** for the copied-link existing-recipient path. No real email was sent. New-account invitation acceptance, a delivered invitation email, and hosted browser proof for expired or revoked links remain `NOT RUN` and are not inferred from this result.
+
+## 2026-07-16 — invitation email sender implementation
+
+- A focused origin test first rejected wildcard-host acceptance; exact-origin parsing now fails closed.
+- Security review found stale provider-idempotency replay and cross-invitation aggregate abuse risks. Prepared operations older than the provider window now require operator review, and advisory-locked 24-hour actor/family attempt bounds cover multiple invitations and ownership transfer.
+- Focused core/static tests, local Supabase reset, and invitation-email E2E pass. App lint, 86/86 app tests, focused scaffold test, and direct TypeScript check pass.
+- Standalone Deno checking was `NOT RUN` because Deno is unavailable. No Edge Function/provider/staging mutation occurred, no real email was sent, and independent final review remains pending.
+- Independent review returned **RED** with three Medium findings: authenticated owners could forge finalize outcomes, same-key prepared retries bypassed accounting/cooldown, and request sizing trusted `Content-Length` before unbounded JSON buffering.
+- Finalize is now executable only by `service_role`; the Edge Function uses `ctx.supabaseAdmin` only after caller-JWT prepare and supplies `ctx.userClaims.id`, while the RPC revalidates the stored actor and all active invitation/ownership state. Prepared retries now share cooldown, per-delivery, actor, and family accounting. Request parsing now reads a hard maximum of 2 KiB from the stream before decode/parse.
+- Focused core/static/mocked-orchestration tests pass 12/12, and a clean local reset plus E2E prove service-only finalization, counted retries, stale/aggregate bounds, and copied-link preservation. Independent re-review remains pending.
+- Database lint has zero findings; app lint, TypeScript, and all 87 app tests pass; the 271-file secret scan and diff check pass.
