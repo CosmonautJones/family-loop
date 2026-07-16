@@ -191,7 +191,9 @@ function createHead(sequence, hash, passphrase) {
 }
 
 function verifyHead(head, sequence, hash, passphrase) {
-  if (head?.format !== FORMAT || head.sequence !== sequence || head.hash !== hash || !/^[a-f0-9]{64}$/.test(head.mac)) {
+  if (head?.format !== FORMAT || !Number.isSafeInteger(head.sequence) || head.sequence < 1
+      || !/^[a-f0-9]{64}$/.test(head.hash) || head.sequence !== sequence || head.hash !== hash
+      || !/^[a-f0-9]{64}$/.test(head.mac)) {
     throw new Error('journal head does not match the append-only chain.');
   }
   const expected = createHmac('sha256', key(passphrase, Buffer.from(head.salt, 'base64')))
@@ -264,16 +266,18 @@ export async function recoverPurgeJournalHead(journalPath, passphrase) {
   try {
     const chain = await readJournalChain(journalPath, passphrase);
     if (chain.sequence === 0) throw new Error('cannot recover a head without a journal chain.');
+    let existingHead;
     try {
-      const existingHead = JSON.parse(await readFile(`${journalPath}.head`, 'utf8'));
-      verifyHead(existingHead, existingHead.sequence, existingHead.hash, passphrase);
-      if (existingHead.sequence > chain.sequence) throw new Error('head recovery would accept a truncated journal; restore the missing tail instead.');
-      if (existingHead.sequence === chain.sequence && existingHead.hash !== chain.hash) throw new Error('journal and authenticated head disagree at the same sequence.');
-      if (existingHead.sequence < chain.sequence && chain.hashes[existingHead.sequence - 1] !== existingHead.hash) {
-        throw new Error('the appended tail does not extend the authenticated head.');
-      }
+      existingHead = JSON.parse(await readFile(`${journalPath}.head`, 'utf8'));
     } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
+      if (error?.code === 'ENOENT') throw new Error('head recovery requires an existing authenticated stale head.');
+      throw error;
+    }
+    verifyHead(existingHead, existingHead.sequence, existingHead.hash, passphrase);
+    if (existingHead.sequence > chain.sequence) throw new Error('head recovery would accept a truncated journal; restore the missing tail instead.');
+    if (existingHead.sequence === chain.sequence) throw new Error('authenticated journal head is not stale; recovery requires a strict extension.');
+    if (chain.hashes[existingHead.sequence - 1] !== existingHead.hash) {
+      throw new Error('the appended tail does not extend the authenticated head.');
     }
     await replaceHead(journalPath, chain.sequence, chain.hash, passphrase);
     return { recordCount: chain.sequence, lastPhase: chain.records.at(-1).phase };
@@ -310,19 +314,14 @@ export async function appendPurgeJournalRecord(journalPath, value, passphrase) {
   }
 }
 
-export function evaluateRestoreGate(records, { snapshotAt, reconciledOperationIds = [] } = {}) {
+export function evaluateRestoreGate(records, { snapshotAt } = {}) {
   const snapshotTime = instant(snapshotAt, 'snapshotAt');
-  const reconciled = new Set(reconciledOperationIds.map((value) => {
-    if (!isUuid(value)) throw new Error('reconciled operation IDs must be UUIDs.');
-    return value.toLowerCase();
-  }));
   const latest = new Map();
   for (const record of records) {
     if (record.phase !== 'failed' && Date.parse(record.occurredAt) > snapshotTime) latest.set(record.operationId, record);
   }
   const pending = [...latest.values()].filter((record) =>
-    ['objects_deleted', 'relational_finalized', 'auth_deleted', 'completed'].includes(record.phase)
-      && !reconciled.has(record.operationId));
+    ['objects_deleted', 'relational_finalized', 'auth_deleted', 'completed'].includes(record.phase));
   return {
     allowTraffic: pending.length === 0,
     pendingCount: pending.length,

@@ -122,6 +122,22 @@ test('relational finalization is lease-bound, digest-bound, and object-absence g
   assert.match(complete, /(?:already_completed|not_found|delete\s+from\s+loopedin_private\.)/s);
 });
 
+test('completed replay is discoverable and inbound invitation identity is erased', () => {
+  const sql = migration();
+  const lease = functionBody(sql, 'loopedin_lease_account_purge');
+  const completedLookup = lease.indexOf("status = 'completed'");
+  const eligibilityLookup = lease.indexOf('from loopedin_private.loopedin_account_deletion_requests');
+  assert.ok(completedLookup >= 0 && completedLookup < eligibilityLookup, 'completed operations must be discoverable before deleted-request eligibility');
+
+  const finalize = functionBody(sql, 'loopedin_finalize_account_purge_relational');
+  assert.match(finalize, /auth\.users/);
+  assert.match(finalize, /lower\([^)]*email/);
+  assert.match(finalize, /loopedin_invitation_email_deliveries/);
+  assert.match(finalize, /invitation_id/);
+  assert.match(finalize, /responded_by\s*=\s*subject_id/);
+  assert.match(finalize, /invitee_email\s*=\s*subject_email/);
+});
+
 test('nullable event creators remain neutral in the application model', () => {
   const domain = read('app/src/types/domain.ts');
   const adapter = read('app/src/services/supabaseAdapter.ts');

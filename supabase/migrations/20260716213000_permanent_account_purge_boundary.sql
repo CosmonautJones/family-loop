@@ -66,6 +66,19 @@ begin
     raise exception 'A bounded purge operation and lease owner are required.' using errcode = '22023';
   end if;
 
+  select * into current_operation
+  from loopedin_private.loopedin_account_purge_operations operation
+  where operation.id = target_operation_id
+  for update;
+  if current_operation.status = 'completed' then
+    return jsonb_build_object(
+      'operationId', current_operation.id,
+      'status', 'completed',
+      'planDigest', current_operation.plan_digest,
+      'objectCount', current_operation.object_count
+    );
+  end if;
+
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(target_user_id::text, 0));
   select * into current_request
   from loopedin_private.loopedin_account_deletion_requests request
@@ -89,24 +102,17 @@ begin
     raise exception 'An active legal hold prevents permanent deletion.' using errcode = '23514';
   end if;
 
-  select * into current_operation
-  from loopedin_private.loopedin_account_purge_operations operation
-  where operation.request_id = current_request.id or operation.id = target_operation_id
-  order by (operation.id = target_operation_id) desc
-  limit 1
-  for update;
+  if current_operation.id is null then
+    select * into current_operation
+    from loopedin_private.loopedin_account_purge_operations operation
+    where operation.request_id = current_request.id
+    limit 1
+    for update;
+  end if;
 
   if current_operation.id is not null then
     if current_operation.id <> target_operation_id or current_operation.user_id <> target_user_id then
       raise exception 'A different purge operation already owns this request.' using errcode = '23505';
-    end if;
-    if current_operation.status = 'completed' then
-      return jsonb_build_object(
-        'operationId', current_operation.id,
-        'status', 'completed',
-        'planDigest', current_operation.plan_digest,
-        'objectCount', current_operation.object_count
-      );
     end if;
     if current_operation.lease_expires_at > now()
        and current_operation.lease_owner <> target_lease_owner then
@@ -150,6 +156,7 @@ declare
   current_operation loopedin_private.loopedin_account_purge_operations;
   current_request loopedin_private.loopedin_account_deletion_requests;
   subject_id uuid;
+  subject_email text;
   object_paths jsonb;
   row_counts jsonb;
   prepared_plan jsonb;
@@ -166,7 +173,14 @@ begin
     raise exception 'Purge operation not found.' using errcode = 'P0002';
   end if;
   if current_operation.status = 'completed' then
-    return jsonb_build_object('operationId', current_operation.id, 'status', 'completed', 'planDigest', current_operation.plan_digest, 'objectCount', current_operation.object_count);
+    return jsonb_build_object(
+      'operationId', current_operation.id,
+      'status', 'completed',
+      'planDigest', current_operation.plan_digest,
+      'objectCount', current_operation.object_count,
+      'objectPaths', current_operation.frozen_plan -> 'objectPaths',
+      'counts', current_operation.frozen_plan -> 'counts'
+    );
   end if;
   subject_id := current_operation.user_id;
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(subject_id::text, 0));
@@ -208,6 +222,10 @@ begin
     );
   end if;
 
+  select lower(btrim(auth_user.email)) into subject_email
+  from auth.users auth_user
+  where auth_user.id = subject_id;
+
   select coalesce(jsonb_agg(path order by path), '[]'::jsonb) into object_paths
   from (
     select distinct unioned.path
@@ -232,7 +250,12 @@ begin
     'media', (select count(*) from public.loopedin_event_media media where media.uploaded_by = subject_id),
     'notifications', (select count(*) from public.loopedin_notifications notification where notification.user_id = subject_id),
     'reminders', (select count(*) from public.loopedin_reminder_drafts reminder where reminder.user_id = subject_id),
-    'invitations', (select count(*) from public.loopedin_group_invitations invitation where invitation.invited_by = subject_id)
+    'invitations', (
+      select count(*) from public.loopedin_group_invitations invitation
+      where invitation.invited_by = subject_id
+         or invitation.responded_by = subject_id
+         or (subject_email is not null and invitation.invitee_email = subject_email)
+    )
   ) into row_counts;
   prepared_plan := jsonb_build_object(
     'format', 1,
@@ -283,6 +306,7 @@ declare
   current_operation loopedin_private.loopedin_account_purge_operations;
   current_request loopedin_private.loopedin_account_deletion_requests;
   subject_id uuid;
+  subject_email text;
 begin
   if auth.role() <> 'service_role' then
     raise exception 'Service role required.' using errcode = '42501';
@@ -351,10 +375,23 @@ begin
     raise exception 'Every planned private object must be absent before relational cleanup.' using errcode = '23514';
   end if;
 
+  select lower(btrim(auth_user.email)) into subject_email
+  from auth.users auth_user
+  where auth_user.id = subject_id;
+
   delete from loopedin_private.loopedin_invitation_email_deliveries delivery
-  where delivery.requested_by = subject_id;
+  where delivery.requested_by = subject_id
+     or delivery.invitation_id in (
+       select invitation.id
+       from public.loopedin_group_invitations invitation
+       where invitation.invited_by = subject_id
+          or invitation.responded_by = subject_id
+          or (subject_email is not null and invitation.invitee_email = subject_email)
+     );
   delete from public.loopedin_group_invitations invitation
-  where invitation.invited_by = subject_id;
+  where invitation.invited_by = subject_id
+     or invitation.responded_by = subject_id
+     or (subject_email is not null and invitation.invitee_email = subject_email);
   delete from loopedin_private.loopedin_event_create_operations operation
   where operation.actor_id = subject_id;
   delete from loopedin_private.loopedin_message_create_operations operation

@@ -21,6 +21,7 @@ const testCases = [
   ['OBJECTS_DELETED', ['leased', 'prepared', 'objects_deleted']],
   ['RELATIONAL_FINALIZED_BEFORE_CHECKPOINT', ['leased', 'prepared', 'objects_deleted']],
   ['AUTH_DELETED_BEFORE_CHECKPOINT', ['leased', 'prepared', 'objects_deleted', 'relational_finalized']],
+  ['DB_COMPLETE_BEFORE_CHECKPOINT', ['leased', 'prepared', 'objects_deleted', 'relational_finalized', 'auth_deleted']],
 ];
 
 async function request(path, { token = anonKey, headers = {}, ...options } = {}) {
@@ -56,7 +57,7 @@ async function signup(label, run) {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
   }), `login ${label}`);
   assert.equal(login.user.id, created.user.id);
-  return { id: login.user.id, token: login.access_token };
+  return { id: login.user.id, token: login.access_token, email };
 }
 
 async function upload(token, path) {
@@ -136,10 +137,14 @@ async function createFixture(index) {
   await ok(rpc('loopedin_activate_media', subject.token, { target_media_id: orphan.id }), 'activate orphan media');
   sql(`delete from public.loopedin_event_media where id='${orphan.id}';`);
 
+  const invitedByEmailId = sql(`insert into public.loopedin_group_invitations(group_id,invited_by,invitee_email,token_hash,status,expires_at) values ('${group.id}','${owner.id}','${subject.email}',extensions.digest(gen_random_uuid()::text,'sha256'),'pending',now()+interval '7 days') returning id;`).split(/\r?\n/)[0];
+  const respondedById = sql(`insert into public.loopedin_group_invitations(group_id,invited_by,invitee_email,token_hash,status,expires_at,responded_by,responded_at) values ('${group.id}','${owner.id}','other-${run}@loopedin.test',extensions.digest(gen_random_uuid()::text,'sha256'),'declined',now()+interval '7 days','${subject.id}',now()) returning id;`).split(/\r?\n/)[0];
+  sql(`insert into loopedin_private.loopedin_invitation_email_deliveries(invitation_id,requested_by,operation_key) values ('${invitedByEmailId}','${owner.id}',gen_random_uuid()),('${respondedById}','${owner.id}',gen_random_uuid());`);
+
   const deletion = await ok(rpc('loopedin_request_account_deletion', subject.token), 'request fixture deletion');
   sql(`update loopedin_private.loopedin_account_deletion_requests set requested_at=now()-interval '31 days', purge_after=now()-interval '1 day', backup_expires_after=now()+interval '29 days' where user_id='${subject.id}' and status='pending';`);
   const backupExpiresAfter = new Date(Date.now() + 29 * 86400000);
-  return { subject, owner, outsider, groupId: group.id, eventId: event.id, mediaPath, orphanPath, backupExpiresAfter, deletion };
+  return { subject, owner, outsider, groupId: group.id, eventId: event.id, mediaPath, orphanPath, invitedByEmailId, respondedById, backupExpiresAfter, deletion };
 }
 
 async function cleanupFixture(fixture) {
@@ -231,6 +236,7 @@ try {
       const rawJournal = await readFile(journalPath, 'utf8');
       assert.equal(rawJournal.includes(fixture.mediaPath), false);
       assert.equal(rawJournal.includes(fixture.subject.id), false);
+      assert.equal(rawJournal.includes(fixture.subject.email), false);
 
       assert.equal((await request(`/auth/v1/admin/users/${fixture.subject.id}`, { token: serviceKey })).response.status, 404);
       assert.equal(sql(`select count(*) from public.loopedin_groups where id='${fixture.groupId}' and created_by is null;`), '1');
@@ -239,6 +245,8 @@ try {
       assert.equal(sql(`select count(*) from public.loopedin_event_messages where author_id='${fixture.subject.id}';`), '0');
       assert.equal(sql(`select count(*) from public.loopedin_event_media where uploaded_by='${fixture.subject.id}';`), '0');
       assert.equal(sql(`select count(*) from storage.objects where bucket_id='${bucket}' and owner_id='${fixture.subject.id}';`), '0');
+      assert.equal(sql(`select count(*) from public.loopedin_group_invitations where id in ('${fixture.invitedByEmailId}','${fixture.respondedById}');`), '0');
+      assert.equal(sql(`select count(*) from loopedin_private.loopedin_invitation_email_deliveries where invitation_id in ('${fixture.invitedByEmailId}','${fixture.respondedById}');`), '0');
       assert.equal(sql(`select status || ':' || (user_id is null)::text || ':' || (request_id is null)::text || ':' || (frozen_plan ? 'objectPaths')::text from loopedin_private.loopedin_account_purge_operations where id='${operationId}';`), 'completed:true:true:false');
       const ownerEvents = await ok(request(`/rest/v1/loopedin_events?id=eq.${fixture.eventId}&select=id`, { token: fixture.owner.token }), 'owner reads preserved shared event');
       assert.equal(ownerEvents.length, 1);
@@ -258,7 +266,7 @@ try {
       }
     }
   }
-  console.log('Local permanent account purge E2E passed: hold/owner/service gates, frozen union, object-first failure, four crash resumes, Auth-last completion, neutral shared creators, journal retention, outsider denial, and idempotent replay.');
+  console.log('Local permanent account purge E2E passed: hold/owner/service gates, frozen union, invitation identity cleanup, object-first failure, five crash resumes, Auth-last completion, neutral shared creators, journal retention, outsider denial, and idempotent replay.');
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

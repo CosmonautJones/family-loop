@@ -60,6 +60,11 @@ test('validated head recovery accepts only an authenticated appended tail', asyn
   try {
     await appendPurgeJournalRecord(journal, record('leased', '2026-07-16T20:00:00.000Z'), passphrase);
     const firstHead = await readFile(`${journal}.head`, 'utf8');
+    await assert.rejects(recoverPurgeJournalHead(journal, passphrase), /not stale|strict extension/i);
+    await rm(`${journal}.head`, { force: true });
+    await assert.rejects(recoverPurgeJournalHead(journal, passphrase), /missing.*authenticated head|existing authenticated stale head/i);
+    await assert.rejects(readFile(`${journal}.head`, 'utf8'), /ENOENT/);
+    await writeFile(`${journal}.head`, firstHead);
     await appendPurgeJournalRecord(journal, record('prepared', '2026-07-16T20:01:00.000Z'), passphrase);
     await writeFile(`${journal}.head`, firstHead);
     await assert.rejects(readPurgeJournal(journal, passphrase), /head does not match/i);
@@ -108,6 +113,10 @@ test('per-operation transitions are monotonic and failure annotations never adva
     assert.deepEqual((await readPurgeJournal(journal, passphrase)).map((item) => item.phase), [
       'leased', 'failed', 'prepared', 'objects_deleted', 'relational_finalized', 'auth_deleted', 'completed',
     ]);
+    await appendPurgeJournalRecord(journal, record('restore_reconciled', '2026-07-16T20:10:00.000Z'), passphrase);
+    assert.equal(evaluateRestoreGate(await readPurgeJournal(journal, passphrase), {
+      snapshotAt: '2026-07-16T20:04:00.000Z',
+    }).allowTraffic, true);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -148,5 +157,10 @@ test('restore gate denies traffic until every post-snapshot destructive operatio
     snapshotAt: '2026-07-16T20:00:00.000Z',
     reconciledOperationIds: [operationId],
   });
-  assert.deepEqual(allowed, { allowTraffic: true, pendingCount: 0, pendingOperationIds: [] });
+  assert.deepEqual(allowed, { allowTraffic: false, pendingCount: 1, pendingOperationIds: [operationId] });
+  const reconciled = evaluateRestoreGate([
+    ...records,
+    normalizeJournalRecord(record('restore_reconciled', '2026-07-16T20:06:00.000Z')),
+  ], { snapshotAt: '2026-07-16T20:00:00.000Z' });
+  assert.deepEqual(reconciled, { allowTraffic: true, pendingCount: 0, pendingOperationIds: [] });
 });

@@ -204,7 +204,7 @@
 - [x] Real loopback Auth sessions for owner/member/outsider exclude pairwise foreign IDs; outsider contributions are empty; 390px inputs/actions are 52/48px with no overflow or console events.
 - [x] Local deletion grace state proves recent-auth and owner guards, concurrent transfer/request serialization, exact 30-day recovery, pending DB/RPC/Storage denial, cancellation restoration, deadline rejection, and service-role-only legal-hold records.
 - [x] Hosted encrypted owner/member/outsider export and hosted grace-state request/cancel/access-denial browser proof pass with exact scope, baseline restoration, and zero residue.
-- [x] Disposable loopback permanent purge proves service-only lease/prepare/finalize/complete, frozen media-plus-owned-orphan paths and digest, real Storage deletion/absence, relational cleanup, Auth last, four crash resumes, neutral shared creators, encrypted chained journal recovery/retention, outsider denial, and idempotent replay.
+- [x] Disposable loopback permanent purge proves service-only lease/prepare/finalize/complete, completed replay before request eligibility, frozen media-plus-owned-orphan paths and digest, inbound invitation/token/delivery cleanup, real Storage deletion/absence, relational cleanup, Auth last, five crash resumes, neutral shared creators, strict-extension journal recovery/retention, authenticated-only restore reconciliation, outsider denial, and idempotent replay.
 - [ ] Hosted external-journal custody/replay, hosted/production purge, retention/orphan apply, shared-family export scope, and production restore remain `NOT RUN`.
 
 ## Wave 5 mobile accessibility implementation

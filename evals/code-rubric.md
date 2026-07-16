@@ -49,7 +49,7 @@
 
 - [x] Service-role-only leased RPCs recheck expiry, ownership, and holds; freeze a deterministic digest over media and subject-owned Storage paths; require object absence before relational cleanup; and require Auth absence before completion.
 - [x] The operator refuses non-loopback targets, reads secrets only from environment, writes bounded AES-256-GCM chained evidence outside the repository, and resumes without reversing schema or duplicating completion evidence.
-- [x] Contract/journal tests and real local Supabase E2E cover tamper/truncation, stale-head recovery, retention, restore gating, object-first cleanup, Auth-last deletion, four injected crash seams, cross-user denial, and idempotent replay.
+- [x] Contract/journal tests and real local Supabase E2E cover missing/current-head refusal, authenticated strict-extension recovery, tamper/truncation, retention, authenticated restore gating, invitation identity cleanup, object-first cleanup, Auth-last deletion, five injected crash seams, cross-user denial, and idempotent replay.
 - [ ] Hosted operator adaptation, external journal custody, restore-time reconciliation, production authorization, and independent final review remain required.
 - [ ] Local demo actors and adapter contracts do not prove production authentication, invitations, RLS, or server synchronization.
 

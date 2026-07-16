@@ -183,6 +183,21 @@ try {
   if ($journalRank -gt $databaseRank -and -not $allowedExternalAdvance) {
     throw 'JOURNAL_DB_DIVERGENCE'
   }
+  if ([string]$lease.status -eq 'completed') {
+    if ($journalPhase -ne 'auth_deleted' -or $planDigest -ne [string]$lease.planDigest) { throw 'JOURNAL_DB_DIVERGENCE' }
+    $authUri = "$($env:SUPABASE_URL)/auth/v1/admin/users/$($UserId.ToLowerInvariant())"
+    $verifyResponse = Invoke-WebRequest -Method Get -Uri $authUri -Headers $headers -SkipHttpErrorCheck
+    if ([int]$verifyResponse.StatusCode -ne 404) { throw 'JOURNAL_DB_DIVERGENCE' }
+    $completed = Invoke-PurgeRpc 'loopedin_complete_account_purge' @{
+      target_operation_id = $OperationId
+      target_lease_owner = $LeaseOwner
+      target_plan_digest = $planDigest
+    }
+    if ([string]$completed.status -notin @('completed', 'already_completed')) { throw 'JOURNAL_DB_DIVERGENCE' }
+    Add-JournalCheckpoint 'completed'
+    Write-Output "Account purge operation $OperationId reconciled durable database completion."
+    return
+  }
 
   $stage = 'PREPARE'
   $prepared = Invoke-PurgeRpc 'loopedin_prepare_account_purge' @{
@@ -249,6 +264,7 @@ try {
     target_plan_digest = $planDigest
   }
   if ([string]$completed.status -notin @('completed', 'already_completed')) { throw 'PURGE_COMPLETE_FAILED' }
+  Stop-ForLocalFailureInjection 'DB_COMPLETE_BEFORE_CHECKPOINT'
   if ($phaseRank[$journalPhase] -lt $phaseRank['completed']) {
     Add-JournalCheckpoint 'completed'
     $journalPhase = 'completed'
