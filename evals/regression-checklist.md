@@ -370,7 +370,7 @@ Use this before considering a mission complete.
 - [x] A clean existing-recipient profile opens and reloads the copied deep link, signs in, accepts through the UI, restores the authenticated session after reload, and sees the consumed link become unavailable.
 - [x] Synthetic cleanup handles a lost family-create response through exact owner/name/description discovery and leaves zero marked residue.
 - [x] Independent review closed the owner-UI provenance and response-loss cleanup findings and returned **GREEN** for this bounded path.
-- [ ] No family invitation email was sent; new-account invitation acceptance and delivered invitation email proof remain `NOT RUN`.
+- [ ] At this copied-link checkpoint no family invitation email had been sent. The later sender section supersedes delivery evidence; new-account confirmation/acceptance remains `NOT RUN`.
 - [ ] Hosted browser handling for expired and revoked invitation links remains `NOT RUN`.
 
 ## 2026-07-16 invitation email sender

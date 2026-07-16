@@ -2,14 +2,14 @@
 
 ## Status
 
-STAGING PARTIAL / EXTERNAL CONDITIONAL — local Auth/recovery remains complete; dedicated hosted Auth now has exact staging/immutable/future-production redirects and logged recovery dispatch to the approved owner address. User-observed password replacement, custom SMTP/rate limits, invitation email delivery, and physical-browser checks remain `NOT RUN`.
+STAGING SMTP/DELIVERY PASS / EXTERNAL CONDITIONAL — local Auth/recovery remains complete; dedicated hosted Auth has exact staging/immutable/future-production redirects, custom Resend SMTP, and provider-delivered recovery dispatch to the approved owner address. User-observed Gmail receipt/password replacement, new-account confirmation, provider rate-limit characterization, and physical-browser checks remain `NOT RUN`.
 
 ## Situation and evidence
 
 - Configured builds restore Supabase sessions and gate protected content; unconfigured builds enter deterministic prototype mode (`docs/architecture.md:31-40`).
 - The shell explicitly handles restoring, signed-out/error, group loading/error, and no-group states (`app/src/navigation/AppShell.tsx:29-41`).
 - Loopback Supabase browser sessions proved invite-bound signup for Maya and Jordan, owner and outsider sign-in, session restoration, reload persistence, and protected direct-route denial.
-- A disposable loopback account proved the complete reset lifecycle. Hosted staging now proves exact redirect origins and default-sender recovery dispatch to the approved owner, while user-observed replacement, custom SMTP, production delivery, and provider rate limits remain unverified.
+- A disposable loopback account proved the complete reset lifecycle. Hosted staging now proves exact redirect origins, custom Auth SMTP readback, and provider-delivered recovery dispatch to the approved owner, while Gmail inbox observation, user-observed replacement/replay, new-account confirmation, production delivery, and provider rate limits remain unverified.
 
 ## Mission/objective
 
@@ -95,7 +95,7 @@ git status --short
 ### Conditional-staging/mobile-web/human
 
 - Safe-environment matrix: valid/invalid/expired/wrong-account invite; new/existing account; known/unknown email neutral recovery; expired/reused reset; offline failure; bootstrap retry; session restore/sign-out.
-- Hosted recovery request/dispatch: `PASS` on dedicated staging. User-observed link/password replacement: `NOT RUN`; custom SMTP and physical-browser evidence remain open.
+- Hosted custom-SMTP recovery request/provider delivery: `PASS` on dedicated staging. Gmail inbox observation and user-observed link/password replacement/replay: `NOT RUN`; physical-browser evidence remains open.
 - HTTPS browser-link tests: report iOS Safari and Android Chrome results honestly, including existing/new tab, Back/history, deep-link, and reload behavior.
 
 ## Stop conditions/authorization limits
