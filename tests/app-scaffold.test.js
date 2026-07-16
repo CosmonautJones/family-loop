@@ -38,6 +38,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/features/account/dataExport.ts'),
     path.join(appRoot, 'src/services/serviceErrors.ts'),
     path.join(appRoot, 'src/services/messageSubscription.ts'),
+    path.join(appRoot, 'src/app/queryReconciliation.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -59,6 +60,7 @@ function loadCompiledModules() {
     clientErrorTelemetry: require(path.join(outDir, 'services/clientErrorTelemetry.js')),
     serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
     messageSubscription: require(path.join(outDir, 'services/messageSubscription.js')),
+    queryReconciliation: require(path.join(outDir, 'app/queryReconciliation.js')),
   };
 }
 
@@ -70,6 +72,7 @@ test('mobile scaffold and event-loop files exist', () => {
     'App.tsx',
     'src/app/AppProviders.tsx',
     'src/app/queries.ts',
+    'src/app/queryReconciliation.ts',
     'src/app/selectors.ts',
     'src/features/auth/AuthSessionProvider.tsx',
     'src/features/events/selectors.ts',
@@ -2162,6 +2165,36 @@ test('event message subscription is exact-key, reconnecting, and inert after cle
   records.system({ extension: 'postgres_changes', status: 'ok' });
   assert.equal(changes, 3, 'late callbacks cannot update an unmounted or switched event');
   assert.equal(statuses.length, 8);
+});
+
+test('message reconciliation replaces a stale initial fetch after Postgres readiness', async () => {
+  const { queryReconciliation } = loadCompiledModules();
+  const appRequire = createRequire(path.join(appRoot, 'package.json'));
+  const { QueryClient, QueryObserver } = appRequire('@tanstack/query-core');
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryKey = ['messages', 'event-a'];
+  let calls = 0;
+  let resolveInitial;
+  const observer = new QueryObserver(queryClient, {
+    queryKey,
+    queryFn: async () => {
+      calls += 1;
+      if (calls === 1) return new Promise((resolve) => { resolveInitial = resolve; });
+      return ['fresh'];
+    },
+  });
+  const unsubscribe = observer.subscribe(() => undefined);
+
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls, 1);
+  await queryReconciliation.refetchActiveQueryAfterInFlight(queryClient, queryKey);
+  assert.equal(calls, 2, 'readiness starts a fresh exact query after cancelling the stale initial fetch');
+  resolveInitial(['stale']);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(queryClient.getQueryData(queryKey), ['fresh']);
+
+  unsubscribe();
+  queryClient.clear();
 });
 
 test('hosted family harness is exact-project, staging-acknowledged, synthetic, and cleanup-bounded', () => {
