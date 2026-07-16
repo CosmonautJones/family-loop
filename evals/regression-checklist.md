@@ -383,6 +383,8 @@ Use this before considering a mission complete.
 - [x] Prepared same-key retries are cooled, counted, and bounded; missing-length/chunked bodies are capped at 2 KiB before JSON parsing.
 - [x] The UI says provider accepted/queued and never claims delivery.
 - [x] Main CI, independent re-review, post-rotation encrypted backup/isolated restore, all-nine remote migration history, active JWT-verified function, exact-origin preflight, and anonymous denial are GREEN.
-- [x] Provider credentials are absent and the current staging web remains on `ce4`; the deployed function therefore stays fail-closed until the reviewed web/provider release is ready.
-- [ ] Disable Resend click/open tracking and prove deployed provider acceptance/delivery.
+- [x] Authenticated Resend readback proves the existing domain is verified, custom click/open tracking is not configured, and a dedicated sending-only key is restricted to that domain.
+- [x] The provider key and sender are configured in the staging Edge Function without exposing the key in source, logs, evidence, or chat.
+- [x] Exact GREEN source `2721a98ce6fc03a1263ebc5284d90ac936d2e571` and application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` are immutable draft deploy `6a591b138c9727a4b2ca6d48`; transport/runtime/CSP/cache/404 checks pass and canonical staging remains unchanged.
+- [ ] Prove deployed provider acceptance/delivery.
 - [ ] Prove inbox receipt, separate-user confirmation/acceptance, and Supabase Auth confirmation/recovery SMTP.
