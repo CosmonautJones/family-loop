@@ -134,6 +134,10 @@ Exact CI artifact source `a45838479634e61aedec0ceb210f79b21f58d225`, release `0.
 
 Rollback selected `6a58428caebae3fadaf3906b`/`0.1.0-08006e5e83a8`, then restoration selected `6a5863f6aebae3714ef3906c`/`0.1.0-a45838479634`; HTTPS and availability passed after restoration and no database reversal occurred.
 
+### Invitation-mail release supersession
+
+Exact main source `2721a98ce6fc03a1263ebc5284d90ac936d2e571`, release `0.1.0-2721a98ce6fc`, and application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` were downloaded from GREEN CI run `29518737936`, wrapped with the unchanged staging overlay, and verified before upload. Immutable deploy `6a591b138c9727a4b2ca6d48` was initially published unchanged to `https://loopedin-family.netlify.app` at `2026-07-16T18:19:21.898Z`. Exact rollback selected `6a58e22e48d42235e0ea40e0` and verified release `0.1.0-ce4b0c56d30b`; restoration selected `6a591b138c9727a4b2ca6d48` at `2026-07-16T18:55:26.407Z` and verified `0.1.0-2721a98ce6fc`/`loopedin-staging`. The database remained forward-only, and the personal site, custom domain, Git link, production backend, and production alias were unchanged.
+
 ## 2026-07-14 runtime-config evidence
 
 - Exact source `522aed7217ea` produced release `0.1.0-522aed7217ea`: three files, one 986,099-byte JavaScript bundle, digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`.

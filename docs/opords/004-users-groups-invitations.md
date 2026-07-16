@@ -2,7 +2,7 @@
 
 ## Status
 
-STAGING SYNTHETIC COMPLETE / DELIVERY CONDITIONAL — dedicated hosted staging proves entitled family creation, two live email-bound invitation acceptances, owner/member restrictions, outsider match/accept/read/write denial, and zero cleanup residue. Real invitation email delivery is not implemented, no `admin` role exists, and real-account/production proof remains open.
+STAGING DELIVERY PASS / PRODUCTION CONDITIONAL — dedicated hosted staging proves entitled family creation, live email-bound invitation acceptance, owner/member restrictions, outsider match/accept/read/write denial, owner-triggered provider delivery, exact displayed/delivered URL equality, separate approved existing-recipient acceptance across reload, and zero cleanup residue. No distinct `admin` role exists; Gmail inbox/new-account and production proof remain open.
 
 ## Situation and evidence
 
@@ -75,7 +75,7 @@ Creation and invitations must state the group name, inviter, joining impact, and
 | Nonmember direct-ID denial across protected data | COMPLETE LOCALLY | Authenticated outsider browser route plus family/media RLS matrices. |
 | Existing event and no-family gates truthful | COMPLETE | Full browser lifecycle and root/app regressions. |
 
-Dedicated hosted migration/RLS and synthetic invitation acceptance/denial are `PASS`. Product-sent invitation email, a distinct `admin` role, real recipients, and production delivery remain `NOT RUN`.
+Dedicated hosted migration/RLS, invitation acceptance/denial, and owner-triggered provider delivery to the explicitly approved existing recipient are `PASS`. A distinct `admin` role, Gmail inbox observation, new-account confirmation/acceptance, additional real recipients, and production delivery remain `NOT RUN`.
 
 ## Validation commands/evidence
 

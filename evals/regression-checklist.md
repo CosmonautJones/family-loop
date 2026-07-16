@@ -370,7 +370,7 @@ Use this before considering a mission complete.
 - [x] A clean existing-recipient profile opens and reloads the copied deep link, signs in, accepts through the UI, restores the authenticated session after reload, and sees the consumed link become unavailable.
 - [x] Synthetic cleanup handles a lost family-create response through exact owner/name/description discovery and leaves zero marked residue.
 - [x] Independent review closed the owner-UI provenance and response-loss cleanup findings and returned **GREEN** for this bounded path.
-- [ ] No real email was sent; new-account invitation acceptance and delivered invitation email proof remain `NOT RUN`.
+- [ ] At this copied-link checkpoint no family invitation email had been sent. The later sender section supersedes delivery evidence; new-account confirmation/acceptance remains `NOT RUN`.
 - [ ] Hosted browser handling for expired and revoked invitation links remains `NOT RUN`.
 
 ## 2026-07-16 invitation email sender
@@ -383,6 +383,10 @@ Use this before considering a mission complete.
 - [x] Prepared same-key retries are cooled, counted, and bounded; missing-length/chunked bodies are capped at 2 KiB before JSON parsing.
 - [x] The UI says provider accepted/queued and never claims delivery.
 - [x] Main CI, independent re-review, post-rotation encrypted backup/isolated restore, all-nine remote migration history, active JWT-verified function, exact-origin preflight, and anonymous denial are GREEN.
-- [x] Provider credentials are absent and the current staging web remains on `ce4`; the deployed function therefore stays fail-closed until the reviewed web/provider release is ready.
-- [ ] Disable Resend click/open tracking and prove deployed provider acceptance/delivery.
-- [ ] Prove inbox receipt, separate-user confirmation/acceptance, and Supabase Auth confirmation/recovery SMTP.
+- [x] Authenticated Resend readback proves the existing domain is verified and a dedicated sending-only key is restricted to it; the domain has no tracking subdomain, the invitation is text-only, and provider Plain Text preserves the exact unwrapped canonical URL with no tracking redirect.
+- [x] The provider key and sender are configured in the staging Edge Function without exposing the key in source, logs, evidence, or chat.
+- [x] Exact GREEN source `2721a98ce6fc03a1263ebc5284d90ac936d2e571` and application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` are canonical staging deploy `6a591b138c9727a4b2ca6d48`; transport/runtime/CSP/cache/404 checks pass, and exact rollback to `6a58e22e48d42235e0ea40e0` plus restoration to `6a591b138c9727a4b2ca6d48` verified both releases without database reversal.
+- [x] Supabase Auth custom SMTP readback matches Resend STARTTLS, the verified Auth sender, required confirmation, existing Site URL/redirects, and existing invite/recovery templates.
+- [x] Auth accepts an approved-owner recovery request and Resend records the exact recovery message as `delivered` with the correct recovery route/type and canonical origin.
+- [x] Hosted run `mailqa-mrnu92ro-be6d0bcc` proves owner-UI queueing, provider `delivered`, exact displayed/delivered URL equality, separate signed-out existing-recipient acceptance across deep-link reload, session restoration, consumed-link denial/reload, baseline restoration, and zero residue.
+- [ ] Prove Gmail inbox receipt, new-account confirmation/acceptance, and the complete password replacement/replay path without exposing links or credentials.

@@ -129,6 +129,14 @@ These defaults are intentionally modest and must be accepted rather than silentl
 - Superseding hosted lifecycle run `lqa-mrni99q8-d25f64ff` and hosted family/export run `qa-mrniaqp3-c0cb2cea` are GREEN after the independent-review fix loop, with unchanged protected fingerprints and zero residue. Evidence is automated synthetic staging evidence.
 - Production remains blocked by permanent purge/external journal, custom SMTP and security notices, real recovery/invitation delivery, production Supabase capacity/region/plan selection, physical devices/assistive technology, leaked-password protection disposition, custom domain, and explicit promotion approval.
 
+## 2026-07-16 invitation-mail staging supersession
+
+- Exact source `2721a98ce6fc03a1263ebc5284d90ac936d2e571`, release `0.1.0-2721a98ce6fc`, and application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` are published unchanged as canonical staging deploy `6a591b138c9727a4b2ca6d48`; `6a58e22e48d42235e0ea40e0` is the rollback target.
+- Dedicated staging matches all nine reviewed migrations. Auth SMTP recovery delivery and the separate owner-triggered family invitation provider delivery pass. Marked run `mailqa-mrnu92ro-be6d0bcc` accepted the exact delivered URL as the approved existing recipient across reload and restored its pre-test memberships with zero marked residue.
+- Exact rollback selected `6a58e22e48d42235e0ea40e0` and verified `0.1.0-ce4b0c56d30b`; restoration selected `6a591b138c9727a4b2ca6d48` at `2026-07-16T18:55:26.407Z` and verified `0.1.0-2721a98ce6fc`/`loopedin-staging` without database reversal.
+- Read-only Supabase CLI inventory shows one available organization, two active projects (the dedicated LoopedIn staging project and the quarantined unrelated project), three inactive unrelated projects, and no dedicated production project. Production creation remains stopped before provider organization/region/plan or billing selection; no unrelated project was resumed, changed, or deleted.
+- Gmail inbox observation, new-account confirmation, password replacement/replay, production Supabase, physical devices/assistive technology, custom domain, and production promotion remain open. No family recipient was contacted.
+
 ## Credential and evidence rules
 
 - Never print, commit, paste into PRs, or retain service-role keys, SMTP passwords, database passwords, provider tokens, signed URLs, recovery fragments, or `.env.local` contents.

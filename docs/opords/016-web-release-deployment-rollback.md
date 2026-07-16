@@ -1,7 +1,7 @@
 # OPORD 016 — Web Release, Deployment, and Rollback
 
 ## Status
-STAGING COMPLETE / PRODUCTION CONDITIONAL — exact artifact `e41dd172…e0d38` from `08006e5e…fa619` is published on the separate LoopedIn Netlify site as deploy `6a58428caebae3fadaf3906b` and staging release `0.1.0-08006e5e83a8`. HTTPS/runtime/CSP/cache/404, hosted core-loop/readiness gates, exact-deploy rollback/restoration, and Auth redirect custody pass. Custom domain, physical devices, real-account completion, and production promotion remain open.
+STAGING COMPLETE / PRODUCTION CONDITIONAL — exact application digest `3794214c…4779a` from `2721a98c…2e571` is published unchanged on the separate LoopedIn Netlify site as deploy `6a591b138c9727a4b2ca6d48` and staging release `0.1.0-2721a98ce6fc`. HTTPS/runtime/CSP/cache/404, hosted core-loop/readiness gates, Auth redirect/SMTP custody, provider-delivered invitation acceptance, and newest exact-deploy rollback/restoration pass. Custom domain, physical devices, Gmail/new-account/password completion, a separate production backend, and production promotion remain open.
 
 ## Situation and evidence
 The product is a responsive Expo/React Native Web app: mobile Safari and Chrome are primary and desktop browsers secondary. GitHub run `29451842237` passed all jobs on exact source `3cf45367dc858e5c58bf8b72ae28e263b310c6b4`; artifact digest is `7a18b2f52097697de2b25edd6b49a6454626a1375502637504539e9919fc3c8c`. The verified envelope is immutable deploy `6a57fc726b558b21faf57459` on dedicated site `loopedin-family` (`50ae6d6b-28ad-49c0-9654-c3a54899fcb5`) and is published at `https://loopedin-family.netlify.app`. Custom domain and Git link remain absent. Personal site `travisjohnjones` (`519f3aa3-c723-4b2a-b9dd-4761e7b0a8bf`) retained the same exact identity and was not changed.
@@ -96,3 +96,10 @@ Environment separation, reproducible immutable web artifacts, secure hosting, st
 - Rollback selected exact prior deploy `6a583390d6997d709c864c56`; restoration selected `6a58428caebae3fadaf3906b`; HTTP 200 passed after both alias changes. No database migration was reversed.
 - Hosted signed-out widths 320, 390, and 430 CSS px were observed. Local native browser-zoom evidence remains applicable, but native hosted 200% observation, physical iPhone Safari/Android Chrome, VoiceOver/TalkBack, physical software-keyboard behavior, and moderated use remain unproven.
 - Production requires an isolated Supabase project and redirect allow-list, an explicit plan/organization/region decision, exact-artifact approval, and custom-domain action. `app.travisjohnjones.com` is not production evidence.
+
+## Invitation-mail release supersession — 2026-07-16
+
+- Main CI `29518737936` is GREEN at source `2721a98ce6fc03a1263ebc5284d90ac936d2e571`; release `0.1.0-2721a98ce6fc` and application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` were wrapped with the unchanged reviewed staging overlay.
+- Immutable deploy `6a591b138c9727a4b2ca6d48` was initially published unchanged to canonical staging at `2026-07-16T18:19:21.898Z`; HTTPS/runtime/CSP/cache/404 and exact release/environment identity pass. Rollback selected `6a58e22e48d42235e0ea40e0` and verified `0.1.0-ce4b0c56d30b`; restoration selected `6a591b138c9727a4b2ca6d48` at `2026-07-16T18:55:26.407Z` and verified `0.1.0-2721a98ce6fc`/`loopedin-staging` without database reversal.
+- Hosted invitation run `mailqa-mrnu92ro-be6d0bcc` proves provider delivery and separate existing-recipient acceptance across deep-link reload, session restoration, and consumed-link denial, followed by exact baseline restoration and zero residue. Gmail inbox/new-account/password completion remain open.
+- Custom domain, Git link, production Supabase, and personal site were unchanged. Production promotion remains conditional on the separate production environment and remaining external gates.
