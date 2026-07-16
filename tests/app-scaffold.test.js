@@ -38,6 +38,7 @@ function loadCompiledModules() {
     path.join(appRoot, 'src/features/account/dataExport.ts'),
     path.join(appRoot, 'src/services/serviceErrors.ts'),
     path.join(appRoot, 'src/services/messageSubscription.ts'),
+    path.join(appRoot, 'src/app/queryReconciliation.ts'),
     '--outDir', outDir,
     '--module', 'commonjs',
     '--target', 'es2020',
@@ -59,6 +60,7 @@ function loadCompiledModules() {
     clientErrorTelemetry: require(path.join(outDir, 'services/clientErrorTelemetry.js')),
     serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
     messageSubscription: require(path.join(outDir, 'services/messageSubscription.js')),
+    queryReconciliation: require(path.join(outDir, 'app/queryReconciliation.js')),
   };
 }
 
@@ -70,6 +72,7 @@ test('mobile scaffold and event-loop files exist', () => {
     'App.tsx',
     'src/app/AppProviders.tsx',
     'src/app/queries.ts',
+    'src/app/queryReconciliation.ts',
     'src/app/selectors.ts',
     'src/features/auth/AuthSessionProvider.tsx',
     'src/features/events/selectors.ts',
@@ -2089,12 +2092,17 @@ test('representative family capacity preserves exact event identity and stays wi
 
 test('event message subscription is exact-key, reconnecting, and inert after cleanup', async () => {
   const { messageSubscription } = loadCompiledModules();
-  const records = { name: '', filter: null, change: null, status: null, removed: [] };
+  const records = { name: '', filter: null, change: null, system: null, status: null, removed: [] };
   const channel = {
     on(type, filter, callback) {
-      assert.equal(type, 'postgres_changes');
-      records.filter = filter;
-      records.change = callback;
+      if (type === 'postgres_changes') {
+        records.filter = filter;
+        records.change = callback;
+      } else {
+        assert.equal(type, 'system');
+        assert.deepEqual(filter, {});
+        records.system = callback;
+      }
       return this;
     },
     subscribe(callback) {
@@ -2128,15 +2136,25 @@ test('event message subscription is exact-key, reconnecting, and inert after cle
     filter: 'event_id=eq.event-a',
   });
   records.status('SUBSCRIBED');
-  assert.equal(changes, 1, 'initial subscription reconciles server history');
+  assert.equal(changes, 0, 'channel join alone is not Postgres readiness');
+  records.system({ extension: 'system', status: 'ok' });
+  assert.equal(changes, 0, 'unrelated system readiness is ignored');
+  records.system({ extension: 'postgres_changes', status: 'error' });
+  records.system({ extension: 'postgres_changes', status: 'ok' });
+  assert.equal(changes, 1, 'Postgres readiness reconciles server history');
   records.change();
   assert.equal(changes, 2, 'one matching database event requests one reconciliation');
   records.status('CHANNEL_ERROR');
   records.status('TIMED_OUT');
   records.status('CLOSED');
   records.status('SUBSCRIBED');
-  assert.equal(changes, 3, 'reconnect reconciles missed server history once');
-  assert.deepEqual(statuses, ['connected', 'reconnecting', 'reconnecting', 'reconnecting', 'connected']);
+  assert.equal(changes, 2, 'channel rejoin still waits for Postgres readiness');
+  records.system({ extension: 'postgres_changes', status: 'ok' });
+  assert.equal(changes, 3, 'Postgres reconnect reconciles missed server history once');
+  assert.deepEqual(statuses, [
+    'reconnecting', 'reconnecting', 'connected', 'reconnecting',
+    'reconnecting', 'reconnecting', 'reconnecting', 'connected',
+  ]);
 
   unsubscribe();
   unsubscribe();
@@ -2144,8 +2162,39 @@ test('event message subscription is exact-key, reconnecting, and inert after cle
   assert.deepEqual(records.removed, [channel], 'cleanup removes the channel once');
   records.change();
   records.status('SUBSCRIBED');
+  records.system({ extension: 'postgres_changes', status: 'ok' });
   assert.equal(changes, 3, 'late callbacks cannot update an unmounted or switched event');
-  assert.equal(statuses.length, 5);
+  assert.equal(statuses.length, 8);
+});
+
+test('message reconciliation replaces a stale initial fetch after Postgres readiness', async () => {
+  const { queryReconciliation } = loadCompiledModules();
+  const appRequire = createRequire(path.join(appRoot, 'package.json'));
+  const { QueryClient, QueryObserver } = appRequire('@tanstack/query-core');
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryKey = ['messages', 'event-a'];
+  let calls = 0;
+  let resolveInitial;
+  const observer = new QueryObserver(queryClient, {
+    queryKey,
+    queryFn: async () => {
+      calls += 1;
+      if (calls === 1) return new Promise((resolve) => { resolveInitial = resolve; });
+      return ['fresh'];
+    },
+  });
+  const unsubscribe = observer.subscribe(() => undefined);
+
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(calls, 1);
+  await queryReconciliation.refetchActiveQueryAfterInFlight(queryClient, queryKey);
+  assert.equal(calls, 2, 'readiness starts a fresh exact query after cancelling the stale initial fetch');
+  resolveInitial(['stale']);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(queryClient.getQueryData(queryKey), ['fresh']);
+
+  unsubscribe();
+  queryClient.clear();
 });
 
 test('hosted family harness is exact-project, staging-acknowledged, synthetic, and cleanup-bounded', () => {
@@ -2169,6 +2218,9 @@ test('hosted family harness is exact-project, staging-acknowledged, synthetic, a
   assert.match(harness, /loopedin_accept_group_invite/);
   assert.match(harness, /loopedin_begin_media_upload/);
   assert.match(harness, /postgres_changes/);
+  assert.match(harness, /\.on\('system'/);
+  assert.match(harness, /payload\.extension === 'postgres_changes'/);
+  assert.doesNotMatch(harness, /setTimeout\(resolve, 2000\)/);
   assert.match(harness, /protectedFingerprint/);
   assert.match(harness, /protectedStateUnchanged: true/);
   assert.match(harness, /finally/);

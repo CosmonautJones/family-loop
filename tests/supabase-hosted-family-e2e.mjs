@@ -276,31 +276,36 @@ async function realtimeInsert(token, eventId) {
   await client.realtime.setAuth(token);
   let resolveChange;
   let rejectChange;
+  let changeTimeout;
   const change = new Promise((resolve, reject) => { resolveChange = resolve; rejectChange = reject; });
-  const changeTimeout = setTimeout(() => rejectChange(new Error('bounded Realtime observation timed out')), 60000);
+  let resolveReady;
+  let rejectReady;
+  const ready = new Promise((resolve, reject) => { resolveReady = resolve; rejectReady = reject; });
+  const readyTimeout = setTimeout(() => rejectReady(new Error('bounded Realtime subscription timed out')), 60000);
   const channel = client.channel(`hosted-proof:${eventId}:${crypto.randomUUID()}`)
     .on('postgres_changes', {
       event: 'INSERT', schema: 'public', table: 'loopedin_event_messages', filter: `event_id=eq.${eventId}`,
     }, () => {
       clearTimeout(changeTimeout);
       resolveChange();
-    });
-  const ready = new Promise((resolve, reject) => {
-    const readyTimeout = setTimeout(() => reject(new Error('bounded Realtime subscription timed out')), 30000);
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
+    })
+    .on('system', {}, (payload) => {
+      if (payload.extension === 'postgres_changes' && payload.status === 'ok' && !changeTimeout) {
         clearTimeout(readyTimeout);
-        resolve();
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        clearTimeout(readyTimeout);
-        reject(new Error('Realtime subscription failed'));
+        changeTimeout = setTimeout(() => rejectChange(new Error('bounded Realtime observation timed out')), 60000);
+        resolveReady();
       }
     });
+  channel.subscribe((status) => {
+    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+      clearTimeout(readyTimeout);
+      rejectReady(new Error('Realtime subscription failed'));
+    }
   });
   return {
     ready,
     change,
-    close() { clearTimeout(changeTimeout); void client.removeChannel(channel); },
+    close() { clearTimeout(readyTimeout); clearTimeout(changeTimeout); void client.removeChannel(channel); },
   };
 }
 
@@ -423,7 +428,6 @@ async function run() {
 
     realtime = await realtimeInsert(memberA.token, events[0].id);
     await realtime.ready;
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     await required(rpc('loopedin_send_event_message', owner.token, {
       target_event_id: events[0].id, target_body: 'Hosted QA owner comment', target_operation_key: crypto.randomUUID(),
     }), 'send owner QA comment');

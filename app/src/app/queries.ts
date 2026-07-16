@@ -5,6 +5,7 @@ import { invitationFlowId } from '../features/auth/invitationRoute';
 import { loopedInService } from '../services';
 import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
+import { refetchActiveQueryAfterInFlight } from './queryReconciliation';
 
 export const queryKeys = {
   groups: ['groups'] as const,
@@ -241,7 +242,7 @@ export function useEventMessagesQuery(eventId: string) {
   useEffect(() => {
     if (!eventId) return;
     return loopedInService.thread.subscribeMessages(eventId, () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.messages(eventId), exact: true });
+      void refetchActiveQueryAfterInFlight(queryClient, queryKeys.messages(eventId));
     });
   }, [eventId, queryClient]);
 
