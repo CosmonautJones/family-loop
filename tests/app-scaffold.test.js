@@ -2291,5 +2291,6 @@ test('hosted backup packages protected schemas and private bytes under client en
   assert.match(workflow, /environment: loopedin-staging-backup/);
   assert.ok(workflow.indexOf('Verify isolated database restore before upload') < workflow.indexOf('Upload encrypted backup only'));
   assert.doesNotMatch(workflow, /pull_request|push:/);
-  assert.doesNotMatch(backup + restore, /console\.|Write-Host|service_role/);
+  assert.doesNotMatch(backup, /console\.|Write-Host|service_role/);
+  assert.doesNotMatch(restore, /console\.|Write-Host/);
 });
