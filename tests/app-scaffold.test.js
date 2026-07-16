@@ -56,6 +56,7 @@ function loadCompiledModules() {
     invitationRoute: require(path.join(outDir, 'features/auth/invitationRoute.js')),
     invitationDraft: require(path.join(outDir, 'features/auth/invitationDraft.js')),
     dataExport: require(path.join(outDir, 'features/account/dataExport.js')),
+    clientErrorTelemetry: require(path.join(outDir, 'services/clientErrorTelemetry.js')),
     serviceErrors: require(path.join(outDir, 'services/serviceErrors.js')),
     messageSubscription: require(path.join(outDir, 'services/messageSubscription.js')),
   };
@@ -406,6 +407,88 @@ test('configured transport rejection becomes calm copy while safe validation cop
     return true;
   });
   await assert.rejects(service.thread.validate(), /Write a message before sending\./);
+});
+
+test('privacy-safe telemetry is bounded, deduplicated, and excludes validation errors', async () => {
+  const { clientErrorTelemetry, serviceErrors } = loadCompiledModules();
+  const sent = [];
+  const report = clientErrorTelemetry.createClientErrorTelemetryReporter('loopedin-staging', '0.1.0-123456789abc', async (event) => { sent.push(event); });
+  const service = serviceErrors.withSafeServiceErrors({
+    auth: {
+      transport: async () => { throw new TypeError('Failed to fetch https://private.example?token=secret'); },
+      validate: async () => { throw serviceErrors.userServiceError('Enter your email.'); },
+    },
+    media: { denied: async () => { throw { status: 403, message: 'private media path' }; } },
+  }, report);
+
+  await assert.rejects(service.auth.transport());
+  await assert.rejects(service.auth.transport());
+  await assert.rejects(service.auth.validate());
+  await assert.rejects(service.media.denied());
+  report({ operation: 'render', category: 'render' });
+  report({ operation: 'data', category: 'conflict' });
+  report({ operation: 'data', category: 'session' });
+  report({ operation: 'data', category: 'access' });
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.deepEqual(sent, [
+    { operation: 'auth', category: 'network', release: '0.1.0-123456789abc' },
+    { operation: 'media', category: 'access', release: '0.1.0-123456789abc' },
+    { operation: 'render', category: 'render', release: '0.1.0-123456789abc' },
+    { operation: 'data', category: 'conflict', release: '0.1.0-123456789abc' },
+    { operation: 'data', category: 'session', release: '0.1.0-123456789abc' },
+  ]);
+  assert.doesNotMatch(JSON.stringify(sent), /private|token|secret|email|url|message|stack|user/i);
+
+  const ignored = [];
+  const developmentReport = clientErrorTelemetry.createClientErrorTelemetryReporter('development', 'development', async (event) => { ignored.push(event); });
+  developmentReport({ operation: 'render', category: 'render' });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.deepEqual(ignored, []);
+});
+
+test('telemetry migration stores no caller or content and exposes only an authenticated bounded RPC', () => {
+  const migration = fs.readFileSync(path.join(repoRoot, 'supabase', 'migrations', '20260716002122_privacy_safe_error_telemetry.sql'), 'utf8');
+  const backupScript = fs.readFileSync(path.join(repoRoot, 'scripts', 'create-hosted-encrypted-backup.ps1'), 'utf8');
+  const restoreScript = fs.readFileSync(path.join(repoRoot, 'scripts', 'restore-hosted-encrypted-backup.ps1'), 'utf8');
+  const eventTable = migration.match(/create table loopedin_telemetry\.client_error_events \(([\s\S]*?)\n\);/)?.[1] ?? '';
+  const appBoundary = read('src/app/AppErrorBoundary.tsx');
+  const adapter = read('src/services/supabaseAdapter.ts');
+
+  assert.match(eventTable, /occurred_at timestamptz/);
+  assert.match(eventTable, /environment text/);
+  assert.match(eventTable, /operation text/);
+  assert.match(eventTable, /category text/);
+  assert.match(eventTable, /release text/);
+  const eventColumns = [...eventTable.matchAll(/^\s*(\w+)\s+(?:timestamptz|text)\b/gm)].map((match) => match[1]);
+  assert.deepEqual(eventColumns, ['occurred_at', 'environment', 'operation', 'category', 'release']);
+  assert.match(migration, /request_count smallint not null check \(request_count between 1 and 5\)/);
+  assert.match(migration, /date_bin\('15 minutes'/);
+  assert.match(migration, /interval '24 hours'/);
+  assert.match(migration, /interval '30 days'/);
+  assert.match(migration, /target_release !~ '\^\[0-9\]\{1,3\}/);
+  assert.match(migration, /from loopedin_telemetry\.configuration/);
+  assert.doesNotMatch(migration.match(/create or replace function public\.loopedin_report_client_error[\s\S]*?\$\$;/)?.[0] ?? '', /delete from/);
+  assert.match(migration, /create index client_error_events_occurred_at_idx/);
+  assert.match(migration, /create index client_error_rate_limits_bucket_start_idx/);
+  assert.match(migration, /revoke all on schema loopedin_telemetry from public, anon, authenticated/);
+  assert.match(migration, /revoke all on function public\.loopedin_report_client_error\(text, text, text\) from public, anon/);
+  assert.match(migration, /grant execute on function public\.loopedin_report_client_error\(text, text, text\) to authenticated/);
+  assert.match(migration, /grant execute on function public\.loopedin_maintain_client_error_telemetry\(\) to service_role/);
+  assert.doesNotMatch(migration, /grant select/);
+  assert.doesNotMatch(adapter, /target_environment/);
+  assert.match(adapter, /target_release: event\.release/);
+  assert.match(appBoundary, /reportRenderErrorTelemetry\(\)/);
+  assert.doesNotMatch(appBoundary, /reportRenderErrorTelemetry\([^)]/);
+  assert.match(backupScript, /--schema=loopedin_telemetry/);
+  assert.match(backupScript, /telemetryConfiguration[\s\S]*?loopedin_telemetry\.configuration/);
+  assert.match(backupScript, /--exclude-table-data=loopedin_telemetry\.client_error_events/);
+  assert.match(backupScript, /--exclude-table-data=loopedin_telemetry\.client_error_rate_limits/);
+  assert.match(backupScript, /client_error_events where occurred_at < now\(\) - interval '30 days'/);
+  assert.match(backupScript, /client_error_rate_limits where bucket_start < now\(\) - interval '24 hours'/);
+  assert.match(restoreScript, /eventRows[\s\S]*?client_error_events/);
+  assert.match(restoreScript, /rateLimitRows[\s\S]*?client_error_rate_limits/);
+  assert.match(restoreScript, /Restored telemetry privacy or retention contract mismatch/);
 });
 
 test('Supabase retryable auth transport failures retain the network recovery category', () => {
@@ -2208,5 +2291,6 @@ test('hosted backup packages protected schemas and private bytes under client en
   assert.match(workflow, /environment: loopedin-staging-backup/);
   assert.ok(workflow.indexOf('Verify isolated database restore before upload') < workflow.indexOf('Upload encrypted backup only'));
   assert.doesNotMatch(workflow, /pull_request|push:/);
-  assert.doesNotMatch(backup + restore, /console\.|Write-Host|service_role/);
+  assert.doesNotMatch(backup, /console\.|Write-Host|service_role/);
+  assert.doesNotMatch(restore, /console\.|Write-Host/);
 });

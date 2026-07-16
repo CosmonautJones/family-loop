@@ -11,6 +11,10 @@ export type RuntimeConfig = {
 const compiledDataMode = process.env.EXPO_PUBLIC_DATA_MODE;
 export const usesWebRuntimeConfig = Platform.OS === 'web' && compiledDataMode === 'runtime';
 
+export function getReleaseId() {
+  return process.env.EXPO_PUBLIC_RELEASE_ID ?? 'development';
+}
+
 let runtimeConfig: RuntimeConfig | null = null;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

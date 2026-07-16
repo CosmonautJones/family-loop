@@ -24,6 +24,7 @@ test('release build contract pins one runtime-configured artifact and disables d
   assert.match(build, /git -C \$repositoryRoot archive[\s\S]*\$sourceCommit/);
   assert.match(build, /EXPO_NO_DOTENV', '1'/);
   assert.match(build, /EXPO_PUBLIC_DATA_MODE', 'runtime'/);
+  assert.match(build, /EXPO_PUBLIC_RELEASE_ID', \$releaseId/);
   for (const name of ['EXPO_PUBLIC_SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_ANON_KEY', 'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY']) {
     assert.match(build, new RegExp(`Remove-Item Env:${name}`));
   }
