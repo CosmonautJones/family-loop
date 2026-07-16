@@ -84,7 +84,7 @@ export type MediaItem = {
 export type Event = {
   id: EventId;
   groupId: GroupId;
-  creatorId: PersonId;
+  creatorId: PersonId | null;
   title: string;
   startsAt: string;
   endsAt: string;

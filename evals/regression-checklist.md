@@ -204,7 +204,8 @@
 - [x] Real loopback Auth sessions for owner/member/outsider exclude pairwise foreign IDs; outsider contributions are empty; 390px inputs/actions are 52/48px with no overflow or console events.
 - [x] Local deletion grace state proves recent-auth and owner guards, concurrent transfer/request serialization, exact 30-day recovery, pending DB/RPC/Storage denial, cancellation restoration, deadline rejection, and service-role-only legal-hold records.
 - [x] Hosted encrypted owner/member/outsider export and hosted grace-state request/cancel/access-denial browser proof pass with exact scope, baseline restoration, and zero residue.
-- [ ] External restore-journal replay, permanent Postgres/Storage/Auth purge, retention/orphan apply, shared-family export scope, and production restore remain `NOT RUN`.
+- [x] Disposable loopback permanent purge proves service-only lease/prepare/finalize/complete, frozen media-plus-owned-orphan paths and digest, real Storage deletion/absence, relational cleanup, Auth last, four crash resumes, neutral shared creators, encrypted chained journal recovery/retention, outsider denial, and idempotent replay.
+- [ ] Hosted external-journal custody/replay, hosted/production purge, retention/orphan apply, shared-family export scope, and production restore remain `NOT RUN`.
 
 ## Wave 5 mobile accessibility implementation
 
@@ -364,7 +365,8 @@ Use this before considering a mission complete.
 - [x] Family harness cleanup now safely reconciles pending/active/deleting media after failure; the final family/export run leaves zero users/profiles/groups/invitations/objects.
 - [x] Exact frontend rollback/restoration passes without database reversal and the personal Netlify site remains untouched.
 - [ ] Signed-out Auth still has no main landmark; hosted authenticated native 200% zoom and physical iPhone/Android/VoiceOver/TalkBack remain `NOT RUN`.
-- [ ] Permanent purge/external journal, Gmail/new-account/password completion, production SMTP/security notices, production backend/domain/promotion, and leaked-password protection remain blocking.
+- [x] Local permanent purge/external journal contracts and disposable loopback E2E pass; no hosted or real-user deletion is inferred.
+- [ ] Hosted purge/journal custody and restore reconciliation, Gmail/new-account/password completion, production SMTP/security notices, production backend/domain/promotion, and leaked-password protection remain blocking.
 
 ## 2026-07-16 hosted copied invitation
 

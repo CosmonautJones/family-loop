@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted as the LoopedIn lifecycle architecture. The recoverable grace state is implemented and verified locally and with disposable hosted-staging accounts; external-journal reconciliation, permanent purge, and production adoption remain unproven.
+Accepted as the LoopedIn lifecycle architecture. The recoverable grace state is verified locally and with disposable hosted-staging accounts. The permanent-purge boundary, encrypted external journal, recovery gate, and crash-safe operator are implemented and verified only against disposable loopback Supabase; hosted/production adoption and restore-time replay remain unproven.
 
 ## Context
 
@@ -22,6 +22,7 @@ A direct Auth-user delete is unsafe: creator foreign keys intentionally restrict
 6. Backup copies expire through the documented 30-day backup retention. A request records the conservative latest backup-expiry boundary as 30 days after its purge deadline.
 7. Permanent deletion is a separate operator state machine across Postgres, Storage, and Auth. It must be leased, retryable, idempotent, hold-aware, and delete Auth last.
 8. A deletion/legal-hold journal outside the database being restored must outlive every restorable copy. No restored environment may receive traffic until that journal is replayed and reconciled.
+9. Shared families and events survive with a neutral `null` creator after the subject leaves. The frozen deletion plan includes both subject media rows and subject-owned Storage objects, including object orphans.
 
 ## Alternatives
 
@@ -37,23 +38,26 @@ A direct Auth-user delete is unsafe: creator foreign keys intentionally restrict
 - Pending accounts fail closed at RLS helpers, direct policy branches, authenticated RPC wrappers, Storage helpers, and the client query bootstrap.
 - Signed private-media URLs retain the existing one-hour lifetime until the app has expiry-aware renewal. Already rendered data, an already issued URL during its remaining lifetime, and previously downloaded bytes cannot be revoked; this is a documented boundary rather than an immediate-erasure claim.
 - The client polls deletion status every 15 seconds while authenticated and clears protected Query data and active-family state when pending status is observed.
-- Production remains blocked until SMTP security notices, external journal custody/replay, and the distributed purge state machine are implemented and proven.
+- Production remains blocked until journal custody/replay and the destructive operator are adapted and independently proven in an authorized hosted environment. The current operator refuses every non-loopback target.
 
 ## Assumptions and inferences
 
 - **Approved policy input:** immediate access disablement, a 30-day recoverable grace period, ownership transfer first, permanent deletion after grace, backup expiry under retention, and explicit legal-hold records were supplied as the default lifecycle policy.
 - **Verified locally:** migration reset/lint, stale-session and owner rejection, concurrent request/transfer serialization, pending DB/RPC/Storage denial, pre-deadline cancellation, expired cancellation denial, legal-hold privilege, and restored access after cancellation.
+- **Verified locally for permanent purge:** service-role-only leasing, deadline/owner/hold rechecks, deterministic frozen path union and digest, real object deletion and exact absence checks, transactional contribution cleanup, Auth deletion last, four injected crash/resume boundaries, neutral shared creators, encrypted chained journal retention, outsider denial, and idempotent completion replay.
 - **Verified in dedicated staging with synthetic users:** owner transfer, exact grace/backup boundaries, pending DB/RPC/Storage denial, legal holds, cancellation restoration, expired cancellation denial, outsider isolation, unchanged protected state, and zero residue.
 - **Inference:** 15-second status polling plus fail-closed protected-cache eviction reduce cached-access exposure within the current browser architecture; expiry-aware media renewal and physical-device behavior remain unimplemented or unobserved.
 
 ## Non-decisions
 
-This ADR does not choose the external journal provider, legal-hold retention period, creator-field custody/anonymization model, purge worker host, production Supabase project, SMTP provider, or production promotion. It does not claim deletion compliance or completed erasure.
+This ADR does not choose the external journal provider, legal-hold retention period, hosted purge worker, production Supabase project, SMTP provider, or production promotion. It does not claim deletion compliance or hosted/production erasure.
 
 ## Validation
 
 - `node --test tests/account-lifecycle-contract.test.js`
 - `./scripts/test-local-supabase-account-lifecycle.ps1`
+- `node --test tests/account-purge-contract.test.js tests/account-purge-journal.test.js`
+- `./scripts/test-local-supabase-account-purge.ps1`
 - `supabase db reset --local`
 - `supabase db lint --local --level error`
 - Root/app tests, TypeScript, lint, migration checksum validation, secret scan, and independent review remain required.
@@ -63,6 +67,8 @@ This ADR does not choose the external journal provider, legal-hold retention per
 - [`account lifecycle migration`](../../supabase/migrations/20260716033000_account_deletion_grace_state.sql)
 - [`account lifecycle E2E`](../../tests/supabase-account-lifecycle-e2e.mjs)
 - [`account lifecycle runbook`](../runbooks/account-deletion-grace-state.md)
+- [`permanent purge migration`](../../supabase/migrations/20260716213000_permanent_account_purge_boundary.sql)
+- [`permanent purge E2E`](../../tests/supabase-account-purge-e2e.mjs)
 - [`OPORD 017`](../opords/017-backup-restore-data-lifecycle.md)
 - [`current mission`](../../tasks/current-mission.md)
 - [`regression checklist`](../../evals/regression-checklist.md)

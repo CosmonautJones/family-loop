@@ -44,6 +44,13 @@
 - [x] `2b6d725`, `a52e43b`, and `0601baa` simplify Event Detail and close DST/timeline, delete, validation, media-mode, and Supabase timeline correctness gaps without new dependencies.
 - [x] Current final gates are independently transcribed: root 58/58, app-local 47/47, TypeScript, local Supabase migration/lint/lifecycle, harness, Expo export, and diff check pass; lint is placeholder WARN.
 - [ ] Hosted remote parity is unproven: repository and local Supabase media lifecycle policies pass, but hosted RLS, migration-data validation, and operational recovery still require authorized execution evidence.
+
+## Permanent account purge boundary
+
+- [x] Service-role-only leased RPCs recheck expiry, ownership, and holds; freeze a deterministic digest over media and subject-owned Storage paths; require object absence before relational cleanup; and require Auth absence before completion.
+- [x] The operator refuses non-loopback targets, reads secrets only from environment, writes bounded AES-256-GCM chained evidence outside the repository, and resumes without reversing schema or duplicating completion evidence.
+- [x] Contract/journal tests and real local Supabase E2E cover tamper/truncation, stale-head recovery, retention, restore gating, object-first cleanup, Auth-last deletion, four injected crash seams, cross-user denial, and idempotent replay.
+- [ ] Hosted operator adaptation, external journal custody, restore-time reconciliation, production authorization, and independent final review remain required.
 - [ ] Local demo actors and adapter contracts do not prove production authentication, invitations, RLS, or server synchronization.
 
 ## Wave 6 local E2E and recovery
