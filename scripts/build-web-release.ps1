@@ -91,6 +91,7 @@ function Invoke-BoundedProcess(
 $environmentNames = @(
   'EXPO_NO_DOTENV',
   'EXPO_PUBLIC_DATA_MODE',
+  'EXPO_PUBLIC_RELEASE_ID',
   'EXPO_PUBLIC_SUPABASE_URL',
   'EXPO_PUBLIC_SUPABASE_ANON_KEY',
   'EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
@@ -108,8 +109,15 @@ try {
   & tar -xf $archivePath -C $sourcePath
   if ($LASTEXITCODE -ne 0) { throw 'Source archive extraction failed.' }
 
+  $package = Get-Content -Raw -LiteralPath (Join-Path $sourcePath 'app/package.json') | ConvertFrom-Json
+  $releaseId = "$($package.version)-$($sourceCommit.Substring(0, 12))"
+  if ($releaseId -notmatch '^\d{1,3}\.\d{1,3}\.\d{1,3}-[0-9a-f]{12}$') {
+    throw 'Release identity does not match the bounded telemetry contract.'
+  }
+
   [Environment]::SetEnvironmentVariable('EXPO_NO_DOTENV', '1', 'Process')
   [Environment]::SetEnvironmentVariable('EXPO_PUBLIC_DATA_MODE', 'runtime', 'Process')
+  [Environment]::SetEnvironmentVariable('EXPO_PUBLIC_RELEASE_ID', $releaseId, 'Process')
   Remove-Item Env:EXPO_PUBLIC_SUPABASE_URL -ErrorAction SilentlyContinue
   Remove-Item Env:EXPO_PUBLIC_SUPABASE_ANON_KEY -ErrorAction SilentlyContinue
   Remove-Item Env:EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY -ErrorAction SilentlyContinue
@@ -142,13 +150,12 @@ try {
         }
       }
   )
-  $package = Get-Content -Raw -LiteralPath (Join-Path $sourcePath 'app/package.json') | ConvertFrom-Json
   $canonicalFiles = ($files | ForEach-Object { "$($_.path)`t$($_.bytes)`t$($_.sha256)" }) -join "`n"
   $canonicalArtifact = "schemaVersion=2`nappVersion=$($package.version)`ndataMode=runtime`nsourceCommit=$sourceCommit`nsourceDateEpoch=$sourceEpoch`n$canonicalFiles`n"
   $artifactDigest = Get-TextSha256 $canonicalArtifact
   $manifest = [ordered]@{
     schemaVersion = 2
-    releaseId = "$($package.version)-$($sourceCommit.Substring(0, 12))"
+    releaseId = $releaseId
     appVersion = $package.version
     dataMode = 'runtime'
     sourceCommit = $sourceCommit

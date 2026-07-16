@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { AppShell } from './src/navigation/AppShell';
 import { AppProviders } from './src/app/AppProviders';
 import { getRuntimeConfig, usesWebRuntimeConfig } from './src/config/runtimeConfig';
+import { AppErrorBoundary } from './src/app/AppErrorBoundary';
 
 export default function App() {
   const config = getRuntimeConfig();
@@ -12,9 +13,11 @@ export default function App() {
           <Text style={styles.environmentText}>{config.environmentId} · {config.dataMode === 'supabase' ? 'Connected' : 'Local demo'}</Text>
         </View>
       ) : null}
-      <AppProviders>
-        <AppShell />
-      </AppProviders>
+      <AppErrorBoundary>
+        <AppProviders>
+          <AppShell />
+        </AppProviders>
+      </AppErrorBoundary>
     </View>
   );
 }

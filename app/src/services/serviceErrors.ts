@@ -1,4 +1,11 @@
+import type { ClientErrorCategory, ClientErrorOperation } from './clientErrorTelemetry';
+
 export type ServiceErrorCategory = 'network' | 'session' | 'access' | 'conflict' | 'rate-limit' | 'unknown';
+
+export type ServiceErrorTelemetry = (event: {
+  operation: ClientErrorOperation;
+  category: ClientErrorCategory;
+}) => void;
 
 type ErrorDetails = {
   code?: unknown;
@@ -17,6 +24,8 @@ const safeMessages: Record<ServiceErrorCategory, string> = {
 };
 
 const userSafeErrorName = 'LoopedInUserSafeError';
+const serviceErrorPrefix = 'LoopedInServiceError:';
+const serviceErrorCategories = new Set<ServiceErrorCategory>(['network', 'session', 'access', 'conflict', 'rate-limit', 'unknown']);
 
 export function userServiceError(message: string): Error {
   const error = new Error(message);
@@ -48,7 +57,13 @@ function categoryForError(error: unknown): ServiceErrorCategory | null {
 }
 
 export function sanitizeServiceError(error: unknown): Error {
-  if (error instanceof Error && (error.name === userSafeErrorName || error.name.startsWith('LoopedInServiceError:'))) return error;
+  if (error instanceof Error) {
+    if (error.name === userSafeErrorName) return error;
+    const existingCategory = error.name.startsWith(serviceErrorPrefix)
+      ? error.name.slice(serviceErrorPrefix.length) as ServiceErrorCategory
+      : null;
+    if (existingCategory && serviceErrorCategories.has(existingCategory)) return error;
+  }
   const category = categoryForError(error);
   const safeError = new Error(safeMessages[category ?? 'unknown']);
   safeError.name = `LoopedInServiceError:${category ?? 'unknown'}`;
@@ -63,7 +78,26 @@ function isPromiseLike(value: unknown): value is Promise<unknown> {
   return Boolean(value && typeof value === 'object' && 'then' in value && typeof (value as Promise<unknown>).then === 'function');
 }
 
-export function withSafeServiceErrors<T extends object>(service: T): T {
+function operationForArea(areaName: string): ClientErrorOperation {
+  if (areaName === 'auth') return 'auth';
+  if (areaName === 'media') return 'media';
+  return 'data';
+}
+
+function sanitizeAndReport(error: unknown, areaName: string, report?: ServiceErrorTelemetry) {
+  if (!(error instanceof Error && error.name === userSafeErrorName)) {
+    const candidateCategory = error instanceof Error && error.name.startsWith(serviceErrorPrefix)
+      ? error.name.slice(serviceErrorPrefix.length) as ServiceErrorCategory
+      : null;
+    const safeCategory = candidateCategory && serviceErrorCategories.has(candidateCategory)
+      ? candidateCategory
+      : categoryForError(error) ?? 'unknown';
+    report?.({ operation: operationForArea(areaName), category: safeCategory });
+  }
+  return sanitizeServiceError(error);
+}
+
+export function withSafeServiceErrors<T extends object>(service: T, report?: ServiceErrorTelemetry): T {
   return Object.fromEntries(Object.entries(service).map(([areaName, area]) => {
     if (!area || typeof area !== 'object') return [areaName, area];
     const wrappedArea = Object.fromEntries(Object.entries(area).map(([methodName, method]) => {
@@ -71,9 +105,9 @@ export function withSafeServiceErrors<T extends object>(service: T): T {
       return [methodName, (...args: unknown[]) => {
         try {
           const result = method(...args);
-          return isPromiseLike(result) ? result.catch((error) => { throw sanitizeServiceError(error); }) : result;
+          return isPromiseLike(result) ? result.catch((error) => { throw sanitizeAndReport(error, areaName, report); }) : result;
         } catch (error) {
-          throw sanitizeServiceError(error);
+          throw sanitizeAndReport(error, areaName, report);
         }
       }];
     }));

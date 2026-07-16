@@ -39,6 +39,7 @@ select md5(json_build_object(
   'entitlements', (select coalesce(json_agg(t order by user_id), '[]'::json) from loopedin_private.loopedin_group_creation_entitlements t),
   'eventOps', (select coalesce(json_agg(t order by actor_id,group_id,operation_key), '[]'::json) from loopedin_private.loopedin_event_create_operations t),
   'messageOps', (select coalesce(json_agg(t order by actor_id,event_id,operation_key), '[]'::json) from loopedin_private.loopedin_message_create_operations t),
+  'telemetryConfiguration', (select coalesce(json_agg(t order by singleton), '[]'::json) from loopedin_telemetry.configuration t),
   'authUsers', (select coalesce(json_agg(t order by id), '[]'::json) from auth.users t),
   'authIdentities', (select coalesce(json_agg(t order by id), '[]'::json) from auth.identities t),
   'storageBuckets', (select coalesce(json_agg(t order by id), '[]'::json) from storage.buckets t),
@@ -61,9 +62,19 @@ try {
   New-Item -ItemType Directory -Force -Path $stage, (Join-Path $stage 'objects'), (Split-Path -Parent $ArtifactPath) | Out-Null
   $env:PGPASSWORD = $env:LOOPEDIN_STAGING_DB_PASSWORD
   $connection = "host=$poolerHost port=5432 user=$poolerUser dbname=postgres sslmode=require"
+  Invoke-PostgresContainer @(
+    'psql', $connection, '-v', 'ON_ERROR_STOP=1', '-c',
+    "delete from loopedin_telemetry.client_error_events where occurred_at < now() - interval '30 days'; delete from loopedin_telemetry.client_error_rate_limits where bucket_start < now() - interval '24 hours';"
+  )
   $snapshotStartedAt = [DateTimeOffset]::UtcNow
   $fingerprintBefore = Get-HostedFingerprint
-  Invoke-PostgresContainer @('pg_dump', $connection, '-Fc', '--no-owner', '--schema=public', '--schema=loopedin_private', '--schema=auth', '--schema=storage', '--schema=supabase_migrations', '-f', '/work/stage/database.dump')
+  Invoke-PostgresContainer @(
+    'pg_dump', $connection, '-Fc', '--no-owner',
+    '--schema=public', '--schema=loopedin_private', '--schema=loopedin_telemetry', '--schema=auth', '--schema=storage', '--schema=supabase_migrations',
+    '--exclude-table-data=loopedin_telemetry.client_error_events',
+    '--exclude-table-data=loopedin_telemetry.client_error_rate_limits',
+    '-f', '/work/stage/database.dump'
+  )
 
   $countsJson = (& docker run --rm -e PGPASSWORD $postgresImage psql $connection -At -c @'
 select json_build_object(

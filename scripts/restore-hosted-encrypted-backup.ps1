@@ -95,6 +95,26 @@ select json_build_object(
 )::text;
 '@ | ConvertFrom-Json
   if ($integrity.mediaWithoutEvent -or $integrity.mediaWithoutObject -or $integrity.objectWithoutMedia) { throw 'Restored reference reconciliation failed.' }
+  $telemetry = Invoke-RestoreSql @'
+select json_build_object(
+  'configurationRows', (select count(*) from loopedin_telemetry.configuration),
+  'environment', (select environment from loopedin_telemetry.configuration where singleton),
+  'eventRows', (select count(*) from loopedin_telemetry.client_error_events),
+  'rateLimitRows', (select count(*) from loopedin_telemetry.client_error_rate_limits),
+  'anonCanReport', has_function_privilege('anon', 'public.loopedin_report_client_error(text,text,text)', 'execute'),
+  'authenticatedCanReport', has_function_privilege('authenticated', 'public.loopedin_report_client_error(text,text,text)', 'execute'),
+  'authenticatedCanMaintain', has_function_privilege('authenticated', 'public.loopedin_maintain_client_error_telemetry()', 'execute'),
+  'serviceRoleCanMaintain', has_function_privilege('service_role', 'public.loopedin_maintain_client_error_telemetry()', 'execute'),
+  'anonSchemaUsage', has_schema_privilege('anon', 'loopedin_telemetry', 'usage'),
+  'authenticatedSchemaUsage', has_schema_privilege('authenticated', 'loopedin_telemetry', 'usage')
+)::text;
+'@ | ConvertFrom-Json
+  if ($telemetry.configurationRows -ne 1 -or $telemetry.environment -ne 'loopedin-staging' -or
+    $telemetry.eventRows -ne 0 -or $telemetry.rateLimitRows -ne 0 -or $telemetry.anonCanReport -or
+    -not $telemetry.authenticatedCanReport -or $telemetry.authenticatedCanMaintain -or
+    -not $telemetry.serviceRoleCanMaintain -or $telemetry.anonSchemaUsage -or $telemetry.authenticatedSchemaUsage) {
+    throw 'Restored telemetry privacy or retention contract mismatch.'
+  }
   $restoredInventory = @(Invoke-RestoreSql "select coalesce(json_agg(json_build_object('bucketId',bucket_id,'name',name,'ownerId',owner_id) order by name), '[]'::json)::text from storage.objects where bucket_id='loopedin-event-media';" | ConvertFrom-Json)
   if (($restoredInventory | ConvertTo-Json -Compress -Depth 5) -ne (@($manifest.objects | ForEach-Object { [ordered]@{ bucketId=$_.bucketId; name=$_.name; ownerId=$_.ownerId } }) | ConvertTo-Json -Compress -Depth 5)) { throw 'Restored Storage inventory mismatch.' }
   $restoredMigrations = @(Invoke-RestoreSql "select coalesce(json_agg(json_build_object('version',version,'name',name) order by version), '[]'::json)::text from supabase_migrations.schema_migrations;" | ConvertFrom-Json)
@@ -136,6 +156,7 @@ select coalesce(json_agg(json_build_object(
     observedSnapshotAgeSeconds = [math]::Round(([DateTimeOffset]::UtcNow - [DateTimeOffset]::Parse($manifest.snapshotAt)).TotalSeconds, 3)
     counts = $counts
     integrity = $integrity
+    telemetry = $telemetry
     rls = $rls
     objectCount = @($manifest.objects).Count
   } | ConvertTo-Json -Depth 6

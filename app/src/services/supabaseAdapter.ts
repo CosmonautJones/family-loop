@@ -23,6 +23,8 @@ import { updateEventLocationTimeline } from '../features/events/createEvent';
 import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
 import { backendServiceError, userServiceError, withSafeServiceErrors } from './serviceErrors';
 import { subscribeToEventMessages } from './messageSubscription';
+import { createClientErrorTelemetryReporter } from './clientErrorTelemetry';
+import { getReleaseId, getRuntimeConfig } from '../config/runtimeConfig';
 
 type GroupRow = {
   id: string;
@@ -130,6 +132,31 @@ type RpcResult = {
 };
 
 const mediaBucket = 'loopedin-event-media';
+
+let clientErrorTelemetryReporter: ReturnType<typeof createClientErrorTelemetryReporter> | null = null;
+
+function getClientErrorTelemetryReporter() {
+  if (clientErrorTelemetryReporter) return clientErrorTelemetryReporter;
+  const config = getRuntimeConfig();
+  clientErrorTelemetryReporter = createClientErrorTelemetryReporter(config.environmentId, getReleaseId(), async (event) => {
+    const { error } = await getSupabaseClient().rpc('loopedin_report_client_error', {
+      target_operation: event.operation,
+      target_category: event.category,
+      target_release: event.release,
+    });
+    if (error) throw error;
+  });
+  return clientErrorTelemetryReporter;
+}
+
+export function reportRenderErrorTelemetry() {
+  try {
+    if (getRuntimeConfig().dataMode !== 'supabase') return;
+    getClientErrorTelemetryReporter()({ operation: 'render', category: 'render' });
+  } catch {
+    // Telemetry must never interfere with recovery UI.
+  }
+}
 
 function sessionWithoutProfile(session: Session, displayName?: string): AuthSession {
   return {
@@ -938,5 +965,5 @@ export function createSupabaseLoopedInService(): LoopedInService {
     },
   };
 
-  return withSafeServiceErrors(service);
+  return withSafeServiceErrors(service, getClientErrorTelemetryReporter());
 }
