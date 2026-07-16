@@ -1,11 +1,14 @@
-import { useMutation, useQueries, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { deriveEventHistory, selectCompletedEvents } from '../features/memories/derivedHistory';
 import { invitationFlowId } from '../features/auth/invitationRoute';
 import { loopedInService } from '../services';
-import type { CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
+import type { AccountDeletionStatus, CreateEventPayload, CreateGroupPayload, CreateRsvpPayload, MediaUploadPayload, UpdateEventPayload } from '../services/api';
 import { useLoopedInStore } from '../store/useLoopedInStore';
 import { refetchActiveQueryAfterInFlight } from './queryReconciliation';
+import { evictProtectedQueries } from './protectedQueries';
+
+export { evictProtectedQueries } from './protectedQueries';
 
 export const queryKeys = {
   groups: ['groups'] as const,
@@ -21,16 +24,8 @@ export const queryKeys = {
   canCreateGroup: ['groups', 'can-create'] as const,
   notifications: ['notifications'] as const,
   reminder: (eventId: string, userId: string) => ['reminder', eventId, userId] as const,
+  accountDeletionStatus: ['account-deletion-status'] as const,
 };
-
-const protectedQueryRoots = new Set(['event', 'events', 'rsvps', 'messages', 'media', 'notifications', 'reminder', 'profiles']);
-
-export function evictGroupScopedQueries(queryClient: QueryClient) {
-  queryClient.removeQueries({ predicate: (query) => {
-    const [root] = query.queryKey;
-    return protectedQueryRoots.has(String(root)) || (root === 'groups' && query.queryKey.length > 1);
-  } });
-}
 
 export function useActiveGroupQuery() {
   const activeGroupId = useLoopedInStore((state) => state.activeGroupId);
@@ -46,6 +41,41 @@ export function useGroupsQuery(enabled = true) {
     queryKey: queryKeys.groups,
     queryFn: () => loopedInService.groups.listGroups(),
     enabled,
+  });
+}
+
+export function useAccountDeletionStatusQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.accountDeletionStatus,
+    queryFn: () => loopedInService.accounts.getDeletionStatus(),
+    enabled,
+    retry: false,
+    refetchInterval: enabled ? 15_000 : false,
+  });
+}
+
+export function useRequestAccountDeletionMutation() {
+  const queryClient = useQueryClient();
+  const setActiveGroupId = useLoopedInStore((state) => state.setActiveGroupId);
+  return useMutation({
+    mutationFn: (password: string) => loopedInService.accounts.requestDeletion(password),
+    onSuccess: async (status: AccountDeletionStatus) => {
+      await queryClient.cancelQueries();
+      evictProtectedQueries(queryClient);
+      setActiveGroupId('');
+      queryClient.setQueryData(queryKeys.accountDeletionStatus, status);
+    },
+  });
+}
+
+export function useCancelAccountDeletionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => loopedInService.accounts.cancelDeletion(),
+    onSuccess: async () => {
+      queryClient.setQueryData(queryKeys.accountDeletionStatus, null);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
+    },
   });
 }
 
@@ -81,7 +111,7 @@ export function useCreateGroupMutation() {
   return useMutation({
     mutationFn: (payload: CreateGroupPayload) => loopedInService.groups.createGroup(payload),
     onSuccess: (group) => {
-      evictGroupScopedQueries(queryClient);
+      evictProtectedQueries(queryClient);
       queryClient.setQueryData(queryKeys.group(group.id), group);
       queryClient.setQueryData(queryKeys.groups, (current: (typeof group)[] | undefined) => current
         ? [...current.filter((item) => item.id !== group.id), group]
@@ -99,7 +129,7 @@ export function useAcceptInvitationMutation() {
     mutationFn: (token: string) => loopedInService.groups.acceptInvitation(token),
     onSuccess: async (result, token) => {
       queryClient.removeQueries({ queryKey: queryKeys.invitation(invitationFlowId(token)) });
-      evictGroupScopedQueries(queryClient);
+      evictProtectedQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
       if (result.groupId) {
         setActiveGroupId(result.groupId);
@@ -138,7 +168,7 @@ export function useRemoveGroupMemberMutation(groupId: string) {
   return useMutation({
     mutationFn: (userId: string) => loopedInService.groups.removeMember(groupId, userId),
     onSuccess: async () => {
-      evictGroupScopedQueries(queryClient);
+      evictProtectedQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
     },
   });
@@ -149,7 +179,7 @@ export function useLeaveGroupMutation(groupId: string) {
   return useMutation({
     mutationFn: () => loopedInService.groups.leaveGroup(groupId),
     onSuccess: async () => {
-      evictGroupScopedQueries(queryClient);
+      evictProtectedQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
     },
   });
@@ -160,7 +190,7 @@ export function useTransferGroupOwnershipMutation(groupId: string) {
   return useMutation({
     mutationFn: (userId: string) => loopedInService.groups.transferOwnership(groupId, userId),
     onSuccess: async () => {
-      evictGroupScopedQueries(queryClient);
+      evictProtectedQueries(queryClient);
       await queryClient.invalidateQueries({ queryKey: queryKeys.groups });
     },
   });

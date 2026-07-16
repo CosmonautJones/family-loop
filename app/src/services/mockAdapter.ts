@@ -337,6 +337,11 @@ export function createMockLoopedInService(seed: MockDatabase = createMockDatabas
         return changed(undefined);
       },
     },
+    accounts: {
+      getDeletionStatus: async () => wait(null),
+      requestDeletion: async () => { throw new Error('Account deletion is available only in the connected app.'); },
+      cancelDeletion: async () => { throw new Error('Account deletion is available only in the connected app.'); },
+    },
   };
 }
 

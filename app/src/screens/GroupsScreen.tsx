@@ -4,6 +4,7 @@ import { useActiveEventsQuery, useActiveGroupMembersQuery, useActiveGroupQuery, 
 import { selectFamilyViewModel } from '../app/selectors';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { DataExportCard } from '../features/account/DataExportCard';
+import { AccountDeletionCard } from '../features/account/AccountDeletionCard';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { canSubmitInvitation, confirmInvitationDraft, invitationDraftForEmail, normalizeInvitationEmail, retainInvitationPresentation, revokeInvitationPresentation, type InvitationDraft, type InvitationPresentation } from '../features/auth/invitationDraft';
 import { palette, spacing } from '../theme/tokens';
@@ -93,6 +94,7 @@ export function GroupsScreen() {
       {owner && member.id !== auth.session?.userId ? <View style={styles.memberActions}><CardAction label={`Transfer ownership to ${member.name}`} disabled={transferOwnership.isPending} onPress={async () => { if (await confirmAction('Transfer family ownership?', `${member.name} will control invitations and members. You will become a member.`)) await act(() => transferOwnership.mutateAsync(member.id), 'Ownership transferred.'); }} /><CardAction label={`Remove ${member.name}`} disabled={removeMember.isPending} onPress={async () => { if (await confirmAction(`Remove ${member.name}?`, 'They will immediately lose access to this family’s plans, comments, and photos.')) await act(() => removeMember.mutateAsync(member.id), `${member.name} removed.`); }} /></View> : null}
     </View>)}</View></SurfaceCard>
     {auth.session ? <DataExportCard session={auth.session} /> : null}
+    {auth.configured ? <AccountDeletionCard /> : null}
     {!owner ? <SurfaceCard><Text style={styles.cardTitle}>Leave family</Text><Text style={styles.cardCopy}>Leaving removes your access to this family’s plans, comments, and photos.</Text><CardAction label={leaveGroup.isPending ? 'Leaving family…' : 'Leave family'} disabled={leaveGroup.isPending} onPress={async () => { if (await confirmAction(`Leave ${family.name}?`, 'You will lose access immediately. You’ll need a new invitation to return.')) await act(() => leaveGroup.mutateAsync(), 'You left the family.'); }} /></SurfaceCard> : null}
   </ScrollView>;
 }

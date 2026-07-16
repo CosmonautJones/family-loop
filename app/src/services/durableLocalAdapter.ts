@@ -198,6 +198,7 @@ export function createDurableLocalLoopedInService(
     media: section('media'),
     notifications: section('notifications'),
     reminders: section('reminders'),
+    accounts: section('accounts'),
     resetAndReseed: async () => {
       const recovery = ready.catch(() => undefined).then(() => withStorageLock(async () => {
         const previous = committed;

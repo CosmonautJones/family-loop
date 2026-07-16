@@ -187,6 +187,19 @@ export interface RemindersApi {
   disablePreference(eventId: string): Promise<void>;
 }
 
+export interface AccountDeletionStatus {
+  status: 'pending';
+  requestedAt: string;
+  purgeAfter: string;
+  backupExpiresAfter: string;
+}
+
+export interface AccountsApi {
+  getDeletionStatus(): Promise<AccountDeletionStatus | null>;
+  requestDeletion(password: string): Promise<AccountDeletionStatus>;
+  cancelDeletion(): Promise<void>;
+}
+
 export interface LoopedInService {
   auth: AuthApi;
   groups: GroupsApi;
@@ -197,4 +210,5 @@ export interface LoopedInService {
   media: MediaApi;
   notifications: NotificationsApi;
   reminders: RemindersApi;
+  accounts: AccountsApi;
 }

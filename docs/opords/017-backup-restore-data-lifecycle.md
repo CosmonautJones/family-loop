@@ -1,10 +1,10 @@
 # OPORD 017 — Backup, Restore, and Data Lifecycle
 
 ## Status
-HOSTED LOGICAL BACKUP/RESTORE PASS; LIFECYCLE PARTIAL — the dedicated project has client-encrypted database/private-object backup tooling, 24-hour RPO/4-hour RTO/30-day retention targets, protected environment secrets, and a GREEN workflow-dispatch isolated restore with count/hash/reference/RLS evidence. First cron observation, managed PITR, replacement cutover, deletion apply, and legal-hold operations remain open.
+HOSTED LOGICAL BACKUP/RESTORE PASS; LIFECYCLE PARTIAL — the dedicated project has client-encrypted database/private-object backup tooling and a GREEN workflow-dispatch isolated restore. A recoverable access-disabled deletion grace state, ownership race guard, and service-role legal-hold records pass locally. Hosted grace-state proof, the external restore journal, permanent distributed purge, first cron observation, managed PITR, and replacement cutover remain open.
 
 ## Situation and evidence
-The hosted drill encrypted the dedicated `public`, `loopedin_private`, `auth`, and `storage` schemas plus private object bytes, restored the schemas and Storage metadata into an isolated disposable database, reconstructed the object bytes in a temporary directory, and reconciled counts, hashes, references, and owner/outsider RLS. The free plan has no managed restore points/PITR, so the configured daily logical backup is the active control; its first scheduled run is still unobserved. Export/deletion apply and legal-hold jobs still do not exist.
+The hosted drill encrypted the dedicated `public`, `loopedin_private`, `auth`, and `storage` schemas plus private object bytes, restored the schemas and Storage metadata into an isolated disposable database, reconstructed the object bytes in a temporary directory, and reconciled counts, hashes, references, and owner/outsider RLS. The free plan has no managed restore points/PITR, so the configured daily logical backup is the active control; its first scheduled run is still unobserved. Local migration eight adds request/cancel/status and legal-hold record operations, but no permanent purge or external restore-journal replay exists.
 
 ## Mission/objective
 Implement and prove recoverability for database and private objects, then implement auditable user export/deletion, retention, and orphan reconciliation without weakening event/group privacy.
@@ -51,7 +51,7 @@ Export and deletion requests must explain scope, timing, grace/recovery limits, 
 | Encrypted DB backup/PITR and private-object strategy | HOSTED LOGICAL PASS / PITR UNAVAILABLE | Dedicated schemas and three private object bytes are hashed and AES-256-GCM encrypted. Repository secrets, daily 05:23 UTC workflow, and 30-day artifact retention are configured; schedule activation awaits default-branch merge. Free-plan PITR is unavailable. |
 | Isolated restore within RTO with DB/object/RLS/core-loop integrity | HOSTED SNAPSHOT PASS / CUTOVER OPEN | Digest-pinned offline restore matched 1/1/1/4/4/4/3/0/1/3 counts, hosted migration/Storage inventories, three object hashes, zero reference drift, exact owner 4/4/3 visibility, and outsider 0/0/0 in 10.392 seconds from a 28.2-second-old snapshot. Storage API rehydration and replacement cutover are untested. |
 | Complete scoped encrypted auditable export | LOCAL PASS / HOSTED OPEN | Existing Auth/RLS reads produce a versioned AES-256-GCM browser download for the current account profile/memberships and only its created/authored/uploaded/selected contributions. Owner, member, and outsider actual downloads decrypted with exact scope; pairwise foreign IDs and signed URLs were absent; wrong passphrase/tamper failed. The encrypted manifest provides counts/integrity. Shared-family scope, server audit job, hosted delivery, and policy approval remain open. |
-| Deliberate idempotent cross-user-safe deletion | DRY RUN ONLY | Deterministic bounded plans deny cross-user scope and expose no apply mode. All 21 owner candidates remain protected/blocked pending product/legal policy and destructive authorization. |
+| Deliberate idempotent cross-user-safe deletion | LOCAL GRACE-STATE PASS / PURGE OPEN | Synthetic owner rejection, recent-auth enforcement, concurrent request/ownership transfer serialization, exact 30-day grace, pending DB/RPC/Storage denial, pre-deadline recovery, expired recovery rejection, and service-role-only hold records pass. Permanent row/object/Auth purge and an external restore journal do not exist. |
 | Dry-run retention/orphan plan before apply | LOCAL DRY-RUN PASS | Bidirectional row/object comparison found zero discrepancies in the retained scenario; fixture tests cover both orphan directions, bounding, and review-only exclusions. No retention or apply job exists. |
 
 ## Validation commands/evidence
@@ -81,7 +81,7 @@ Database/object point-in-time mismatch, backups conflicting with erasure duties,
 ## Definition of done
 Backup/PITR and private-object protection are configured, an isolated restore drill passes RPO/RTO/integrity/RLS checks, export/deletion and retention/orphan flows have scoped executable evidence, and every production/destructive action has explicit authorization and audit history.
 
-Hosted logical recoverability, conservative authenticated current-user export, and non-destructive planning pass. The OPORD remains partial because the first cron trigger is unobserved, managed PITR is unavailable, and replacement cutover, deliberate deletion, legal hold, and retention/orphan apply remain open.
+Hosted logical recoverability, conservative authenticated current-user export, local access-disabled grace/cancel, and local legal-hold records pass. The OPORD remains partial because the first cron trigger is unobserved, managed PITR is unavailable, and replacement cutover, hosted grace proof, external restore-journal replay, permanent purge, and retention/orphan apply remain open.
 
 ## Superseding hosted backup disposition — 2026-07-16
 

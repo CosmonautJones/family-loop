@@ -19,7 +19,7 @@ The artifact authenticated and decrypted, then restored with the pinned image an
 - Retention: 30 days in GitHub Actions artifacts, client-encrypted before upload.
 - Availability: 30-minute target. Provider scheduling delays mean this is not a hard SLA.
 - Free-plan limitation: managed daily backups/PITR are unavailable. Logical backup is the active control, and private object bytes are copied separately because database dumps contain only Storage metadata.
-- Deletion: disable access immediately; 30-day recoverable grace; transfer family ownership first; permanently remove rows/objects after grace; let backup copies expire through retention; require an explicit operator record for legal hold. Apply tooling remains intentionally unimplemented pending a real request and confirmation.
+- Deletion: migration eight implements the recoverable access-disabled request/cancel state, ownership guard, and service-role legal-hold records locally. Permanent row/object/Auth purge remains intentionally unimplemented until a retryable state machine and an external restore journal exist. Backup copies retain the 30-day expiry policy.
 
 ## Scheduled backup and restore
 
