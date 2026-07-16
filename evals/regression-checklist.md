@@ -164,7 +164,8 @@
 - [x] Safe validation/domain messages remain intact; media recovery states retain their actionable meaning without appended Storage/RPC messages.
 - [x] Focused tests inject credentials, tokens, signed URLs, message bodies, storage paths, and SQL/backend details and prove they are absent from surfaced copy.
 - [x] The local incident runbook assigns severity, conditional owner, minimal evidence, authorization gates, recovery validation, and records a no-production-action tabletop.
-- [ ] Production telemetry, named hosted incident ownership, retention decisions, hosted enforcement, external assessment, and physical-device failure copy remain `NOT RUN`.
+- [x] Dedicated staging telemetry retention/enforcement and scheduled retention run `29520494334` are GREEN.
+- [ ] Named production incident ownership/routing, production alerting, external assessment, and physical-device failure copy remain `NOT RUN`.
 
 ## OPORD 016 local release and rollback
 
@@ -202,7 +203,8 @@
 - [x] PBKDF2-SHA256/AES-256-GCM actual downloads decrypt and verify counts/digests; wrong passphrase and tampering fail; unavailable-media retry succeeds.
 - [x] Real loopback Auth sessions for owner/member/outsider exclude pairwise foreign IDs; outsider contributions are empty; 390px inputs/actions are 52/48px with no overflow or console events.
 - [x] Local deletion grace state proves recent-auth and owner guards, concurrent transfer/request serialization, exact 30-day recovery, pending DB/RPC/Storage denial, cancellation restoration, deadline rejection, and service-role-only legal-hold records.
-- [ ] Hosted encrypted export, hosted grace-state/browser proof, external restore-journal replay, permanent Postgres/Storage/Auth purge, retention/orphan apply, shared-family export scope, and production restore remain `NOT RUN`.
+- [x] Hosted encrypted owner/member/outsider export and hosted grace-state request/cancel/access-denial browser proof pass with exact scope, baseline restoration, and zero residue.
+- [ ] External restore-journal replay, permanent Postgres/Storage/Auth purge, retention/orphan apply, shared-family export scope, and production restore remain `NOT RUN`.
 
 ## Wave 5 mobile accessibility implementation
 
@@ -336,8 +338,8 @@ Use this before considering a mission complete.
 - [x] Hosted database/Auth/Storage metadata and private bytes are client-encrypted and hashed.
 - [x] Isolated restore matches counts, object hashes, references, owner access, and outsider denial.
 - [x] Repository secret names exist; values are absent from source, logs, evidence, and chat.
-- [ ] Availability and daily backup schedules require a hosted run after default-branch merge.
-- [ ] Managed PITR, replacement-project cutover, client-error ingestion, SMTP, physical devices, and production remain open.
+- [x] Scheduled backup/isolated restore `29480318427` is GREEN for initial cron execution with eight migrations before migration nine; telemetry retention `29520494334` and availability `29521815271` are GREEN. Earlier manual `29517385245` proved all nine; fresh manual `29527751546` at main head `90250b6d…` is the newest current-schema/direct-credential proof with backup, isolated restore, three objects, expected counts/integrity, owner RLS, and outsider denial. Sustained RPO and a post-migration-nine scheduled restore remain open.
+- [ ] Managed PITR, replacement-project cutover, permanent deletion apply, Gmail/new-account/password completion, production SMTP, physical devices, and production remain open.
 
 ## 2026-07-15 final hosted staging closeout
 
@@ -351,7 +353,7 @@ Use this before considering a mission complete.
 - [x] Hosted 320/390/430 CSS-pixel widths have no horizontal overflow and sign-in controls are at least 48 CSS pixels high; Back, deep-link reload, and signed-out shell restoration pass with clean console/network evidence.
 - [x] Realtime MEDIUM Query race at `d1b8b59` is fixed in exact release source; independent review is GREEN with zero blocker/high/medium findings.
 - [ ] Do not mark a retained local Realtime rerun green: the local Auth fixture had no `@loopedin.test` accounts. Hosted drills and focused Query coverage are the accepted evidence.
-- [ ] Production SMTP and delivered invitations, real private password recovery, dedicated production Supabase, physical iPhone Safari/Android Chrome/VoiceOver/TalkBack, authoritative hosted native 200% zoom, observed schedule cadence, managed PITR, custom domain, and explicit production promotion remain open.
+- [ ] Gmail/new-account/password completion, production SMTP and delivered invitations, dedicated production Supabase, physical iPhone Safari/Android Chrome/VoiceOver/TalkBack, authoritative hosted native 200% zoom, managed PITR, custom domain, and explicit production promotion remain open.
 
 ## 2026-07-16 hosted lifecycle and encrypted export
 
@@ -362,7 +364,7 @@ Use this before considering a mission complete.
 - [x] Family harness cleanup now safely reconciles pending/active/deleting media after failure; the final family/export run leaves zero users/profiles/groups/invitations/objects.
 - [x] Exact frontend rollback/restoration passes without database reversal and the personal Netlify site remains untouched.
 - [ ] Signed-out Auth still has no main landmark; hosted authenticated native 200% zoom and physical iPhone/Android/VoiceOver/TalkBack remain `NOT RUN`.
-- [ ] Permanent purge/external journal, SMTP/security notices and delivered recovery/invites, production backend/domain/promotion, and leaked-password protection remain blocking.
+- [ ] Permanent purge/external journal, Gmail/new-account/password completion, production SMTP/security notices, production backend/domain/promotion, and leaked-password protection remain blocking.
 
 ## 2026-07-16 hosted copied invitation
 
