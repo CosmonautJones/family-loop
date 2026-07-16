@@ -467,3 +467,10 @@ Current truth: **Waves 0-4 are complete. Independent Wave 4 Run 2 accepted the c
 - Exact frontend rollback to `6a58428caebae3fadaf3906b` and restoration of `6a5863f6aebae3714ef3906c` passed without database reversal.
 - Post-rotation encrypted-backup dispatch `29499987122` failed safely at database password authentication; restore/upload were skipped and no artifact was created. GitHub secret synchronization remains open, while Netlify and the repository contain no database-password value.
 - Mission remains **IN PROGRESS**: permanent purge/external journal, SMTP/security notices and real recovery delivery, separate production Supabase decision, physical devices/AT, leaked-password protection, native hosted 200% zoom, custom domain, and explicit production approval remain open.
+
+## 2026-07-16 — invitation/email blocking mission
+
+- Copied-link diagnosis found a deterministic double-conversion in new invited-account signup: preview and existing-account acceptance converted the canonical token once, while signup converted the resulting hex a second time and failed before the email-match RPC. A focused regression failed 2-versus-1 before the one-line fix and now passes.
+- Provider readback confirms the exact staging Site URL and five exact redirects, email confirmation required, configured invite/recovery templates, and no custom SMTP or sender configuration. Password-change notices are disabled.
+- Family invitation email is not implemented: the UI explicitly instructs the owner to copy the link, and no trusted sender exists. Custom SMTP alone will not deliver the application family token.
+- Next gates are an exact corrected staging artifact plus clean-session copied-link proof, followed by a separately reviewed server-side sender and real delivery using only an explicitly approved test recipient. See `docs/runbooks/hosted-invitations-and-email.md`.
