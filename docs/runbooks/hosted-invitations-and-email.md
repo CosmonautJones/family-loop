@@ -35,10 +35,10 @@ These are automated configuration readbacks, not delivery proof. The browser sig
 
 ## Delivery implementation checkpoint
 
-The repository now contains a separately triggered owner-only invitation-email action, a private metadata-only delivery ledger, caller-scoped prepare/finalize RPCs, and a text-only Resend Edge Function. The sender revalidates the exact pending, unexpired invitation and token; uses a stable provider idempotency key; bounds per-invitation, actor, and family attempts; and fails stale prepared operations closed for operator review. Provider failure does not revoke the copied link. The UI reports only provider acceptance/queueing, never delivery.
+The repository now contains a separately triggered owner-only invitation-email action, a private metadata-only delivery ledger, a caller-scoped prepare RPC, a service-role-only finalize RPC, and a text-only Resend Edge Function. Prepare owns the authorization decision; finalize receives the trusted caller identity from the function and revalidates account, delivery, invitation, token, expiry, status, and current ownership. Stable provider idempotency, counted/cooled retries, per-invitation and actor/family bounds, fail-closed stale operations, and a streamed 2 KiB request cap protect the copied-link flow. Provider failure does not revoke the link, and the UI never claims delivery.
 
 Hosted configuration requires `LOOPEDIN_APP_ORIGIN`, `RESEND_INVITATION_API_KEY`, and `RESEND_INVITATION_FROM`. Supabase Auth SMTP remains a separate requirement for confirmation and recovery mail. Resend click and open tracking must be disabled in provider settings; the text-only API request does not prove that provider setting.
 
-- Automated: focused core/static tests and local Supabase invitation-email E2E pass, including authorization, replay, stale-operation, aggregate-rate, private-ledger, and provider-failure/link-preservation checks.
+- Automated: focused core/static/orchestration tests and local Supabase invitation-email E2E pass, including service-only finalization, streamed size enforcement, counted replay, stale-operation, aggregate-rate, private-ledger, and provider-failure/link-preservation checks.
 - Manually observed: none for the sender.
 - Still unproven: Edge Function deployment/secrets, verified sender identity, provider tracking settings, accepted/delivered provider status, inbox receipt, new-account confirmation, and clean-browser invitation acceptance. No real email was sent.

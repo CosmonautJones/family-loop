@@ -10,6 +10,7 @@ import {
   parseInvocationBody,
   parsePreparedDelivery,
   parseSender,
+  readJsonBody,
 } from '../supabase/functions/send-group-invitation/core.mjs';
 
 const invitationId = '5f2acb5b-5ddf-4b22-97a9-55a17e3ff30f';
@@ -34,6 +35,25 @@ test('invocation accepts only canonical token and exact bounded fields', () => {
   assert.equal(parseInvocationBody({ invitationId, token, deliveryKey, email: 'leak@example.com' }), null);
   assert.equal(invitationTokenToHex(token), '00'.repeat(32));
   assert.equal(invitationTokenToHex(`${'A'.repeat(42)}B`), null);
+});
+
+test('streamed JSON reader accepts missing-length chunks and rejects oversized chunks before parsing', async () => {
+  const encoder = new TextEncoder();
+  const chunked = (chunks) => ({
+    body: new ReadableStream({
+      start(controller) {
+        for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+        controller.close();
+      },
+    }),
+  });
+  assert.deepEqual(await readJsonBody(chunked(['{"invitationId":"', invitationId, '"}'])), {
+    ok: true, value: { invitationId },
+  });
+  assert.deepEqual(await readJsonBody(chunked(['{"value":"', 'x'.repeat(2048), '"}'])), {
+    ok: false, code: 'too_large',
+  });
+  assert.deepEqual(await readJsonBody(chunked(['not json'])), { ok: false, code: 'invalid' });
 });
 
 test('prepared RPC values are fail-closed and labels are flattened', () => {

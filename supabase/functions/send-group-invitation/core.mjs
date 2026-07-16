@@ -36,6 +36,38 @@ export function parseInvocationBody(value) {
   return { deliveryKey, invitationId, token };
 }
 
+export async function readJsonBody(request, maxBytes = 2048) {
+  if (!Number.isInteger(maxBytes) || maxBytes < 1 || !request?.body?.getReader) {
+    return { ok: false, code: 'invalid' };
+  }
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!(value instanceof Uint8Array) || total + value.byteLength > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return { ok: false, code: 'too_large' };
+      }
+      total += value.byteLength;
+      chunks.push(value);
+    }
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    return { ok: true, value: JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) };
+  } catch {
+    return { ok: false, code: 'invalid' };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 export function invitationTokenToHex(token) {
   if (!tokenPattern.test(token)) return null;
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -108,4 +140,59 @@ export function buildResendRequest({ apiKey, sender, recipient, text, deliveryId
       body: JSON.stringify({ from: sender, to: [recipient], subject: invitationEmailSubject, text }),
     },
   };
+}
+
+export async function runInvitationEmail({ input, actorId, appOrigin, sender, apiKey, prepare, finalize, send }) {
+  const tokenHex = input ? invitationTokenToHex(input.token) : null;
+  if (!input || !tokenHex || !uuidPattern.test(actorId) || !parseAppOrigin(appOrigin)
+    || !parseSender(sender) || typeof apiKey !== 'string') return { httpStatus: 503, status: 'unavailable' };
+
+  let preparedValue;
+  try {
+    preparedValue = await prepare({
+      target_invitation_id: input.invitationId,
+      target_token: tokenHex,
+      target_operation_key: input.deliveryKey,
+    });
+  } catch {
+    return { httpStatus: 403, status: 'unavailable' };
+  }
+  const prepared = parsePreparedDelivery(preparedValue);
+  if (prepared.code === 'provider_accepted') return { httpStatus: 202, status: 'provider_accepted' };
+  if (prepared.code === 'try_later') return { httpStatus: 429, status: 'try_later' };
+  if (prepared.code !== 'prepared') return { httpStatus: 403, status: 'unavailable' };
+
+  const invitationLink = buildInvitationLink(appOrigin, input.token);
+  const text = invitationLink ? buildInvitationText({ ...prepared, invitationLink }) : null;
+  const providerRequest = text ? buildResendRequest({
+    apiKey,
+    sender,
+    recipient: prepared.inviteeEmail,
+    text,
+    deliveryId: prepared.deliveryId,
+  }) : null;
+  if (!providerRequest) return { httpStatus: 503, status: 'unavailable' };
+
+  let providerAccepted = false;
+  try {
+    providerAccepted = await send(providerRequest) === true;
+  } catch {
+    providerAccepted = false;
+  }
+  const outcome = providerAccepted ? 'provider_accepted' : 'provider_failed';
+  let finalized;
+  try {
+    finalized = await finalize({
+      target_delivery_id: prepared.deliveryId,
+      target_requested_by: actorId,
+      target_token: tokenHex,
+      target_outcome: outcome,
+    });
+  } catch {
+    return { httpStatus: 503, status: 'unavailable' };
+  }
+  if (finalized?.ok !== true || finalized?.code !== outcome) return { httpStatus: 503, status: 'unavailable' };
+  return providerAccepted
+    ? { httpStatus: 202, status: 'provider_accepted' }
+    : { httpStatus: 503, status: 'provider_unavailable' };
 }

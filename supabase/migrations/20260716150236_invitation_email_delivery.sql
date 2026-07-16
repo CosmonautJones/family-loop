@@ -44,11 +44,12 @@ declare
   actor_attempts integer;
   group_attempts integer;
 begin
-  perform loopedin_private.require_active_account();
   if actor_id is null or target_invitation_id is null or target_operation_key is null
      or normalized_token !~ '^[0-9a-f]{64}$' then
     return jsonb_build_object('ok', false, 'code', 'unavailable');
   end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(actor_id::text, 0));
+  perform loopedin_private.require_active_account();
   requested_hash := extensions.digest(decode(normalized_token, 'hex'), 'sha256');
 
   select * into matching
@@ -94,7 +95,7 @@ begin
     if delivery.status = 'prepared' and delivery.last_attempt_at <= now() - interval '24 hours' then
       return jsonb_build_object('ok', false, 'code', 'operator_review');
     end if;
-    if delivery.status = 'provider_failed' then
+    if delivery.status in ('prepared', 'provider_failed') then
       if delivery.last_attempt_at > now() - interval '60 seconds' then
         return jsonb_build_object('ok', false, 'code', 'cooldown', 'retryAfterSeconds', 60);
       end if;
@@ -162,6 +163,7 @@ $$;
 
 create function public.loopedin_finalize_invitation_email(
   target_delivery_id uuid,
+  target_requested_by uuid,
   target_token text,
   target_outcome text
 )
@@ -171,23 +173,29 @@ security definer
 set search_path = pg_catalog, public, extensions
 as $$
 declare
-  actor_id uuid := auth.uid();
   normalized_token text := lower(btrim(coalesce(target_token, '')));
   requested_hash bytea;
   delivery loopedin_private.loopedin_invitation_email_deliveries;
   matching public.loopedin_group_invitations;
 begin
-  perform loopedin_private.require_active_account();
-  if actor_id is null or target_delivery_id is null
+  if target_requested_by is null or target_delivery_id is null
      or normalized_token !~ '^[0-9a-f]{64}$'
      or target_outcome not in ('provider_accepted', 'provider_failed') then
+    return jsonb_build_object('ok', false, 'code', 'unavailable');
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(target_requested_by::text, 0));
+  if exists (
+    select 1
+    from loopedin_private.loopedin_account_deletion_requests request
+    where request.user_id = target_requested_by and request.status = 'pending'
+  ) then
     return jsonb_build_object('ok', false, 'code', 'unavailable');
   end if;
   requested_hash := extensions.digest(decode(normalized_token, 'hex'), 'sha256');
 
   select * into delivery
   from loopedin_private.loopedin_invitation_email_deliveries item
-  where item.id = target_delivery_id and item.requested_by = actor_id
+  where item.id = target_delivery_id and item.requested_by = target_requested_by
   for update;
   if delivery.id is null then
     return jsonb_build_object('ok', false, 'code', 'unavailable');
@@ -202,7 +210,7 @@ begin
      or not exists (
        select 1 from public.loopedin_group_members member
        where member.group_id = matching.group_id
-         and member.user_id = actor_id
+         and member.user_id = target_requested_by
          and member.role = 'owner'
      ) then
     return jsonb_build_object('ok', false, 'code', 'unavailable');
@@ -219,6 +227,6 @@ end;
 $$;
 
 revoke all on function public.loopedin_prepare_invitation_email(uuid, text, uuid) from public, anon;
-revoke all on function public.loopedin_finalize_invitation_email(uuid, text, text) from public, anon;
+revoke all on function public.loopedin_finalize_invitation_email(uuid, uuid, text, text) from public, anon, authenticated;
 grant execute on function public.loopedin_prepare_invitation_email(uuid, text, uuid) to authenticated;
-grant execute on function public.loopedin_finalize_invitation_email(uuid, text, text) to authenticated;
+grant execute on function public.loopedin_finalize_invitation_email(uuid, uuid, text, text) to service_role;

@@ -9,7 +9,7 @@ $ErrorActionPreference = 'SilentlyContinue'
 }
 $ErrorActionPreference = $previousErrorActionPreference
 
-if (-not $values['API_URL'] -or -not $values['ANON_KEY']) {
+if (-not $values['API_URL'] -or -not $values['ANON_KEY'] -or -not $values['SERVICE_ROLE_KEY']) {
   throw 'Local Supabase is not running. Start Docker, then run supabase start.'
 }
 
@@ -20,6 +20,7 @@ if ($apiUri.Host -notin @('127.0.0.1', 'localhost', '::1')) {
 
 $env:SUPABASE_URL = $values['API_URL']
 $env:SUPABASE_ANON_KEY = $values['ANON_KEY']
+$env:SUPABASE_SERVICE_ROLE_KEY = $values['SERVICE_ROLE_KEY']
 
 node tests/supabase-invitation-email-e2e.mjs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

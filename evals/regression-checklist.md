@@ -379,6 +379,8 @@ Use this before considering a mission complete.
 - [x] The sender revalidates the exact active owner, pending/unexpired invitation, recipient, and token.
 - [x] The private ledger stores bounded metadata only; no plaintext token, email, body, URL, or provider identifier is persisted.
 - [x] Stable replay, stale-operation operator review, and per-invitation plus actor/family 24-hour bounds pass local tests.
+- [x] Authenticated owner/member calls cannot execute finalize; only the service role can, with trusted-actor and exact-state revalidation.
+- [x] Prepared same-key retries are cooled, counted, and bounded; missing-length/chunked bodies are capped at 2 KiB before JSON parsing.
 - [x] The UI says provider accepted/queued and never claims delivery.
 - [ ] Disable Resend click/open tracking and prove deployed provider acceptance/delivery.
 - [ ] Prove inbox receipt, separate-user confirmation/acceptance, and Supabase Auth confirmation/recovery SMTP.

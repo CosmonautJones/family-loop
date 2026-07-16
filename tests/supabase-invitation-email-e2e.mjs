@@ -3,7 +3,8 @@ import { spawnSync } from 'node:child_process';
 
 const url = process.env.SUPABASE_URL;
 const anonKey = process.env.SUPABASE_ANON_KEY;
-assert.ok(url && anonKey, 'local Supabase URL and publishable key are required');
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+assert.ok(url && anonKey && serviceRoleKey, 'local Supabase URL and API keys are required');
 assert.ok(['127.0.0.1', 'localhost', '::1'].includes(new URL(url).hostname), 'this destructive test only runs against loopback Supabase');
 
 const run = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -69,8 +70,8 @@ try {
   const prepare = (actor, operationKey, token = inviteToken) => rpc('loopedin_prepare_invitation_email', actor, {
     target_invitation_id: invite.invitationId, target_token: token, target_operation_key: operationKey,
   });
-  const finalize = (actor, deliveryId, outcome, token = inviteToken) => rpc('loopedin_finalize_invitation_email', actor, {
-    target_delivery_id: deliveryId, target_token: token, target_outcome: outcome,
+  const finalize = (requestedBy, deliveryId, outcome, token = inviteToken) => rpc('loopedin_finalize_invitation_email', serviceRoleKey, {
+    target_delivery_id: deliveryId, target_requested_by: requestedBy, target_token: token, target_outcome: outcome,
   });
 
   assert.equal((await prepare(anonKey, crypto.randomUUID())).response.ok, false, 'anonymous caller executed prepare RPC');
@@ -82,27 +83,37 @@ try {
   const prepared = await ok(prepare(owner.token, operationKey), 'owner prepares delivery');
   assert.equal(prepared.code, 'prepared');
   assert.deepEqual(Object.keys(prepared).sort(), ['code', 'deliveryId', 'groupName', 'inviteeEmail', 'inviterName', 'ok'].sort());
-  const replayed = await ok(prepare(owner.token, operationKey), 'response-loss prepare replay');
+  assert.equal((await ok(prepare(owner.token, operationKey), 'immediate prepared retry cooldown')).code, 'cooldown');
+  sql(`update loopedin_private.loopedin_invitation_email_deliveries set last_attempt_at=now()-interval '61 seconds' where id='${prepared.deliveryId}';`);
+  const replayed = await ok(prepare(owner.token, operationKey), 'counted prepared retry');
   assert.equal(replayed.deliveryId, prepared.deliveryId);
+  assert.equal(sql(`select attempt_count from loopedin_private.loopedin_invitation_email_deliveries where id='${prepared.deliveryId}';`), '2');
   assert.equal((await ok(prepare(owner.token, crypto.randomUUID()), 'new-operation cooldown')).code, 'cooldown');
-  assert.deepEqual(await ok(finalize(member.token, prepared.deliveryId, 'provider_accepted'), 'member finalize denial'), { code: 'unavailable', ok: false });
-  assert.deepEqual(await ok(finalize(owner.token, prepared.deliveryId, 'provider_accepted', tokenHex()), 'wrong-token finalize denial'), { code: 'unavailable', ok: false });
+  assert.equal((await rpc('loopedin_finalize_invitation_email', owner.token, {
+    target_delivery_id: prepared.deliveryId, target_requested_by: owner.id, target_token: inviteToken, target_outcome: 'provider_accepted',
+  })).response.ok, false, 'authenticated owner executed service-only finalize RPC');
+  assert.equal((await rpc('loopedin_finalize_invitation_email', member.token, {
+    target_delivery_id: prepared.deliveryId, target_requested_by: owner.id, target_token: inviteToken, target_outcome: 'provider_accepted',
+  })).response.ok, false, 'authenticated member executed service-only finalize RPC');
+  assert.deepEqual(await ok(finalize(owner.id, prepared.deliveryId, 'provider_accepted', tokenHex()), 'wrong-token finalize denial'), { code: 'unavailable', ok: false });
 
-  assert.equal((await ok(finalize(owner.token, prepared.deliveryId, 'provider_failed'), 'provider failure finalization')).code, 'provider_failed');
+  assert.equal((await ok(finalize(owner.id, prepared.deliveryId, 'provider_failed'), 'provider failure finalization')).code, 'provider_failed');
   assert.equal((await ok(rpc('loopedin_validate_group_invite', anonKey, { target_token: inviteToken }), 'link remains valid after provider failure')).code, 'ready');
   assert.equal((await ok(prepare(owner.token, operationKey), 'failed-operation cooldown')).code, 'cooldown');
   sql(`update loopedin_private.loopedin_invitation_email_deliveries set last_attempt_at=now()-interval '61 seconds' where id='${prepared.deliveryId}';`);
   const failedRetry = await ok(prepare(owner.token, operationKey), 'same-key retry after cooldown');
   assert.equal(failedRetry.deliveryId, prepared.deliveryId);
-  assert.equal(sql(`select attempt_count from loopedin_private.loopedin_invitation_email_deliveries where id='${prepared.deliveryId}';`), '2');
-  assert.equal((await ok(finalize(owner.token, prepared.deliveryId, 'provider_accepted'), 'provider acceptance finalization')).code, 'provider_accepted');
+  assert.equal(sql(`select attempt_count from loopedin_private.loopedin_invitation_email_deliveries where id='${prepared.deliveryId}';`), '3');
+  assert.equal((await ok(finalize(owner.id, prepared.deliveryId, 'provider_accepted'), 'provider acceptance finalization')).code, 'provider_accepted');
   assert.equal((await ok(prepare(owner.token, operationKey), 'accepted-operation replay')).code, 'provider_accepted');
+  sql(`update loopedin_private.loopedin_invitation_email_deliveries set status='provider_failed',finalized_at=now(),attempt_count=5,last_attempt_at=now()-interval '61 seconds' where id='${prepared.deliveryId}';`);
+  assert.equal((await ok(prepare(owner.token, operationKey), 'per-delivery attempt limit')).code, 'rate_limited');
 
   for (let attempt = 2; attempt <= 5; attempt += 1) {
     sql(`update loopedin_private.loopedin_invitation_email_deliveries set last_attempt_at=now()-interval '61 seconds' where invitation_id='${invite.invitationId}';`);
     const next = await ok(prepare(owner.token, crypto.randomUUID()), `bounded attempt ${attempt}`);
     assert.equal(next.code, 'prepared');
-    await ok(finalize(owner.token, next.deliveryId, 'provider_failed'), `bounded failure ${attempt}`);
+    await ok(finalize(owner.id, next.deliveryId, 'provider_failed'), `bounded failure ${attempt}`);
   }
   sql(`update loopedin_private.loopedin_invitation_email_deliveries set last_attempt_at=now()-interval '61 seconds' where invitation_id='${invite.invitationId}';`);
   assert.equal((await ok(prepare(owner.token, crypto.randomUUID()), '24-hour rate limit')).code, 'rate_limited');
@@ -112,6 +123,7 @@ try {
 
   sql(`insert into loopedin_private.loopedin_account_deletion_requests(user_id,purge_after,backup_expires_after) values ('${owner.id}',now()+interval '30 days',now()+interval '60 days');`);
   assert.equal((await prepare(owner.token, crypto.randomUUID())).response.ok, false, 'pending-deletion owner prepared email');
+  assert.deepEqual(await ok(finalize(owner.id, prepared.deliveryId, 'provider_failed'), 'pending-deletion finalize denial'), { code: 'unavailable', ok: false });
   sql(`delete from loopedin_private.loopedin_account_deletion_requests where user_id='${owner.id}';`);
 
   const revokeToken = tokenHex();
@@ -122,9 +134,7 @@ try {
     target_invitation_id: revokeInvite.invitationId, target_token: revokeToken, target_operation_key: crypto.randomUUID(),
   }), 'prepare revocation delivery');
   await ok(rpc('loopedin_revoke_group_invite', owner.token, { target_invitation_id: revokeInvite.invitationId }), 'revoke invitation');
-  assert.deepEqual(await ok(rpc('loopedin_finalize_invitation_email', owner.token, {
-    target_delivery_id: revokeDelivery.deliveryId, target_token: revokeToken, target_outcome: 'provider_accepted',
-  }), 'revoked finalize denial'), { code: 'unavailable', ok: false });
+  assert.deepEqual(await ok(finalize(owner.id, revokeDelivery.deliveryId, 'provider_accepted', revokeToken), 'revoked finalize denial'), { code: 'unavailable', ok: false });
 
   sql(`with ranked as (select id,row_number() over(order by id) position from loopedin_private.loopedin_invitation_email_deliveries where invitation_id='${invite.invitationId}') update loopedin_private.loopedin_invitation_email_deliveries delivery set attempt_count=case when ranked.position<=3 then 5 when ranked.position=4 then 3 else 1 end,last_attempt_at=now()-interval '2 hours' from ranked where delivery.id=ranked.id;`);
   sql(`update loopedin_private.loopedin_invitation_email_deliveries set last_attempt_at=now()-interval '25 hours' where id='${revokeDelivery.deliveryId}';`);
@@ -170,7 +180,7 @@ try {
     target_invitation_id: groupRateInvite.invitationId, target_token: groupRateToken, target_operation_key: crypto.randomUUID(),
   }), 'group aggregate rate limit')).code, 'rate_limited');
 
-  console.log(JSON.stringify({ invitationEmailDatabase: 'passed', anonymousDenied: true, memberDenied: true, outsiderDenied: true, exactInviteChecks: true, stableReplay: true, staleReplayOperatorReview: true, cooldown: true, invitationRateBound: true, ownerAggregateBound: true, groupAggregateBound: true, providerFailurePreservedLink: true, privateLedger: true }));
+  console.log(JSON.stringify({ invitationEmailDatabase: 'passed', anonymousDenied: true, memberDenied: true, outsiderDenied: true, finalizeServiceOnly: true, exactInviteChecks: true, countedRetry: true, staleReplayOperatorReview: true, cooldown: true, invitationRateBound: true, ownerAggregateBound: true, groupAggregateBound: true, providerFailurePreservedLink: true, privateLedger: true }));
 } finally {
   if (owner?.id) sql(`delete from public.loopedin_groups where created_by='${owner.id}';`);
   for (const user of users) sql(`delete from auth.users where id='${user.id}';`);
