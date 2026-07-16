@@ -370,7 +370,7 @@ Use this before considering a mission complete.
 - [x] A clean existing-recipient profile opens and reloads the copied deep link, signs in, accepts through the UI, restores the authenticated session after reload, and sees the consumed link become unavailable.
 - [x] Synthetic cleanup handles a lost family-create response through exact owner/name/description discovery and leaves zero marked residue.
 - [x] Independent review closed the owner-UI provenance and response-loss cleanup findings and returned **GREEN** for this bounded path.
-- [ ] No real email was sent; new-account invitation acceptance and delivered invitation email proof remain `NOT RUN`.
+- [ ] No family invitation email was sent; new-account invitation acceptance and delivered invitation email proof remain `NOT RUN`.
 - [ ] Hosted browser handling for expired and revoked invitation links remains `NOT RUN`.
 
 ## 2026-07-16 invitation email sender
@@ -386,5 +386,7 @@ Use this before considering a mission complete.
 - [x] Authenticated Resend readback proves the existing domain is verified, custom click/open tracking is not configured, and a dedicated sending-only key is restricted to that domain.
 - [x] The provider key and sender are configured in the staging Edge Function without exposing the key in source, logs, evidence, or chat.
 - [x] Exact GREEN source `2721a98ce6fc03a1263ebc5284d90ac936d2e571` and application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` are immutable draft deploy `6a591b138c9727a4b2ca6d48`; transport/runtime/CSP/cache/404 checks pass and canonical staging remains unchanged.
+- [x] Supabase Auth custom SMTP readback matches Resend STARTTLS, the verified Auth sender, required confirmation, existing Site URL/redirects, and existing invite/recovery templates.
+- [x] Auth accepts an approved-owner recovery request and Resend records the exact recovery message as `delivered` with the correct recovery route/type and canonical origin.
 - [ ] Prove deployed provider acceptance/delivery.
-- [ ] Prove inbox receipt, separate-user confirmation/acceptance, and Supabase Auth confirmation/recovery SMTP.
+- [ ] Prove Gmail inbox receipt, separate-user confirmation/acceptance, and the complete password replacement/replay path without exposing links or credentials.
