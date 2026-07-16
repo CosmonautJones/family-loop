@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
-import { useActiveEventsQuery, useActiveGroupMembersQuery, useActiveGroupQuery, useCreateGroupInvitationMutation, useGroupInvitationsQuery, useLeaveGroupMutation, useRemoveGroupMemberMutation, useRevokeGroupInvitationMutation, useTransferGroupOwnershipMutation } from '../app/queries';
+import { useActiveEventsQuery, useActiveGroupMembersQuery, useActiveGroupQuery, useCreateGroupInvitationMutation, useEmailGroupInvitationMutation, useGroupInvitationsQuery, useLeaveGroupMutation, useRemoveGroupMemberMutation, useRevokeGroupInvitationMutation, useTransferGroupOwnershipMutation } from '../app/queries';
 import { selectFamilyViewModel } from '../app/selectors';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { DataExportCard } from '../features/account/DataExportCard';
@@ -31,15 +31,19 @@ export function GroupsScreen() {
   const owner = currentMember?.role === 'owner';
   const invitations = useGroupInvitationsQuery(groupId, owner);
   const createInvitation = useCreateGroupInvitationMutation(groupId);
+  const emailInvitation = useEmailGroupInvitationMutation();
   const revokeInvitation = useRevokeGroupInvitationMutation(groupId);
   const removeMember = useRemoveGroupMemberMutation(groupId);
   const leaveGroup = useLeaveGroupMutation(groupId);
   const transferOwnership = useTransferGroupOwnershipMutation(groupId);
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePresentation, setInvitePresentation] = useState<InvitationPresentation | null>(null);
+  const [createdInvitationId, setCreatedInvitationId] = useState<string | null>(null);
+  const [emailQueued, setEmailQueued] = useState(false);
   const [notice, setNotice] = useState<{ text: string; tone: 'error' | 'info' } | null>(null);
   const inviteDraft = useRef<InvitationDraft | null>(null);
   const inviteInFlight = useRef(false);
+  const emailAttempt = useRef<{ invitationId: string; deliveryKey: string } | null>(null);
   const loading = groupQuery.isPending || membersQuery.isPending || eventsQuery.isPending;
   const error = groupQuery.error ?? membersQuery.error ?? eventsQuery.error;
   const retry = () => Promise.all([groupQuery.refetch(), membersQuery.refetch(), eventsQuery.refetch()]);
@@ -59,9 +63,12 @@ export function GroupsScreen() {
     inviteInFlight.current = true;
     setNotice(null);
     try {
-      await createInvitation.mutateAsync({ email: draft.email, token: draft.token });
+      const created = await createInvitation.mutateAsync({ email: draft.email, token: draft.token });
       const base = typeof window === 'undefined' ? 'https://loopedin.app/' : `${window.location.origin}${window.location.pathname}`;
       setInvitePresentation(confirmInvitationDraft(draft, base));
+      setCreatedInvitationId(created.invitationId);
+      setEmailQueued(false);
+      emailAttempt.current = null;
       setNotice({ text: 'Invitation created. Share the private link below with the invited person.', tone: 'info' });
     } catch (cause: unknown) {
       setInvitePresentation((current) => retainInvitationPresentation(current));
@@ -72,22 +79,38 @@ export function GroupsScreen() {
       inviteInFlight.current = false;
     }
   };
+  const emailCreatedInvitation = async () => {
+    const draft = inviteDraft.current;
+    if (!draft || !invitePresentation || !createdInvitationId || emailQueued || emailInvitation.isPending) return;
+    const attempt = emailAttempt.current?.invitationId === createdInvitationId
+      ? emailAttempt.current
+      : { invitationId: createdInvitationId, deliveryKey: crypto.randomUUID() };
+    emailAttempt.current = attempt;
+    setNotice(null);
+    try {
+      await emailInvitation.mutateAsync({ invitationId: createdInvitationId, token: draft.token, deliveryKey: attempt.deliveryKey });
+      setEmailQueued(true);
+      setNotice({ text: 'The email provider accepted and queued the invitation. The private link remains available below.', tone: 'info' });
+    } catch {
+      setNotice({ text: 'We couldn’t queue the email. The private invitation link still works; retry the email or copy the link.', tone: 'error' });
+    }
+  };
 
   return <ScrollView contentContainerStyle={[styles.container, { width: Math.max(width - (2 * spacing.lg), 0) }]}>
     <Text style={styles.eyebrow}>Your family</Text><Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{family.name}</Text><Text style={styles.subtitle}>{family.description}</Text>
     {notice ? <Text accessibilityLiveRegion={notice.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={notice.tone === 'error' ? 'alert' : undefined} style={notice.tone === 'error' ? styles.error : styles.notice}>{notice.text}</Text> : null}
     <SurfaceCard><Text style={styles.cardTitle}>Family at a glance</Text><Text style={styles.summary}>{family.memberCountLabel}</Text><Text style={styles.cardCopy}>{family.upcomingLabel}</Text></SurfaceCard>
     {owner ? <SurfaceCard>
-      <Text style={styles.cardTitle}>Invite someone</Text><Text style={styles.cardCopy}>The link is private and tied to this email. LoopedIn does not send it for you yet.</Text>
-      <Text style={styles.label}>Email address</Text><TextInput nativeID="family-invite-email-input" accessibilityLabel="Invite email address" autoCapitalize="none" autoComplete="email" inputMode="email" onChangeText={(value) => { if (normalizeInvitationEmail(value) !== normalizeInvitationEmail(inviteEmail)) { inviteDraft.current = null; setInvitePresentation(null); } setInviteEmail(value); }} placeholder="relative@example.com" style={styles.input} value={inviteEmail} />
+      <Text style={styles.cardTitle}>Invite someone</Text><Text style={styles.cardCopy}>Create the private, email-bound link first. Then copy it or explicitly queue an invitation email.</Text>
+      <Text style={styles.label}>Email address</Text><TextInput nativeID="family-invite-email-input" accessibilityLabel="Invite email address" autoCapitalize="none" autoComplete="email" inputMode="email" onChangeText={(value) => { if (normalizeInvitationEmail(value) !== normalizeInvitationEmail(inviteEmail)) { inviteDraft.current = null; emailAttempt.current = null; setInvitePresentation(null); setCreatedInvitationId(null); setEmailQueued(false); } setInviteEmail(value); }} placeholder="relative@example.com" style={styles.input} value={inviteEmail} />
       <CardAction label={createInvitation.isPending ? 'Creating invitation…' : invitePresentation ? 'Invitation link created' : 'Create invitation link'} disabled={!canSubmitInvitation(invitePresentation, inviteEmail, createInvitation.isPending || inviteInFlight.current)} onPress={invite} />
-      {(inviteDraft.current || invitePresentation) && !createInvitation.isPending ? <CardAction label="Cancel invitation draft" onPress={() => { inviteDraft.current = null; setInvitePresentation(null); setNotice({ text: 'Invitation draft cleared.', tone: 'info' }); }} /> : null}
-      {invitePresentation ? <View style={styles.linkBox}><Text selectable style={styles.link}>{invitePresentation.link}</Text><CardAction label="Copy invitation link" onPress={async () => { if (typeof navigator !== 'undefined' && navigator.clipboard) { await navigator.clipboard.writeText(invitePresentation.link); setNotice({ text: 'Invitation link copied.', tone: 'info' }); } else setNotice({ text: 'Select and copy the invitation link above.', tone: 'info' }); }} /></View> : null}
+      {(inviteDraft.current || invitePresentation) && !createInvitation.isPending ? <CardAction label="Cancel invitation draft" onPress={() => { inviteDraft.current = null; emailAttempt.current = null; setInvitePresentation(null); setCreatedInvitationId(null); setEmailQueued(false); setNotice({ text: 'Invitation draft cleared.', tone: 'info' }); }} /> : null}
+      {invitePresentation ? <View style={styles.linkBox}><Text selectable style={styles.link}>{invitePresentation.link}</Text><CardAction label="Copy invitation link" onPress={async () => { if (typeof navigator !== 'undefined' && navigator.clipboard) { await navigator.clipboard.writeText(invitePresentation.link); setNotice({ text: 'Invitation link copied.', tone: 'info' }); } else setNotice({ text: 'Select and copy the invitation link above.', tone: 'info' }); }} />{auth.configured && createdInvitationId ? <CardAction label={emailInvitation.isPending ? 'Queueing invitation email…' : emailQueued ? 'Invitation email queued' : 'Email invitation'} disabled={emailInvitation.isPending || emailQueued} onPress={emailCreatedInvitation} /> : null}</View> : null}
       <Text style={styles.sectionTitle}>Pending invitations</Text>
       {invitations.isPending ? <ActivityIndicator color={palette.plum} /> : null}
       {invitations.isError ? <><Text style={styles.error}>Pending invitations are unavailable.</Text><CardAction label="Retry invitations" onPress={() => invitations.refetch()} /></> : null}
       {invitations.isSuccess && invitations.data.filter((item) => item.status === 'pending').length === 0 ? <Text style={styles.cardCopy}>No invitations are waiting.</Text> : null}
-      {invitations.data?.filter((item) => item.status === 'pending').map((item) => <View key={item.id} style={styles.actionRow}><View style={styles.rowCopy}><Text style={styles.memberName}>{item.email}</Text><Text style={styles.role}>Pending</Text></View><CardAction label={`Revoke invitation for ${item.email}`} disabled={revokeInvitation.isPending} onPress={async () => { setNotice(null); try { await revokeInvitation.mutateAsync(item.id); const nextPresentation = revokeInvitationPresentation(invitePresentation, item.email); if (!nextPresentation) inviteDraft.current = null; setInvitePresentation(nextPresentation); setNotice({ text: 'Invitation revoked. Any displayed link for it is no longer usable.', tone: 'info' }); } catch { setNotice({ text: 'That family action isn’t available. Try again.', tone: 'error' }); } }} /></View>)}
+      {invitations.data?.filter((item) => item.status === 'pending').map((item) => <View key={item.id} style={styles.actionRow}><View style={styles.rowCopy}><Text style={styles.memberName}>{item.email}</Text><Text style={styles.role}>Pending</Text></View><CardAction label={`Revoke invitation for ${item.email}`} disabled={revokeInvitation.isPending} onPress={async () => { setNotice(null); try { await revokeInvitation.mutateAsync(item.id); const nextPresentation = revokeInvitationPresentation(invitePresentation, item.email); if (!nextPresentation) { inviteDraft.current = null; emailAttempt.current = null; setCreatedInvitationId(null); setEmailQueued(false); } setInvitePresentation(nextPresentation); setNotice({ text: 'Invitation revoked. Any displayed link for it is no longer usable.', tone: 'info' }); } catch { setNotice({ text: 'That family action isn’t available. Try again.', tone: 'error' }); } }} /></View>)}
     </SurfaceCard> : null}
     <SurfaceCard><Text style={styles.cardTitle}>People</Text><View style={styles.list}>{family.members.map((member) => <View key={member.id} style={styles.memberBlock}>
       <View style={styles.memberRow} accessibilityLabel={`${member.name}, ${member.role}`}><View accessible={false} style={styles.avatar}><Text style={styles.avatarText}>{member.initials}</Text></View><View style={styles.memberCopy}><Text style={styles.memberName}>{member.name}</Text><Text style={styles.role}>{member.role}</Text></View></View>

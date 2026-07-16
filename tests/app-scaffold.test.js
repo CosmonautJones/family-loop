@@ -1158,6 +1158,25 @@ test('Family screen is service-backed with owner and member controls', () => {
   assert.doesNotMatch(shellState, /history\.length/);
 });
 
+test('hosted invitation email is a separate explicit, idempotent, delivery-honest action', () => {
+  const api = read('src/services/api.ts');
+  const adapter = read('src/services/supabaseAdapter.ts');
+  const queries = read('src/app/queries.ts');
+  const family = read('src/screens/GroupsScreen.tsx');
+  assert.match(api, /emailInvitation\?\(invitationId: string, token: string, deliveryKey: string\)/);
+  assert.match(adapter, /functions\.invoke\('send-group-invitation',[\s\S]*?body: \{ invitationId, token, deliveryKey \}/);
+  assert.match(adapter, /data\?\.status !== 'provider_accepted'/);
+  assert.match(adapter, /private link still works/);
+  assert.match(queries, /useEmailGroupInvitationMutation/);
+  assert.match(queries, /emailInvitation\(invitationId, token, deliveryKey\)/);
+  assert.ok(family.indexOf('Create invitation link') < family.indexOf("'Email invitation'"), 'email action must follow link creation');
+  assert.match(family, /emailAttempt\.current\?\.invitationId === createdInvitationId[\s\S]*?emailAttempt\.current = attempt/);
+  assert.match(family, /auth\.configured && createdInvitationId/);
+  assert.match(family, /email provider accepted and queued the invitation/);
+  assert.match(family, /private invitation link still works/);
+  assert.doesNotMatch(family, /email (?:was )?delivered/i);
+});
+
 test('signed-out invitation UI defaults to sign in and reveals accessible account creation only for a ready preview', () => {
   const auth = read('src/screens/AuthScreen.tsx');
   assert.match(auth, /useState<Mode>\('signIn'\)/);

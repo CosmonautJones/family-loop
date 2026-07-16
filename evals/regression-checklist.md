@@ -372,3 +372,13 @@ Use this before considering a mission complete.
 - [x] Independent review closed the owner-UI provenance and response-loss cleanup findings and returned **GREEN** for this bounded path.
 - [ ] No real email was sent; new-account invitation acceptance and delivered invitation email proof remain `NOT RUN`.
 - [ ] Hosted browser handling for expired and revoked invitation links remains `NOT RUN`.
+
+## 2026-07-16 invitation email sender
+
+- [x] Email delivery is a separate explicit owner action after copied-link creation; provider failure preserves the link.
+- [x] The sender revalidates the exact active owner, pending/unexpired invitation, recipient, and token.
+- [x] The private ledger stores bounded metadata only; no plaintext token, email, body, URL, or provider identifier is persisted.
+- [x] Stable replay, stale-operation operator review, and per-invitation plus actor/family 24-hour bounds pass local tests.
+- [x] The UI says provider accepted/queued and never claims delivery.
+- [ ] Disable Resend click/open tracking and prove deployed provider acceptance/delivery.
+- [ ] Prove inbox receipt, separate-user confirmation/acceptance, and Supabase Auth confirmation/recovery SMTP.

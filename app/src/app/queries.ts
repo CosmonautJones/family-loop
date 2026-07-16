@@ -155,6 +155,15 @@ export function useCreateGroupInvitationMutation(groupId: string) {
   });
 }
 
+export function useEmailGroupInvitationMutation() {
+  return useMutation({
+    mutationFn: ({ invitationId, token, deliveryKey }: { invitationId: string; token: string; deliveryKey: string }) => {
+      if (!loopedInService.groups.emailInvitation) throw new Error('Invitation email is available only with the hosted family service.');
+      return loopedInService.groups.emailInvitation(invitationId, token, deliveryKey);
+    },
+  });
+}
+
 export function useRevokeGroupInvitationMutation(groupId: string) {
   const queryClient = useQueryClient();
   return useMutation({
