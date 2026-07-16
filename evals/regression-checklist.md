@@ -338,7 +338,7 @@ Use this before considering a mission complete.
 - [x] Hosted database/Auth/Storage metadata and private bytes are client-encrypted and hashed.
 - [x] Isolated restore matches counts, object hashes, references, owner access, and outsider denial.
 - [x] Repository secret names exist; values are absent from source, logs, evidence, and chat.
-- [x] Scheduled backup/isolated restore `29480318427`, telemetry retention `29520494334`, and availability `29521815271` are GREEN; dispatch `29517385245` separately proves the current all-nine restore boundary.
+- [x] Scheduled backup/isolated restore `29480318427` is GREEN for initial cron execution with eight migrations before migration nine; telemetry retention `29520494334` and availability `29521815271` are GREEN. Earlier manual `29517385245` proved all nine; fresh manual `29527751546` at main head `90250b6d…` is the newest current-schema/direct-credential proof with backup, isolated restore, three objects, expected counts/integrity, owner RLS, and outsider denial. Sustained RPO and a post-migration-nine scheduled restore remain open.
 - [ ] Managed PITR, replacement-project cutover, permanent deletion apply, Gmail/new-account/password completion, production SMTP, physical devices, and production remain open.
 
 ## 2026-07-15 final hosted staging closeout
