@@ -2189,6 +2189,11 @@ test('hosted backup packages protected schemas and private bytes under client en
   assert.match(backup, /-Filter '\*\.sql'/);
   assert.match(backup, /postgres@sha256:178f0976/);
   assert.match(backup, /fingerprintBefore/);
+  assert.match(backup, /loopedin_event_create_operations t\)/);
+  assert.match(backup, /json_agg\(t order by actor_id,group_id,operation_key\)/);
+  assert.match(backup, /loopedin_message_create_operations t\)/);
+  assert.match(backup, /json_agg\(t order by actor_id,event_id,operation_key\)/);
+  assert.doesNotMatch(backup, /json_agg\(t order by user_id,operation_key\)/);
   assert.match(backup, /supabase_migrations/);
   assert.match(restore, /local-backup-crypto\.mjs'\) decrypt/);
   assert.match(restore, /disposable Docker database; primary was never a restore target/);
