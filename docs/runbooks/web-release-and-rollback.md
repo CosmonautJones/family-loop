@@ -128,6 +128,12 @@ No production approval is implied by the local rehearsal.
 - Hosted signed-out views at exact 320, 390, and 430 CSS-pixel widths were observed. Local native browser-zoom evidence remains dated local evidence; native hosted 200% zoom, physical iPhone/Android, VoiceOver/TalkBack, physical keyboard, and moderated checks are not complete.
 - Production/custom domain remains gated by a separate isolated production Supabase project and redirect configuration, exact-artifact approval, real SMTP/password completion, approved family recipients, physical-device checks, and explicit production authorization. The personal Netlify site remains outside scope.
 
+### Lifecycle candidate supersession
+
+Exact CI artifact source `a45838479634e61aedec0ceb210f79b21f58d225`, release `0.1.0-a45838479634`, and application digest `aceefccf1a794f93fc145cb412db20ccf0d92c51a6a8b87549679e81065f95e6` were assembled with the reviewed staging overlay and uploaded without a Netlify rebuild. Deploy `6a5863f6aebae3714ef3906c` is the current staging alias.
+
+Rollback selected `6a58428caebae3fadaf3906b`/`0.1.0-08006e5e83a8`, then restoration selected `6a5863f6aebae3714ef3906c`/`0.1.0-a45838479634`; HTTPS and availability passed after restoration and no database reversal occurred.
+
 ## 2026-07-14 runtime-config evidence
 
 - Exact source `522aed7217ea` produced release `0.1.0-522aed7217ea`: three files, one 986,099-byte JavaScript bundle, digest `12925c40f8068afbaa58b3dd5a7b132ed405e9e510adc90310945e72ca27f38d`.

@@ -120,6 +120,15 @@ These defaults are intentionally modest and must be accepted rather than silentl
 - Netlify + Supabase native observability and one synthetic check first; no session replay and no message/photo contents in telemetry;
 - GitHub Pro required checks if the repository stays private; otherwise manual owner-enforced merge control is an explicit release warning, not a technical pass.
 
+## 2026-07-16 lifecycle staging release
+
+- CI artifact `loopedin-web-a45838479634e61aedec0ceb210f79b21f58d225` from run `29471573031` was downloaded rather than rebuilt. Its source is `a45838479634e61aedec0ceb210f79b21f58d225`, release is `0.1.0-a45838479634`, and internal application digest is `aceefccf1a794f93fc145cb412db20ccf0d92c51a6a8b87549679e81065f95e6`.
+- The external staging overlay was assembled and reverified without logging the public key. Immutable Netlify deploy `6a5863f6aebae3714ef3906c` is published at `https://loopedin-family.netlify.app`; prior deploy `6a58428caebae3fadaf3906b` remains the rollback target. The personal site was not linked, replaced, or modified.
+- HTTPS shell/runtime/Auth health, exact release/environment headers, exact backend CSP, `no-store` runtime config, immutable asset caching, missing-asset 404, and fragment deep-link load pass. Signed-out 320/390/430 checks have exact document widths, 48–52px controls, and zero console warnings/errors. The signed-out screen still lacks a main landmark, matching the prior published release; this is an open accessibility follow-up, not a new lifecycle regression.
+- Exact rollback selected `6a58428caebae3fadaf3906b` and verified release `0.1.0-08006e5e83a8`; exact restoration selected `6a5863f6aebae3714ef3906c` and verified release `0.1.0-a45838479634`. No database migration was reversed.
+- Superseding hosted lifecycle run `lqa-mrni99q8-d25f64ff` and hosted family/export run `qa-mrniaqp3-c0cb2cea` are GREEN after the independent-review fix loop, with unchanged protected fingerprints and zero residue. Evidence is automated synthetic staging evidence.
+- Production remains blocked by permanent purge/external journal, custom SMTP and security notices, real recovery/invitation delivery, production Supabase capacity/region/plan selection, physical devices/assistive technology, leaked-password protection disposition, custom domain, and explicit promotion approval.
+
 ## Credential and evidence rules
 
 - Never print, commit, paste into PRs, or retain service-role keys, SMTP passwords, database passwords, provider tokens, signed URLs, recovery fragments, or `.env.local` contents.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted as the LoopedIn lifecycle architecture. The recoverable grace state is implemented and verified locally; hosted staging, external-journal reconciliation, permanent purge, and production adoption remain unproven.
+Accepted as the LoopedIn lifecycle architecture. The recoverable grace state is implemented and verified locally and with disposable hosted-staging accounts; external-journal reconciliation, permanent purge, and production adoption remain unproven.
 
 ## Context
 
@@ -43,6 +43,7 @@ A direct Auth-user delete is unsafe: creator foreign keys intentionally restrict
 
 - **Approved policy input:** immediate access disablement, a 30-day recoverable grace period, ownership transfer first, permanent deletion after grace, backup expiry under retention, and explicit legal-hold records were supplied as the default lifecycle policy.
 - **Verified locally:** migration reset/lint, stale-session and owner rejection, concurrent request/transfer serialization, pending DB/RPC/Storage denial, pre-deadline cancellation, expired cancellation denial, legal-hold privilege, and restored access after cancellation.
+- **Verified in dedicated staging with synthetic users:** owner transfer, exact grace/backup boundaries, pending DB/RPC/Storage denial, legal holds, cancellation restoration, expired cancellation denial, outsider isolation, unchanged protected state, and zero residue.
 - **Inference:** 15-second status polling plus fail-closed protected-cache eviction reduce cached-access exposure within the current browser architecture; expiry-aware media renewal and physical-device behavior remain unimplemented or unobserved.
 
 ## Non-decisions

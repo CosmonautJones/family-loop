@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
+import { proveHostedEncryptedExports } from './hosted-browser-data-export.mjs';
 
 const require = createRequire(new URL('../app/package.json', import.meta.url));
 const { createClient } = require('@supabase/supabase-js');
@@ -148,6 +149,48 @@ async function adminUsers() {
   return Array.isArray(body) ? body : body.users ?? [];
 }
 
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function adminUsersWithRetry(label, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await adminUsers();
+    } catch {
+      if (attempt === attempts) throw new Error(`${label} failed after ${attempts} attempts`);
+      await delay(attempt * 250);
+    }
+  }
+  throw new Error(`${label} failed`);
+}
+
+async function deleteObjectAndConfirmAbsent(path, attempts = 3) {
+  const segments = path.split('/');
+  const objectName = segments.pop();
+  const prefix = segments.join('/');
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const removed = await request(`/storage/v1/object/${BUCKET}`, {
+      token: secretKey,
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefixes: [path] }),
+    }).catch(() => null);
+    const listed = await request(`/storage/v1/object/list/${BUCKET}`, {
+      token: secretKey,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prefix, limit: 1000, offset: 0 }),
+    }).catch(() => null);
+    const absent = listed?.response.ok
+      && Array.isArray(listed.body)
+      && !listed.body.some((item) => item.name === objectName || item.name === path);
+    if ((removed?.response.ok || removed?.response.status === 404) && absent) return;
+    if (attempt < attempts) await delay(attempt * 250);
+  }
+  throw new Error('Storage object deletion could not be confirmed');
+}
+
 async function upsertQaUser(runId, identity) {
   const users = await adminUsers();
   const existing = users.find((user) => user.email?.toLowerCase() === identity.email);
@@ -184,9 +227,32 @@ async function prepare() {
       userCount: identities.length,
     }));
   } catch (error) {
-    const listed = await adminUsers().catch(() => []);
-    for (const user of listed.filter((candidate) => ROLES.some((role) => isMarked(candidate, runId, role)))) {
-      await request(`/auth/v1/admin/users/${user.id}`, { token: secretKey, method: 'DELETE' }).catch(() => undefined);
+    try {
+      const listed = await adminUsersWithRetry('discover marked QA users after prepare failure');
+      const marked = listed.filter(
+        (candidate) => candidate.app_metadata?.[QA_MARKER] === true && candidate.app_metadata?.loopedin_qa_run_id === runId,
+      );
+      for (const user of marked) {
+        const role = user.app_metadata?.loopedin_qa_role;
+        if (!ROLES.includes(role) || user.email?.toLowerCase() !== identityFor(runId, role).email) {
+          throw new Error('refusing to delete an inexact prepare-failure Auth marker');
+        }
+        await required(
+          request(`/auth/v1/admin/users/${user.id}`, { token: secretKey, method: 'DELETE' }),
+          'delete marked QA user after prepare failure',
+        );
+      }
+      let residue = [];
+      for (let attempt = 1; attempt <= 4; attempt += 1) {
+        residue = (await adminUsersWithRetry('verify prepare-failure Auth residue'))
+          .filter((candidate) => candidate.app_metadata?.[QA_MARKER] === true
+            && candidate.app_metadata?.loopedin_qa_run_id === runId);
+        if (residue.length === 0) break;
+        if (attempt < 4) await delay(attempt * 250);
+      }
+      assert.equal(residue.length, 0, 'marked prepare-failure Auth residue remains');
+    } catch (cleanupError) {
+      throw new Error(`${redact(error)}; prepare cleanup failed: ${redact(cleanupError)}`);
     }
     throw error;
   }
@@ -220,7 +286,7 @@ async function loadRunUsers(runId) {
       body: JSON.stringify({ email: identity.email, password }),
     }), 'sign in QA user');
     assert.equal(session.user.id, user.id, 'QA session identity mismatch');
-    users[role] = { ...identity, id: user.id, token: session.access_token };
+    users[role] = { ...identity, id: user.id, token: session.access_token, password };
   }
   return users;
 }
@@ -312,13 +378,40 @@ async function realtimeInsert(token, eventId) {
 async function cleanup(runId, users, groupId, paths) {
   const failures = [];
   for (const path of paths) {
-    const removed = await request(`/storage/v1/object/${BUCKET}`, {
-      token: secretKey, method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [path] }),
-    }).catch(() => null);
-    if (!removed?.response.ok && removed?.response.status !== 404) failures.push('storage cleanup');
-    const residue = await request(`/storage/v1/object/authenticated/${BUCKET}/${path}`, { token: secretKey }).catch(() => null);
-    if (residue?.response.ok) failures.push('storage residue');
+    try {
+      await deleteObjectAndConfirmAbsent(path);
+    } catch {
+      failures.push('storage cleanup unconfirmed');
+      continue;
+    }
+    const media = await table(
+      'loopedin_event_media', secretKey, `?storage_path=eq.${encodeURIComponent(path)}&select=id,status,uploaded_by`,
+    ).catch(() => null);
+    if (!media?.response.ok) {
+      failures.push('media cleanup discovery');
+      continue;
+    }
+    for (const row of media.body) {
+      const actor = Object.values(users).find((user) => user.id === row.uploaded_by);
+      if (!actor?.token) { failures.push('media cleanup actor'); continue; }
+      if (row.status === 'pending') {
+        const aborted = await rpc('loopedin_abort_media_upload', actor.token, { target_media_id: row.id }).catch(() => null);
+        if (!aborted?.response.ok) failures.push('media abort cleanup');
+      } else {
+        if (row.status === 'active') {
+          const claimed = await rpc('loopedin_claim_media_deletion', actor.token, { target_media_id: row.id }).catch(() => null);
+          if (!claimed?.response.ok) { failures.push('media claim cleanup'); continue; }
+        }
+        const finalized = await rpc('loopedin_finalize_media_deletion', actor.token, { target_media_id: row.id }).catch(() => null);
+        if (!finalized?.response.ok) failures.push('media finalize cleanup');
+      }
+    }
+    const mediaResidue = await table(
+      'loopedin_event_media', secretKey, `?storage_path=eq.${encodeURIComponent(path)}&select=id`,
+    ).catch(() => null);
+    if (!mediaResidue?.response.ok || mediaResidue.body.length !== 0) failures.push('media cleanup unconfirmed');
   }
+  if (failures.length) throw new Error([...new Set(failures)].join(', '));
   if (groupId) {
     const markedGroup = await table(
       'loopedin_groups', secretKey, `?id=eq.${groupId}&select=id,name,description,created_by`,
@@ -333,7 +426,7 @@ async function cleanup(runId, users, groupId, paths) {
       if (!removed?.response.ok) failures.push('group cleanup');
     }
   }
-  const listedBeforeDelete = await adminUsers().catch(() => []);
+  const listedBeforeDelete = await adminUsersWithRetry('discover marked QA users for cleanup');
   for (const user of Object.values(users)) {
     const current = listedBeforeDelete.find((candidate) => candidate.id === user.id);
     if (!current) continue;
@@ -344,7 +437,13 @@ async function cleanup(runId, users, groupId, paths) {
     const removed = await request(`/auth/v1/admin/users/${user.id}`, { token: secretKey, method: 'DELETE' }).catch(() => null);
     if (!removed?.response.ok && removed?.response.status !== 404) failures.push('user cleanup');
   }
-  const remainingUsers = (await adminUsers().catch(() => [])).filter((user) => user.app_metadata?.loopedin_qa_run_id === runId);
+  let remainingUsers = [];
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
+    remainingUsers = (await adminUsersWithRetry('verify marked QA Auth residue'))
+      .filter((user) => user.app_metadata?.[QA_MARKER] === true && user.app_metadata?.loopedin_qa_run_id === runId);
+    if (remainingUsers.length === 0) break;
+    if (attempt < 4) await delay(attempt * 250);
+  }
   const userIds = Object.values(users).map((user) => user.id).filter(Boolean);
   const remainingProfiles = userIds.length
     ? await table('loopedin_profiles', secretKey, `?id=in.(${userIds.join(',')})&select=id`).catch(() => null)
@@ -360,7 +459,7 @@ async function cleanup(runId, users, groupId, paths) {
     profiles: remainingProfiles?.response.ok ? remainingProfiles.body.length : userIds.length ? -1 : 0,
     groups: remainingGroup?.response.ok ? remainingGroup.body.length : groupId ? -1 : 0,
     invitations: remainingInvitations?.response.ok ? remainingInvitations.body.length : groupId ? -1 : 0,
-    objects: failures.includes('storage residue') ? -1 : 0,
+    objects: failures.some((failure) => failure.startsWith('storage ')) ? -1 : 0,
   };
   if (Object.values(residue).some((count) => count !== 0)) failures.push('nonzero residue');
   if (failures.length) throw new Error([...new Set(failures)].join(', '));
@@ -476,6 +575,25 @@ async function run() {
     assert.equal(commentRows.length, 2);
     assert.equal(mediaRows.length, 1);
 
+    const exportProof = await proveHostedEncryptedExports({
+      accounts: [
+        {
+          email: owner.email, password: owner.password, userId: owner.id, surface: 'family',
+          expectedCounts: { memberships: 1, createdEvents: 1, rsvps: 1, messages: 1, media: 0, mediaFiles: 0, unavailableMediaFiles: 0, reminders: 0 },
+        },
+        {
+          email: memberB.email, password: memberB.password, userId: memberB.id, surface: 'family',
+          expectedCounts: { memberships: 1, createdEvents: 1, rsvps: 1, messages: 1, media: 1, mediaFiles: 1, unavailableMediaFiles: 0, reminders: 0 },
+        },
+        {
+          email: outsider.email, password: outsider.password, userId: outsider.id, surface: 'onboarding',
+          expectedCounts: { memberships: 0, createdEvents: 0, rsvps: 0, messages: 0, media: 0, mediaFiles: 0, unavailableMediaFiles: 0, reminders: 0 },
+        },
+      ],
+      expectedMediaBytes: PNG,
+      syntheticUserIds: [owner.id, memberA.id, memberB.id, outsider.id],
+    });
+
     await required(rpc('loopedin_claim_media_deletion', memberB.token, { target_media_id: pending.id }), 'claim QA photo deletion');
     await required(request(`/storage/v1/object/${BUCKET}`, {
       token: memberB.token, method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prefixes: [storagePath] }),
@@ -485,6 +603,8 @@ async function run() {
       runId, familyId: group.id, memberCount: 3, eventCount: eventRows.length,
       rsvpCount: rsvpRows.length, commentCount: commentRows.length, notificationCount: notifications.length,
       privateMediaCreated: 1, privateMediaDeleted: 1, realtimeObserved: true,
+      encryptedExports: exportProof.accountCount, exportedPrivateMediaFiles: exportProof.privateMediaFiles,
+      outsiderExportEmpty: exportProof.outsiderEmpty,
     };
   } catch (error) {
     primaryError = error;

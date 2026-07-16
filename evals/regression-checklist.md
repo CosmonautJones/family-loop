@@ -352,3 +352,14 @@ Use this before considering a mission complete.
 - [x] Realtime MEDIUM Query race at `d1b8b59` is fixed in exact release source; independent review is GREEN with zero blocker/high/medium findings.
 - [ ] Do not mark a retained local Realtime rerun green: the local Auth fixture had no `@loopedin.test` accounts. Hosted drills and focused Query coverage are the accepted evidence.
 - [ ] Production SMTP and delivered invitations, real private password recovery, dedicated production Supabase, physical iPhone Safari/Android Chrome/VoiceOver/TalkBack, authoritative hosted native 200% zoom, observed schedule cadence, managed PITR, custom domain, and explicit production promotion remain open.
+
+## 2026-07-16 hosted lifecycle and encrypted export
+
+- [x] Repository and dedicated staging migration histories match all eight immutable versions through `20260716033000`; CI's rejected rename was closed rather than exempted.
+- [x] Exact release `0.1.0-a45838479634`/deploy `6a5863f6aebae3714ef3906c` passes HTTPS/runtime/Auth/CSP/cache/404/deep-link availability and signed-out 320/390/430 width/control checks.
+- [x] Hosted grace-state run proves owner transfer, exact 30+30-day boundaries, current-token DB/RPC/Storage denial, service-only legal holds, cancellation restoration, expired denial, outsider isolation, protected-state equality, and zero residue.
+- [x] Three hosted Chrome sessions download and decrypt current-user exports; counts, ownership, pairwise isolation, ciphertext/data hashes, private PNG hash, wrong-passphrase/tamper denial, outsider emptiness, 390px controls, console, and failed-request gates pass.
+- [x] Family harness cleanup now safely reconciles pending/active/deleting media after failure; the final family/export run leaves zero users/profiles/groups/invitations/objects.
+- [x] Exact frontend rollback/restoration passes without database reversal and the personal Netlify site remains untouched.
+- [ ] Signed-out Auth still has no main landmark; hosted authenticated native 200% zoom and physical iPhone/Android/VoiceOver/TalkBack remain `NOT RUN`.
+- [ ] Permanent purge/external journal, SMTP/security notices and delivered recovery/invites, production backend/domain/promotion, and leaked-password protection remain blocking.

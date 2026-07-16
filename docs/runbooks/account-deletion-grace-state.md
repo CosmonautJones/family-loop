@@ -54,6 +54,22 @@ Pop-Location
 
 The destructive lifecycle test refuses non-loopback Supabase. It uses synthetic users and cleans its exact rows/objects. Never test deletion with the real Travis account.
 
+## Hosted staging verification
+
+Dedicated staging migration history reports the immutable repository version `20260716033000`; the accidental apply-time version was reconciled as history metadata only, without replaying or reversing schema SQL. PR #7, which attempted to rename the merged migration, was closed after CI correctly rejected it. Main CI run `29471863503` is green.
+
+The hosted-only wrapper hard-locks the linked CLI, API URL, acknowledgement, and project ref to `vkogznsfthirhxkqysza`; it refuses the quarantined project. Superseding run `lqa-mrni99q8-d25f64ff` used three marked disposable users and proved:
+
+- owner rejection followed by ownership transfer;
+- exact 30-day recovery and subsequent 30-day backup-expiry boundaries;
+- immediate new DB, protected RPC, signed-URL, and private-object download denial with the current token;
+- service-role-only legal-hold placement/release and append-only action order;
+- cancellation restoring the exact membership roles plus a fresh signed private-object download whose SHA-256 matched the uploaded bytes;
+- self-cancellation denial after the recovery deadline;
+- outsider isolation, unchanged non-QA fingerprint, and zero row/object/Auth residue.
+
+Hosted serialization races were not duplicated; the local destructive harness remains the evidence for request-versus-transfer and request-versus-family-creation serialization. The hosted run is automated synthetic evidence, not a deletion request for Travis or Jones Fam.
+
 ## Permanent-purge gate
 
 Do not call the lifecycle complete until all of the following exist and pass:
