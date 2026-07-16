@@ -20,9 +20,9 @@ Superseding hosted run `iqa-mrnli3aw-18956cda` used only marked disposable owner
 
 Rollback selected `6a5863f6aebae3714ef3906c` and verified release `0.1.0-a45838479634`; restoration selected `6a58e22e48d42235e0ea40e0` and verified `0.1.0-ce4b0c56d30b`. No database migration was reversed.
 
-## Hosted Auth configuration readback
+## Superseded pre-SMTP hosted Auth configuration readback
 
-Authenticated Management API readback for dedicated staging `vkogznsfthirhxkqysza` shows:
+At the diagnosis checkpoint, before the 2026-07-16 SMTP change, authenticated Management API readback for dedicated staging `vkogznsfthirhxkqysza` showed:
 
 - Site URL exactly `https://loopedin-family.netlify.app`;
 - five exact allowed redirects: staging, three retained immutable Netlify deploys, and future `https://app.travisjohnjones.com`;
@@ -31,7 +31,7 @@ Authenticated Management API readback for dedicated staging `vkogznsfthirhxkqysz
 - no custom SMTP host, port, user, password, sender address, or sender name;
 - password-change security notification disabled.
 
-These are automated configuration readbacks, not delivery proof. The browser signup intentionally tells a new user to confirm email, return to the original family invitation, and sign in; it does not currently attach the family hash to the Auth confirmation redirect.
+This dated list is retained as the before-state, not the current configuration. The later checkpoint below supersedes the absent-SMTP item. The browser signup intentionally tells a new user to confirm email, return to the original family invitation, and sign in; it does not currently attach the family hash to the Auth confirmation redirect.
 
 ## Delivery implementation checkpoint
 
@@ -40,15 +40,28 @@ The repository now contains a separately triggered owner-only invitation-email a
 Hosted configuration requires `LOOPEDIN_APP_ORIGIN`, `RESEND_INVITATION_API_KEY`, and `RESEND_INVITATION_FROM`. Supabase Auth SMTP remains a separate requirement for confirmation and recovery mail. Resend click and open tracking must be disabled in provider settings; the text-only API request does not prove that provider setting.
 
 - Automated: focused core/static/orchestration tests and local Supabase invitation-email E2E pass, including service-only finalization, streamed size enforcement, counted replay, stale-operation, aggregate-rate, private-ledger, and provider-failure/link-preservation checks. PR #11 merged as `6e8616d9e6d8a8fa7ddbebfa958aa5b11df5964c`; main CI `29516031310` is GREEN and produced artifact digest `sha256:fe2b977a8b3d97250700487e885a21c87252e3e8f8f268c322e4a6991bf2b341`. Remote migration readback matches all nine repository migrations. Edge Function version 1 is `ACTIVE` with bundle SHA-256 `940dad6d9e355fc0d0a90c0708d81735828cc7e067fa4a3853af40e0c8dbb1a2`, has JWT verification enabled, and returns exact-origin `204` CORS preflight plus unauthenticated `401` denial. `LOOPEDIN_APP_ORIGIN` is configured; its value and all provider secrets remain undisclosed.
-- Manually observed: pre-migration encrypted backup/isolated restore `29516656250`, post-migration backup/restore `29517385245`, migration dry-run/apply/readback, function deploy/list readback, exact-origin preflight, anonymous denial, authenticated Resend account/domain readback, and the provider's unconfigured-tracking state.
+- Manually observed: pre-migration encrypted backup/isolated restore `29516656250`, post-migration backup/restore `29517385245`, migration dry-run/apply/readback, function deploy/list readback, exact-origin preflight, anonymous denial, and authenticated Resend account/domain readback. At that checkpoint the provider had no tracking subdomain; the later delivered-message proof below verifies that the invitation URL remains unwrapped.
 - Still unproven at that backend-deploy checkpoint: family-invitation provider acceptance/delivery, inbox receipt, new-account confirmation, and clean-browser delivered-invitation acceptance. No family invitation email has been sent.
 
-## 2026-07-16 provider and immutable staging preview
+## 2026-07-16 provider, SMTP, and canonical staging proof
 
-- Authenticated Resend readback shows `travisjohnjones.com` verified in `us-east-1`, with DKIM/SPF/DMARC already resolving and no custom click/open tracking configured. Existing personal-site DNS records were not changed.
-- A dedicated sending-only API key restricted to `travisjohnjones.com` was created and transferred directly into the staging Edge Function secret store. Its value was never printed, committed, persisted in evidence, or sent through chat. `RESEND_INVITATION_FROM` is `LoopedIn <invites@travisjohnjones.com>` and `LOOPEDIN_APP_ORIGIN` remains the exact canonical staging origin.
+### Automated evidence
+
 - Main CI `29518737936` is GREEN at `2721a98ce6fc03a1263ebc5284d90ac936d2e571`. Its exact application digest `3794214c24c33c82961fd9c96a66c9bf2fc9809e366bfb03f4ce31c138a4779a` was wrapped with the unchanged reviewed staging runtime overlay and reverified.
-- Immutable Netlify draft deploy `6a591b138c9727a4b2ca6d48` serves release `0.1.0-2721a98ce6fc` at `https://invitation-mail-proof-2721a98--loopedin-family.netlify.app`. Root/runtime/asset transport, source/digest identity, exact Supabase HTTPS/WSS CSP, runtime `no-store`, shell `no-cache`, immutable hashed-asset caching, and missing-script `404` pass. The canonical staging alias, custom domain, Git link, and personal site were not changed.
-- The authenticated Supabase CLI credential was reused through the official Management API, so dashboard sign-in was not required. Custom Auth SMTP now uses Resend STARTTLS on port 587, sender `LoopedIn <auth@travisjohnjones.com>`, and the same domain-restricted credential; Site URL, redirect allowlist, confirmation requirement, and invite/recovery templates remained unchanged.
-- A password-recovery request to the explicitly approved owner address returned Auth `200`. Resend lists the exact `Reset your password` message as `delivered`; detail metadata contains the Auth verification route, `type=recovery`, canonical LoopedIn origin, approved recipient, and Auth sender. No recovery token, URL, body, provider identifier, or recipient value is persisted in repository evidence.
-- Gmail inbox receipt remains `NOT RUN` because the Gmail connector requires reauthentication. The recovery link was not opened and the password was not changed. Family invitation provider acceptance, inbox receipt, and clean separate-user acceptance also remain `NOT RUN` until a separate recipient is explicitly approved.
+- Immutable Netlify deploy `6a591b138c9727a4b2ca6d48` was published unchanged to `https://loopedin-family.netlify.app` at `2026-07-16T18:19:21.898Z`. Root/runtime/asset transport, source/digest identity, exact Supabase HTTPS/WSS CSP, runtime `no-store`, shell `no-cache`, immutable hashed-asset caching, missing-script `404`, and canonical release/environment headers pass. Prior deploy `6a58e22e48d42235e0ea40e0` is the database-neutral rollback target. The custom domain, Git link, production backend, and personal site were not changed.
+- The authenticated Supabase CLI credential was reused through the official Management API, so dashboard sign-in was not required. Custom Auth SMTP now uses Resend STARTTLS on port 587, sender `LoopedIn <auth@travisjohnjones.com>`, and the domain-restricted credential; readback preserved Site URL, redirect allowlist, confirmation requirement, and invite/recovery templates.
+- A password-recovery request to the explicitly approved owner address returned Auth `200` and Resend recorded the exact message as `delivered` with the expected Auth verification route, recovery type, canonical origin, and sender.
+- Marked hosted run `mailqa-mrnu92ro-be6d0bcc` created an isolated family through the exact canonical release, created the email-bound link in the owner UI, and queued the separate email action. The UI reported provider acceptance without claiming delivery. The approved existing recipient then authenticated in a separate signed-out session, opened the exact invitation URL, preserved it across reload, accepted through the UI, restored the session after reload, and saw consumed-link denial before and after reload. Cleanup restored that real account's membership list byte-for-byte to its baseline and left zero marked user/profile/family/membership/invitation/entitlement residue.
+
+### Manually observed provider evidence
+
+- Authenticated Resend readback shows `travisjohnjones.com` verified in `us-east-1`, with DKIM/SPF/DMARC resolving. The domain has no tracking subdomain; its configuration page offers **Enable tracking metrics** rather than showing tracking as active. The invitation is text-only, and the delivered message's Plain Text view contains the exact unwrapped canonical invitation URL with no tracking redirect. Click and open tracking are therefore inactive for this invitation. Existing personal-site DNS records were not changed.
+- A dedicated sending-only API key restricted to `travisjohnjones.com` was created and transferred directly into the staging Edge Function secret store. Its value was never printed, committed, persisted in evidence, or sent through chat. `RESEND_INVITATION_FROM` is `LoopedIn <invites@travisjohnjones.com>` and `LOOPEDIN_APP_ORIGIN` is the exact canonical staging origin.
+- Resend recorded the hosted family invitation as `delivered`, with the verified invitation sender, approved recipient, expected subject, and the same private URL displayed by the hosted owner UI. No invitation token, URL, message body, provider identifier, credential, or approved address is persisted in repository evidence.
+
+### Still unproven
+
+- Gmail inbox receipt remains `NOT RUN` because the Gmail connector requires reauthentication. Provider `delivered` is not mislabeled as inbox observation.
+- The recovery link was not opened and the password was not changed. Full password replacement and replay denial remain `NOT RUN`.
+- New-account confirmation from a delivered invitation remains `NOT RUN`; the accepted invitation used the explicitly approved existing account. No family recipient was contacted.
+- These are staging proofs. Production SMTP remains blocked on the separate production Supabase/provider environment and the production promotion gate.
