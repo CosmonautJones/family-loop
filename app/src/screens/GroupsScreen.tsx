@@ -150,10 +150,10 @@ const styles = StyleSheet.create({
   field: { gap: 6 },
   input: { backgroundColor: palette.well, borderColor: palette.hairline, borderRadius: radii.md, borderWidth: 1, color: palette.text, fontFamily: fonts.regular, fontWeight: '400', fontSize: 16, minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: 11 },
   notice: { color: palette.plum, fontFamily: fonts.medium, fontWeight: '500', fontSize: 14, lineHeight: 20 },
-  error: { color: palette.coral, fontFamily: fonts.medium, fontWeight: '500', fontSize: 14, lineHeight: 20 },
+  error: { color: palette.berry, fontFamily: fonts.medium, fontWeight: '500', fontSize: 14, lineHeight: 20 },
 
   primaryAction: { alignSelf: 'flex-start', alignItems: 'center', backgroundColor: palette.plum, borderRadius: radii.md, justifyContent: 'center', minHeight: 46, paddingHorizontal: spacing.md },
-  primaryActionText: { color: palette.surface, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 15 },
+  primaryActionText: { color: palette.white, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 15 },
   textAction: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   textActionText: { color: palette.plum, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14 },
   actionDisabled: { opacity: 0.55 },

@@ -162,7 +162,7 @@ export function CreateEventScreen({ onCreated }: { onCreated?: (eventId: string)
           accessibilityLabel={submitLabel}
           accessibilityRole="button"
           accessibilityState={{ disabled: submitDisabled }}
-          disabled={submitDisabled}
+          disabled={createEvent.isPending || !activeGroupId}
           onPress={submitEvent}
           style={({ pressed }) => [styles.submitWrap, submitDisabled && styles.submitDisabled, pressed && styles.submitPressed]}
         >
@@ -188,13 +188,13 @@ const styles = StyleSheet.create({
   input: { width: '100%', minWidth: 0, minHeight: 48, boxSizing: 'border-box', borderRadius: radii.md, borderWidth: 1, borderColor: palette.hairline, backgroundColor: palette.well, color: palette.text, fontFamily: fonts.regular, fontWeight: '400', fontSize: 16, lineHeight: 22, paddingHorizontal: 14, paddingVertical: 11 },
   inputError: { borderColor: palette.coral },
   notesInput: { minHeight: 96, textAlignVertical: 'top' },
-  errorText: { color: palette.coral, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13, lineHeight: 18 },
+  errorText: { color: palette.berry, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13, lineHeight: 18 },
   accentRow: { flexDirection: 'row', gap: 4 },
   accentSlot: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
   accentRing: { width: 34, height: 34, borderRadius: 17, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   accentRingSelected: { borderColor: palette.text },
   accentDot: { width: 26, height: 26, borderRadius: 13 },
-  submitError: { borderRadius: radii.md, backgroundColor: palette.well, borderWidth: 1, borderColor: palette.hairline, color: palette.coral, fontFamily: fonts.medium, fontWeight: '500', fontSize: 14, lineHeight: 20, padding: spacing.sm },
+  submitError: { borderRadius: radii.md, backgroundColor: palette.well, borderWidth: 1, borderColor: palette.hairline, color: palette.berry, fontFamily: fonts.medium, fontWeight: '500', fontSize: 14, lineHeight: 20, padding: spacing.sm },
   submitWrap: { borderRadius: radii.pill, overflow: 'hidden' },
   submitPressed: { opacity: 0.9 },
   submitDisabled: { opacity: 0.55 },

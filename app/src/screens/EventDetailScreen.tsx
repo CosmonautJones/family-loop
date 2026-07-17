@@ -238,7 +238,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             <LinearGradient colors={accent.cover} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCoverFill} />
           )}
         </View>
-        <View style={[styles.heroBody, width <= 360 && styles.heroBodyNarrow]}>
+        <View style={[styles.heroBody, width <= 360 && styles.heroHeaderNarrow]}>
           <View style={styles.heroMetaRow}>
             <Ionicons name="calendar-outline" size={14} color={accent.deep} />
             <Text style={[styles.heroMeta, { color: accent.deep }]}>{eventDetail.timeLabel}</Text>
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   heroCover: { height: 160, width: '100%', backgroundColor: palette.well },
   heroCoverFill: { height: '100%', width: '100%' },
   heroBody: { padding: spacing.lg, gap: spacing.sm },
-  heroBodyNarrow: { padding: spacing.md },
+  heroHeaderNarrow: { flexDirection: 'column' },
   heroMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   heroMeta: { fontFamily: fonts.semibold, fontWeight: '600', fontSize: 12.5, letterSpacing: 0.2 },
   heroTitle: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 27, lineHeight: 31, letterSpacing: -0.5 },

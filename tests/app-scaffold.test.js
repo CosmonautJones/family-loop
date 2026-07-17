@@ -1292,7 +1292,8 @@ test('mobile shell and primary flows expose landmarks, headings, useful image na
 
   assert.ok(navIndex >= 0 && navIndex < mainIndex, 'fixed navigation precedes the main landmark in DOM order');
   assert.match(shell, /fontSize: 12/);
-  assert.match(shell, /paddingBottom: 180/);
+  // Bottom clearance for the fixed nav moved from a shell-level pad to a per-screen inset.
+  assert.match(read('src/screens/HomeScreen.tsx'), /paddingBottom: tabBarInset/);
   assert.match(create, /inputRefs\.current\[firstInvalid\]\?\.focus\(\)/);
   assert.match(create, /'aria-describedby': `\$\{field\.key\}-error`/);
   assert.match(create, /'aria-invalid': true/);
@@ -1852,10 +1853,11 @@ test('Calendar excludes completed events before deriving its upcoming month and 
 });
 
 test('Calendar agenda copy can shrink before its status chip at narrow and zoomed widths', () => {
-  const calendar = read('src/screens/CalendarScreen.tsx');
+  // Agenda rows now use the shared EventRow, which owns the shrink-before-chip behavior.
+  const row = read('src/components/EventRow.tsx');
 
-  assert.match(calendar, /<View style=\{styles\.listCopy\}>/);
-  assert.match(calendar, /listCopy:\s*\{\s*flex: 1,\s*minWidth: 0,/);
+  assert.match(row, /<View style=\{styles\.copy\}>/);
+  assert.match(row, /copy:\s*\{\s*flex: 1,\s*minWidth: 0/);
 });
 
 test('completed-event history is derived chronologically and keeps exact event comments and photos isolated', () => {
