@@ -13,6 +13,9 @@ type HomeViewModelInput = {
 
 export const appTabs = ['Home', 'Calendar', 'Create', 'Memories', 'Family'] as const;
 export type AppTab = (typeof appTabs)[number];
+// Bottom-bar destinations (redesign: 3 tabs). Create is a FAB, Family lives behind
+// the header avatar — both remain routable AppTabs, just not tab-bar items.
+export const navTabs = ['Home', 'Calendar', 'Memories'] as const satisfies readonly AppTab[];
 export type AppRoute =
   | { surface: AppTab }
   | { surface: 'EventDetail'; eventId: string; returnTab: AppTab };

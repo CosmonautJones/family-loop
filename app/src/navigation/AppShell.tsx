@@ -1,14 +1,15 @@
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AppBackground } from '../components/AppBackground';
+import { Avatar } from '../components/Avatar';
 import { CalendarScreen } from '../screens/CalendarScreen';
 import { CreateEventScreen } from '../screens/CreateEventScreen';
 import { EventDetailScreen } from '../screens/EventDetailScreen';
 import { GroupsScreen } from '../screens/GroupsScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MemoriesScreen } from '../screens/MemoriesScreen';
-import { gradients, palette, radii, shadow, spacing } from '../theme/tokens';
+import { fonts, gradients, palette, radii, shadow, spacing } from '../theme/tokens';
 import { useAppShellState } from './useAppShellState';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
 import { AuthScreen, SessionStatusScreen } from '../screens/AuthScreen';
@@ -16,8 +17,13 @@ import { FamilyOnboardingScreen } from '../screens/FamilyOnboardingScreen';
 import { useActiveGroupQuery } from '../app/queries';
 import { AccountDeletionRecoveryScreen } from '../screens/AccountDeletionRecoveryScreen';
 
+function initialsOf(name?: string) {
+  if (!name) return 'LI';
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'LI';
+}
+
 export function AppShell() {
-  const { width } = useWindowDimensions();
   const auth = useAuthSession();
   const { tabItems, activeTab, activeSurface, activeEventId, setActiveTab, openEventDetail, closeEventDetail } = useAppShellState();
 
@@ -47,14 +53,23 @@ export function AppShell() {
   return (
     <AppBackground>
       <View style={styles.root}>
-        <ActiveFamilyLabel />
-        <View style={[styles.navOuter, { width: Math.max(width - (2 * spacing.md), 0) }]}>
-          {auth.session ? (
-            <Pressable accessibilityRole="button" disabled={auth.pending} onPress={auth.logout} style={styles.signOut}>
-              <Text style={styles.signOutText}>Sign out</Text>
-            </Pressable>
-          ) : null}
-          <BlurView intensity={42} tint="light" style={styles.navWrap}>
+        <View style={styles.header}>
+          <View style={styles.brandBlock}>
+            <Text style={styles.wordmark}>Looped<Text style={styles.wordmarkAccent}>In</Text></Text>
+            <ActiveFamilyLabel />
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Family and account. Signed in as ${auth.session?.displayName ?? 'your account'}.`}
+            onPress={() => setActiveTab('Family')}
+            hitSlop={8}
+          >
+            <Avatar initials={initialsOf(auth.session?.displayName)} />
+          </Pressable>
+        </View>
+
+        <View style={styles.navWrap} pointerEvents="box-none">
+          <BlurView intensity={30} tint="light" style={styles.navBar}>
             <View accessibilityRole="tablist" style={styles.navRow}>
               {tabItems.map((tab) => (
                 <Pressable
@@ -66,13 +81,27 @@ export function AppShell() {
                   style={styles.navItem}
                   tabIndex={0}
                 >
-                  {tab.active ? <LinearGradient colors={gradients.sunset} style={styles.activePill} /> : null}
+                  {tab.active ? <View style={styles.activePill} /> : null}
                   <Text style={[styles.navText, tab.active && styles.navTextActive]}>{tab.label}</Text>
                 </Pressable>
               ))}
             </View>
           </BlurView>
         </View>
+
+        {activeSurface !== 'EventDetail' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Start a new plan"
+            onPress={() => setActiveTab('Create')}
+            style={styles.fabWrap}
+          >
+            <LinearGradient colors={gradients.sunset} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.fab}>
+              <Text style={styles.fabPlus}>+</Text>
+            </LinearGradient>
+          </Pressable>
+        ) : null}
+
         <View role="main" style={styles.content}>
           {activeSurface === 'EventDetail' ? <EventDetailScreen eventId={activeEventId} backLabel={`Back to ${activeTab.toLowerCase()}`} onBack={closeEventDetail} /> : null}
           {activeSurface !== 'EventDetail' && activeTab === 'Home' ? <HomeScreen onOpenEvent={(eventId) => openEventDetail('Home', eventId)} onCreateEvent={() => setActiveTab('Create')} /> : null}
@@ -90,81 +119,47 @@ function ActiveFamilyLabel() {
   const activeGroup = useActiveGroupQuery();
   const auth = useAuthSession();
   if (!activeGroup.data) return null;
-  return <Text style={styles.familyLabel} accessibilityLabel={`Current person: ${auth.session?.displayName}. Active family: ${activeGroup.data.name}`}>{auth.session?.displayName} · {activeGroup.data.name}</Text>;
+  return (
+    <Text style={styles.familyLabel} accessibilityLabel={`Signed in as ${auth.session?.displayName}. Active family: ${activeGroup.data.name}`}>
+      {activeGroup.data.name}
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    width: '100%',
-    maxWidth: '100%',
-    minWidth: 0,
-    boxSizing: 'border-box',
-    backgroundColor: 'transparent',
+  root: { flex: 1, width: '100%', maxWidth: '100%', minWidth: 0, backgroundColor: 'transparent' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xs,
+    minHeight: 56,
   },
-  content: {
-    flex: 1,
-    width: '100%',
-    maxWidth: '100%',
-    minWidth: 0,
-    boxSizing: 'border-box',
-    paddingBottom: 180,
-  },
-  familyLabel: { minHeight: 48, paddingHorizontal: spacing.lg, paddingTop: spacing.md, color: palette.plum, fontSize: 14, fontWeight: '800', textAlignVertical: 'center' },
-  navOuter: {
-    position: 'absolute',
-    left: spacing.md,
-    bottom: spacing.md,
-    minWidth: 0,
-    boxSizing: 'border-box',
-    zIndex: 10,
-  },
-  signOut: { alignSelf: 'flex-end', minHeight: 48, justifyContent: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  signOutText: { color: palette.muted, fontSize: 12, fontWeight: '800' },
-  navWrap: {
+  brandBlock: { minWidth: 0, flexShrink: 1 },
+  wordmark: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 19, letterSpacing: -0.4 },
+  wordmarkAccent: { color: palette.plum },
+  familyLabel: { color: palette.muted, fontFamily: fonts.regular, fontSize: 12.5, marginTop: 1 },
+  content: { flex: 1, width: '100%', maxWidth: '100%', minWidth: 0, backgroundColor: 'transparent' },
+
+  fabWrap: { position: 'absolute', right: spacing.lg, bottom: 96, zIndex: 20 },
+  fab: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', ...shadow.soft },
+  fabPlus: { color: palette.white, fontSize: 30, lineHeight: 32, fontWeight: '700', marginTop: -2 },
+
+  navWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, alignItems: 'center', paddingHorizontal: spacing.md, paddingBottom: spacing.md, zIndex: 10 },
+  navBar: {
     alignSelf: 'stretch',
-    minWidth: 0,
-    boxSizing: 'border-box',
     overflow: 'hidden',
     borderRadius: radii.hero,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.66)',
-    backgroundColor: 'rgba(255,249,244,0.74)',
+    borderColor: palette.hairline,
+    backgroundColor: palette.glass,
     ...shadow.soft,
   },
-  navRow: {
-    alignSelf: 'stretch',
-    minWidth: 0,
-    boxSizing: 'border-box',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 5,
-  },
-  navItem: {
-    flexBasis: '20%',
-    maxWidth: '20%',
-    flexGrow: 0,
-    flexShrink: 1,
-    minWidth: 0,
-    minHeight: 58,
-    borderRadius: radii.card,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    overflow: 'hidden',
-  },
-  activePill: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: radii.card,
-  },
-  navText: {
-    color: palette.muted,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: -0.35,
-    flexShrink: 1,
-  },
-  navTextActive: {
-    color: palette.white,
-  },
+  navRow: { flexDirection: 'row', justifyContent: 'space-around', padding: 6 },
+  navItem: { flex: 1, minHeight: 58, borderRadius: radii.md, alignItems: 'center', justifyContent: 'center', gap: 3, overflow: 'hidden' },
+  activePill: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(113,54,93,0.07)', borderRadius: radii.md },
+  navText: { color: palette.faint, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 12, letterSpacing: -0.1 },
+  navTextActive: { color: palette.plum, fontFamily: fonts.bold, fontWeight: '700' },
 });

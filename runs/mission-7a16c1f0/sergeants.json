@@ -1,0 +1,42 @@
+{
+  "mission_id": "mission-7a16c1f0",
+  "status": "complete",
+  "general": "/root",
+  "sergeants": [
+    {
+      "agent_id": "/root/ops_docs_sergeant",
+      "manifest": [
+        "tasks/current-mission.md",
+        "docs/architecture.md",
+        "docs/opords/README.md",
+        "docs/opords/013-security-observability-incident-response.md",
+        "docs/opords/017-backup-restore-data-lifecycle.md",
+        "docs/runbooks/hosted-operations-backup-monitoring.md",
+        "docs/runbooks/hosted-release-completion.md",
+        "evals/code-rubric.md",
+        "evals/regression-checklist.md",
+        "evals/review-log.md"
+      ]
+    },
+    {
+      "agent_id": "/root/mail_sergeant",
+      "manifest": [
+        "tasks/current-mission.md",
+        "docs/architecture.md",
+        "docs/opords/README.md",
+        "docs/opords/013-security-observability-incident-response.md",
+        "docs/opords/017-backup-restore-data-lifecycle.md",
+        "docs/runbooks/hosted-operations-backup-monitoring.md",
+        "docs/runbooks/hosted-release-completion.md",
+        "evals/code-rubric.md",
+        "evals/regression-checklist.md",
+        "evals/review-log.md"
+      ]
+    }
+  ],
+  "workers": {
+    "/root/ops_colonel": [
+      "runs/mission-7a16c1f0/**"
+    ]
+  }
+}

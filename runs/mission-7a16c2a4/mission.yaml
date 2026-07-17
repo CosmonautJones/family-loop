@@ -1,0 +1,33 @@
+mission_id: mission-7a16c2a4
+profile: critical
+status: complete
+phase: debrief
+fix_wave: 1
+general: /root
+colonel: /root/lifecycle_colonel
+requested_models:
+  colonel: cheapest-capable-planner
+  sergeant: cheapest-capable-implementer
+  private: cheapest-capable-editor
+actual_models: null
+model_verification: unavailable
+structural_limitations:
+  - runtime_thread_limit_prevented_nested_private
+  - registered_existing_independent_private_outside_sergeant_subtree
+authority:
+  local_repository: approved
+  local_fixture_mutation: approved
+  hosted_mutation: prohibited
+  real_deletion: prohibited
+  provider_promotion: prohibited
+opord_signed_by: /root
+opord_signed_at: 2026-07-16
+completed_at: 2026-07-16T22:33:44Z
+result_commit: 459daa28f39a3ac778f8718acbf44f135f8c2a5b
+result_pr: 15
+result_ci_run: 29539584597
+acceptance_ref: runs/mission-7a16c2a4/briefing.md
+budget:
+  waves: 6
+  fix_waves_per_signature: 3
+  concurrent_executors: 1

@@ -1,0 +1,10 @@
+mission_id: mission-7a16c1f0
+profile: critical
+phase: F
+status: complete
+trusted_commit: 90250b6d46482b3fa2b8d1a19b8eaeffc6a5148e
+authority: repository_documentation_and_read_only_evidence
+provider_mutation: forbidden
+recipient_contact: forbidden
+production: forbidden
+quarantined_project: forbidden

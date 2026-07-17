@@ -1,0 +1,39 @@
+{
+  "mission_id": "mission-7a16c2a4",
+  "status": "active",
+  "general": "/root",
+  "sergeants": [
+    {
+      "agent_id": "/root/lifecycle_colonel/lifecycle_sergeant",
+      "manifest": [
+        "supabase/migrations/20260716213000_permanent_account_purge_boundary.sql",
+        "supabase/migrations/checksums.sha256",
+        "scripts/account-purge-journal.mjs",
+        "scripts/invoke-account-purge.ps1",
+        "scripts/test-local-supabase-account-purge.ps1",
+        "tests/account-purge-contract.test.js",
+        "tests/account-purge-journal.test.js",
+        "tests/supabase-account-purge-e2e.mjs",
+        "app/src/types/domain.ts",
+        "app/src/services/supabaseAdapter.ts",
+        "docs/adr/002-account-deletion-grace-and-purge-boundary.md",
+        "docs/opords/017-backup-restore-data-lifecycle.md",
+        "docs/runbooks/account-deletion-grace-state.md",
+        "docs/runbooks/hosted-operations-backup-monitoring.md",
+        "docs/architecture.md",
+        "tasks/current-mission.md",
+        "evals/code-rubric.md",
+        "evals/regression-checklist.md",
+        "evals/review-log.md"
+      ]
+    }
+  ],
+  "workers": {
+    "/root/lifecycle_colonel": [
+      "runs/mission-7a16c2a4/**"
+    ],
+    "/root/audit_deletion_lifecycle": [
+      "tests/account-purge-contract.test.js"
+    ]
+  }
+}
