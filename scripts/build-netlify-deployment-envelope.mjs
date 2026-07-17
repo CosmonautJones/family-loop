@@ -54,7 +54,7 @@ export function verifyArtifact(artifactPath, expectedArtifactSha256, expectedSou
   if (manifest.sourceCommit !== expectedSourceCommit) throw new Error('Artifact does not match the trusted CI source commit.');
   const seenPaths = new Set();
   const files = manifest.files.map((file) => {
-    if (!isRecord(file) || typeof file.path !== 'string' || !/^[0-9A-Za-z._/-]+$/.test(file.path) || file.path.startsWith('/') || file.path.includes('\\') ||
+    if (!isRecord(file) || typeof file.path !== 'string' || !/^[0-9A-Za-z._@/-]+$/.test(file.path) || file.path.startsWith('/') || file.path.includes('\\') ||
         file.path.split('/').includes('..') || !Number.isSafeInteger(file.bytes) || file.bytes < 0 || !/^[0-9a-f]{64}$/.test(file.sha256 ?? '')) {
       throw new Error('Artifact manifest file entry is invalid.');
     }
