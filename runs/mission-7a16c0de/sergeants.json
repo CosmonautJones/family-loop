@@ -1,0 +1,28 @@
+{
+  "mission_id": "mission-7a16c0de",
+  "general": "/root",
+  "sergeants": {
+    "/root/mail_sergeant": [
+      "supabase/config.toml",
+      "supabase/migrations/checksums.sha256",
+      "supabase/migrations/20260716*_invitation_email_delivery.sql",
+      "supabase/functions/send-group-invitation/**",
+      "app/src/services/api.ts",
+      "app/src/services/supabaseAdapter.ts",
+      "app/src/app/queries.ts",
+      "app/src/screens/GroupsScreen.tsx",
+      "tests/app-scaffold.test.js",
+      "tests/invitation-email*.test.mjs",
+      "tests/supabase-invitation-email-e2e.mjs",
+      "scripts/test-local-invitation-email.ps1",
+      "docs/runbooks/hosted-invitations-and-email.md",
+      "docs/architecture.md",
+      "tasks/current-mission.md",
+      "evals/review-log.md",
+      "evals/regression-checklist.md"
+    ]
+  },
+  "workers": {
+    "/root/mail_colonel": ["runs/mission-7a16c0de/**"]
+  }
+}

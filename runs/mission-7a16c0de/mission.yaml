@@ -1,0 +1,10 @@
+mission_id: mission-7a16c0de
+profile: critical
+phase: G
+status: active
+trusted_commit: 6e8616d9e6d8a8fa7ddbebfa958aa5b11df5964c
+authority: staging_backend_and_repository
+provider_mutation: staging_backend_applied_mail_provider_gated
+recipient_contact: forbidden
+production: forbidden
+quarantined_project: forbidden
