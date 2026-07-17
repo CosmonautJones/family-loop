@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image as CoverImage } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
@@ -225,7 +224,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     <ScrollView contentContainerStyle={styles.container}>
       {onBack ? (
         <Pressable accessibilityRole="button" accessibilityLabel={backLabel} accessibilityState={{ disabled: false }} onPress={onBack} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={19} color={palette.text} />
+          <Text style={{ color: palette.text, fontSize: 22, marginRight: 2 }}>‹</Text>
           <Text style={styles.backLabel}>{backLabel}</Text>
         </Pressable>
       ) : null}
@@ -240,12 +239,10 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         </View>
         <View style={[styles.heroBody, width <= 360 && styles.heroHeaderNarrow]}>
           <View style={styles.heroMetaRow}>
-            <Ionicons name="calendar-outline" size={14} color={accent.deep} />
             <Text style={[styles.heroMeta, { color: accent.deep }]}>{eventDetail.timeLabel}</Text>
           </View>
           <Text role="heading" {...{ 'aria-level': 1 }} style={styles.heroTitle}>{eventDetail.title}</Text>
           <View style={styles.heroMetaRow}>
-            <Ionicons name="location-outline" size={14} color={palette.muted} />
             <Text style={styles.heroLocation}>{eventDetail.location}</Text>
           </View>
           <Text style={styles.heroCopy}>{eventDetail.description}</Text>
@@ -526,7 +523,7 @@ function DetailState({ title, detail, backLabel, onBack }: { title: string; deta
     <View accessibilityLiveRegion="polite" style={styles.state}>
       {onBack ? (
         <Pressable accessibilityRole="button" accessibilityLabel={backLabel} accessibilityState={{ disabled: false }} onPress={onBack} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={19} color={palette.text} />
+          <Text style={{ color: palette.text, fontSize: 22, marginRight: 2 }}>‹</Text>
           <Text style={styles.backLabel}>{backLabel}</Text>
         </Pressable>
       ) : null}

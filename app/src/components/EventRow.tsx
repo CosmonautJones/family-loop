@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { EventDateBadge } from './EventDateBadge';
 import { StatusChip, type RsvpStatus } from './Chip';
@@ -35,7 +34,7 @@ export function EventRow({
         <Text numberOfLines={1} style={styles.title}>{title}</Text>
         <Text numberOfLines={1} style={styles.meta}>{meta}</Text>
       </View>
-      {status ? <StatusChip status={status} /> : <Ionicons name="chevron-forward" size={18} color={palette.faint} />}
+      {status ? <StatusChip status={status} /> : <Text style={styles.chevron}>›</Text>}
     </Pressable>
   );
 }
@@ -57,4 +56,5 @@ const styles = StyleSheet.create({
   copy: { flex: 1, minWidth: 0 },
   title: { color: palette.text, fontSize: 15.5, fontFamily: fonts.semibold, fontWeight: '600', letterSpacing: -0.2 },
   meta: { color: palette.muted, fontSize: 13, fontFamily: fonts.regular, marginTop: 2 },
+  chevron: { color: palette.faint, fontSize: 22, fontFamily: fonts.regular, lineHeight: 22 },
 });
