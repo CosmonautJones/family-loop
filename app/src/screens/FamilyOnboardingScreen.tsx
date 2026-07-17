@@ -36,7 +36,8 @@ export function FamilyOnboardingScreen() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       auth.clearInvitationToken();
     } catch {
-      setMessage({ text: 'That family action isn’t available. Ask for a new invitation and try again.', tone: 'error' });
+      const invited = invitation.data?.status === 'ready' ? invitation.data.maskedEmail : 'the invited email';
+      setMessage({ text: `We couldn’t add you to this family. This invitation is for ${invited}. If you’re signed in as someone else, sign out and open the link again as that person — otherwise ask for a new invitation.`, tone: 'error' });
     }
   };
 
@@ -58,6 +59,7 @@ export function FamilyOnboardingScreen() {
         <Text style={styles.copy}>{invitation.data.inviterName} invited {invitation.data.maskedEmail}. Accepting gives this family access to the plans and photos you share with them.</Text>
         <CardAction label={accept.isPending ? 'Joining family…' : 'Accept invitation'} disabled={accept.isPending || decline.isPending} onPress={() => finishInvite('accept')} />
         <CardAction label={decline.isPending ? 'Declining…' : 'Decline invitation'} disabled={accept.isPending || decline.isPending} onPress={() => finishInvite('decline')} />
+        {auth.session ? <><Text style={styles.copy}>Signed in as {auth.session.displayName}. This invitation is for {invitation.data.maskedEmail}.</Text><CardAction label="Sign out to join as the invited person" disabled={accept.isPending || decline.isPending} onPress={() => auth.logout()} /></> : null}
       </> : null}
       {invitation.isError || invitation.data?.status === 'unavailable' ? <><Text accessibilityRole="alert" style={styles.error}>This invitation isn’t available. Ask the sender for a new link.</Text><CardAction label="Remove invitation" onPress={auth.clearInvitationToken} /></> : null}
       {message ? <Text accessibilityLiveRegion={message.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={message.tone === 'error' ? 'alert' : undefined} style={message.tone === 'error' ? styles.error : styles.copy}>{message.text}</Text> : null}

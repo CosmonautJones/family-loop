@@ -507,7 +507,12 @@ export function createSupabaseLoopedInService(): LoopedInService {
           password,
           options: { data: { display_name: name } },
         });
-        if (error) throw userServiceError('We couldn’t create your account. Try again or ask for a new invitation.');
+        if (error) {
+          const alreadyExists = error.code === 'user_already_exists' || /already registered|already exists|already been registered/i.test(error.message ?? '');
+          throw userServiceError(alreadyExists
+            ? 'An account with this email already exists. Confirm the email we sent you (check your spam folder), or choose “Already have an account? Sign in.”'
+            : 'We couldn’t create your account. Try again or ask for a new invitation.');
+        }
         if (!data.session) return { status: 'confirmationRequired' };
         return { status: 'authenticated', session: sessionWithoutProfile(data.session, name) };
       },
