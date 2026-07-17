@@ -1,249 +1,189 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import { Image } from 'expo-image';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Avatar } from '../components/Avatar';
-import { Chip } from '../components/Chip';
-import { PhotoCard } from '../components/PhotoCard';
+import { StatusChip } from '../components/Chip';
+import { EventRow } from '../components/EventRow';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectHomeViewModel } from '../app/selectors';
-import { useActiveEventsQuery, useActiveGroupHistoryQuery, useMarkAllNotificationsReadMutation, useMarkNotificationReadMutation, useNotificationsQuery } from '../app/queries';
-import { palette, spacing } from '../theme/tokens';
+import { useActiveEventsQuery, useActiveGroupHistoryQuery, useNotificationsQuery } from '../app/queries';
+import { accentForId, accentOf, fonts, palette, radii, spacing } from '../theme/tokens';
+
+const MONTH = (iso: string) => new Date(iso).toLocaleDateString('en-US', { month: 'short' });
+const DAY = (iso: string) => new Date(iso).getDate();
+const dateRange = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+const timeOf = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
 export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
-  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(12);
+  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(8);
   const eventsQuery = useActiveEventsQuery();
   const historyQuery = useActiveGroupHistoryQuery();
   const notificationsQuery = useNotificationsQuery();
-  const markRead = useMarkNotificationReadMutation();
-  const markAllRead = useMarkAllNotificationsReadMutation();
-  const appSections = selectHomeViewModel({ events: eventsQuery.data ?? [], history: historyQuery.data ?? [] });
-  const heroEvent = appSections.heroEvent;
-  const visibleUpcomingEvents = appSections.upcomingEvents.slice(0, visibleUpcomingCount);
+  const sections = selectHomeViewModel({ events: eventsQuery.data ?? [], history: historyQuery.data ?? [] });
 
   if (eventsQuery.isPending) return <ScreenState title="Loading your plans" detail="Finding what’s next for this group…" />;
   if (eventsQuery.isError) return <ScreenState title="We couldn’t load your plans" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} onRetry={() => eventsQuery.refetch()} />;
 
+  const now = Date.now();
+  const upcoming = (eventsQuery.data ?? [])
+    .filter((event) => new Date(event.startsAt).getTime() >= now)
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const hero = upcoming[0];
+  const comingUp = upcoming.slice(1, 1 + visibleUpcomingCount);
+  const unread = notificationsQuery.data?.filter((n) => !n.read).length ?? 0;
+
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.eyebrow}>What’s next</Text>
-        {heroEvent ? (
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        {hero ? (
           <View>
-            <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{heroEvent.title}</Text>
-            <Text style={styles.subtitle}>{heroEvent.timeLabel} · {heroEvent.location}</Text>
-            <PhotoCard uri={heroEvent.coverUri} title={heroEvent.title} subtitle={heroEvent.description} height={260} />
-            <View style={styles.heroActions}>
-              <CardAction label="Open event" onPress={() => onOpenEvent?.(heroEvent.id)} />
-            </View>
+            <Text style={styles.eyebrow}>UP NEXT</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Up next: ${hero.title}. ${dateRange(hero.startsAt)}, ${hero.location}`}
+              onPress={() => onOpenEvent?.(hero.id)}
+              style={({ pressed }) => [styles.hero, pressed && styles.heroPressed]}
+            >
+              <View style={styles.heroCover}>
+                {hero.coverUri ? (
+                  <Image source={{ uri: hero.coverUri }} style={styles.heroCoverFill} contentFit="cover" />
+                ) : (
+                  <LinearGradient colors={accentOf(accentForId(hero.id)).cover} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCoverFill} />
+                )}
+              </View>
+              <View style={styles.heroBody}>
+                <Text role="heading" {...{ 'aria-level': 1 }} numberOfLines={2} style={styles.heroTitle}>{hero.title}</Text>
+                <Text style={styles.heroMeta}>{dateRange(hero.startsAt)} · {timeOf(hero.startsAt)}</Text>
+                <Text numberOfLines={1} style={styles.heroWhere}>{hero.location}</Text>
+                <View style={styles.heroFooter}>
+                  <StatusChip status="pending" label="Tap to RSVP" />
+                </View>
+              </View>
+            </Pressable>
           </View>
         ) : (
           <SurfaceCard>
-            <Text style={styles.cardTitle}>No events planned yet</Text>
-            <Text style={styles.cardCopy}>Create the first event for this group so everyone knows what’s next.</Text>
-            <CardAction label="Create event" onPress={onCreateEvent} />
+            <Text style={styles.emptyTitle}>No plans yet</Text>
+            <Text style={styles.emptyCopy}>Tap the + to start your family’s first plan — everyone will see it here.</Text>
+            <Pressable accessibilityRole="button" onPress={onCreateEvent} style={styles.emptyCta}><Text style={styles.emptyCtaText}>Start a plan</Text></Pressable>
           </SurfaceCard>
         )}
 
-        <SurfaceCard>
-          <View style={styles.rowBetween}>
-            <View style={styles.flexCopy}><Text style={styles.cardTitle}>Updates</Text><Text style={styles.cardCopy}>The latest changes across your family.</Text></View>
-            {notificationsQuery.data?.some((item) => !item.read) ? <Chip label={`${notificationsQuery.data.filter((item) => !item.read).length} unread`} tone="coral" /> : null}
+        {comingUp.length > 0 ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Coming up</Text>
+            <View style={styles.rows}>
+              {comingUp.map((event) => (
+                <EventRow
+                  key={event.id}
+                  title={event.title}
+                  meta={`${dateRange(event.startsAt)} · ${event.location}`}
+                  day={DAY(event.startsAt)}
+                  month={MONTH(event.startsAt)}
+                  accent={accentForId(event.id)}
+                  onPress={() => onOpenEvent?.(event.id)}
+                />
+              ))}
+            </View>
+            {upcoming.length - 1 > comingUp.length ? (
+              <Pressable accessibilityRole="button" onPress={() => setVisibleUpcomingCount((c) => c + 8)} style={styles.moreLink}>
+                <Text style={styles.moreText}>Show more</Text>
+              </Pressable>
+            ) : null}
           </View>
-          {notificationsQuery.isPending ? <View accessibilityLiveRegion="polite"><Text style={styles.cardCopy}>Loading family updates…</Text></View> : null}
-          {notificationsQuery.isError ? <View accessibilityLiveRegion="polite"><Text accessibilityRole="alert" style={styles.errorCopy}>Updates are unavailable right now.</Text><CardAction label="Retry updates" onPress={() => notificationsQuery.refetch()} /></View> : null}
-          {notificationsQuery.isSuccess && notificationsQuery.data.length === 0 ? <Text style={styles.cardCopy}>No updates yet. New comments, photos, and plan changes will appear here.</Text> : null}
-          {notificationsQuery.isSuccess ? [...notificationsQuery.data].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 3).map((item) => (
-            <View key={item.id} style={[styles.updateItem, !item.read && styles.updateUnread]}>
-              <View style={styles.flexCopy}><Text style={styles.listTitle}>{item.title}</Text><Text style={styles.cardCopy}>{item.body}</Text><Text style={styles.updateTime}>{new Date(item.createdAt).toLocaleDateString()}</Text></View>
-              {item.eventId ? <CardAction label={`Open update: ${item.title}`} disabled={markRead.isPending} onPress={async () => { try { if (!item.read) await markRead.mutateAsync(item.id); } catch { /* Opening the event does not depend on read-state persistence. */ } onOpenEvent?.(item.eventId!); }} /> : !item.read ? <CardAction label={`Mark ${item.title} read`} disabled={markRead.isPending} onPress={() => markRead.mutate(item.id)} /> : null}
-            </View>
-          )) : null}
-          {notificationsQuery.isSuccess && notificationsQuery.data.some((item) => !item.read) ? <CardAction label={markAllRead.isPending ? 'Marking updates read…' : 'Mark all read'} disabled={markAllRead.isPending} onPress={() => markAllRead.mutate()} /> : null}
-          {markRead.isError || markAllRead.isError ? <Text accessibilityRole="alert" style={styles.errorCopy}>We couldn’t update read status. Try again.</Text> : null}
-        </SurfaceCard>
+        ) : null}
 
-        {heroEvent ? <SurfaceCard>
-          <View style={styles.rowBetween}>
-            <View>
-              <Text style={styles.cardTitle}>Upcoming plans</Text>
-              <Text style={styles.cardCopy}>{appSections.weekSummary}</Text>
-            </View>
-            <Chip label="Agenda" tone="sky" />
+        <View style={styles.section}>
+          <View style={styles.sectionHead}>
+            <Text style={styles.sectionTitle}>In the loop</Text>
+            {unread > 0 ? <StatusChip status="pending" label={`${unread} new`} /> : null}
           </View>
-        </SurfaceCard> : null}
-
-        {appSections.upcomingEvents.length > 0 ? <SurfaceCard>
-          <Text style={styles.cardTitle}>Also coming up</Text>
-          <View style={styles.upcomingList}>
-            {visibleUpcomingEvents.map((event) => (
-              <View key={event.id} style={styles.upcomingItem}>
-                <View style={styles.upcomingCopy}>
-                  <Text style={styles.listTitle}>{event.title}</Text>
-                  <Text style={styles.cardCopy}>{event.detail}</Text>
-                </View>
-                <CardAction label={`Open ${event.title}`} onPress={() => onOpenEvent?.(event.id)} />
-              </View>
-            ))}
+          <View style={styles.well}>
+            {sections.activity.length === 0 ? (
+              <Text style={styles.wellEmpty}>New comments and photos from your plans will show up here.</Text>
+            ) : (
+              sections.activity.map((item, index) => (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole={item.eventId ? 'button' : undefined}
+                  onPress={item.eventId ? () => onOpenEvent?.(item.eventId!) : undefined}
+                  style={[styles.loopItem, index > 0 && styles.loopDivider]}
+                >
+                  <Avatar uri={item.actor?.avatarUri} initials={item.actor?.initials ?? 'LI'} />
+                  <View style={styles.loopCopy}>
+                    <Text numberOfLines={2} style={styles.loopTitle}>{item.title}</Text>
+                    {item.detail ? <Text numberOfLines={1} style={styles.loopDetail}>{item.detail}</Text> : null}
+                  </View>
+                </Pressable>
+              ))
+            )}
           </View>
-          {visibleUpcomingCount < appSections.upcomingEvents.length ? <CardAction label={`Show ${Math.min(12, appSections.upcomingEvents.length - visibleUpcomingCount)} more plans`} onPress={() => setVisibleUpcomingCount((count) => count + 12)} /> : null}
-        </SurfaceCard> : null}
-
-        {historyQuery.isPending ? <SurfaceCard><Text style={styles.cardTitle}>Loading recent family history</Text><Text style={styles.cardCopy}>Gathering comments and photos from completed events…</Text></SurfaceCard> : null}
-        {historyQuery.isError ? <SurfaceCard><Text style={styles.cardTitle}>Recent history is unavailable</Text><Text style={styles.cardCopy}>{historyQuery.error instanceof Error ? historyQuery.error.message : 'Try again in a moment.'}</Text><CardAction label="Retry history" onPress={() => historyQuery.refetch()} /></SurfaceCard> : null}
-        {historyQuery.isSuccess && appSections.activity.length === 0 ? <SurfaceCard><Text style={styles.cardTitle}>No recent comments or photos</Text><Text style={styles.cardCopy}>New activity from completed family events will appear here.</Text></SurfaceCard> : null}
-        {historyQuery.isSuccess && appSections.activity.length > 0 ? <SurfaceCard>
-          <View style={styles.rowBetween}>
-            <View>
-              <Text style={styles.cardTitle}>Recent activity</Text>
-              <Text style={styles.cardCopy}>{appSections.recentActivityTitle}</Text>
-            </View>
-            <Chip label="Recent" tone="coral" />
-          </View>
-          <View style={styles.divider} />
-          {appSections.activity.map((item) => (
-            <View key={item.id} style={styles.listItem}>
-              <View style={styles.activityMain}>
-                <Avatar uri={item.actor?.avatarUri} initials={item.actor?.initials ?? 'LI'} />
-                <View>
-                  <Text style={styles.listTitle}>{item.title}</Text>
-                  <Text style={styles.cardCopy}>{item.detail}</Text>
-                </View>
-              </View>
-              <Chip label={item.badge} tone={item.tone} />
-            </View>
-          ))}
-        </SurfaceCard> : null}
-
-        {historyQuery.isSuccess && appSections.memories.length > 0 ? <View style={styles.memoryRow}>
-          {appSections.memories.map((memory) => (
-            <View key={memory.eventId} style={styles.memoryTile}>
-              <PhotoCard uri={memory.coverUri} title={memory.title} subtitle={`${memory.eyebrow} · ${memory.subtitle}`} height={172} />
-              <View style={styles.memoryAction}><CardAction label={`Open ${memory.title}`} onPress={() => onOpenEvent?.(memory.eventId)} /></View>
-            </View>
-          ))}
-        </View> : null}
+        </View>
       </ScrollView>
     </View>
   );
 }
 
 function ScreenState({ title, detail, onRetry }: { title: string; detail: string; onRetry?: () => void }) {
-  return <View accessibilityLiveRegion="polite" style={styles.state}><SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text>{onRetry ? <CardAction label="Retry" onPress={onRetry} /> : null}</SurfaceCard></View>;
-}
-
-function CardAction({ label, disabled = false, onPress }: { label: string; disabled?: boolean; onPress?: () => void | Promise<unknown> }) {
-  return <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.cardAction, disabled && styles.cardActionDisabled]}><Text style={styles.cardActionText}>{label}</Text></Pressable>;
+  return (
+    <View accessibilityLiveRegion="polite" style={styles.state}>
+      <SurfaceCard>
+        <Text role="heading" {...{ 'aria-level': 1 }} style={styles.emptyTitle}>{title}</Text>
+        <Text style={styles.emptyCopy}>{detail}</Text>
+        {onRetry ? <Pressable accessibilityRole="button" onPress={onRetry} style={styles.emptyCta}><Text style={styles.emptyCtaText}>Retry</Text></Pressable> : null}
+      </SurfaceCard>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  container: {
-    padding: spacing.lg,
-    gap: spacing.md,
-    paddingBottom: 40,
-  },
-  eyebrow: {
-    marginTop: 18,
-    color: palette.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 1.8,
-    fontSize: 11,
-    fontWeight: '900',
-  },
-  title: {
-    color: palette.text,
-    fontSize: 38,
-    lineHeight: 40,
-    fontWeight: '900',
-    marginTop: 10,
-  },
-  subtitle: {
-    color: palette.muted,
-    fontSize: 16,
-    lineHeight: 25,
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  heroActions: {
-    flexDirection: 'row',
-    gap: 10,
-    flexWrap: 'wrap',
-    marginTop: 12,
-  },
+  root: { flex: 1, backgroundColor: 'transparent' },
+  container: { padding: spacing.lg, gap: spacing.xl, paddingBottom: 120 },
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg },
-  flexCopy: { flex: 1, minWidth: 0 },
-  errorCopy: { color: palette.berry, fontSize: 14, lineHeight: 20 },
-  updateItem: { borderColor: palette.inkSoft, borderRadius: 12, borderWidth: 1, gap: 10, padding: 12 },
-  updateUnread: { backgroundColor: 'rgba(247,211,200,0.18)', borderColor: palette.coral },
-  updateTime: { color: palette.muted, fontSize: 12, marginTop: 5 },
-  cardAction: { alignItems: 'center', backgroundColor: palette.plum, borderColor: palette.plum, borderRadius: 14, borderWidth: 1, justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  cardActionDisabled: { opacity: 0.55 },
-  cardActionText: { color: palette.white, fontSize: 15, fontWeight: '800', textAlign: 'center' },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  cardTitle: {
-    color: palette.text,
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  cardCopy: {
-    color: palette.muted,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: palette.inkSoft,
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
-  activityMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  listTitle: {
-    color: palette.text,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  upcomingList: {
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  upcomingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  upcomingCopy: {
-    flex: 1,
-  },
-  memoryRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  memoryTile: {
-    flex: 1,
-    flexBasis: 240,
-  },
-  memoryAction: {
-    marginTop: 8,
-    alignItems: 'flex-start',
-  },
+  eyebrow: { color: palette.berry, fontFamily: fonts.bold, fontWeight: '700', fontSize: 11.5, letterSpacing: 1.4, marginBottom: 10 },
+
+  hero: { backgroundColor: palette.surface, borderRadius: radii.hero, borderWidth: 1, borderColor: palette.hairline, overflow: 'hidden', ...shadowSoft() },
+  heroPressed: { transform: [{ scale: 0.995 }] },
+  heroCover: { height: 150, width: '100%', backgroundColor: palette.well },
+  heroCoverFill: { height: '100%', width: '100%' },
+  heroBody: { padding: 18 },
+  heroTitle: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 25, lineHeight: 29, letterSpacing: -0.5 },
+  heroMeta: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13.5, marginTop: 8 },
+  heroWhere: { color: palette.muted, fontFamily: fonts.regular, fontSize: 13.5, marginTop: 2 },
+  heroFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 14 },
+
+  section: { gap: spacing.sm },
+  sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionTitle: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 18, letterSpacing: -0.3 },
+  rows: { gap: 10 },
+  moreLink: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  moreText: { color: palette.plum, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14 },
+
+  well: { backgroundColor: palette.well, borderRadius: radii.md, padding: spacing.md },
+  wellEmpty: { color: palette.muted, fontFamily: fonts.regular, fontSize: 13.5, lineHeight: 20 },
+  loopItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 },
+  loopDivider: { borderTopWidth: 1, borderTopColor: palette.hairline },
+  loopCopy: { flex: 1, minWidth: 0 },
+  loopTitle: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14 },
+  loopDetail: { color: palette.muted, fontFamily: fonts.regular, fontSize: 13, marginTop: 2 },
+
+  emptyTitle: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 19 },
+  emptyCopy: { color: palette.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, marginTop: 6 },
+  emptyCta: { alignSelf: 'flex-start', marginTop: 14, backgroundColor: palette.plum, borderRadius: radii.md, minHeight: 46, justifyContent: 'center', paddingHorizontal: 18 },
+  emptyCtaText: { color: palette.white, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 15 },
 });
+
+function shadowSoft() {
+  return {
+    shadowColor: 'rgba(38,22,28,0.5)',
+    shadowOpacity: 0.1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  } as const;
+}

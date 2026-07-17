@@ -1,5 +1,36 @@
 # Review Log
 
+## 2026-07-16 — Redesign: remaining 5 screens migrated + tab-bar inset fix
+
+- Bug fix (reported: tab bar clipping the "Add photo" button): added shared `tabBarInset` (120) to tokens and applied it to all five in-shell screens' scroll containers (they were at 40px, less than the fixed tab bar height). Fixed via a 2-agent haiku team; `tsc` clean.
+- Ran a 6-agent Workflow (`wf_9e758c8d-a7c`) to migrate the remaining screens against the locked foundation — one sonnet agent per screen (Calendar, Memories, EventDetail, Groups/Family, CreateEvent) + a tsc/lint review pass. 0 agent errors.
+  - Calendar: white month card, today = plum-filled circle, per-event accent dots, agenda uses shared `EventRow`.
+  - EventDetail: accent cover fallback, plum-icon info rows, RSVP 3-segment control (selected solid plum), `StatusChip`, quiet secondaries; all mutations/upload/comment/edit logic + a11y preserved.
+  - Memories: white cards with accent cover fallback, whole-card tap.
+  - Family (GroupsScreen): member-list card, invite well, quiet sign-out reusing existing logout.
+  - Create: system restyle + local `AccentPicker` (visual only — no DB column yet) + plum gradient submit.
+- Reskin-only: no query/mutation/prop/a11y changes. Authoritative `tsc --noEmit` and `eslint --max-warnings 0` both exit 0. Verified on-device (memory mode, 402×874, 0 console errors); screenshots at repo root `loopedin-calendar-redesign.png`, `loopedin-eventdetail-redesign.png`.
+- Deferred follow-ups: `events.accent` column + create RPC pass-through (accents currently pseudo-assigned by id), true bottom-sheet presentation for Create, `LoopedInMark` SVG logo + tab-icon SVGs, and FAB-vs-bottom-content overlap polish.
+
+## 2026-07-16 — Redesign foundation + Home (validate-early pass)
+
+- Imported the approved Claude Design project (`Redesign Spec` + `Dev Handoff`) via the DesignSync MCP. Decision (with the owner): redesign before shipping to family; build foundation + Home first and validate the feel before fanning out the other screens.
+- Foundation, additive so no screen broke (`tsc` + `eslint --max-warnings 0` both green): rewrote `theme/tokens.ts` to the porcelain/white/ink system + `eventAccents`/`accentOf`/`accentForId` + `statusChip` + Instrument Sans `fonts` tokens (kept legacy keys as aliases); flattened `AppBackground` to porcelain; loaded Instrument Sans via `@expo-google-fonts/instrument-sans` with a font gate in `App.tsx`.
+- New shared components: `EventDateBadge` (accent-tinted month/day), `EventRow` (whole-row tap target, no "Open" button), `StatusChip` (fixed RSVP colors) alongside the refined `Chip`.
+- Nav restructure: added `navTabs` (Home/Calendar/Memories) while keeping `appTabs` for routing; rebuilt `AppShell` — porcelain canvas, header wordmark + avatar (→ Family), glass 3-tab bar with plum-tint active pill + Ionicons, berry→plum FAB (→ create). Create/Family remain routable, just off the bar.
+- Rebuilt `HomeScreen` to up-next hero → coming-up rows → in-the-loop well panel, all on existing data hooks (no selector/query/a11y changes; dates derived from raw events, accents pseudo-assigned by id pending the `events.accent` column).
+- Verified on-device feel: ran Expo web in memory/demo mode, drove to Home at 402×874, 0 console errors; screenshot at repo root `loopedin-home-redesign.png`. DB accent migration + create-sheet + the other 5 screens are the next (workflow) pass — coral defaults keep everything shippable without the migration.
+
+## 2026-07-16 — Go-live state verification and migration 10 hosted apply
+
+- Reconstructed the post-Codex state via parallel read-only workers + a Fable strategic-advisor consult. Verified live rather than trusting docs: `loopedin-family.netlify.app` loads as `loopedin-staging · Connected`; Supabase project `vkogznsfthirhxkqysza` is `ACTIVE_HEALTHY`. Corrected a doc claim — the hosted DB was at migration 9 (not 8); `invitation_email_delivery` was already applied.
+- Applied the final migration `20260716213000_permanent_account_purge_boundary` to the hosted DB via MCP `apply_migration` (returned success). MCP recorded it under a fresh version `20260717015523`; reconciled `supabase_migrations.schema_migrations` back to the repo version `20260716213000` so a future `supabase db push` is a no-op. Verified the purge functions are `service_role`-only with no trigger/cron — dormant, not reachable by family use.
+- Security advisors reviewed: the `SECURITY DEFINER` warnings are the intended RPC-boundary architecture; `loopedin_group_invitations` RLS-no-policy is deny-all-by-design. One real open item: leaked-password protection is disabled (dashboard toggle, handed to owner).
+- Data enumeration (read-only) found no synthetic test *accounts* — a single real owner account (`travisjohn.jones@gmail.com`) holding generated starter content (group "Jones Fam", demo events, template messages). No deletion performed; owner to decide keep-vs-clear.
+- Confirmed the local `check-migrations`/test-109 failures are a Windows CRLF working-copy artifact only (`i/lf w/crlf`; recorded checksum == git-blob == LF-normalized hash); committed files are byte-correct and CI on `main` is green.
+- Established that the free-tier durability safeguards already exist as scheduled workflows: `availability.yml` (30-min `auth/v1/health` hit — the effective anti-idle-pause keep-alive) and `encrypted-backup.yml` (daily restore-verified encrypted backup, 30-day artifact retention). Owner chose free-tier + safeguards; risk (artifact-only backup retention, silent lapse if Actions disabled) recorded in `GO-LIVE.md`.
+- Added `GO-LIVE.md` (repo root) as the single consolidated go-live handoff; advisor consult + dispositions recorded in its appendix.
+
 ## 2026-07-15 — Exact staging release, Realtime fix loop, and operations closeout
 
 - Initial Realtime review of head `d1b8b59` was **MEDIUM/RED**: treating channel subscription as PostgreSQL-change readiness allowed a readiness invalidation to coalesce into a stale in-flight Query result.

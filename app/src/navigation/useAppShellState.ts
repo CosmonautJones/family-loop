@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { appTabs as tabs, formatAppRoute, parseAppRoute, type AppRoute, type AppTab } from '../app/selectors';
+import { appTabs as tabs, navTabs, formatAppRoute, parseAppRoute, type AppRoute, type AppTab } from '../app/selectors';
 
 export { formatAppRoute, parseAppRoute } from '../app/selectors';
 export type { AppRoute, AppTab } from '../app/selectors';
@@ -43,7 +43,7 @@ export function useAppShellState() {
   };
 
   const tabItems = useMemo(
-    () => tabs.map((tab) => ({ label: tab, active: tab === activeTab })),
+    () => navTabs.map((tab) => ({ label: tab, active: tab === activeTab })),
     [activeTab],
   );
 

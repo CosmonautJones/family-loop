@@ -1,11 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Image as CoverImage } from 'expo-image';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
-import { Button } from '../components/Button';
-import { Chip } from '../components/Chip';
+import { Chip, StatusChip, type RsvpStatus } from '../components/Chip';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectEventDetailViewModel } from '../app/selectors';
 import { useLoopedInStore } from '../store/useLoopedInStore';
-import { palette, spacing } from '../theme/tokens';
+import { accentForId, accentOf, fonts, palette, radii, shadow, spacing, tabBarInset } from '../theme/tokens';
 import type { RSVPStatus } from '../types/domain';
 import { useActiveGroupMembersQuery, useDeleteEventMutation, useDeleteMediaMutation, useEventMediaQuery, useEventMessagesQuery, useEventQuery, useEventReminderQuery, useEventRsvpsQuery, useSendMessageMutation, useSetEventReminderMutation, useUpdateEventMutation, useUploadMediaMutation, useUpsertRsvpMutation } from '../app/queries';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
@@ -21,6 +23,11 @@ const rsvpNotes: Record<RSVPStatus, string> = {
   going: 'You are counted in. The host can plan around you.',
   maybe: 'You are marked as maybe. The group knows your plan is not final.',
   declined: 'You are marked out. The event stays visible for context and photos.',
+};
+const rsvpChipStatus: Record<RSVPStatus, RsvpStatus> = {
+  going: 'going',
+  maybe: 'maybe',
+  declined: 'cantGo',
 };
 
 export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eventId?: string; backLabel?: string; onBack?: () => void }) {
@@ -76,6 +83,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
     return <DetailState title="We couldn’t load this event" detail={error instanceof Error ? error.message : 'Try again in a moment.'} backLabel={backLabel} onBack={onBack} />;
   }
   if (!eventDetail) return <DetailState title="Event not found" detail="This event may have been removed or is unavailable to this group." backLabel={backLabel} onBack={onBack} />;
+  const accent = accentOf(accentForId(eventDetail.id));
   const setRsvpStatus = (status: RSVPStatus) => {
     if (!identity || upsertRsvp.isPending) return;
     upsertRsvp.mutate({ eventId: eventDetail.id, status });
@@ -215,40 +223,69 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {onBack ? <Button label={backLabel} onPress={onBack} /> : null}
+      {onBack ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={backLabel} accessibilityState={{ disabled: false }} onPress={onBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={19} color={palette.text} />
+          <Text style={styles.backLabel}>{backLabel}</Text>
+        </Pressable>
+      ) : null}
+
       <View style={styles.heroCard}>
-        <Text style={styles.heroMini}>{eventDetail.timeLabel}</Text>
-        <View style={[styles.heroHeader, width <= 360 && styles.heroHeaderNarrow]}>
-          <View style={styles.heroContent}>
-            <Text role="heading" {...{ 'aria-level': 1 }} style={styles.heroTitle}>{eventDetail.title}</Text>
+        <View style={styles.heroCover}>
+          {eventQuery.data?.coverUri ? (
+            <CoverImage source={{ uri: eventQuery.data.coverUri }} style={styles.heroCoverFill} contentFit="cover" />
+          ) : (
+            <LinearGradient colors={accent.cover} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.heroCoverFill} />
+          )}
+        </View>
+        <View style={[styles.heroBody, width <= 360 && styles.heroBodyNarrow]}>
+          <View style={styles.heroMetaRow}>
+            <Ionicons name="calendar-outline" size={14} color={accent.deep} />
+            <Text style={[styles.heroMeta, { color: accent.deep }]}>{eventDetail.timeLabel}</Text>
+          </View>
+          <Text role="heading" {...{ 'aria-level': 1 }} style={styles.heroTitle}>{eventDetail.title}</Text>
+          <View style={styles.heroMetaRow}>
+            <Ionicons name="location-outline" size={14} color={palette.muted} />
             <Text style={styles.heroLocation}>{eventDetail.location}</Text>
-            <Text style={styles.heroCopy}>{eventDetail.description}</Text>
           </View>
-          <Chip label={`${eventDetail.rsvpSummary} / ${currentStatus ? rsvpLabels[currentStatus] : 'No response'}`} tone="sage" />
-        </View>
-        <View style={styles.actionRow}>
-          {rsvpOptions.map((status) => (
-            <Button
-              key={status}
-              label={rsvpLabels[status]}
-              tone={status === currentStatus ? 'primary' : 'secondary'}
-              disabled={upsertRsvp.isPending}
-              onPress={() => setRsvpStatus(status)}
-            />
-          ))}
-        </View>
-        <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
-        {upsertRsvp.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.responseNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
-        {canManagePlan ? (
-          <View style={styles.planOptions}>
-            <Text style={styles.planOptionsLabel}>Plan options</Text>
-            <View style={styles.actionRow}>
-              <Button label="Edit plan" tone="ghost" disabled={deleteEvent.isPending || updateEvent.isPending} onPress={beginEditing} />
-              <Button label={deleteEvent.isPending ? 'Canceling plan…' : deleteEvent.isError ? 'Try canceling again' : 'Cancel plan'} tone="ghost" disabled={deleteEvent.isPending || updateEvent.isPending} onPress={cancelPlan} />
+          <Text style={styles.heroCopy}>{eventDetail.description}</Text>
+
+          <View style={styles.heroStatusRow}>
+            <StatusChip status={currentStatus ? rsvpChipStatus[currentStatus] : 'pending'} label={currentStatus ? undefined : 'No response yet'} />
+            <Text style={styles.rsvpSummary}>{eventDetail.rsvpSummary}</Text>
+          </View>
+
+          <View style={styles.segmentRow}>
+            {rsvpOptions.map((status) => {
+              const active = status === currentStatus;
+              return (
+                <Pressable
+                  key={status}
+                  accessibilityRole="button"
+                  accessibilityLabel={rsvpLabels[status]}
+                  accessibilityState={{ disabled: upsertRsvp.isPending, selected: active }}
+                  disabled={upsertRsvp.isPending}
+                  onPress={() => setRsvpStatus(status)}
+                  style={[styles.segment, active && styles.segmentActive, upsertRsvp.isPending && styles.segmentDisabled]}
+                >
+                  <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{rsvpLabels[status]}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text accessibilityLiveRegion="polite" style={styles.responseNote}>{upsertRsvp.isPending ? 'Saving your response…' : currentStatus ? rsvpNotes[currentStatus] : 'Choose a response so your family can plan around you.'}</Text>
+          {upsertRsvp.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.errorNote}>{upsertRsvp.error instanceof Error ? upsertRsvp.error.message : 'We couldn’t save your response.'}</Text> : null}
+          {canManagePlan ? (
+            <View style={styles.planOptions}>
+              <Text style={styles.planOptionsLabel}>Plan options</Text>
+              <View style={styles.lightActionRow}>
+                <SecondaryAction label="Edit plan" disabled={deleteEvent.isPending || updateEvent.isPending} onPress={beginEditing} />
+                <SecondaryAction label={deleteEvent.isPending ? 'Canceling plan…' : deleteEvent.isError ? 'Try canceling again' : 'Cancel plan'} tone="danger" disabled={deleteEvent.isPending || updateEvent.isPending} onPress={cancelPlan} />
+              </View>
+              {deleteEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.errorNote}>{deleteEvent.error instanceof Error ? deleteEvent.error.message : 'We couldn’t cancel this plan. Try again.'}</Text> : null}
             </View>
-            {deleteEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.responseNote}>{deleteEvent.error instanceof Error ? deleteEvent.error.message : 'We couldn’t cancel this plan. Try again.'}</Text> : null}
-          </View>
-        ) : null}
+          ) : null}
+        </View>
       </View>
 
       {editForm ? (
@@ -274,7 +311,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                 editable={!updateEvent.isPending}
                 onChangeText={(value) => changeEditField(field.key, value)}
                 placeholder={field.placeholder}
-                placeholderTextColor={palette.muted}
+                placeholderTextColor={palette.faint}
                 style={[styles.input, editErrors[field.key] && styles.inputError]}
                 value={editForm[field.key]}
               />
@@ -283,12 +320,12 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           ))}
           <View style={styles.editField}>
             <Text style={styles.editLabel}>Notes (optional)</Text>
-            <TextInput nativeID="edit-description-input" accessibilityLabel="Notes, optional" autoComplete="off" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.muted} style={[styles.input, styles.notesInput]} value={editForm.description} />
+            <TextInput nativeID="edit-description-input" accessibilityLabel="Notes, optional" autoComplete="off" editable={!updateEvent.isPending} multiline onChangeText={(value) => changeEditField('description', value)} placeholder="What should everyone know?" placeholderTextColor={palette.faint} style={[styles.input, styles.notesInput]} value={editForm.description} />
           </View>
           {updateEvent.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.editError}>{updateEvent.error instanceof Error ? updateEvent.error.message : 'We couldn’t update this plan. Your changes are still here.'}</Text> : null}
           <View style={styles.lightActionRow}>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending || deleteEvent.isPending }} disabled={updateEvent.isPending || deleteEvent.isPending} onPress={savePlan} style={styles.planButton}><Text style={styles.planButtonText}>{updateEvent.isPending ? 'Saving changes…' : updateEvent.isError ? 'Try saving again' : 'Save changes'}</Text></Pressable>
-            <Pressable accessibilityRole="button" accessibilityState={{ disabled: updateEvent.isPending || deleteEvent.isPending }} disabled={updateEvent.isPending || deleteEvent.isPending} onPress={() => setEditForm(null)} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Keep current plan</Text></Pressable>
+            <PrimaryAction label={updateEvent.isPending ? 'Saving changes…' : updateEvent.isError ? 'Try saving again' : 'Save changes'} disabled={updateEvent.isPending || deleteEvent.isPending} onPress={savePlan} />
+            <SecondaryAction label="Keep current plan" disabled={updateEvent.isPending || deleteEvent.isPending} onPress={() => setEditForm(null)} />
           </View>
         </SurfaceCard>
       ) : null}
@@ -301,7 +338,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         {reminderQuery.isError ? (
           <View style={styles.feedback}>
             <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{reminderQuery.error instanceof Error ? reminderQuery.error.message : 'We couldn’t load your reminder preference.'}</Text>
-            <Button label="Retry reminder preference" tone="secondary" onPress={() => reminderQuery.refetch()} />
+            <SecondaryAction label="Retry reminder preference" onPress={() => reminderQuery.refetch()} />
           </View>
         ) : null}
         {reminderQuery.isSuccess ? (
@@ -320,7 +357,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         {setReminder.isError ? (
           <View style={styles.feedback}>
             <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>We couldn’t save your preference. Your choice is ready to retry.</Text>
-            <Button label={`Retry turning ${setReminder.variables?.enabled ? 'on' : 'off'}`} tone="secondary" onPress={() => setReminder.variables && changeReminder(setReminder.variables.enabled)} />
+            <SecondaryAction label={`Retry turning ${setReminder.variables?.enabled ? 'on' : 'off'}`} onPress={() => setReminder.variables && changeReminder(setReminder.variables.enabled)} />
           </View>
         ) : null}
         {setReminder.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>In-app preference {reminderEnabled ? 'on' : 'off'}.</Text> : null}
@@ -331,7 +368,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         <View style={styles.journey}>
           {eventDetail.sections.map((section, index) => (
             <View key={section.title} style={styles.journeyRow}>
-              <View style={styles.step}><Text style={styles.stepText}>{index + 1}</Text></View>
+              <View style={[styles.step, { backgroundColor: accent.tint }]}><Text style={[styles.stepText, { color: accent.deep }]}>{index + 1}</Text></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.listTitle}>{section.title}</Text>
                 <Text style={styles.cardCopy}>{section.detail}</Text>
@@ -345,7 +382,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
         <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Thread</Text>
         {messagesQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading the event conversation…</Text> : null}
         {messagesQuery.isError ? (
-          <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text><Button label="Retry conversation" tone="secondary" onPress={() => messagesQuery.refetch()} /></View>
+          <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{messagesQuery.error instanceof Error ? messagesQuery.error.message : 'We couldn’t load this conversation.'}</Text><SecondaryAction label="Retry conversation" onPress={() => messagesQuery.refetch()} /></View>
         ) : null}
         {messagesQuery.isSuccess && messagesQuery.data.length === 0 ? <Text style={styles.cardCopy}>No messages yet. Start the plan here.</Text> : null}
         {messagesQuery.isSuccess && messagesQuery.data.length > 0 ? (
@@ -368,7 +405,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
             editable={!sendMessage.isPending}
             onChangeText={(value) => { messageOperationKey.current = crypto.randomUUID(); setMessageDraft(value); sendMessage.reset(); }}
             placeholder="Add a note for this event"
-            placeholderTextColor={palette.muted}
+            placeholderTextColor={palette.faint}
             style={styles.composerInput}
             value={messageDraft}
           />
@@ -383,7 +420,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           </Pressable>
         </View>
         {sendMessage.isError ? (
-          <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text><Button label="Retry sending" tone="secondary" disabled={sendDisabled} onPress={submitMessage} /></View>
+          <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{sendMessage.error instanceof Error ? sendMessage.error.message : 'We couldn’t send that message. Your draft is still here.'}</Text><SecondaryAction label="Retry sending" disabled={sendDisabled} onPress={submitMessage} /></View>
         ) : null}
         {sendMessage.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Comment shared.</Text> : null}
       </SurfaceCard>
@@ -397,7 +434,7 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
           <Chip label={`${mediaQuery.data?.length ?? 0} shared`} tone={mediaQuery.data?.length ? 'coral' : 'sky'} />
         </View>
         {mediaQuery.isPending ? <Text accessibilityLiveRegion="polite" style={styles.cardCopy}>Loading shared photos…</Text> : null}
-        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><Button label="Retry photos" tone="secondary" onPress={() => mediaQuery.refetch()} /></View> : null}
+        {mediaQuery.isError ? <View style={styles.feedback}><Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{mediaQuery.error instanceof Error ? mediaQuery.error.message : 'We couldn’t load these photos.'}</Text><SecondaryAction label="Retry photos" onPress={() => mediaQuery.refetch()} /></View> : null}
         {mediaQuery.isSuccess && mediaQuery.data.length === 0 ? <Text style={styles.cardCopy}>No photos yet.</Text> : null}
         {mediaQuery.isSuccess && mediaQuery.data.length > 0 ? (
           <View style={styles.galleryGrid}>
@@ -411,9 +448,9 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
                     <Text style={styles.attributionText}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` on ${item.sourceName}` : ''}</Text>
                   </Pressable>
                 ) : <Text style={styles.photoMeta}>Photo{item.creatorName ? ` by ${item.creatorName}` : ''}{item.sourceName ? ` via ${item.sourceName}` : ''}</Text> : null}
-                {item.uploadedBy === identity?.userId || currentMember?.role === 'owner' || currentMember?.role === 'admin' ? <Button
+                {item.uploadedBy === identity?.userId || currentMember?.role === 'owner' || currentMember?.role === 'admin' ? <SecondaryAction
                   label={deleteMedia.isPending && deleteMedia.variables?.mediaId === item.id ? `Removing ${item.caption}…` : `Remove ${item.caption}`}
-                  tone="ghost"
+                  tone="danger"
                   disabled={deleteMedia.isPending}
                   onPress={() => {
                     const approved = Platform.OS !== 'web' || typeof window === 'undefined' || window.confirm('Remove this photo from the family event?');
@@ -429,34 +466,50 @@ export function EventDetailScreen({ eventId, backLabel = 'Back', onBack }: { eve
 
       <SurfaceCard>
         {!photoComposerOpen ? (
-          <Pressable accessibilityRole="button" aria-controls="photo-composer" aria-expanded={false} onPress={() => { setPhotoComposerOpen(true); setPhotoError(''); }} style={styles.planButton}>
-            <Text style={styles.planButtonText}>Add photo</Text>
+          <Pressable accessibilityRole="button" aria-controls="photo-composer" aria-expanded={false} onPress={() => { setPhotoComposerOpen(true); setPhotoError(''); }} style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Add photo</Text>
           </Pressable>
         ) : (
           <View nativeID="photo-composer" style={styles.photoComposer}>
             <Text role="heading" {...{ 'aria-level': 2 }} style={styles.cardTitle}>Add a photo</Text>
             {!photoMode ? (
               <View style={styles.lightActionRow}>
-                <Pressable accessibilityRole="button" onPress={choosePhoto} style={styles.planButton}><Text style={styles.planButtonText}>Choose image file</Text></Pressable>
-                <Pressable accessibilityRole="button" onPress={() => { setPhotoMode('link'); setPhotoUri(''); setPhotoError(''); uploadMedia.reset(); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Add Unsplash link</Text></Pressable>
+                <PrimaryAction label="Choose image file" onPress={choosePhoto} />
+                <SecondaryAction label="Add Unsplash link" onPress={() => { setPhotoMode('link'); setPhotoUri(''); setPhotoError(''); uploadMedia.reset(); }} />
               </View>
             ) : null}
-            {photoMode === 'file' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>{photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'}</Text></Pressable> : null}
-            {photoMode === 'link' ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={choosePhoto} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Use image file instead</Text></Pressable> : null}
-            {photoMode === 'link' ? <TextInput nativeID="event-photo-url-input" accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.muted} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'file' ? <SecondaryAction label={photoUri.startsWith('data:') ? 'Choose another file' : 'Choose image file'} disabled={uploadMedia.isPending} onPress={choosePhoto} /> : null}
+            {photoMode === 'link' ? <SecondaryAction label="Use image file instead" disabled={uploadMedia.isPending} onPress={choosePhoto} /> : null}
+            {photoMode === 'link' ? <TextInput nativeID="event-photo-url-input" accessibilityLabel="Photo web address" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setPhotoUri(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="HTTPS image address" placeholderTextColor={palette.faint} style={styles.input} value={photoUri} editable={!uploadMedia.isPending} /> : null}
             {photoMode && photoPreviewUri ? <Image accessibilityLabel={photoAltText || 'Selected photo preview'} source={{ uri: photoPreviewUri }} style={styles.preview} /> : null}
-            {photoMode ? <TextInput nativeID="event-photo-caption-input" accessibilityLabel="Photo caption" autoComplete="off" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
-            {photoMode ? <TextInput nativeID="event-photo-description-input" accessibilityLabel="Image description" autoComplete="off" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Image description (required)" placeholderTextColor={palette.muted} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} /> : null}
-            {photoMode === 'link' ? <TextInput nativeID="event-photo-photographer-input" accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.muted} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
-            {photoMode === 'link' ? <TextInput nativeID="event-photo-source-input" accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Unsplash photo page (required)" placeholderTextColor={palette.muted} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} /> : null}
-            {photoMode ? <Pressable accessibilityRole="button" accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={submitPhoto} style={styles.planButton}><Text style={styles.planButtonText}>{uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'}</Text></Pressable> : null}
-            <Pressable accessibilityRole="button" aria-controls="photo-composer" aria-expanded accessibilityState={{ disabled: uploadMedia.isPending }} disabled={uploadMedia.isPending} onPress={() => { setPhotoComposerOpen(false); setPhotoMode(null); }} style={styles.secondaryPlanButton}><Text style={styles.secondaryPlanButtonText}>Close photo form</Text></Pressable>
+            {photoMode ? <TextInput nativeID="event-photo-caption-input" accessibilityLabel="Photo caption" autoComplete="off" onChangeText={(value) => { setPhotoCaption(value); uploadMedia.reset(); }} placeholder="Caption (required)" placeholderTextColor={palette.faint} style={styles.input} value={photoCaption} editable={!uploadMedia.isPending} /> : null}
+            {photoMode ? <TextInput nativeID="event-photo-description-input" accessibilityLabel="Image description" autoComplete="off" onChangeText={(value) => { setPhotoAltText(value); uploadMedia.reset(); }} placeholder="Image description (required)" placeholderTextColor={palette.faint} style={styles.input} value={photoAltText} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput nativeID="event-photo-photographer-input" accessibilityLabel="Photographer name" autoComplete="name" onChangeText={(value) => { setCreatorName(value); uploadMedia.reset(); }} placeholder="Unsplash photographer (required)" placeholderTextColor={palette.faint} style={styles.input} value={creatorName} editable={!uploadMedia.isPending} /> : null}
+            {photoMode === 'link' ? <TextInput nativeID="event-photo-source-input" accessibilityLabel="Unsplash source page" autoCapitalize="none" autoComplete="url" keyboardType="url" onChangeText={(value) => { setSourceUrl(value); setPhotoError(''); uploadMedia.reset(); }} placeholder="Unsplash photo page (required)" placeholderTextColor={palette.faint} style={styles.input} value={sourceUrl} editable={!uploadMedia.isPending} /> : null}
+            {photoMode ? <PrimaryAction label={uploadMedia.isPending ? 'Sharing photo…' : uploadMedia.isError ? 'Retry sharing photo' : 'Share photo'} disabled={uploadMedia.isPending} onPress={submitPhoto} /> : null}
+            <SecondaryAction label="Close photo form" disabled={uploadMedia.isPending} onPress={() => { setPhotoComposerOpen(false); setPhotoMode(null); }} accessibilityProps={{ 'aria-controls': 'photo-composer', 'aria-expanded': true }} />
             {photoError || uploadMedia.isError ? <Text accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.threadError}>{photoError || (uploadMedia.error instanceof Error ? uploadMedia.error.message : 'We couldn’t share this photo. Your details are still here.')}</Text> : null}
             {uploadMedia.isSuccess ? <Text accessibilityLiveRegion="polite" style={styles.successNote}>Photo shared with the family.</Text> : null}
           </View>
         )}
       </SurfaceCard>
     </ScrollView>
+  );
+}
+
+function PrimaryAction({ label, disabled = false, onPress }: { label: string; disabled?: boolean; onPress?: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.primaryButton, disabled && styles.buttonDisabled]}>
+      <Text style={styles.primaryButtonText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function SecondaryAction({ label, disabled = false, tone = 'plum', onPress, accessibilityProps }: { label: string; disabled?: boolean; tone?: 'plum' | 'danger'; onPress?: () => void; accessibilityProps?: Record<string, unknown> }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityState={{ disabled }} disabled={disabled} onPress={onPress} style={[styles.secondaryButton, disabled && styles.buttonDisabled]} {...accessibilityProps}>
+      <Text style={[styles.secondaryButtonText, tone === 'danger' && styles.secondaryButtonTextDanger]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -469,71 +522,108 @@ function isSafeHttpsUrl(value?: string): value is string {
 }
 
 function DetailState({ title, detail, backLabel, onBack }: { title: string; detail: string; backLabel: string; onBack?: () => void }) {
-  return <View accessibilityLiveRegion="polite" style={styles.state}>{onBack ? <Button label={backLabel} onPress={onBack} /> : null}<SurfaceCard><Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text><Text style={styles.cardCopy}>{detail}</Text></SurfaceCard></View>;
+  return (
+    <View accessibilityLiveRegion="polite" style={styles.state}>
+      {onBack ? (
+        <Pressable accessibilityRole="button" accessibilityLabel={backLabel} accessibilityState={{ disabled: false }} onPress={onBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={19} color={palette.text} />
+          <Text style={styles.backLabel}>{backLabel}</Text>
+        </Pressable>
+      ) : null}
+      <SurfaceCard>
+        <Text role="heading" {...{ 'aria-level': 1 }} style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardCopy}>{detail}</Text>
+      </SurfaceCard>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   state: { flex: 1, justifyContent: 'center', padding: spacing.lg, gap: spacing.md },
-  container: { width: '100%', maxWidth: '100%', minWidth: 0, padding: spacing.lg, gap: spacing.md, paddingBottom: 40, boxSizing: 'border-box' },
-  heroCard: { backgroundColor: palette.plum, borderRadius: 28, padding: spacing.lg, gap: spacing.sm },
-  heroMini: { color: 'rgba(255,255,255,0.82)', textTransform: 'uppercase', letterSpacing: 1.4, fontSize: 11, fontWeight: '700' },
-  heroHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  heroHeaderNarrow: { flexDirection: 'column' },
-  heroContent: { width: '100%', minWidth: 0, flex: 1 },
-  heroTitle: { color: '#fff', fontSize: 32, lineHeight: 32, fontWeight: '900' },
-  heroLocation: { color: 'rgba(255,255,255,0.82)', fontSize: 13, lineHeight: 18, marginTop: 6, fontWeight: '800' },
-  heroCopy: { color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: 22, marginTop: 8 },
-  actionRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginTop: 6 },
-  responseNote: { color: 'rgba(255,255,255,0.86)', fontSize: 13, lineHeight: 19 },
-  planOptions: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.18)', marginTop: spacing.sm, paddingTop: spacing.sm, gap: spacing.xs },
-  planOptionsLabel: { color: 'rgba(255,255,255,0.82)', fontSize: 12, lineHeight: 18, fontWeight: '800' },
-  cardTitle: { color: palette.text, fontSize: 20, fontWeight: '900' },
-  cardCopy: { color: palette.muted, fontSize: 14, lineHeight: 20, marginTop: 4 },
-  reminderTiming: { color: palette.text, fontSize: 16, lineHeight: 22, fontWeight: '800', marginTop: spacing.xs },
-  reminderSwitch: { minWidth: 72, minHeight: 48, alignSelf: 'flex-start', marginTop: spacing.md, paddingHorizontal: 18, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(113,54,93,0.24)', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
+  container: { width: '100%', maxWidth: '100%', minWidth: 0, padding: spacing.lg, gap: spacing.md, paddingBottom: tabBarInset, boxSizing: 'border-box' },
+
+  backButton: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', minHeight: 44, paddingVertical: 8, paddingRight: 10 },
+  backLabel: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 15 },
+
+  heroCard: { backgroundColor: palette.surface, borderRadius: radii.hero, borderWidth: 1, borderColor: palette.hairline, overflow: 'hidden', ...shadow.soft },
+  heroCover: { height: 160, width: '100%', backgroundColor: palette.well },
+  heroCoverFill: { height: '100%', width: '100%' },
+  heroBody: { padding: spacing.lg, gap: spacing.sm },
+  heroBodyNarrow: { padding: spacing.md },
+  heroMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  heroMeta: { fontFamily: fonts.semibold, fontWeight: '600', fontSize: 12.5, letterSpacing: 0.2 },
+  heroTitle: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 27, lineHeight: 31, letterSpacing: -0.5 },
+  heroLocation: { color: palette.muted, fontFamily: fonts.regular, fontSize: 13.5 },
+  heroCopy: { color: palette.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 21 },
+  heroStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
+  rsvpSummary: { color: palette.muted, fontFamily: fonts.regular, fontSize: 13 },
+
+  segmentRow: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  segment: { flex: 1, minHeight: 46, borderRadius: radii.md, borderWidth: 1, borderColor: palette.hairline, backgroundColor: palette.surface, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
+  segmentActive: { backgroundColor: palette.plum, borderColor: palette.plum },
+  segmentDisabled: { opacity: 0.6 },
+  segmentText: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14 },
+  segmentTextActive: { color: palette.white },
+
+  responseNote: { color: palette.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 19 },
+  errorNote: { color: palette.berry, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13, lineHeight: 19 },
+  planOptions: { borderTopWidth: 1, borderTopColor: palette.hairline, marginTop: spacing.xs, paddingTop: spacing.sm, gap: spacing.xs },
+  planOptionsLabel: { color: palette.muted, fontFamily: fonts.bold, fontWeight: '700', fontSize: 11.5, letterSpacing: 0.8, textTransform: 'uppercase' },
+
+  cardTitle: { color: palette.text, fontFamily: fonts.bold, fontWeight: '700', fontSize: 19, letterSpacing: -0.3 },
+  cardCopy: { color: palette.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, marginTop: 4 },
+  reminderTiming: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 15.5, marginTop: spacing.xs },
+  reminderSwitch: { minWidth: 72, minHeight: 46, alignSelf: 'flex-start', marginTop: spacing.md, paddingHorizontal: 18, borderRadius: radii.pill, borderWidth: 1, borderColor: palette.hairline, alignItems: 'center', justifyContent: 'center', backgroundColor: palette.surface },
   reminderSwitchOn: { backgroundColor: palette.plum, borderColor: palette.plum },
-  reminderSwitchText: { color: palette.plum, fontSize: 15, lineHeight: 20, fontWeight: '900' },
-  reminderSwitchTextOn: { color: '#fff' },
-  journey: { marginTop: spacing.md, gap: spacing.sm },
+  reminderSwitchText: { color: palette.plum, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14.5 },
+  reminderSwitchTextOn: { color: palette.white },
+
+  journey: { marginTop: spacing.sm, gap: spacing.sm },
   journeyRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  step: { width: 32, height: 32, borderRadius: 12, backgroundColor: 'rgba(113,54,93,0.1)', justifyContent: 'center', alignItems: 'center' },
-  stepText: { color: palette.plum, fontWeight: '800', fontSize: 13 },
-  listTitle: { color: palette.text, fontSize: 15, fontWeight: '800' },
+  step: { width: 32, height: 32, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  stepText: { fontFamily: fonts.bold, fontWeight: '700', fontSize: 13 },
+  listTitle: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 15 },
+
   galleryHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  galleryGrid: { marginTop: spacing.md, gap: spacing.md },
-  photoCard: { overflow: 'hidden', borderRadius: 18, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)', padding: 12, gap: 8 },
-  photo: { width: '100%', height: 220, borderRadius: 12, backgroundColor: 'rgba(32,22,28,0.06)' },
-  photoCaption: { color: palette.text, fontSize: 15, lineHeight: 21, fontWeight: '800' },
-  photoMeta: { color: palette.muted, fontSize: 12, lineHeight: 18 },
-  attributionLink: { minHeight: 48, justifyContent: 'center', alignSelf: 'flex-start' },
-  attributionText: { color: palette.plum, fontSize: 13, lineHeight: 18, fontWeight: '800', textDecorationLine: 'underline' },
-  photoComposer: { marginTop: spacing.lg, gap: spacing.sm },
-  input: { minHeight: 48, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(32,22,28,0.14)', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
+  galleryGrid: { marginTop: spacing.sm, gap: spacing.md },
+  photoCard: { overflow: 'hidden', borderRadius: radii.md, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.hairline, padding: 12, gap: 8 },
+  photo: { width: '100%', height: 220, borderRadius: 12, backgroundColor: palette.well },
+  photoCaption: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14.5 },
+  photoMeta: { color: palette.muted, fontFamily: fonts.regular, fontSize: 12, lineHeight: 18 },
+  attributionLink: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  attributionText: { color: palette.plum, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13, lineHeight: 18, textDecorationLine: 'underline' },
+
+  photoComposer: { marginTop: spacing.sm, gap: spacing.sm },
+  input: { minHeight: 48, borderRadius: radii.md, borderWidth: 1, borderColor: palette.hairline, backgroundColor: palette.surface, color: palette.text, fontFamily: fonts.regular, fontSize: 15.5, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
   inputError: { borderColor: palette.coral, borderWidth: 2 },
   notesInput: { minHeight: 96, textAlignVertical: 'top' },
   editField: { gap: 6, marginTop: spacing.sm },
-  editLabel: { color: palette.text, fontSize: 14, lineHeight: 20, fontWeight: '800' },
-  editError: { color: palette.berry, fontSize: 13, lineHeight: 19, fontWeight: '700' },
+  editLabel: { color: palette.text, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13.5 },
+  editError: { color: palette.berry, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13 },
   lightActionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.sm },
-  planButton: { minHeight: 48, borderRadius: 999, backgroundColor: palette.plum, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
-  planButtonText: { color: '#fff', fontSize: 15, lineHeight: 20, fontWeight: '900' },
-  secondaryPlanButton: { minHeight: 48, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(113,54,93,0.24)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
-  secondaryPlanButtonText: { color: palette.plum, fontSize: 15, lineHeight: 20, fontWeight: '900' },
-  preview: { width: '100%', height: 200, borderRadius: 16, backgroundColor: 'rgba(32,22,28,0.06)' },
-  thread: { marginTop: spacing.md, gap: spacing.sm },
-  bubble: { maxWidth: '84%', borderRadius: 18, padding: 13, backgroundColor: '#fff', borderWidth: 1, borderColor: 'rgba(32,22,28,0.08)' },
+
+  primaryButton: { minHeight: 46, borderRadius: radii.pill, backgroundColor: palette.plum, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
+  primaryButtonText: { color: palette.white, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14.5 },
+  secondaryButton: { minHeight: 46, borderRadius: radii.pill, borderWidth: 1, borderColor: palette.hairline, backgroundColor: palette.surface, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18 },
+  secondaryButtonText: { color: palette.plum, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14.5 },
+  secondaryButtonTextDanger: { color: palette.berry },
+  buttonDisabled: { opacity: 0.5 },
+
+  preview: { width: '100%', height: 200, borderRadius: radii.md, backgroundColor: palette.well },
+  thread: { marginTop: spacing.sm, gap: spacing.sm },
+  bubble: { maxWidth: '84%', borderRadius: radii.md, padding: 13, backgroundColor: palette.surface, borderWidth: 1, borderColor: palette.hairline },
   selfBubble: { alignSelf: 'flex-end', backgroundColor: palette.plum, borderColor: palette.plum },
-  bubbleText: { color: palette.text, fontSize: 14, lineHeight: 20 },
-  bubbleAuthor: { color: palette.muted, fontSize: 12, fontWeight: '800', marginBottom: 3 },
-  bubbleTime: { color: palette.muted, fontSize: 11, lineHeight: 16, marginTop: 6 },
-  selfBubbleText: { color: '#fff' },
+  bubbleText: { color: palette.text, fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+  bubbleAuthor: { color: palette.muted, fontFamily: fonts.bold, fontWeight: '700', fontSize: 12, marginBottom: 3 },
+  bubbleTime: { color: palette.muted, fontFamily: fonts.regular, fontSize: 11, lineHeight: 16, marginTop: 6 },
+  selfBubbleText: { color: palette.white },
   selfBubbleTime: { color: 'rgba(255,255,255,0.78)' },
-  composer: { marginTop: spacing.md, gap: spacing.sm },
-  composerInput: { minHeight: 48, maxHeight: 120, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(32,22,28,0.14)', backgroundColor: '#fff', color: palette.text, fontSize: 16, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
-  sendButton: { minHeight: 48, borderRadius: 16, backgroundColor: palette.plum, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
-  sendButtonDisabled: { opacity: 0.45 },
-  sendButtonText: { color: '#fff', fontSize: 15, fontWeight: '900' },
-  threadError: { color: palette.berry, fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
+  composer: { marginTop: spacing.sm, gap: spacing.sm },
+  composerInput: { minHeight: 48, maxHeight: 120, borderRadius: radii.md, borderWidth: 1, borderColor: palette.hairline, backgroundColor: palette.surface, color: palette.text, fontFamily: fonts.regular, fontSize: 15.5, lineHeight: 21, paddingHorizontal: 14, paddingVertical: 12 },
+  sendButton: { minHeight: 46, borderRadius: radii.md, backgroundColor: palette.plum, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
+  sendButtonDisabled: { opacity: 0.5 },
+  sendButtonText: { color: palette.white, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 14.5 },
+  threadError: { color: palette.berry, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
   feedback: { gap: spacing.sm, alignItems: 'flex-start' },
-  successNote: { color: palette.plum, fontSize: 13, lineHeight: 19, marginTop: spacing.sm, fontWeight: '800' },
+  successNote: { color: palette.plum, fontFamily: fonts.semibold, fontWeight: '600', fontSize: 13, lineHeight: 19, marginTop: spacing.sm },
 });

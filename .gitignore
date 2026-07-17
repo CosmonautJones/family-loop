@@ -10,3 +10,7 @@ Thumbs.db
 .env
 .env.*
 *.log
+
+# scratch / review artifacts
+.playwright-mcp/
+/loopedin-*.png

@@ -1,13 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { palette, radii } from '../theme/tokens';
+import { fonts, palette, radii, statusChip } from '../theme/tokens';
 
 import type { AccentTone } from '../types/ui';
 
-
+// Calmed to the redesign system: soft neutral pills, one weight, no shouting.
 const tones = {
-  sage: { backgroundColor: 'rgba(170,197,177,0.28)', color: '#355442' },
-  sky: { backgroundColor: 'rgba(198,217,246,0.42)', color: '#35527C' },
-  coral: { backgroundColor: 'rgba(240,111,103,0.18)', color: '#9C3E44' },
+  sage: { backgroundColor: statusChip.going.bg, color: statusChip.going.fg },
+  sky: { backgroundColor: 'rgba(113,54,93,0.10)', color: palette.plum },
+  coral: { backgroundColor: statusChip.maybe.bg, color: statusChip.maybe.fg },
 } as const;
 
 export function Chip({ label, tone = 'sage' }: { label: string; tone?: AccentTone }) {
@@ -18,16 +18,35 @@ export function Chip({ label, tone = 'sage' }: { label: string; tone?: AccentTon
   );
 }
 
+export type RsvpStatus = 'going' | 'maybe' | 'cantGo' | 'pending';
+
+const STATUS_LABEL: Record<RsvpStatus, string> = {
+  going: 'Going',
+  maybe: 'Maybe',
+  cantGo: 'Can’t go',
+  pending: 'RSVP',
+};
+
+export function StatusChip({ status, label }: { status: RsvpStatus; label?: string }) {
+  const c = statusChip[status];
+  return (
+    <View style={[styles.chip, { backgroundColor: c.bg }]}>
+      <Text style={[styles.text, { color: c.fg }]}>{label ?? STATUS_LABEL[status]}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   chip: {
     borderRadius: radii.pill,
-    paddingVertical: 8,
-    paddingHorizontal: 11,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
     alignSelf: 'flex-start',
-    backgroundColor: palette.surface,
   },
   text: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: 11.5,
+    fontFamily: fonts.semibold,
+    fontWeight: '600',
+    letterSpacing: 0.1,
   },
 });

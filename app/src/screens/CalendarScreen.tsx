@@ -1,17 +1,35 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Chip } from '../components/Chip';
+import { EventRow } from '../components/EventRow';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { selectCalendarViewModel } from '../app/selectors';
 import { useActiveEventsQuery } from '../app/queries';
-import { Button } from '../components/Button';
-import { palette, spacing } from '../theme/tokens';
+import { accentForId, accentOf, fonts, palette, radii, spacing, tabBarInset } from '../theme/tokens';
 
 export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (eventId: string) => void; onCreateEvent?: () => void }) {
   const eventsQuery = useActiveEventsQuery();
-  const viewModel = selectCalendarViewModel(eventsQuery.data ?? []);
+  const events = eventsQuery.data ?? [];
+  const viewModel = selectCalendarViewModel(events);
 
   if (eventsQuery.isPending) return <CalendarState title="Loading the calendar" detail="Gathering this group’s plans…" />;
   if (eventsQuery.isError) return <CalendarState title="We couldn’t load the calendar" detail={eventsQuery.error instanceof Error ? eventsQuery.error.message : 'Try again in a moment.'} />;
+
+  // Same "current month" window the selector uses, re-derived here so the grid
+  // can tint each day's dot with its event's accent and mark today.
+  const now = new Date();
+  const upcomingSorted = events
+    .filter((event) => new Date(event.endsAt).getTime() >= now.getTime())
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const monthDate = upcomingSorted[0] ? new Date(upcomingSorted[0].startsAt) : now;
+  const isCurrentMonth = now.getMonth() === monthDate.getMonth() && now.getFullYear() === monthDate.getFullYear();
+  const today = now.getDate();
+  const eventIdByDay = new Map<number, string>();
+  upcomingSorted
+    .filter((event) => new Date(event.startsAt).getMonth() === monthDate.getMonth() && new Date(event.startsAt).getFullYear() === monthDate.getFullYear())
+    .forEach((event) => {
+      const day = new Date(event.startsAt).getDate();
+      if (!eventIdByDay.has(day)) eventIdByDay.set(day, event.id);
+    });
+  const eventsById = new Map(events.map((event) => [event.id, event]));
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -20,44 +38,58 @@ export function CalendarScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (
       <Text style={styles.subtitle}>{viewModel.calendarSummary}</Text>
 
       <SurfaceCard>
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.cardTitle}>{viewModel.month}</Text>
-            <Text style={styles.cardCopy}>Dates with an event are marked with a dot.</Text>
-          </View>
-          <Chip label={viewModel.calendarSummary} tone="sky" />
+        <View>
+          <Text style={styles.cardTitle}>{viewModel.month}</Text>
+          <Text style={styles.cardCopy}>Days with a plan are marked with a dot.</Text>
         </View>
 
         <View style={styles.grid}>
-          {viewModel.calendarEvents.map((event) => (
-            <View key={event.day} style={[styles.day, event.highlight && styles.dayActive]}>
-              <Text style={styles.dayNumber}>{event.day}</Text>
-              {event.highlight ? <View style={styles.dot} /> : null}
-            </View>
-          ))}
+          {viewModel.calendarEvents.map((item) => {
+            const isToday = isCurrentMonth && item.day === today;
+            const eventId = eventIdByDay.get(item.day);
+            const dotColor = accentOf(eventId ? accentForId(eventId) : undefined).dot;
+            return (
+              <View key={item.day} style={styles.day}>
+                <View style={[styles.dayCircle, isToday && styles.dayCircleToday]}>
+                  <Text style={[styles.dayNumber, isToday && styles.dayNumberToday]}>{item.day}</Text>
+                </View>
+                <View style={[styles.dot, item.highlight && { backgroundColor: dotColor }]} />
+              </View>
+            );
+          })}
         </View>
       </SurfaceCard>
 
-      {viewModel.agenda.length > 0 ? <SurfaceCard>
-        <Text style={styles.cardTitle}>Upcoming agenda</Text>
-        <View style={styles.list}>
-          {viewModel.agenda.map((item) => (
-            <Pressable
-              key={item.title}
-              accessibilityRole="button"
-              accessibilityLabel={`Open ${item.title}`}
-              onPress={() => onOpenEvent?.(item.id)}
-              style={styles.listRow}
-            >
-              <View style={styles.listCopy}>
-                <Text style={styles.listTitle}>{item.title}</Text>
-                <Text style={styles.cardCopy}>{item.detail}</Text>
-              </View>
-              <Chip label={item.badge} tone={item.tone} />
-            </Pressable>
-          ))}
+      {viewModel.agenda.length > 0 ? (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Upcoming agenda</Text>
+          <View style={styles.rows}>
+            {viewModel.agenda.map((item) => {
+              const source = eventsById.get(item.id);
+              const start = source ? new Date(source.startsAt) : now;
+              return (
+                <EventRow
+                  key={item.id}
+                  title={item.title}
+                  meta={item.detail}
+                  day={start.getDate()}
+                  month={start.toLocaleDateString('en-US', { month: 'short' })}
+                  accent={accentForId(item.id)}
+                  onPress={() => onOpenEvent?.(item.id)}
+                />
+              );
+            })}
+          </View>
         </View>
-      </SurfaceCard> : <SurfaceCard><Text style={styles.cardTitle}>No upcoming events planned</Text><Text style={styles.cardCopy}>Create an event to put a new plan on this group’s calendar.</Text><Button label="Create event" onPress={onCreateEvent} /></SurfaceCard>}
+      ) : (
+        <SurfaceCard>
+          <Text style={styles.cardTitle}>No upcoming events planned</Text>
+          <Text style={styles.cardCopy}>Create an event to put a new plan on this group’s calendar.</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel="Create event" onPress={onCreateEvent} style={styles.emptyCta}>
+            <Text style={styles.emptyCtaText}>Create event</Text>
+          </Pressable>
+        </SurfaceCard>
+      )}
     </ScrollView>
   );
 }
@@ -71,43 +103,44 @@ const styles = StyleSheet.create({
   container: {
     padding: spacing.lg,
     gap: spacing.md,
-    paddingBottom: 40,
+    paddingBottom: tabBarInset,
   },
   eyebrow: {
     marginTop: 18,
-    color: palette.muted,
+    color: palette.berry,
+    fontFamily: fonts.bold,
+    fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1.8,
-    fontSize: 11,
-    fontWeight: '800',
+    letterSpacing: 1.4,
+    fontSize: 11.5,
   },
   title: {
     color: palette.text,
+    fontFamily: fonts.bold,
+    fontWeight: '700',
     fontSize: 32,
-    lineHeight: 34,
-    fontWeight: '800',
+    lineHeight: 36,
+    letterSpacing: -0.5,
     marginTop: 10,
   },
   subtitle: {
     color: palette.muted,
+    fontFamily: fonts.regular,
     fontSize: 15,
     lineHeight: 24,
     marginTop: 10,
     marginBottom: 8,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-  },
   cardTitle: {
     color: palette.text,
+    fontFamily: fonts.bold,
+    fontWeight: '700',
     fontSize: 20,
-    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   cardCopy: {
     color: palette.muted,
+    fontFamily: fonts.regular,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
@@ -116,54 +149,62 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   day: {
-    width: '12.5%',
-    minWidth: 30,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(32,22,28,0.08)',
-    padding: 8,
+    width: `${100 / 7}%`,
+    alignItems: 'center',
+    paddingVertical: 6,
   },
-  dayActive: {
-    backgroundColor: 'rgba(113,54,93,0.08)',
-    borderColor: 'rgba(113,54,93,0.22)',
+  dayCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayCircleToday: {
+    backgroundColor: palette.plum,
   },
   dayNumber: {
     color: palette.text,
-    fontSize: 12,
-    fontWeight: '700',
+    fontFamily: fonts.medium,
+    fontWeight: '500',
+    fontSize: 13,
+  },
+  dayNumberToday: {
+    color: palette.white,
+    fontFamily: fonts.semibold,
+    fontWeight: '600',
   },
   dot: {
-    marginTop: 'auto',
-    width: 8,
-    height: 8,
-    borderRadius: 999,
-    backgroundColor: palette.coral,
+    width: 5,
+    height: 5,
+    borderRadius: radii.pill,
+    marginTop: 5,
+    backgroundColor: 'transparent',
   },
-  list: {
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
-  listCopy: {
-    flex: 1,
-    minWidth: 0,
-  },
-  listRow: {
-    minHeight: 48,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-    borderRadius: 18,
-    paddingVertical: 6,
-  },
-  listTitle: {
+  section: { gap: spacing.sm },
+  sectionTitle: {
     color: palette.text,
-    fontSize: 15,
+    fontFamily: fonts.bold,
     fontWeight: '700',
+    fontSize: 18,
+    letterSpacing: -0.3,
+  },
+  rows: { gap: 10 },
+  emptyCta: {
+    alignSelf: 'flex-start',
+    marginTop: 14,
+    backgroundColor: palette.plum,
+    borderRadius: radii.md,
+    minHeight: 46,
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+  emptyCtaText: {
+    color: palette.white,
+    fontFamily: fonts.semibold,
+    fontWeight: '600',
+    fontSize: 15,
   },
 });
