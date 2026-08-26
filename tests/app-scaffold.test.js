@@ -14,6 +14,16 @@ function read(rel) {
   return fs.readFileSync(path.join(appRoot, rel), 'utf8');
 }
 
+function assertRepresentativeTimingBudget(samples, budgetMs, label) {
+  assert.equal(samples.length, 3, `${label} must use three independent timing samples`);
+  const medianMs = [...samples].sort((left, right) => left - right)[1];
+  assert.ok(
+    medianMs <= budgetMs,
+    `${label} median ${medianMs.toFixed(1)}ms exceeded ${budgetMs}ms (samples: ${samples.map((sample) => sample.toFixed(1)).join(', ')}ms)`,
+  );
+  return medianMs;
+}
+
 function loadStorageModule() {
   const appRequire = createRequire(path.join(appRoot, 'package.json'));
   const ts = appRequire('typescript');
@@ -2121,6 +2131,14 @@ test('Query and screens expose truthful event states without configured fixture 
   assert.doesNotMatch(store, /rsvpOverrides|persistedEvents|draftEvents/);
 });
 
+test('representative capacity timing ignores one scheduler outlier but rejects sustained regressions', () => {
+  assert.equal(assertRepresentativeTimingBudget([125, 700, 140], 200, 'selectors'), 140);
+  assert.throws(
+    () => assertRepresentativeTimingBudget([225, 700, 240], 200, 'selectors'),
+    /selectors median 240\.0ms exceeded 200ms/,
+  );
+});
+
 test('representative family capacity preserves exact event identity and stays within local processing budgets', async (t) => {
   const { durableAdapter, mockAdapter, mockData, selectors } = loadCompiledModules();
   const database = mockData.createMockDatabase();
@@ -2169,18 +2187,32 @@ test('representative family capacity preserves exact event identity and stays wi
   }));
 
   const service = mockAdapter.createMockLoopedInService(database);
-  const serviceStartedAt = performance.now();
-  const [members, events, messages, media] = await Promise.all([
-    service.groups.listGroupMembers(group.id),
-    service.events.listEvents(group.id),
-    service.thread.listMessages(targetEventId),
-    service.media.listMedia(targetEventId),
-  ]);
-  const serviceElapsedMs = performance.now() - serviceStartedAt;
-  const selectorStartedAt = performance.now();
-  const home = selectors.selectHomeViewModel({ events, now: new Date('2026-07-14T00:00:00Z') });
-  const detail = selectors.selectEventDetailViewModel(events[0], database.rsvps, messages);
-  const selectorElapsedMs = performance.now() - selectorStartedAt;
+  const serviceSamples = [];
+  let members;
+  let events;
+  let messages;
+  let media;
+  for (let sample = 0; sample < 3; sample += 1) {
+    const startedAt = performance.now();
+    [members, events, messages, media] = await Promise.all([
+      service.groups.listGroupMembers(group.id),
+      service.events.listEvents(group.id),
+      service.thread.listMessages(targetEventId),
+      service.media.listMedia(targetEventId),
+    ]);
+    serviceSamples.push(performance.now() - startedAt);
+  }
+  const serviceElapsedMs = assertRepresentativeTimingBudget(serviceSamples, 250, 'parallel local reads');
+  const selectorSamples = [];
+  let home;
+  let detail;
+  for (let sample = 0; sample < 3; sample += 1) {
+    const startedAt = performance.now();
+    home = selectors.selectHomeViewModel({ events, now: new Date('2026-07-14T00:00:00Z') });
+    detail = selectors.selectEventDetailViewModel(events[0], database.rsvps, messages);
+    selectorSamples.push(performance.now() - startedAt);
+  }
+  const selectorElapsedMs = assertRepresentativeTimingBudget(selectorSamples, 200, 'selectors');
 
   assert.equal(members.length, 20);
   assert.equal(events.length, 100);
@@ -2191,8 +2223,6 @@ test('representative family capacity preserves exact event identity and stays wi
   assert.equal(home.upcomingEvents.length, 99);
   assert.equal(detail.id, targetEventId);
   assert.equal(detail.rsvpSummary, '20 going');
-  assert.ok(serviceElapsedMs <= 250, `parallel local reads took ${serviceElapsedMs.toFixed(1)}ms`);
-  assert.ok(selectorElapsedMs <= 200, `selectors took ${selectorElapsedMs.toFixed(1)}ms`);
 
   const values = new Map();
   const storage = {
@@ -2209,7 +2239,7 @@ test('representative family capacity preserves exact event identity and stays wi
   assert.equal((await reconstructed.media.listMedia(targetEventId)).length, 50);
   const durableElapsedMs = performance.now() - durableStartedAt;
 
-  t.diagnostic(`representative volume: 20 members, 100 events, 100 comments, 50 media; parallel reads ${serviceElapsedMs.toFixed(1)}ms; selectors ${selectorElapsedMs.toFixed(1)}ms; durable reconstruction ${durableElapsedMs.toFixed(1)}ms`);
+  t.diagnostic(`representative volume: 20 members, 100 events, 100 comments, 50 media; parallel reads median ${serviceElapsedMs.toFixed(1)}ms [${serviceSamples.map((sample) => sample.toFixed(1)).join(', ')}]; selectors median ${selectorElapsedMs.toFixed(1)}ms [${selectorSamples.map((sample) => sample.toFixed(1)).join(', ')}]; durable reconstruction ${durableElapsedMs.toFixed(1)}ms`);
 });
 
 test('event message subscription is exact-key, reconnecting, and inert after cleanup', async () => {
