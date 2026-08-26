@@ -33,7 +33,10 @@ function loadStorageModule() {
   return module.exports;
 }
 
+let compiledModules;
+
 function loadCompiledModules() {
+  if (compiledModules) return compiledModules;
   const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'loopedin-integration-'));
   const tsc = path.join(appRoot, 'node_modules', 'typescript', 'bin', 'tsc');
   execFileSync(process.execPath, [tsc,
@@ -57,7 +60,7 @@ function loadCompiledModules() {
     '--skipLibCheck',
   ]);
   const require = createRequire(path.join(outDir, 'integration-test.cjs'));
-  return {
+  compiledModules = {
     selectors: require(path.join(outDir, 'app/selectors.js')),
     mockAdapter: require(path.join(outDir, 'services/mockAdapter.js')),
     mockData: require(path.join(outDir, 'services/mockData.js')),
@@ -74,6 +77,7 @@ function loadCompiledModules() {
     queryReconciliation: require(path.join(outDir, 'app/queryReconciliation.js')),
     protectedQueries: require(path.join(outDir, 'app/protectedQueries.js')),
   };
+  return compiledModules;
 }
 
 test('mobile scaffold and event-loop files exist', () => {
@@ -105,6 +109,26 @@ test('mobile scaffold and event-loop files exist', () => {
   }
 
   assert.equal(fs.existsSync(path.join(appRoot, 'src/data/sampleData.ts')), false);
+});
+
+test('compiled integration modules are reused without sharing service state', async () => {
+  const firstModules = loadCompiledModules();
+  const secondModules = loadCompiledModules();
+  assert.strictEqual(secondModules, firstModules);
+
+  const firstService = firstModules.mockAdapter.createMockLoopedInService();
+  const secondService = secondModules.mockAdapter.createMockLoopedInService();
+  const baselineEventCount = (await secondService.events.listEvents('group-jones-family')).length;
+  await firstService.events.createEvent({
+    groupId: 'group-jones-family',
+    title: 'Only in the first service',
+    startsAt: '2027-05-01T15:00:00Z',
+    endsAt: '2027-05-01T17:00:00Z',
+    location: 'Lakefront',
+    description: '',
+  });
+  assert.equal((await firstService.events.listEvents('group-jones-family')).length, baselineEventCount + 1);
+  assert.equal((await secondService.events.listEvents('group-jones-family')).length, baselineEventCount);
 });
 
 test('encrypted account export contains only the current user contributions and verifies integrity', async () => {
