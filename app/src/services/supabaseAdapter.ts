@@ -22,7 +22,7 @@ import { getSupabaseClient } from './supabaseClient';
 import { maxBrowserImageBytes, validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
-import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveWithFallback } from '../features/auth/invitationRoute';
+import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveInvitationSessionPreview, resolveWithFallback } from '../features/auth/invitationRoute';
 import { backendServiceError, userServiceError, withSafeServiceErrors } from './serviceErrors';
 import { subscribeToEventMessages } from './messageSubscription';
 import { createClientErrorTelemetryReporter } from './clientErrorTelemetry';
@@ -621,11 +621,17 @@ export function createSupabaseLoopedInService(): LoopedInService {
         return data === true;
       },
       async validateInvitation(token): Promise<GroupInvitationPreview> {
-        const { data, error } = await supabase.rpc('loopedin_validate_group_invite', { target_token: invitationTokenToHex(token) });
+        const tokenHex = invitationTokenToHex(token);
+        const { data, error } = await supabase.rpc('loopedin_validate_group_invite', { target_token: tokenHex });
         throwIfError(error);
         const result = (data ?? {}) as RpcResult;
         if (!result.ok || !result.groupId || !result.groupName || !result.inviterName || !result.maskedEmail || !result.expiresAt) return { status: 'unavailable' };
-        return { status: 'ready', groupId: result.groupId, groupName: result.groupName, inviterName: result.inviterName, maskedEmail: result.maskedEmail, expiresAt: result.expiresAt };
+        const preview = { status: 'ready' as const, groupId: result.groupId, groupName: result.groupName, inviterName: result.inviterName, maskedEmail: result.maskedEmail, expiresAt: result.expiresAt };
+        const { data: sessionData } = await supabase.auth.getSession();
+        return resolveInvitationSessionPreview(preview, sessionData.session?.user.email, async (sessionEmail) => {
+          const { data: match, error: matchError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: tokenHex, target_email: sessionEmail });
+          return matchError ? undefined : isReadyInvitationEmailMatch(match);
+        });
       },
       async acceptInvitation(token): Promise<GroupActionResult> {
         const { data, error } = await supabase.rpc('loopedin_accept_group_invite', { target_token: invitationTokenToHex(token) });

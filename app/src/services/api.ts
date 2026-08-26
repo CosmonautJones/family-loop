@@ -40,7 +40,7 @@ export interface CreateGroupPayload {
 }
 
 export type GroupInvitationPreview =
-  | { status: 'ready'; groupId: string; groupName: string; inviterName: string; maskedEmail: string; expiresAt: string }
+  | { status: 'ready'; groupId: string; groupName: string; inviterName: string; maskedEmail: string; expiresAt: string; sessionEmailMatchesInvite?: boolean }
   | { status: 'unavailable' };
 
 export interface GroupInvitation {

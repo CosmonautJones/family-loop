@@ -972,6 +972,42 @@ test('invitation routes accept only canonical 32-byte base64url tokens and never
   assert.doesNotMatch(adapter, /\[AQgw\]/);
 });
 
+test('invitation preview identifies only a proven wrong-account session for account switching', async () => {
+  const { invitationRoute } = loadCompiledModules();
+  assert.equal(typeof invitationRoute.resolveInvitationSessionPreview, 'function');
+  assert.equal(typeof invitationRoute.shouldOfferInvitationAccountSwitch, 'function');
+
+  const ready = {
+    status: 'ready',
+    groupId: 'group-invited',
+    groupName: 'Invited Family',
+    inviterName: 'Family Organizer',
+    maskedEmail: 'i***@example.com',
+    expiresAt: '2026-09-01T00:00:00Z',
+  };
+  const checkedEmails = [];
+  const correct = await invitationRoute.resolveInvitationSessionPreview(ready, 'invited@example.com', async (email) => {
+    checkedEmails.push(email);
+    return true;
+  });
+  assert.equal(correct.sessionEmailMatchesInvite, true);
+  assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(correct), false);
+
+  const wrong = await invitationRoute.resolveInvitationSessionPreview(ready, 'owner@example.com', async (email) => {
+    checkedEmails.push(email);
+    return false;
+  });
+  assert.equal(wrong.sessionEmailMatchesInvite, false);
+  assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(wrong), true);
+  assert.deepEqual(checkedEmails, ['invited@example.com', 'owner@example.com']);
+
+  const signedOut = await invitationRoute.resolveInvitationSessionPreview(ready, null, async () => {
+    throw new Error('signed-out previews must not check an email');
+  });
+  assert.equal(signedOut.sessionEmailMatchesInvite, undefined);
+  assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(signedOut), false);
+});
+
 test('invite email matching and auth-event profile fallback are deterministic and fail closed', async () => {
   const { invitationRoute } = loadCompiledModules();
   assert.equal(invitationRoute.isReadyInvitationEmailMatch({ ok: true, code: 'ready' }), true);
@@ -1243,6 +1279,9 @@ test('authenticated family onboarding handles invite decisions and honest zero-f
   assert.match(onboarding, /catch \{ setMessage\(\{ text: 'This invitation isn’t available/);
   assert.match(onboarding, /setMessage\(\{ text: `You joined/);
   assert.match(onboarding, /await new Promise\(\(resolve\) => setTimeout\(resolve, 1500\)\)[\s\S]*?auth\.clearInvitationToken\(\)/);
+  assert.match(onboarding, /shouldOfferInvitationAccountSwitch\(invitation\.data\)/);
+  assert.match(onboarding, /shouldOfferInvitationAccountSwitch\(invitation\.data\)[\s\S]*?Sign out to join as the invited person/);
+  assert.doesNotMatch(onboarding, /auth\.session \? <>[\s\S]*?Sign out to join as the invited person/);
   assert.doesNotMatch(onboarding, /message\.includes/);
 });
 

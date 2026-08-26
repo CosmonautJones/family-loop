@@ -1,3 +1,5 @@
+import type { GroupInvitationPreview } from '../../services/api';
+
 const invitationTokenPattern = /^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/;
 
 export function isCanonicalInvitationToken(token: string) {
@@ -48,6 +50,22 @@ export function createLatestResolutionGuard() {
 
 export function isReadyInvitationEmailMatch(value: unknown): boolean {
   return Boolean(value && typeof value === 'object' && 'ok' in value && value.ok === true && 'code' in value && value.code === 'ready');
+}
+
+type ReadyInvitationPreview = Extract<GroupInvitationPreview, { status: 'ready' }>;
+
+export async function resolveInvitationSessionPreview(
+  preview: ReadyInvitationPreview,
+  sessionEmail: string | null | undefined,
+  checkEmailMatch: (email: string) => Promise<boolean | undefined>,
+): Promise<ReadyInvitationPreview> {
+  if (!sessionEmail) return preview;
+  const matches = await checkEmailMatch(sessionEmail);
+  return matches === undefined ? preview : { ...preview, sessionEmailMatchesInvite: matches };
+}
+
+export function shouldOfferInvitationAccountSwitch(preview: GroupInvitationPreview | undefined): boolean {
+  return preview?.status === 'ready' && preview.sessionEmailMatchesInvite === false;
 }
 
 export function resolveWithFallback<T>(primary: Promise<T>, fallback: T): Promise<T> {

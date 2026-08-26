@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { useAcceptInvitationMutation, useCanCreateGroupQuery, useCreateGroupMutation, useDeclineInvitationMutation, useInvitationQuery } from '../app/queries';
 import { SurfaceCard } from '../components/SurfaceCard';
 import { useAuthSession } from '../features/auth/AuthSessionProvider';
+import { shouldOfferInvitationAccountSwitch } from '../features/auth/invitationRoute';
 import { DataExportCard } from '../features/account/DataExportCard';
 import { AccountDeletionCard } from '../features/account/AccountDeletionCard';
 import { palette, spacing } from '../theme/tokens';
@@ -36,8 +37,11 @@ export function FamilyOnboardingScreen() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       auth.clearInvitationToken();
     } catch {
+      const accountMismatch = shouldOfferInvitationAccountSwitch(invitation.data);
       const invited = invitation.data?.status === 'ready' ? invitation.data.maskedEmail : 'the invited email';
-      setMessage({ text: `We couldn’t add you to this family. This invitation is for ${invited}. If you’re signed in as someone else, sign out and open the link again as that person — otherwise ask for a new invitation.`, tone: 'error' });
+      setMessage({ text: accountMismatch
+        ? `We couldn’t add you to this family because this invitation is for ${invited}. Sign out and open the link again as that person.`
+        : 'That family action isn’t available. Ask for a new invitation and try again.', tone: 'error' });
     }
   };
 
@@ -59,7 +63,8 @@ export function FamilyOnboardingScreen() {
         <Text style={styles.copy}>{invitation.data.inviterName} invited {invitation.data.maskedEmail}. Accepting gives this family access to the plans and photos you share with them.</Text>
         <CardAction label={accept.isPending ? 'Joining family…' : 'Accept invitation'} disabled={accept.isPending || decline.isPending} onPress={() => finishInvite('accept')} />
         <CardAction label={decline.isPending ? 'Declining…' : 'Decline invitation'} disabled={accept.isPending || decline.isPending} onPress={() => finishInvite('decline')} />
-        {auth.session ? <><Text style={styles.copy}>Signed in as {auth.session.displayName}. This invitation is for {invitation.data.maskedEmail}.</Text><CardAction label="Sign out to join as the invited person" disabled={accept.isPending || decline.isPending} onPress={() => auth.logout()} /></> : null}
+        {auth.session ? <Text style={styles.copy}>Signed in as {auth.session.displayName}. This invitation is for {invitation.data.maskedEmail}.</Text> : null}
+        {shouldOfferInvitationAccountSwitch(invitation.data) ? <CardAction label="Sign out to join as the invited person" disabled={accept.isPending || decline.isPending} onPress={() => auth.logout()} /> : null}
       </> : null}
       {invitation.isError || invitation.data?.status === 'unavailable' ? <><Text accessibilityRole="alert" style={styles.error}>This invitation isn’t available. Ask the sender for a new link.</Text><CardAction label="Remove invitation" onPress={auth.clearInvitationToken} /></> : null}
       {message ? <Text accessibilityLiveRegion={message.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={message.tone === 'error' ? 'alert' : undefined} style={message.tone === 'error' ? styles.error : styles.copy}>{message.text}</Text> : null}
