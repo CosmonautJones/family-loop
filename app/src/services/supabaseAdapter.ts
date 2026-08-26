@@ -515,7 +515,7 @@ export function createSupabaseLoopedInService(): LoopedInService {
         });
         const outcome = resolveInvitationSignUpOutcome({ data, error });
         if (outcome.status === 'existingAccount') {
-          throw userServiceError('An account with this email may already exist. If you still need to confirm it, check your inbox and spam folder; otherwise choose “Already have an account? Sign in.”');
+          throw userServiceError('An account with this email may already exist. If you still need to confirm it, check your inbox and spam folder, then return to this invitation and sign in; otherwise choose “Already have an account? Sign in.”');
         }
         if (outcome.status === 'failed') throw userServiceError('We couldn’t create your account. Try again or ask for a new invitation.');
         if (outcome.status === 'confirmationOrSignInRequired') return outcome;

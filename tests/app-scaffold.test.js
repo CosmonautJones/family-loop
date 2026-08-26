@@ -1112,9 +1112,15 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.match(api, /confirmationOrSignInRequired/);
   assert.match(adapter, /resolveInvitationSignUpOutcome/);
   assert.match(adapter, /If you still need to confirm it, check your inbox and spam folder/);
-  assert.match(authScreen, /If no message arrives, this address may already have an account/);
-  assert.match(authScreen, /Already have an account\? Sign in/);
+  assert.match(adapter, /then return to this invitation and sign in/);
+  const confirmationGuidance = authScreen.slice(authScreen.indexOf('{auth.confirmationRequired'), authScreen.indexOf('<Pressable', authScreen.indexOf('{auth.confirmationRequired')));
+  assert.match(confirmationGuidance, /If a confirmation message arrives, confirm it, then return to this invitation and sign in/);
+  assert.match(confirmationGuidance, /If no message arrives, this address may already have an account/);
+  assert.match(confirmationGuidance, /Already have an account\? Sign in/);
+  assert.doesNotMatch(confirmationGuidance, /we (sent|emailed)|message (has been|was) sent/i);
   assert.doesNotMatch(authScreen, /Check your email to confirm your account, then return to this invitation and sign in/);
+  const invitedSignUp = adapter.slice(signUpStart, adapter.indexOf('async requestPasswordReset'));
+  assert.doesNotMatch(invitedSignUp, /emailRedirectTo|redirectTo|[?&](invite|token)=/i, 'the private family token must stay in the original hash route, not an Auth redirect or referrer-visible query');
   assert.match(adapter, /target_creation_key: payload\.creationKey/);
   assert.doesNotMatch(adapter.slice(adapter.indexOf('async createGroup'), adapter.indexOf('async updateGroup')), /from\('loopedin_(groups|group_members)'\)\s*\.insert/);
   assert.match(provider, /parseInvitationToken\(window\.location\.hash\)/);
