@@ -22,7 +22,7 @@ import { getSupabaseClient } from './supabaseClient';
 import { maxBrowserImageBytes, validateMediaUpload } from './mediaValidation';
 import type { Session } from '@supabase/supabase-js';
 import { updateEventLocationTimeline } from '../features/events/createEvent';
-import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveInvitationSessionPreview, resolveWithFallback } from '../features/auth/invitationRoute';
+import { isCanonicalInvitationToken, isReadyInvitationEmailMatch, resolveInvitationSessionPreview, resolveInvitationSignUpOutcome, resolveWithFallback } from '../features/auth/invitationRoute';
 import { backendServiceError, userServiceError, withSafeServiceErrors } from './serviceErrors';
 import { subscribeToEventMessages } from './messageSubscription';
 import { createClientErrorTelemetryReporter } from './clientErrorTelemetry';
@@ -507,14 +507,13 @@ export function createSupabaseLoopedInService(): LoopedInService {
           password,
           options: { data: { display_name: name } },
         });
-        if (error) {
-          const alreadyExists = error.code === 'user_already_exists' || /already registered|already exists|already been registered/i.test(error.message ?? '');
-          throw userServiceError(alreadyExists
-            ? 'An account with this email already exists. Confirm the email we sent you (check your spam folder), or choose “Already have an account? Sign in.”'
-            : 'We couldn’t create your account. Try again or ask for a new invitation.');
+        const outcome = resolveInvitationSignUpOutcome({ data, error });
+        if (outcome.status === 'existingAccount') {
+          throw userServiceError('An account with this email may already exist. If you still need to confirm it, check your inbox and spam folder; otherwise choose “Already have an account? Sign in.”');
         }
-        if (!data.session) return { status: 'confirmationRequired' };
-        return { status: 'authenticated', session: sessionWithoutProfile(data.session, name) };
+        if (outcome.status === 'failed') throw userServiceError('We couldn’t create your account. Try again or ask for a new invitation.');
+        if (outcome.status === 'confirmationOrSignInRequired') return outcome;
+        return { status: 'authenticated', session: sessionWithoutProfile(outcome.session, name) };
       },
       async requestPasswordReset(email, redirectTo) {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });

@@ -17,7 +17,7 @@ export interface AuthSession {
 
 export type AuthSignUpResult =
   | { status: 'authenticated'; session: AuthSession }
-  | { status: 'confirmationRequired' };
+  | { status: 'confirmationOrSignInRequired' };
 
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>;

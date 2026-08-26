@@ -1008,6 +1008,33 @@ test('invitation preview identifies only a proven wrong-account session for acco
   assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(signedOut), false);
 });
 
+test('invited signup outcomes distinguish authenticated, duplicate, ambiguous, and unrelated responses', () => {
+  const { invitationRoute } = loadCompiledModules();
+  assert.equal(typeof invitationRoute.resolveInvitationSignUpOutcome, 'function');
+
+  const session = { access_token: 'ephemeral-session' };
+  assert.deepEqual(
+    invitationRoute.resolveInvitationSignUpOutcome({ data: { session }, error: null }),
+    { status: 'authenticated', session },
+  );
+  assert.deepEqual(
+    invitationRoute.resolveInvitationSignUpOutcome({ data: { session: null }, error: null }),
+    { status: 'confirmationOrSignInRequired' },
+  );
+  assert.deepEqual(
+    invitationRoute.resolveInvitationSignUpOutcome({ data: null, error: { code: 'user_already_exists', message: 'opaque provider error' } }),
+    { status: 'existingAccount' },
+  );
+  assert.deepEqual(
+    invitationRoute.resolveInvitationSignUpOutcome({ data: null, error: { message: 'User already registered' } }),
+    { status: 'existingAccount' },
+  );
+  assert.deepEqual(
+    invitationRoute.resolveInvitationSignUpOutcome({ data: null, error: { code: 'weak_password', message: 'Password is too short' } }),
+    { status: 'failed' },
+  );
+});
+
 test('invite email matching and auth-event profile fallback are deterministic and fail closed', async () => {
   const { invitationRoute } = loadCompiledModules();
   assert.equal(invitationRoute.isReadyInvitationEmailMatch({ ok: true, code: 'ready' }), true);
@@ -1043,6 +1070,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   const api = read('src/services/api.ts');
   const adapter = read('src/services/supabaseAdapter.ts');
   const provider = read('src/features/auth/AuthSessionProvider.tsx');
+  const authScreen = read('src/screens/AuthScreen.tsx');
   const queries = read('src/app/queries.ts');
 
   assert.match(api, /signUp\(invitationToken: string, displayName: string, email: string, password: string\)/);
@@ -1066,6 +1094,12 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.doesNotMatch(authListener, /catch\([\s\S]*?listener\(null\)/);
   assert.match(adapter, /Email or password not recognized/);
   assert.match(adapter, /We couldn’t create your account\. Try again or ask for a new invitation/);
+  assert.match(api, /confirmationOrSignInRequired/);
+  assert.match(adapter, /resolveInvitationSignUpOutcome/);
+  assert.match(adapter, /If you still need to confirm it, check your inbox and spam folder/);
+  assert.match(authScreen, /If no message arrives, this address may already have an account/);
+  assert.match(authScreen, /Already have an account\? Sign in/);
+  assert.doesNotMatch(authScreen, /Check your email to confirm your account, then return to this invitation and sign in/);
   assert.match(adapter, /target_creation_key: payload\.creationKey/);
   assert.doesNotMatch(adapter.slice(adapter.indexOf('async createGroup'), adapter.indexOf('async updateGroup')), /from\('loopedin_(groups|group_members)'\)\s*\.insert/);
   assert.match(provider, /parseInvitationToken\(window\.location\.hash\)/);

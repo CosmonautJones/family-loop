@@ -173,7 +173,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       const result = await loopedInService.auth.signUp(invitationToken, displayName, email, password);
       if (!isCurrent()) return;
       if (result.status === 'authenticated') applySession(result.session);
-      else setConfirmationRequired(true);
+      else if (result.status === 'confirmationOrSignInRequired') setConfirmationRequired(true);
     } catch (cause: unknown) {
       if (!isCurrent()) return;
       setSession(null);

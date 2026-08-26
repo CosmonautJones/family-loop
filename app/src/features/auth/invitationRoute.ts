@@ -68,6 +68,28 @@ export function shouldOfferInvitationAccountSwitch(preview: GroupInvitationPrevi
   return preview?.status === 'ready' && preview.sessionEmailMatchesInvite === false;
 }
 
+export type InvitationSignUpOutcome<T> =
+  | { status: 'authenticated'; session: T }
+  | { status: 'confirmationOrSignInRequired' }
+  | { status: 'existingAccount' }
+  | { status: 'failed' };
+
+export function isExistingAccountSignUpError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const code = 'code' in error && typeof error.code === 'string' ? error.code : '';
+  const message = 'message' in error && typeof error.message === 'string' ? error.message : '';
+  return code === 'user_already_exists' || /already registered|already exists|already been registered/i.test(message);
+}
+
+export function resolveInvitationSignUpOutcome<T>(response: {
+  data: { session: T | null } | null;
+  error: unknown;
+}): InvitationSignUpOutcome<T> {
+  if (response.error) return { status: isExistingAccountSignUpError(response.error) ? 'existingAccount' : 'failed' };
+  if (!response.data?.session) return { status: 'confirmationOrSignInRequired' };
+  return { status: 'authenticated', session: response.data.session };
+}
+
 export function resolveWithFallback<T>(primary: Promise<T>, fallback: T): Promise<T> {
   return primary.catch(() => fallback);
 }
