@@ -989,23 +989,36 @@ test('invitation preview identifies only a proven wrong-account session for acco
   const correct = await invitationRoute.resolveInvitationSessionPreview(ready, 'invited@example.com', async (email) => {
     checkedEmails.push(email);
     return true;
+  }, async () => {
+    throw new Error('a matching account must not revalidate the invitation');
   });
   assert.equal(correct.sessionEmailMatchesInvite, true);
   assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(correct), false);
 
+  let wrongAccountRevalidations = 0;
   const wrong = await invitationRoute.resolveInvitationSessionPreview(ready, 'owner@example.com', async (email) => {
     checkedEmails.push(email);
     return false;
+  }, async () => {
+    wrongAccountRevalidations += 1;
+    return ready;
   });
   assert.equal(wrong.sessionEmailMatchesInvite, false);
   assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(wrong), true);
+  assert.equal(wrongAccountRevalidations, 1);
   assert.deepEqual(checkedEmails, ['invited@example.com', 'owner@example.com']);
 
   const signedOut = await invitationRoute.resolveInvitationSessionPreview(ready, null, async () => {
     throw new Error('signed-out previews must not check an email');
+  }, async () => {
+    throw new Error('signed-out previews must not revalidate the invitation');
   });
   assert.equal(signedOut.sessionEmailMatchesInvite, undefined);
   assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(signedOut), false);
+
+  const terminalDuringMatch = await invitationRoute.resolveInvitationSessionPreview(ready, 'owner@example.com', async () => false, async () => ({ status: 'unavailable' }));
+  assert.deepEqual(terminalDuringMatch, { status: 'unavailable' });
+  assert.equal(invitationRoute.shouldOfferInvitationAccountSwitch(terminalDuringMatch), false);
 });
 
 test('invited signup outcomes distinguish authenticated, duplicate, ambiguous, and unrelated responses', () => {
@@ -1094,6 +1107,8 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.doesNotMatch(authListener, /catch\([\s\S]*?listener\(null\)/);
   assert.match(adapter, /Email or password not recognized/);
   assert.match(adapter, /We couldn’t create your account\. Try again or ask for a new invitation/);
+  const validateInvitation = adapter.slice(adapter.indexOf('async validateInvitation'), adapter.indexOf('async acceptInvitation'));
+  assert.equal((validateInvitation.match(/rpc\('loopedin_validate_group_invite'/g) ?? []).length, 2, 'a failed session-email match must revalidate the invitation before offering an account switch');
   assert.match(api, /confirmationOrSignInRequired/);
   assert.match(adapter, /resolveInvitationSignUpOutcome/);
   assert.match(adapter, /If you still need to confirm it, check your inbox and spam folder/);

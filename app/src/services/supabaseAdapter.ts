@@ -211,6 +211,12 @@ function requireRpcSuccess(data: unknown, allowedStatuses: readonly GroupActionS
   return result as RpcResult & { code: GroupActionStatus };
 }
 
+function invitationPreviewFromRpc(data: unknown): GroupInvitationPreview {
+  const result = (data ?? {}) as RpcResult;
+  if (!result.ok || !result.groupId || !result.groupName || !result.inviterName || !result.maskedEmail || !result.expiresAt) return { status: 'unavailable' };
+  return { status: 'ready', groupId: result.groupId, groupName: result.groupName, inviterName: result.inviterName, maskedEmail: result.maskedEmail, expiresAt: result.expiresAt };
+}
+
 async function fetchValidatedMediaBlob(fileUri: string) {
   const response = await fetch(fileUri);
   if (!response.ok) throw userServiceError('The photo could not be downloaded. Check the link and try again.');
@@ -623,13 +629,15 @@ export function createSupabaseLoopedInService(): LoopedInService {
         const tokenHex = invitationTokenToHex(token);
         const { data, error } = await supabase.rpc('loopedin_validate_group_invite', { target_token: tokenHex });
         throwIfError(error);
-        const result = (data ?? {}) as RpcResult;
-        if (!result.ok || !result.groupId || !result.groupName || !result.inviterName || !result.maskedEmail || !result.expiresAt) return { status: 'unavailable' };
-        const preview = { status: 'ready' as const, groupId: result.groupId, groupName: result.groupName, inviterName: result.inviterName, maskedEmail: result.maskedEmail, expiresAt: result.expiresAt };
+        const preview = invitationPreviewFromRpc(data);
+        if (preview.status !== 'ready') return preview;
         const { data: sessionData } = await supabase.auth.getSession();
         return resolveInvitationSessionPreview(preview, sessionData.session?.user.email, async (sessionEmail) => {
           const { data: match, error: matchError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: tokenHex, target_email: sessionEmail });
           return matchError ? undefined : isReadyInvitationEmailMatch(match);
+        }, async () => {
+          const { data: latest, error: latestError } = await supabase.rpc('loopedin_validate_group_invite', { target_token: tokenHex });
+          return latestError ? undefined : invitationPreviewFromRpc(latest);
         });
       },
       async acceptInvitation(token): Promise<GroupActionResult> {

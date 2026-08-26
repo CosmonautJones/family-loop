@@ -58,10 +58,15 @@ export async function resolveInvitationSessionPreview(
   preview: ReadyInvitationPreview,
   sessionEmail: string | null | undefined,
   checkEmailMatch: (email: string) => Promise<boolean | undefined>,
-): Promise<ReadyInvitationPreview> {
+  revalidateInvitation: () => Promise<GroupInvitationPreview | undefined>,
+): Promise<GroupInvitationPreview> {
   if (!sessionEmail) return preview;
   const matches = await checkEmailMatch(sessionEmail);
-  return matches === undefined ? preview : { ...preview, sessionEmailMatchesInvite: matches };
+  if (matches === undefined) return preview;
+  if (matches) return { ...preview, sessionEmailMatchesInvite: true };
+  const latestPreview = await revalidateInvitation();
+  if (!latestPreview) return preview;
+  return latestPreview.status === 'ready' ? { ...latestPreview, sessionEmailMatchesInvite: false } : latestPreview;
 }
 
 export function shouldOfferInvitationAccountSwitch(preview: GroupInvitationPreview | undefined): boolean {
