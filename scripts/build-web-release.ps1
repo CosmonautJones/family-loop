@@ -127,9 +127,11 @@ try {
   if ($onWindows) {
     $shell = (Get-Command cmd.exe).Source
     Invoke-BoundedProcess $shell @('/d', '/s', '/c', 'npm ci --no-audit --no-fund') $appPath 300 'npm-ci'
+    Invoke-BoundedProcess $shell @('/d', '/s', '/c', 'node scripts\ensure-metro-compat.cjs') $appPath 60 'metro-compat'
     Invoke-BoundedProcess $shell @('/d', '/s', '/c', "npx expo export --platform web --output-dir `"$exportPath`" --clear") $appPath 300 'expo-export'
   } else {
     Invoke-BoundedProcess (Get-Command npm).Source @('ci', '--no-audit', '--no-fund') $appPath 300 'npm-ci'
+    Invoke-BoundedProcess (Get-Command node).Source @('scripts/ensure-metro-compat.cjs') $appPath 60 'metro-compat'
     Invoke-BoundedProcess (Get-Command npx).Source @('expo', 'export', '--platform', 'web', '--output-dir', $exportPath, '--clear') $appPath 300 'expo-export'
   }
 

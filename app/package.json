@@ -9,7 +9,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "eslint . --max-warnings 0",
-    "test": "node --test ../tests/app-scaffold.test.js"
+    "test": "node --test ../tests/app-scaffold.test.js",
+    "postinstall": "node scripts/ensure-metro-compat.cjs"
   },
   "dependencies": {
     "@expo-google-fonts/instrument-sans": "^0.4.2",
