@@ -1369,11 +1369,14 @@ test('mock service completes create, refetch, same-detail, and RSVP loop', async
     members: [{ id: 'person-you', name: 'Alex Jones', initials: 'AJ', avatarUri: '', role: 'owner' }],
   });
   const service = mockAdapter.createMockLoopedInService(seed);
+  const now = new Date();
+  const startsAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const endsAt = new Date(startsAt.getTime() + 3 * 60 * 60 * 1000);
   const payload = {
     groupId: 'group-integration',
     title: 'Future lake day',
-    startsAt: '2026-08-15T15:00:00-05:00',
-    endsAt: '2026-08-15T18:00:00-05:00',
+    startsAt: startsAt.toISOString(),
+    endsAt: endsAt.toISOString(),
     location: 'North shore',
     description: 'Bring towels',
   };
@@ -1384,7 +1387,7 @@ test('mock service completes create, refetch, same-detail, and RSVP loop', async
   assert.equal(refetched.length, 1);
   assert.equal(refetched[0].id, created.id);
 
-  const home = selectors.selectHomeViewModel({ events: refetched, now: new Date('2026-08-01T00:00:00Z') });
+  const home = selectors.selectHomeViewModel({ events: refetched, now });
   const calendar = selectors.selectCalendarViewModel(refetched);
   assert.equal(home.heroEvent.id, created.id);
   assert.equal(calendar.agenda[0].id, created.id);
