@@ -4,10 +4,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
+import { loadInvitationCandidate, verifyHostedInvitationCandidate } from '../scripts/hosted-invitation-release.mjs';
 
 const APP_ORIGIN = 'https://loopedin-family.netlify.app';
-const EXPECTED_RELEASE = '0.1.0-ce4b0c56d30b';
-const EXPECTED_ENVIRONMENT = 'loopedin-staging';
 const EXPECTED_PROJECT_REF = 'vkogznsfthirhxkqysza';
 const QUARANTINED_PROJECT_REF = 'lzscofbvecgpchokxhyb';
 const QA_MARKER = 'loopedin_hosted_invitation_qa';
@@ -20,16 +19,27 @@ const projectRef = process.env.LOOPEDIN_HOSTED_PROJECT_REF;
 const url = process.env.SUPABASE_URL;
 const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
 const secretKey = process.env.SUPABASE_SECRET_KEY;
-const linkedProjectRef = readFileSync(new URL('../supabase/.temp/project-ref', import.meta.url), 'utf8').trim();
-
-assert.equal(process.env.LOOPEDIN_HOSTED_STAGING_ACK, 'I_ACKNOWLEDGE_LOOPEDIN_STAGING_ONLY');
-assert.equal(projectRef, EXPECTED_PROJECT_REF, 'unexpected hosted project');
-assert.equal(linkedProjectRef, EXPECTED_PROJECT_REF, 'Supabase CLI is not linked to the dedicated staging project');
-assert.notEqual(projectRef, QUARANTINED_PROJECT_REF, 'quarantined project refused');
-assert.equal(url, `https://${EXPECTED_PROJECT_REF}.supabase.co`, 'unexpected hosted URL');
-assert.match(publishableKey ?? '', /^sb_publishable_[A-Za-z0-9_-]+$/, 'publishable key required');
-assert.match(secretKey ?? '', /^sb_secret_[A-Za-z0-9_-]+$/, 'secret key required');
-assert.ok(existsSync(CHROME_PATH), 'Chrome executable is unavailable');
+let candidate;
+try {
+  candidate = loadInvitationCandidate({
+    artifactPath: process.env.LOOPEDIN_QA_ARTIFACT_PATH,
+    sourceCommit: process.env.LOOPEDIN_QA_SOURCE_COMMIT,
+    artifactSha256: process.env.LOOPEDIN_QA_ARTIFACT_SHA256,
+    approvalReference: process.env.LOOPEDIN_QA_APPROVAL_REFERENCE,
+  });
+  const linkedProjectRef = readFileSync(new URL('../supabase/.temp/project-ref', import.meta.url), 'utf8').trim();
+  assert.equal(process.env.LOOPEDIN_HOSTED_STAGING_ACK, 'I_ACKNOWLEDGE_LOOPEDIN_STAGING_ONLY');
+  assert.equal(projectRef, EXPECTED_PROJECT_REF, 'unexpected hosted project');
+  assert.equal(linkedProjectRef, EXPECTED_PROJECT_REF, 'Supabase CLI is not linked to the dedicated staging project');
+  assert.notEqual(projectRef, QUARANTINED_PROJECT_REF, 'quarantined project refused');
+  assert.equal(url, `https://${EXPECTED_PROJECT_REF}.supabase.co`, 'unexpected hosted URL');
+  assert.match(publishableKey ?? '', /^sb_publishable_[A-Za-z0-9_-]+$/, 'publishable key required');
+  assert.match(secretKey ?? '', /^sb_secret_[A-Za-z0-9_-]+$/, 'secret key required');
+  assert.ok(existsSync(CHROME_PATH), 'Chrome executable is unavailable');
+} catch {
+  console.error('Hosted invitation QA configuration is invalid; details redacted. No hosted fixture was created.');
+  process.exit(1);
+}
 
 function safeUuid(value) {
   assert.match(value ?? '', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i, 'invalid synthetic UUID');
@@ -92,6 +102,7 @@ async function request(path, { token = publishableKey, headers = {}, ...options 
   const apiKey = token === secretKey ? secretKey : publishableKey;
   const response = await fetch(`${url}${path}`, {
     ...options,
+    redirect: 'error', signal: AbortSignal.timeout(15_000),
     headers: { apikey: apiKey, Authorization: `Bearer ${token}`, ...headers },
   });
   const text = await response.text();
@@ -154,17 +165,7 @@ async function createConfirmedUser(runId, role) {
 }
 
 async function verifyHostedRelease() {
-  const shell = await fetch(`${APP_ORIGIN}/`, { redirect: 'error' });
-  assert.equal(shell.status, 200, 'hosted invitation shell unavailable');
-  assert.equal(shell.headers.get('x-loopedin-release'), EXPECTED_RELEASE, 'hosted invitation release mismatch');
-  assert.equal(shell.headers.get('x-loopedin-environment'), EXPECTED_ENVIRONMENT, 'hosted invitation environment mismatch');
-  const runtimeResponse = await fetch(`${APP_ORIGIN}/runtime-config.json`, { cache: 'no-store' });
-  assert.equal(runtimeResponse.status, 200, 'hosted invitation runtime unavailable');
-  assert.match(runtimeResponse.headers.get('cache-control') ?? '', /no-store/i);
-  const runtime = await runtimeResponse.json();
-  assert.equal(runtime.environmentId, EXPECTED_ENVIRONMENT);
-  assert.equal(runtime.supabaseUrl, url);
-  assert.equal(runtime.supabasePublishableKey, publishableKey);
+  await verifyHostedInvitationCandidate(candidate, { expectedPublishableKey: publishableKey });
 }
 
 async function withBrowser(initialUrl, proof) {
@@ -196,8 +197,15 @@ async function withBrowser(initialUrl, proof) {
     };
     const command = (method, params = {}) => {
       const id = ++sequence;
-      socket.send(JSON.stringify({ id, method, params }));
-      return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => { pending.delete(id); reject(new Error('Browser command timed out.')); }, 15_000);
+        pending.set(id, {
+          resolve: (result) => { clearTimeout(timer); resolve(result); },
+          reject: (error) => { clearTimeout(timer); reject(error); },
+        });
+        try { socket.send(JSON.stringify({ id, method, params })); }
+        catch { pending.get(id)?.reject(new Error('Browser command failed.')); pending.delete(id); }
+      });
     };
     const evaluate = async (expression) => {
       const result = await command('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
@@ -216,18 +224,21 @@ async function withBrowser(initialUrl, proof) {
     const hash = () => evaluate('window.location.hash');
     const fill = (id, value) => evaluate(`(() => { const element=document.getElementById(${JSON.stringify(id)}); if(!element)return false; const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set; setter.call(element,${JSON.stringify(value)}); element.dispatchEvent(new Event('input',{bubbles:true})); return true; })()`);
     const clickText = (value) => evaluate(`(() => { const element=[...document.querySelectorAll('button,[role=button],[role=tab]')].find((item)=>item.textContent?.trim()===${JSON.stringify(value)}); if(!element)return false; element.click(); return true; })()`);
+    const clickLabelPrefix = (value) => evaluate(`(() => { const elements=[...document.querySelectorAll('button,[role=button]')].filter((item)=>item.getAttribute('aria-label')?.startsWith(${JSON.stringify(value)})); if(elements.length!==1)return false; elements[0].click(); return true; })()`);
     const reload = async () => { await command('Page.reload', { ignoreCache: true }); };
     await command('Page.enable');
     await command('Runtime.enable');
     await command('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     await command('Page.navigate', { url: initialUrl });
     stage = 'scenario';
-    const result = await proof({ eventually, text, hash, fill, clickText, reload, evaluate, setStage: (value) => { stage = value; } });
+    const result = await proof({ eventually, text, hash, fill, clickText, clickLabelPrefix, reload, evaluate, setStage: (value) => { stage = value; } });
     assert.deepEqual(consoleEvents, [], 'hosted invitation browser console events');
     return result;
   } catch {
     throw new Error(`hosted invitation browser proof failed during ${stage}`);
   } finally {
+    for (const handlers of pending.values()) handlers.reject(new Error('Browser proof ended.'));
+    pending.clear();
     socket?.close();
     chrome.kill();
     await delay(500);
@@ -241,14 +252,14 @@ function inviteUrl(token) {
 
 async function createCopiedInvitation(owner, inviteeEmail) {
   sensitiveValues.add(inviteeEmail);
-  const copiedUrl = await withBrowser(APP_ORIGIN, async ({ eventually, text, fill, clickText, evaluate, setStage }) => {
+  const copiedUrl = await withBrowser(APP_ORIGIN, async ({ eventually, text, fill, clickText, clickLabelPrefix, evaluate, setStage }) => {
     setStage('owner sign-in');
     await eventually(async () => (await text()).includes('Welcome back'), 'owner sign-in form');
     assert.equal(await fill('auth-email', owner.email), true, 'owner email input unavailable');
     assert.equal(await fill('auth-password', owner.password), true, 'owner password input unavailable');
     assert.equal(await clickText('Sign in'), true, 'owner sign-in unavailable');
-    await eventually(async () => (await text()).includes('Family'), 'owner family tab');
-    assert.equal(await clickText('Family'), true, 'owner family tab unavailable');
+    await eventually(async () => await evaluate(`Boolean(document.querySelector('[aria-label^="Family and account."]'))`), 'owner account button');
+    assert.equal(await clickLabelPrefix('Family and account.'), true, 'owner account button unavailable');
     await eventually(async () => (await text()).includes('Invite someone'), 'owner invitation form');
     setStage('owner creates copied link');
     assert.equal(await fill('family-invite-email-input', inviteeEmail), true, 'owner invitation email unavailable');
@@ -268,15 +279,26 @@ async function createCopiedInvitation(owner, inviteeEmail) {
   return { browser: match[1] };
 }
 
-async function proveExistingRecipient(token, recipient, familyName) {
+async function proveExistingRecipient(token, recipient, familyName, wrongAccount) {
   const route = inviteUrl(token);
-  await withBrowser(route, async ({ eventually, text, hash, fill, clickText, reload, setStage }) => {
+  await withBrowser(route, async ({ eventually, text, hash, fill, clickText, reload, evaluate, setStage }) => {
     setStage('valid signed-out preview');
     await eventually(async () => (await text()).includes(`Join ${familyName}`), 'valid signed-out invitation preview');
     assert.equal(await hash(), `#/invite/${token.browser}`, 'invitation route mismatch');
     await reload();
     await eventually(async () => (await text()).includes(`Join ${familyName}`), 'invitation preview after reload');
     assert.equal(await hash(), `#/invite/${token.browser}`, 'invitation route lost after reload');
+    setStage('wrong-account rejection and recovery');
+    assert.equal(await fill('auth-email', wrongAccount.email), true, 'wrong-account email input unavailable');
+    assert.equal(await fill('auth-password', wrongAccount.password), true, 'wrong-account password input unavailable');
+    assert.equal(await clickText('Sign in'), true, 'wrong-account sign-in unavailable');
+    await eventually(async () => (await text()).includes('Sign out to join as the invited person'), 'wrong-account recovery action');
+    assert.equal(await clickText('Accept invitation'), true, 'wrong-account acceptance action unavailable');
+    await eventually(async () => (await text()).includes('We couldn’t add you to this family because this invitation is for'), 'wrong-account denial');
+    assert.equal(await hash(), `#/invite/${token.browser}`, 'wrong-account denial lost invitation route');
+    assert.equal(await clickText('Sign out to join as the invited person'), true, 'wrong-account sign-out unavailable');
+    await eventually(async () => (await text()).includes('Welcome back') && (await text()).includes(`Join ${familyName}`), 'signed-out invited-account recovery');
+    assert.equal(await hash(), `#/invite/${token.browser}`, 'account switch lost invitation route');
     setStage('recipient sign-in');
     assert.equal(await fill('auth-email', recipient.email), true, 'recipient email input unavailable');
     assert.equal(await fill('auth-password', recipient.password), true, 'recipient password input unavailable');
@@ -287,8 +309,53 @@ async function proveExistingRecipient(token, recipient, familyName) {
     await eventually(async () => (await text()).includes(`You joined ${familyName}.`), 'accepted invitation confirmation');
     await eventually(async () => (await hash()) === '#/home', 'accepted invitation route cleared');
     await reload();
-    await eventually(async () => !(await text()).includes('Welcome back') && (await text()).includes('Family'), 'accepted session restoration');
+    await eventually(async () => (await hash()) === '#/home' &&
+      await evaluate(`Boolean(document.querySelector('[aria-label^="Family and account."]'))`) &&
+      (await text()).includes(familyName), 'accepted session restoration');
   });
+}
+
+async function proveRevokedAndExpired(owner, groupId, runId) {
+  const email = emailFor(runId, 'signup');
+  const locate = async (token) => {
+    const hash = crypto.createHash('sha256').update(Buffer.from(token.browser, 'base64url')).digest('hex');
+    sensitiveValues.add(hash);
+    const rows = await required(request(`/rest/v1/loopedin_group_invitations?group_id=eq.${safeUuid(groupId)}&invited_by=eq.${safeUuid(owner.id)}&token_hash=eq.%5Cx${hash}&select=id,status`, { token: secretKey }), 'locate exact synthetic invitation');
+    assert.equal(rows.length, 1, 'exact synthetic invitation not found');
+    assert.equal(rows[0].status, 'pending', 'synthetic invitation is not pending');
+    return safeUuid(rows[0].id);
+  };
+  const revokedToken = await createCopiedInvitation(owner, email);
+  const revokedId = await locate(revokedToken);
+  const revoked = await required(rpc('loopedin_revoke_group_invite', owner.token, { target_invitation_id: revokedId }), 'revoke synthetic invitation');
+  assert.equal(revoked.ok, true, 'synthetic invitation revoke refused');
+  await proveUnavailable(revokedToken, 'revoked invitation unavailable');
+
+  const expiredToken = await createCopiedInvitation(owner, email);
+  const expiredId = await locate(expiredToken);
+  dbQuery(`
+    do $$
+    declare changed integer;
+    begin
+      update public.loopedin_group_invitations invitation
+      set created_at = least(invitation.created_at, now() - interval '2 seconds'),
+          expires_at = now() - interval '1 second'
+      where invitation.id = '${expiredId}'::uuid and invitation.group_id = '${safeUuid(groupId)}'::uuid
+        and invitation.invited_by = '${safeUuid(owner.id)}'::uuid and invitation.status = 'pending'
+        and exists (
+          select 1 from public.loopedin_groups family join auth.users actor on actor.id = family.created_by
+          where family.id = invitation.group_id and actor.id = invitation.invited_by
+            and family.name = 'LoopedIn invitation QA ${runId}'
+            and family.description = 'loopedin-hosted-invitation-qa:${runId}'
+            and actor.raw_app_meta_data->>'${QA_MARKER}' = 'true'
+            and actor.raw_app_meta_data->>'loopedin_qa_run_id' = '${runId}'
+            and actor.raw_app_meta_data->>'loopedin_qa_role' = 'owner'
+        );
+      get diagnostics changed = row_count;
+      if changed <> 1 then raise exception 'Synthetic invitation expiry guard refused'; end if;
+    end $$;
+  `, 'expire exact marked synthetic invitation');
+  await proveUnavailable(expiredToken, 'expired invitation unavailable');
 }
 
 async function proveUnavailable(token, label) {
@@ -432,8 +499,10 @@ async function run() {
   let groupId;
   let summary;
   let primaryError;
+  let fixturesStarted = false;
   try {
     await verifyHostedRelease();
+    fixturesStarted = true;
     users.owner = await createConfirmedUser(runId, 'owner');
     users.recipient = await createConfirmedUser(runId, 'recipient');
     dbQuery(`
@@ -453,15 +522,19 @@ async function run() {
     }), 'create synthetic invitation family');
     groupId = safeUuid(group.id);
     const existingToken = await createCopiedInvitation(users.owner, users.recipient.email);
-    await proveExistingRecipient(existingToken, users.recipient, group.name);
+    await proveExistingRecipient(existingToken, users.recipient, group.name, users.owner);
     const membership = await required(request(`/rest/v1/loopedin_group_members?group_id=eq.${groupId}&user_id=eq.${users.recipient.id}&select=user_id,role`, { token: secretKey }), 'verify recipient membership');
     assert.deepEqual(membership, [{ user_id: users.recipient.id, role: 'member' }], 'accepted recipient membership');
     await proveUnavailable(existingToken, 'consumed invitation unavailable');
+    await proveRevokedAndExpired(users.owner, groupId, runId);
 
     summary = {
       runId,
+      sourceCommit: candidate.manifest.sourceCommit, artifactSha256: candidate.manifest.artifactSha256,
+      releaseId: candidate.manifest.releaseId, approvalReference: candidate.approvalReference,
       validPreview: true, deepLinkReload: true, existingRecipientAccepted: true,
       sessionRestored: true, consumedUnavailable: true, signupConfirmationRequired: false,
+      wrongAccountRecovered: true, revokedUnavailable: true, expiredUnavailable: true,
       signupDeliveryGateNotRun: true,
       objectFree: true,
     };
@@ -469,7 +542,7 @@ async function run() {
     primaryError = error;
   } finally {
     try {
-      await cleanup(runId, runStartedAt, users, groupId);
+      if (fixturesStarted) await cleanup(runId, runStartedAt, users, groupId);
       if (summary) console.log(JSON.stringify({ ...summary, residue: 0 }));
     } catch (cleanupError) {
       primaryError = new Error(primaryError ? `${redact(primaryError)}; cleanup failed` : `cleanup failed: ${redact(cleanupError)}`);

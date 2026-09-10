@@ -65,3 +65,26 @@ Hosted configuration requires `LOOPEDIN_APP_ORIGIN`, `RESEND_INVITATION_API_KEY`
 - The recovery link was not opened and the password was not changed. Full password replacement and replay denial remain `NOT RUN`.
 - New-account confirmation from a delivered invitation remains `NOT RUN`; the accepted invitation used the explicitly approved existing account. No family recipient was contacted.
 - These are staging proofs. Production SMTP remains blocked on the separate production Supabase/provider environment and the production promotion gate.
+# September 10 exact-candidate invitation gate
+
+The hosted invitation wrapper now requires a verified local artifact, its full source commit, its artifact digest, and a non-sensitive approval reference. It verifies the public deployed release header, root HTML, full manifest, runtime environment/backend, and every payload file's length and SHA-256 before retrieving privileged credentials. The browser harness repeats that verification before attempting fixture creation and compares the expected publishable key inside the same bounded runtime read. A release-name match alone is insufficient.
+
+Use PowerShell for a read-only check (no credential lookup or test accounts):
+
+```powershell
+./scripts/test-hosted-supabase-invitation.ps1 -PreflightOnly `
+  -ArtifactPath '<verified artifact folder>' `
+  -ExpectedSourceCommit '<full 40-character source commit>' `
+  -ExpectedArtifactSha256 '<64-character artifact digest>' `
+  -ApprovalReference 'read-only-candidate-audit'
+```
+
+The September 10 check against candidate `c82b33411c7d3effa2faef7a55c9bb646e798d4d` correctly refuses the older deployed release before credential retrieval. This refusal is a successful guard observation, not hosted acceptance or deployment proof. The public preflight makes no CI claim and cannot replace fresh candidate CI.
+
+Only after separate authorization for the named staging environment, marked disposable accounts, and their exact cleanup may an operator omit `-PreflightOnly`, add `-AcknowledgeStagingOnly`, and supply the recorded approval reference. The wrapper restores process environment inputs and never prints credential values. An approval-reference string records prior authorization; entering one does not grant authorization.
+
+The existing-account browser scenario now navigates through the current accessible Family/account button and includes wrong-account acceptance denial, sign-out back to the original invitation, invited-account acceptance/reload, consumed denial, revoked denial, and expired denial. Expiry is advanced only on the exact pending invitation owned by the marked synthetic family and owner; the update requires one matching row. Browser commands and API calls have bounded timeouts, and preflight failure skips privileged fixture cleanup because no fixture was attempted.
+
+These updated hosted scenarios are **NOT RUN** until the candidate is deployed and execution is authorized. Local tests cover trusted-artifact inputs, full commit identity, altered/oversized/missing served files, runtime isolation/cache controls, and early refusal. They do not prove the browser scenarios or cleanup against Supabase.
+
+New-account signup, actual invitation inbox receipt, confirmation-link use, password replacement, and physical phone use remain a separate attended acceptance flow. The synthetic copied-link harness uses `.invalid` recipients and explicitly reports `signupConfirmationRequired: false` and `signupDeliveryGateNotRun: true`. Do not present its success as real email or new-account confirmation proof. Use a recipient explicitly approved by Travis, keep credentials/links out of evidence, and record observable completion separately.
