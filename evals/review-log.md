@@ -733,3 +733,10 @@
 - Added `npm run lint:workflows` and a root `npm run lint` that also runs the existing app ESLint check. The PowerShell 7 launcher supports x64 Windows/Linux, downloads actionlint 1.7.12 with pinned official archive hashes, verifies the cached archive on every run, and restores the executable from verified bytes. Cache files are ignored by Git.
 - Added the same workflow command to the existing CI Security and dependencies job, without an extra runner job or paid lint service. Local execution uses no Actions allowance; the known account cap still prevents hosted CI execution.
 - Verification: all four real workflow files pass; a temporary workflow with a nonexistent job dependency fails as expected and was removed. A cached run with network access disabled passes. The app ESLint check passes. Workflow lint also passes with optional ShellCheck 0.11.0 available. Secret scan, diff checks, and PowerShell syntax pass. Independent review found no actionable issues. Linux launcher execution and hosted CI remain unverified.
+
+## 2026-09-10 — local release closeout with Actions deferred
+
+- Recorded Travis's decision to defer GitHub Actions and use local checks. Main already contains the application fixes and local workflow linting. Scheduled backup/monitoring coverage remains unavailable and is not replaced by linting.
+- Fresh final repository suite passes 169/169; all ten migration checksum/history checks pass. Verified that app, database, and build-script inputs are unchanged from application artifact source c82b33411c7d3effa2faef7a55c9bb646e798d4d.
+- Built and independently verified a Netlify envelope using the exact application artifact and the current public loopedin-staging runtime. Packaged all 16 files into a ZIP and checked each entry's SHA-256 against the source envelope. No hosted mutation occurred.
+- Fresh public availability passes shell/runtime/Auth 200, expected release/environment, and missing-asset 404. Live remains 0.1.0-eca9bb8f7be8. Publishing, exact-candidate hosted invitation acceptance, attended inbox/phone checks, and operational coverage remain open.
