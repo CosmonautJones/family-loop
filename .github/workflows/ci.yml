@@ -106,6 +106,8 @@ jobs:
           cache-dependency-path: app/package-lock.json
       - name: Scan repository for secrets
         run: npm run check:secrets
+      - name: Lint GitHub Actions workflows
+        run: npm run lint:workflows
       - name: Audit dependency lockfile
         run: npm audit --package-lock-only --audit-level=high
         working-directory: app

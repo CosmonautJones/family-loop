@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 coverage/
+.cache/
 .codex/
 app/.expo/
 .DS_Store

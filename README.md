@@ -25,6 +25,19 @@ The main product surface is the responsive web app in `app/`, optimized for iOS 
 npm test
 ```
 
+### Local linting without GitHub Actions minutes
+
+From the repository root, with Node.js and PowerShell 7 installed:
+
+```powershell
+npm run lint:workflows  # Validate every GitHub Actions workflow
+npm run lint            # Workflow validation plus the app's ESLint checks
+```
+
+App linting requires its dependencies (`npm --prefix app ci`). The workflow launcher downloads the free MIT-licensed actionlint 1.7.12 once from its official release, verifies its pinned SHA-256, and caches the archive under ignored `.cache/actionlint/`. Later runs use that archive offline and verify it again before extraction. The launcher supports x64 Windows and Linux; ShellCheck/Pyflakes integration is automatic when those optional tools are installed.
+
+The same workflow command runs inside CI's existing Security and dependencies job, without an extra job or paid lint service. Local linting consumes no GitHub Actions minutes. Hosted checks still use the account's Actions allowance and cannot run while the account is capped. Workflow linting does not replace app tests, database integration, or hosted release verification.
+
 ### Preview concept docs locally
 ```bash
 npm run preview:prototype

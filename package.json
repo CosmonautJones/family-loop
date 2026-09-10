@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "lint:workflows": "pwsh -NoProfile -File scripts/lint-workflows.ps1",
+    "lint": "npm run lint:workflows && npm --prefix app run lint",
     "test": "node --test",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
