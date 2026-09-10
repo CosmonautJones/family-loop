@@ -1,5 +1,30 @@
 # GO-LIVE — LoopedIn (family use)
 
+## Current finish checkpoint: 2026-09-10
+
+This checkpoint supersedes the dated status and unconditional readiness claims below. The target remains a small private family launch using the existing product.
+
+- Canonical GitHub repository: `https://github.com/CosmonautJones/family-loop` (private).
+- Latest saved candidate at discovery: `codex/invitation-flow-release-ready`, source `eb587668eac3d2ea6d21ff015df0c4ed52c9ea52`, dated August 26. It contains all of current `main` plus 14 commits. The clean release checkout and the latest verification checkout agree.
+- Current `main`: `85f2da319fc1fb641d2854d689e2731842dcadbd`. Live site: `https://loopedin-family.netlify.app`, release `0.1.0-eca9bb8f7be8`, environment `loopedin-staging`.
+- Fresh read-only availability passed shell/runtime/Auth HTTP 200, security/cache headers, release identity, and missing-asset HTTP 404. The hosted signed-out browser reaches the sign-in form. This does not prove a signed-in family journey or the newer candidate's deployment.
+- GitHub Actions is blocked before jobs start. Availability run `34425708109` and backup run `34337308359` both report failed account payments or a spending limit. The latest observed successful backup run is `34212218896` from September 8. This is workflow status, not a fresh download/restore proof.
+- An HTTP health check is not a guarantee against provider suspension or data loss. Scheduled checks and backups cannot be counted as safeguards while Actions cannot run. No billing settings have been changed.
+- The finish branch `codex/loopedin-finish-20260910` preserves the candidate and pins migration SQL/checksum files to LF. It updates existing transitive xmldom, browserslist, and js-yaml packages within compatible ranges. Fresh lockfile audit reports zero high/critical findings and 11 moderate findings; the latter are not represented as resolved.
+
+### Remaining launch sequence
+
+1. Resolve the account-level Actions block in GitHub Billing and obtain fresh candidate CI plus successful monitoring/backup runs. Do not assume the message proves a specific debt or that raising a budget is required.
+2. Review and integrate the tested candidate, build its exact immutable release, and explicitly approve promotion to the existing hosted site. Preserve the prior immutable deployment for rollback.
+3. Use one user-approved recipient/inbox to prove invitation receipt, confirmation-required signup, return to the invitation, acceptance, reload, wrong-account recovery, and consumed/revoked/expired denial. The retained hosted invitation harness still names an obsolete release and does not prove new-account mail confirmation; do not run it as a current acceptance gate.
+4. Have the owner privately complete password recovery and check the core event loop on an actual phone: create a plan, RSVP, comment, add a photo, reload, and revisit it. Physical-device and assistive-technology checks remain unproven.
+
+Local tests and builds can continue without Actions. Local Docker Supabase integration was unavailable at discovery because the Docker engine was stopped. No hosted data, recipients, passwords, deployment, or billing state was changed by this checkpoint.
+
+## Historical July handoff
+
+The text below is retained for its original decisions and triage context. Statements such as "CI is green", "Nothing below requires more engineering", and the asserted keep-alive guarantee are historical and are superseded by the checkpoint above.
+
 _Last verified: 2026-07-16 by live checks against the Netlify site, the Supabase
 project (`vkogznsfthirhxkqysza`), and the repo. This is the single actionable
 handoff doc — the `docs/runbooks/*` files are the detailed evidence behind it._
