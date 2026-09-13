@@ -1,5 +1,11 @@
 # Review Log
 
+## 2026-09-13 — staging fixes published and retested
+
+- User authorized direct CLI login. The verified existing package uploaded without a rebuild, passed preview verification, then published to the dedicated LoopedIn staging alias as deploy `6aa6b736b29ebed58613109d`, release `0.1.0-c6c0de82de92`. No database or family-account mutation.
+- Hosted manifest and all 11 asset hashes match the exact local artifact; staging runtime, cache/security headers, missing-asset 404, and shell/runtime/Auth availability pass. Browser renders the signed-out connected-staging form.
+- [Published evidence](../docs/evidence/2026-09-13-local-release/published-retest.md) includes provider responses, machine-readable checks, executed checker, and screenshot. Authenticated/physical-device journeys remain not run; no production-ready claim. The PR is not merged by deployment.
+
 ## 2026-09-13 — authorized local staging release package
 
 - Owner approved the local release alternative for the frontend-only simulation fixes. Exact remote source `c6c0de82de926a173102d4cdab13202cac70905c` built with the unchanged archived-source PowerShell builder; the publish envelope verified against the source and builder digest.

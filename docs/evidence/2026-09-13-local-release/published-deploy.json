@@ -1,0 +1,10 @@
+{
+  "site_id": "50ae6d6b-28ad-49c0-9654-c3a54899fcb5",
+  "site_name": "loopedin-family",
+  "deploy_id": "6aa6b736b29ebed58613109d",
+  "deploy_url": "https://6aa6b736b29ebed58613109d--loopedin-family.netlify.app",
+  "logs": "https://app.netlify.com/projects/loopedin-family/deploys/6aa6b736b29ebed58613109d",
+  "function_logs": "https://app.netlify.com/projects/loopedin-family/logs/functions",
+  "edge_function_logs": "https://app.netlify.com/projects/loopedin-family/logs/edge-functions",
+  "url": "https://loopedin-family.netlify.app"
+}

@@ -1,5 +1,7 @@
 # Authorized local staging release — 2026-09-13
 
+**Update: deployed successfully.** See [published release and hosted retest](published-retest.md). The preparation record below preserves the earlier blockers as historical evidence.
+
 The owner explicitly approved establishing a documented local build-and-verification release path after GitHub runner allocation failed. This evidence supersedes the earlier CI-only blocker for this frontend-only staging candidate. It does not claim hosted deployment or successful hosted CI.
 
 - Exact source: `c6c0de82de926a173102d4cdab13202cac70905c` (PR #19).
