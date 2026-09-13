@@ -1,5 +1,14 @@
 # Review Log
 
+## 2026-09-13 — personal-plan Actions trim
+
+- Owner explicitly authorized reducing recurring Actions usage. Standalone availability is now manual-only; the existing hourly telemetry runner also checks public availability, including after telemetry failure unless cancelled. Availability has no step-level secrets. Hourly telemetry preserves the RPC's one-hour alert window.
+- Configured scheduled job starts fall from 73/day to 25/day (about 66%); actual billed-minute savings remain unmeasured. Daily encrypted backup, isolated restore verification, and 30-day backup retention are unchanged.
+- New CI release artifacts retain for 7 days rather than 14. All four CI jobs, trigger events, exact-source release verification, security checks, and migration gates remain intact. Runbooks updated.
+- Verification: existing telemetry operations tests PASS 3/3. All four workflow YAML files parse; manual-only availability, combined hourly schedule, failure continuation, step-scoped secrets, stable CI jobs, 7-day release retention, and daily/30-day backup policy checked locally. No application or database code changed.
+- Limits: actionlint/PowerShell and full application build were not run in this environment. Hosted execution is not claimed: observed jobs failed before runner assignment, consistent with an unresolved account restriction. No reruns, billing changes, secret changes, deployments, or hosted database operations were performed.
+- Follow-up: inspect account billing/quota and confirm the next combined monitoring run and daily backup after runner access resumes. Investigation's last observed successful backup was September 8. Shorter release retention applies to new uploads only.
+
 ## 2026-08-26 — PR #18 invitation-flow release candidate
 
 - Started from freshly fetched `origin/main` (`85f2da3`) on `codex/invitation-flow-release-ready`. Commit `7f0d1e0` preserves PR #18's two-file patch exactly (stable patch ID `82d9f59f...`): clearer existing-account signup guidance plus a switch-account recovery action. The branch is intentionally unmerged.

@@ -4,7 +4,7 @@
 
 This runbook applies only to Supabase project `vkogznsfthirhxkqysza` and Netlify site `loopedin-family`. The quarantined Supabase project and personal Netlify site are forbidden targets.
 
-On 2026-07-15, the no-secret availability checker passed against `https://loopedin-family.netlify.app`: HTTPS shell `200`, runtime config `200` with `no-store`, exact `loopedin-staging` backend, Supabase Auth health `200`, release `0.1.0-3cf45367dc85`, and missing-asset `404`. The scheduled workflow runs at minutes 17 and 47 after default-branch merge. A failed run is the alert; no behavioral analytics, cookies, user identifiers, content, or tracking SDK is collected.
+On 2026-07-15, the no-secret availability checker passed against `https://loopedin-family.netlify.app`: HTTPS shell `200`, runtime config `200` with `no-store`, exact `loopedin-staging` backend, Supabase Auth health `200`, release `0.1.0-3cf45367dc85`, and missing-asset `404`. Originally, the scheduled workflow ran at minutes 17 and 47; the 2026-09-13 cost correction below supersedes that cadence. A failed run is the alert; no behavioral analytics, cookies, user identifiers, content, or tracking SDK is collected.
 
 The database password was rotated to an operator-generated value and stored only as repository secret `LOOPEDIN_STAGING_DB_PASSWORD`. The dedicated Supabase secret key and separate backup passphrase are stored as `LOOPEDIN_STAGING_SUPABASE_SECRET_KEY` and `LOOPEDIN_BACKUP_PASSPHRASE`. Values were never printed or committed. Runtime configuration still contains only the public publishable key.
 
@@ -17,7 +17,7 @@ The artifact authenticated and decrypted, then restored with the pinned image an
 - RPO: 24 hours; daily workflow at 05:23 UTC, with manual runs before risky operations.
 - RTO: 4 hours for operator-led restoration into a replacement environment. The measured isolated restore is not a production cutover guarantee.
 - Retention: 30 days in GitHub Actions artifacts, client-encrypted before upload.
-- Availability: 30-minute target. Provider scheduling delays mean this is not a hard SLA.
+- Availability: hourly target, sharing the telemetry runner. Provider scheduling delays mean this is not a hard SLA.
 - Free-plan limitation: managed daily backups/PITR are unavailable. Logical backup is the active control, and private object bytes are copied separately because database dumps contain only Storage metadata.
 - Deletion: migration eight implements the recoverable access-disabled request/cancel state, ownership guard, and service-role legal-hold records; dedicated staging lifecycle proof is GREEN. A later repository migration and hard-loopback operator implement and prove the retryable row/object/Auth purge plus encrypted external journal locally. They have not been applied or executed on hosted staging or production. Backup copies retain the 30-day expiry policy.
 
@@ -63,3 +63,13 @@ Evidence classification: controlled telemetry alert behavior remains manually di
 Repository search confirms the database password is consumed only as GitHub environment secret `LOOPEDIN_STAGING_DB_PASSWORD` by the encrypted-backup workflow; no Netlify production environment variable or local repository value exists. Initial post-rotation dispatch `29499987122` reached the dedicated staging pooler but failed password authentication, so restore/upload were safely skipped. Dispatch `29516656250` then revalidated the rotated credential before migration. Earlier all-nine dispatch `29517385245` from main commit `6e8616d9e6d8a8fa7ddbebfa958aa5b11df5964c` passed encrypted snapshot and isolated restore with all nine hosted migrations, three private objects, restored counts 1/1/1/4/4/4/3/0/1/3, references 0/0/0, owner RLS 4/4/3, and outsider RLS 0/0/0. Its observed snapshot age was 33.409 seconds and isolated restore was 6.169 seconds. Ciphertext artifact `8383282648` has GitHub digest `sha256:d091ffd04556661a70dc638316dada338a5798211955c32534785fc98a156589`, internal encrypted-file SHA-256 `002fee88812ddf5f81f778a014e5579210ce9b5a6691f67aef92c1575bfa6beb`, and expires 2026-08-15.
 
 Fresh workflow-dispatch run `29527751546` at main head `90250b6d46482b3fa2b8d1a19b8eaeffc6a5148e` is the newest current-schema/direct-database-credential revalidation. Backup, isolated restore, and ciphertext upload passed with all nine migrations, three private objects, restored counts 1/1/1/4/4/4/3/0/1/3, zero reference drift, owner RLS 4/4/3, and outsider RLS 0/0/0. No credential value was exposed. This manual run does not prove sustained RPO or a post-migration-nine scheduled restore.
+
+## 2026-09-13 personal-plan Actions cost correction
+
+The owner authorized trimming recurring Actions usage. Availability now runs as a second step in the existing hourly telemetry job at minute 11, even if telemetry maintenance fails (unless the run is cancelled). Its environment contains no step-level telemetry secret. The standalone availability workflow remains manually dispatchable for diagnosis and has no schedule.
+
+Telemetry remains hourly because its RPC summarizes only the preceding hour; reducing that frequency would create additional alert gaps. Daily encrypted backups, isolated restore verification, and 30-day ciphertext retention are unchanged. Configured scheduled job starts drop from 73 to 25 per day (about 66%); this is a schedule comparison, not measured billed-minute savings. GitHub scheduling is best-effort.
+
+CI continues to validate PR updates and main pushes with all existing checks. New release artifacts expire after 7 days rather than 14; download and verify an intended release within that window. Existing artifacts keep their previously assigned expiry.
+
+September investigation found failed jobs without an assigned runner or executed steps. This change does not resolve an account billing/quota restriction. Follow up in GitHub billing and verify the next hourly monitoring and daily backup executions once runners are available. The last successful backup observed during investigation was September 8.

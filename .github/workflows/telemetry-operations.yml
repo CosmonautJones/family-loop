@@ -39,3 +39,7 @@ jobs:
           LOOPEDIN_STAGING_SUPABASE_SECRET_KEY: ${{ secrets.LOOPEDIN_STAGING_SUPABASE_SECRET_KEY }}
           LOOPEDIN_FORCE_TELEMETRY_ALERT: ${{ inputs.force_alert }}
         run: node scripts/maintain-hosted-error-telemetry.mjs
+      - name: Check privacy-safe public availability
+        # Still check availability if telemetry maintenance fails; retain both failures.
+        if: ${{ !cancelled() }}
+        run: node scripts/check-hosted-availability.mjs

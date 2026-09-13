@@ -1,8 +1,7 @@
 name: Hosted availability
 
 on:
-  schedule:
-    - cron: '17,47 * * * *'
+  # Hourly availability runs inside telemetry-operations.yml to share one runner.
   workflow_dispatch:
 
 permissions:

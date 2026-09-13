@@ -14,7 +14,7 @@ The first authorized pull-request run passed these exact check names; require th
 
 The workflow grants only `contents: read`, cancels stale same-ref runs, uses bounded timeouts, references no repository secrets, and does not deploy or mutate a remote database. Root tests deliberately have no `npm ci` step because the repository root has no lockfile or runtime dependencies. App installation and caching use `app/package-lock.json`.
 
-All four jobs check out the exact pull-request head SHA (or push SHA). `Release artifact` waits for the application, security, and migration jobs to succeed, then runs `build-web-release.ps1` once, verifies the manifest's source commit, publishes only the commit/digest as job outputs, and uploads that directory for 14 days through immutable `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02`. It has no secrets, provider CLI, migration command, deployment, or remote backend step. A later separately authorized deployment must download and verify these bytes against the trusted job outputs; it must not rebuild them.
+All four jobs check out the exact pull-request head SHA (or push SHA). `Release artifact` waits for the application, security, and migration jobs to succeed, then runs `build-web-release.ps1` once, verifies the manifest's source commit, publishes only the commit/digest as job outputs, and uploads that directory for 7 days through immutable `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02`. It has no secrets, provider CLI, migration command, deployment, or remote backend step. A later separately authorized deployment must download and verify these bytes against the trusted job outputs; it must not rebuild them.
 
 ## Pinned tool inventory
 
