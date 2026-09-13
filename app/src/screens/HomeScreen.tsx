@@ -36,10 +36,10 @@ export function HomeScreen({ onOpenEvent, onCreateEvent }: { onOpenEvent?: (even
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {heroEvent ? (
           <View>
-            <Text style={styles.eyebrow}>UP NEXT</Text>
+            <Text style={styles.eyebrow}>{heroEvent.isOngoing ? 'HAPPENING NOW' : 'UP NEXT'}</Text>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Up next: ${heroEvent.title}. ${heroEvent.timeLabel}, ${heroEvent.location}`}
+              accessibilityLabel={`${heroEvent.isOngoing ? 'Happening now' : 'Up next'}: ${heroEvent.title}. ${heroEvent.timeLabel}, ${heroEvent.location}`}
               onPress={() => onOpenEvent?.(heroEvent.id)}
               style={({ pressed }) => [styles.hero, pressed && styles.heroPressed]}
             >

@@ -2502,7 +2502,11 @@ test('hosted availability monitor is no-secret, exact-target, and privacy-safe',
   assert.doesNotMatch(monitor, /SUPABASE_SECRET|service_role|authorization/i);
   assert.doesNotMatch(workflow, /secrets\.|pull_request|push:/);
   assert.match(workflow, /permissions:\r?\n  contents: read/);
-  assert.match(workflow, /cron: '17,47 \* \* \* \*'/);
+  assert.doesNotMatch(workflow, /schedule:/);
+  assert.match(workflow, /workflow_dispatch:/);
+  const combined = fs.readFileSync(path.join(repoRoot, '.github/workflows/telemetry-operations.yml'), 'utf8');
+  assert.match(combined, /cron: '11 \* \* \* \*'/);
+  assert.match(combined, /if: \$\{\{ !cancelled\(\) \}\}\r?\n        run: node scripts\/check-hosted-availability\.mjs/);
   assert.match(workflow, /node scripts\/check-hosted-availability\.mjs/);
 });
 

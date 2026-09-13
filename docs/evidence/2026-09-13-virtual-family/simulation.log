@@ -1,0 +1,21 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> family-loop@0.1.0 test:simulation
+> node --test tests/virtual-family-week.test.js
+
+✔ virtual week: three relatives coordinate seven plans and reconstruct the same history (4137.27267ms)
+✔ virtual week: double submits and lost acknowledgements produce one event and one comment (976.850346ms)
+✔ virtual week: concurrent messages retain every actor and event association (2455.502132ms)
+✔ virtual week: failed edits preserve the committed plan and allow a visible retry (615.875352ms)
+✔ virtual week: outsider and wrong-role actions cannot read or alter another family plan (761.260587ms)
+✔ virtual week: a family arriving during an event still finds it on Home until it ends (165.732619ms)
+✔ virtual week: Calendar does not mark this year with a same-month event from next year (246.49736ms)
+✔ virtual week: cancelling a populated event removes its dependent local records (755.830573ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11170.801238

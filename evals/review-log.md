@@ -1,5 +1,26 @@
 # Review Log
 
+## 2026-09-13 — staging fixes published and retested
+
+- User authorized direct CLI login. The verified existing package uploaded without a rebuild, passed preview verification, then published to the dedicated LoopedIn staging alias as deploy `6aa6b736b29ebed58613109d`, release `0.1.0-c6c0de82de92`. No database or family-account mutation.
+- Hosted manifest and all 11 asset hashes match the exact local artifact; staging runtime, cache/security headers, missing-asset 404, and shell/runtime/Auth availability pass. Browser renders the signed-out connected-staging form.
+- [Published evidence](../docs/evidence/2026-09-13-local-release/published-retest.md) includes provider responses, machine-readable checks, executed checker, and screenshot. Authenticated/physical-device journeys remain not run; no production-ready claim. The PR is not merged by deployment.
+
+## 2026-09-13 — authorized local staging release package
+
+- Owner approved the local release alternative for the frontend-only simulation fixes. Exact remote source `c6c0de82de926a173102d4cdab13202cac70905c` built with the unchanged archived-source PowerShell builder; the publish envelope verified against the source and builder digest.
+- Fresh 177/177 tests, app lint/types, harness, workflow lint, secret scan, migration checksum validation, and high-severity audit gate passed. Eleven moderate audit findings remain. Docker/Supabase integration and authenticated hosted checks were not run.
+- [Local release evidence](../docs/evidence/2026-09-13-local-release/README.md) records logs, manifest, package hash, target and rollback ID, runtime confirmation, and transport limitations. The release runbook now records the authorized scoped alternative.
+- No merge/deploy occurred: connected Netlify provides source upload/build; direct-upload CLI is not logged in. The verified package is ready for direct promotion without rebuilding.
+
+## 2026-09-13 — documented virtual family week
+
+- Added eight repeatable scenarios exercising the actual durable-local adapter and selectors with three synthetic relatives and one outsider. Added `npm run test:simulation`; root test discovery includes it without an additional Actions workflow or schedule.
+- Reproduced and fixed two app defects: ongoing events disappeared from Home, and same-month next-year events highlighted the current calendar. Updated Home wording/accessibility label for ongoing events.
+- Corrected an outdated availability-schedule assertion found by the baseline suite. Independent review found and rechecked a timezone-sensitive test fixture; no remaining code-review blockers in the reviewed app/test changes.
+- Full methodology, raw results, source hashes, observed hosted entry screenshot, and limitations are in [the evidence record](../docs/evidence/2026-09-13-virtual-family/README.md) and [runbook](../docs/runbooks/virtual-family-simulation.md).
+- Boundary: local simulation and build evidence only. No hosted account/data/email mutation, deployment, authenticated browser run, physical-device check, or production certification. The earlier monitoring/backup schedules are unchanged in this patch.
+
 ## 2026-09-13 — personal-plan Actions trim
 
 - Owner explicitly authorized reducing recurring Actions usage. Standalone availability is now manual-only; the existing hourly telemetry runner also checks public availability, including after telemetry failure unless cancelled. Availability has no step-level secrets. Hourly telemetry preserves the RPC's one-hour alert window.

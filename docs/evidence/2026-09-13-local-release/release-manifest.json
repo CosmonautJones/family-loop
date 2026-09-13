@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 2,
+  "releaseId": "0.1.0-c6c0de82de92",
+  "appVersion": "0.1.0",
+  "dataMode": "runtime",
+  "sourceCommit": "c6c0de82de926a173102d4cdab13202cac70905c",
+  "sourceDateEpoch": 1789305932,
+  "artifactSha256": "d123f97d3cbfffedaaf4c4605a3d520dcb32ba9d2b976bfefcc3a5296f186b17",
+  "files": [
+    {
+      "path": "_expo/static/js/web/index-07fbf31a279b245c3d2e0f7a074ba1eb.js",
+      "bytes": 1051470,
+      "sha256": "048a596a0850361b7075ddeeaf1a1c13bdd931c00a65bcbc4f17d5c673698293"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/400Regular_Italic/InstrumentSans_400Regular_Italic.d9ffaa8243d8d6923edf5b10bbdfa0e0.ttf",
+      "bytes": 69900,
+      "sha256": "78e85858e371b2cb4e18f617c10f0f937c0e12a0887ffee98555b24ed305b3a7"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/400Regular/InstrumentSans_400Regular.2b81d5b6a0ff6239ab299c80e4fcceb7.ttf",
+      "bytes": 68028,
+      "sha256": "a22cb26e48fd79bcb01bf2fc92d36785474dce36d9c544ab0a8868c2657c4a87"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/500Medium_Italic/InstrumentSans_500Medium_Italic.48d2d5bdf23c20f7519dffc7e7a503d0.ttf",
+      "bytes": 70144,
+      "sha256": "1ca1555cba16d80e04a0cc6994f24db6a6d0b21d47d0431f53f203f187ed7b4f"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/500Medium/InstrumentSans_500Medium.e0b177a490e51f6ceac9eedac735288c.ttf",
+      "bytes": 68272,
+      "sha256": "55c9b7e83315eb2d661b1ef9f4169cbc9791afedf5c7fc800ba0ddbb05cb4e13"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/600SemiBold_Italic/InstrumentSans_600SemiBold_Italic.d4a6990c5e54ab32e33000240447ed41.ttf",
+      "bytes": 70128,
+      "sha256": "96ddb8aaa443fdb757f326a2d23c7bebf39921863176b85b5d1a11edc51b34b0"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/600SemiBold/InstrumentSans_600SemiBold.b0c4d14368e931d548bddc090025985c.ttf",
+      "bytes": 68248,
+      "sha256": "cb2231708f82dfef7c92c9749cd76e456033b710c677841b01e3e200348394f2"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/700Bold_Italic/InstrumentSans_700Bold_Italic.5042a603563969fc032c33dcc7776dd3.ttf",
+      "bytes": 70004,
+      "sha256": "3762f6cef95d6039489ad5ba5787d4c30f17a1ad01e9ac3c816ed69692722a68"
+    },
+    {
+      "path": "assets/node_modules/@expo-google-fonts/instrument-sans/700Bold/InstrumentSans_700Bold.7b231148a21889380b11d49e774202ee.ttf",
+      "bytes": 68084,
+      "sha256": "444f85bf1c4b0e1ce1ca624f6be54bcd832207714ccaf4ea99ee531341683bdf"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1175,
+      "sha256": "283b5a59c7f6eefffd06e172534dda176fa4a17a1f81458ca8f93d222c363d08"
+    },
+    {
+      "path": "metadata.json",
+      "bytes": 49,
+      "sha256": "aa5f19cc84d41c0f8c70ececb2bc82e863227ea1e121632aca879eb616056991"
+    }
+  ]
+}

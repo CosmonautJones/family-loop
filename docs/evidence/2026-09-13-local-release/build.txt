@@ -1,0 +1,51 @@
+> loopedin-mobile@0.1.0 postinstall
+> node scripts/ensure-metro-compat.cjs
+Metro 0.83.8 compatibility shim applied.
+added 940 packages in 13s
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+npm warn deprecated uuid@7.0.3: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+npm warn deprecated glob@10.5.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+Metro 0.83.8 compatibility shim verified.
+Using src/app as the root directory for Expo Router.
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+| (node:100) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:114) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:107) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:101) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:108) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:120) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+Web ./index.ts ▓▓▓░░░░░░░░░░░░░ 22.0% (38/89)
+Web ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.1% (339/374)
+Web Bundled 8916ms index.ts (429 modules)
+› Assets (8):
+node_modules/@expo-google-fonts/instrument-sans/400Regular_Italic/InstrumentSans_400Regular_Italic.d9ffaa8243d8d6923edf5b10bbdfa0e0.ttf (69.9 kB)
+node_modules/@expo-google-fonts/instrument-sans/400Regular/InstrumentSans_400Regular.2b81d5b6a0ff6239ab299c80e4fcceb7.ttf (68 kB)
+node_modules/@expo-google-fonts/instrument-sans/500Medium_Italic/InstrumentSans_500Medium_Italic.48d2d5bdf23c20f7519dffc7e7a503d0.ttf (70.1 kB)
+node_modules/@expo-google-fonts/instrument-sans/500Medium/InstrumentSans_500Medium.e0b177a490e51f6ceac9eedac735288c.ttf (68.3 kB)
+node_modules/@expo-google-fonts/instrument-sans/600SemiBold_Italic/InstrumentSans_600SemiBold_Italic.d4a6990c5e54ab32e33000240447ed41.ttf (70.1 kB)
+node_modules/@expo-google-fonts/instrument-sans/600SemiBold/InstrumentSans_600SemiBold.b0c4d14368e931d548bddc090025985c.ttf (68.2 kB)
+node_modules/@expo-google-fonts/instrument-sans/700Bold_Italic/InstrumentSans_700Bold_Italic.5042a603563969fc032c33dcc7776dd3.ttf (70 kB)
+node_modules/@expo-google-fonts/instrument-sans/700Bold/InstrumentSans_700Bold.7b231148a21889380b11d49e774202ee.ttf (68.1 kB)
+› web bundles (1):
+_expo/static/js/web/index-07fbf31a279b245c3d2e0f7a074ba1eb.js (1.05 MB)
+› Files (2):
+index.html (1.18 kB)
+metadata.json (49 B)
+Exported: /tmp/loopedin-release-db26a746cd344b688a5e6add70c1dbb7/source/app/release-export
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+Release artifact: /tmp/loopedin-release-tools/artifact
+Release ID: 0.1.0-c6c0de82de92
+Artifact SHA-256: d123f97d3cbfffedaaf4c4605a3d520dcb32ba9d2b976bfefcc3a5296f186b17

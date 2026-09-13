@@ -1,0 +1,48 @@
+✖ virtual week: a family arriving during an event still finds it on Home until it ends (127.323691ms)
+✖ virtual week: Calendar does not mark this year with a same-month event from next year (285.581316ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 0
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1488.415569
+
+✖ failing tests:
+
+test at tests/virtual-family-week.test.js:141:1
+✖ virtual week: a family arriving during an event still finds it on Home until it ends (127.323691ms)
+  AssertionError [ERR_ASSERTION]: An ongoing plan must not disappear when its start time passes
+  + actual - expected
+
+  + undefined
+  - 'event-created-1'
+
+      at TestContext.<anonymous> (file:///workspace/scratch/a6502c323f34/family-loop-simulation/tests/virtual-family-week.test.js:146:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'event-created-1',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/virtual-family-week.test.js:151:1
+✖ virtual week: Calendar does not mark this year with a same-month event from next year (285.581316ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+  true !== false
+
+      at TestContext.<anonymous> (file:///workspace/scratch/a6502c323f34/family-loop-simulation/tests/virtual-family-week.test.js:158:10)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

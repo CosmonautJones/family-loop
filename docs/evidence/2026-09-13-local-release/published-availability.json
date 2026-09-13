@@ -1,0 +1,1 @@
+{"outcome":"PASS","checkedAt":"2026-09-13T14:47:48.012Z","origin":"https://loopedin-family.netlify.app","environment":"loopedin-staging","release":"0.1.0-c6c0de82de92","shellMs":8407,"runtimeMs":75,"authMs":6240,"shellStatus":200,"runtimeStatus":200,"authStatus":200,"missingAssetStatus":404}

@@ -25,6 +25,10 @@ The main product surface is the responsive web app in `app/`, optimized for iOS 
 npm test
 ```
 
+### Repeatable virtual family simulation
+
+See [the simulation runbook](docs/runbooks/virtual-family-simulation.md) for the synthetic household, executable scenarios, and [dated results and raw evidence](docs/evidence/2026-09-13-virtual-family/README.md). After installing app dependencies, run `npm run test:simulation` locally. It also runs as part of `npm test`.
+
 ### Local linting without GitHub Actions minutes
 
 From the repository root, with Node.js and PowerShell 7 installed:

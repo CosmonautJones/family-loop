@@ -1,0 +1,12 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> family-loop@0.1.0 check:secrets
+> node scripts/check-secrets.mjs
+
+Secret scan passed (316 repository files).
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> family-loop@0.1.0 check:migrations
+> node scripts/check-migrations.mjs
+
+Migration validation passed (10 ordered, checksummed migrations).
