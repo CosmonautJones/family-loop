@@ -23,10 +23,11 @@ test('telemetry operations accept only aggregate safe fields and enforce alerts'
   assert.throws(() => evaluateTelemetrySummary({ ...summary(), message: 'not allowed' }), /shape changed/);
 });
 
-test('telemetry workflow is hourly, least-privilege, staging-scoped, and secret-safe', () => {
+test('telemetry workflow is manual-only, least-privilege, staging-scoped, and secret-safe', () => {
   const workflow = fs.readFileSync(path.join(repoRoot, '.github', 'workflows', 'telemetry-operations.yml'), 'utf8');
   const script = fs.readFileSync(path.join(repoRoot, 'scripts', 'maintain-hosted-error-telemetry.mjs'), 'utf8');
-  assert.match(workflow, /cron: '11 \* \* \* \*'/);
+  assert.doesNotMatch(workflow, /schedule:/);
+  assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /environment: loopedin-staging-operations/);
   assert.match(workflow, /permissions:\r?\n  contents: read/);
   assert.match(workflow, /LOOPEDIN_STAGING_SUPABASE_SECRET_KEY: \$\{\{ secrets\.LOOPEDIN_STAGING_SUPABASE_SECRET_KEY \}\}/);

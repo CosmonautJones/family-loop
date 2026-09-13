@@ -2502,7 +2502,8 @@ test('hosted availability monitor is no-secret, exact-target, and privacy-safe',
   assert.doesNotMatch(monitor, /SUPABASE_SECRET|service_role|authorization/i);
   assert.doesNotMatch(workflow, /secrets\.|pull_request|push:/);
   assert.match(workflow, /permissions:\r?\n  contents: read/);
-  assert.match(workflow, /cron: '17,47 \* \* \* \*'/);
+  assert.doesNotMatch(workflow, /schedule:/);
+  assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /node scripts\/check-hosted-availability\.mjs/);
 });
 
@@ -2534,7 +2535,8 @@ test('hosted backup packages protected schemas and private bytes under client en
   assert.match(restore, /Restored member RLS scope mismatch/);
   assert.match(restore, /mediaWithoutObject/);
   assert.match(restore, /outsiderEvents/);
-  assert.match(workflow, /cron: '23 5 \* \* \*'/);
+  assert.doesNotMatch(workflow, /schedule:/);
+  assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /retention-days: 30/);
   assert.match(workflow, /environment: loopedin-staging-backup/);
   assert.ok(workflow.indexOf('Verify isolated database restore before upload') < workflow.indexOf('Upload encrypted backup only'));

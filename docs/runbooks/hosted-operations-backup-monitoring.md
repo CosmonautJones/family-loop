@@ -73,3 +73,10 @@ Telemetry remains hourly because its RPC summarizes only the preceding hour; red
 CI continues to validate PR updates and main pushes with all existing checks. New release artifacts expire after 7 days rather than 14; download and verify an intended release within that window. Existing artifacts keep their previously assigned expiry.
 
 September investigation found failed jobs without an assigned runner or executed steps. This change does not resolve an account billing/quota restriction. Follow up in GitHub billing and verify the next hourly monitoring and daily backup executions once runners are available. The last successful backup observed during investigation was September 8.
+
+
+## 2026-09-13 prelaunch scheduling pause (supersedes hourly/daily cadence)
+
+The owner requested no daily activity for this unfinished project and reported continued failure emails. Availability, telemetry maintenance, and encrypted backups are now manual-only on main. No scheduled workflow remains; configured recurring starts fall from 25/day to zero. CI still runs on pull-request updates and main pushes, so those events may still produce failure notifications while runner access is restricted. Queued or already-delivered mail is not recalled by changing triggers.
+
+Manual telemetry only checks the preceding hour and performs retention cleanup when dispatched; there is no continuous monitoring or scheduled retention cleanup during this pause. Backup retention remains 30 days for existing artifacts, but no new backup is automatic and the earlier 24-hour recovery-point target is suspended. Run a manual backup before changing valuable staging data. Reassess monitoring and backup cadence before a real-family pilot. This change does not shut down the app, mutate the database, delete backups, or change account billing.

@@ -1,7 +1,7 @@
 name: Hosted availability
 
 on:
-  # Hourly availability runs inside telemetry-operations.yml to share one runner.
+  # Manual-only during prelaunch development.
   workflow_dispatch:
 
 permissions:

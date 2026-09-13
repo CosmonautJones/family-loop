@@ -1,8 +1,7 @@
 name: Privacy-safe telemetry operations
 
 on:
-  schedule:
-    - cron: '11 * * * *'
+  # Manual-only during prelaunch development; no recurring Actions usage.
   workflow_dispatch:
     inputs:
       force_alert:
