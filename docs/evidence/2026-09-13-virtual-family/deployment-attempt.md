@@ -8,7 +8,7 @@ The owner authorized deploying the fixes and retesting. Application candidate: `
 - GitHub CI run [34759622157](https://github.com/CosmonautJones/family-loop/actions/runs/34759622157) completed with failure. Migration integrity (103730011617), Security and dependencies (103730011769), and Application quality (103730011800) have empty runner names and no executed steps. Release artifact (103730020246) was skipped. The artifacts endpoint returned `total_count: 0`.
 - This proves CI did not execute candidate checks or create its release artifact. It does not establish the account restriction's billing/quota root cause.
 - The Netlify integration is available but was not installed/connected in this session. Connection was requested; no provider credentials or deployment access were available.
-- A local invocation of the public availability checker did not produce a completed result and was interrupted. No fresh hosted-availability PASS is claimed.
+- The public availability checker completed PASS at `2026-09-13T13:24:51.341Z`: shell/runtime/Auth HTTP 200 and missing-asset HTTP 404. It identified existing staging release `0.1.0-c82b33411c7d`, not the new candidate. Shell took 12,007 ms and Auth 14,236 ms in this environment; this is one observation, not a performance benchmark. No authenticated journey was exercised.
 
 ## Outcome and next gate
 
