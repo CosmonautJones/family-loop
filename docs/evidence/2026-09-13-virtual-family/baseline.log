@@ -1,0 +1,234 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> family-loop@0.1.0 test
+> node --test
+
+✔ account deletion migration enforces the approved recoverable grace state (2.000063ms)
+✔ configured app gates family queries on deletion status and exposes recovery-only UI (0.752933ms)
+✔ private media retains the established TTL until expiry-aware renewal exists (0.615744ms)
+✔ permanent purge detaches shared creator references without cascading or reassignment (1.473235ms)
+✔ purge state is leased, frozen, bounded, and service-role only (1.339606ms)
+✔ prepare freezes a deterministic complete private-object plan and every destructive stage rechecks eligibility (0.651325ms)
+✔ relational finalization is lease-bound, digest-bound, and object-absence gated (0.43266ms)
+✔ completed replay is discoverable and inbound invitation identity is erased (0.352189ms)
+✔ nullable event creators remain neutral in the application model (0.516251ms)
+✔ journal records are encrypted, authenticated, chained, and head-anchored (1024.748777ms)
+✔ validated head recovery accepts only an authenticated appended tail (1166.851067ms)
+✔ per-operation transitions are monotonic and failure annotations never advance state (5461.020809ms)
+✔ journal rejects tampering, unsupported fields, plaintext failure detail, and short retention (118.610429ms)
+✔ restore gate denies traffic until every post-snapshot destructive operation is reconciled (0.631331ms)
+✔ mobile scaffold and event-loop files exist (4.650053ms)
+✔ compiled integration modules are reused without sharing service state (2757.713944ms)
+✔ encrypted account export contains only the current user contributions and verifies integrity (2128.97337ms)
+✔ account export reports an unavailable photo and succeeds on a later retry (2198.641165ms)
+✔ account export caps streamed media before buffering and aborts hung reads (1809.105707ms)
+✔ durable local service persists the family loop across reconstruction and can reseed (1717.9649ms)
+✔ event and comment retries replay committed results without duplicate durable rows (974.038848ms)
+✔ Supabase event and comment operation keys stay private and membership-locked through commit (1.82183ms)
+✔ group member reads return the five Jones members, stay group-isolated, and survive durable reconstruction (486.262813ms)
+✔ Supabase member adapter scopes memberships before resolving profiles (1.243278ms)
+✔ Supabase RSVP identity comes from auth and local profile UI is explicitly a per-tab demo (1.010747ms)
+✔ Supabase error boundary redacts backend details and keeps recovery categories actionable (1.081217ms)
+✔ configured transport rejection becomes calm copy while safe validation copy is preserved (1.062574ms)
+✔ privacy-safe telemetry is bounded, deduplicated, and excludes validation errors (1.961336ms)
+✔ telemetry migration stores no caller or content and exposes only an authenticated bounded RPC (1.333274ms)
+✔ Supabase retryable auth transport failures retain the network recovery category (0.172845ms)
+✔ service reads retry once while writes never retry automatically (0.216135ms)
+✔ reminder preference contract is exact-user/event scoped and delivery-honest (1.897619ms)
+✔ local actor sessions isolate family identities while sharing authorized durable records (4889.257842ms)
+✔ durable operations keep the actor captured at invocation across an immediate profile switch (906.726895ms)
+✔ v3 durable messages and events migrate to actor-owned v8 records without changing revision (128.391515ms)
+✔ v5 group notification fans out once per recipient in v8 without changing revision (258.577053ms)
+✔ durable local service surfaces corrupt storage and write errors without silently resetting (374.661375ms)
+✔ durable local service migrates pre-role v1 members to v8 without losing user data or revision (737.280475ms)
+✔ media uploads are event-scoped, accessible, attributed when remote, removable, and v2-safe (766.558745ms)
+✔ media Query contract is exact-event keyed and invalidates after add or remove (0.667536ms)
+✔ durable local services serialize stale-instance mutations and advance revisions (1352.165309ms)
+✔ durable stringify failures preserve acknowledged state and reset revisions safely (494.321869ms)
+✔ explicit Supabase mode has a visible missing-config path and never selects durable local fallback (0.388152ms)
+✔ App entry composes the navigation shell (0.168161ms)
+✔ web routes preserve tabs and exact event IDs while unknown hashes safely return Home (4.060485ms)
+✔ invitation routes accept only canonical 32-byte base64url tokens and never persist them (8.240568ms)
+✔ invitation preview identifies only a proven wrong-account session for account switching (0.426707ms)
+✔ invited signup outcomes distinguish authenticated, duplicate, ambiguous, and unrelated responses (0.321287ms)
+✔ invite email matching and auth-event profile fallback are deterministic and fail closed (0.625793ms)
+✔ invitation drafts normalize email and retain one canonical 32-byte token across retries (0.527079ms)
+✔ configured service maps the accepted family lifecycle RPC contract without direct group writes (1.575735ms)
+✔ active group initialization is persisted-or-empty and transition eviction precedes observation (462.780348ms)
+✔ latest-resolution guard deterministically rejects stale restore and auth-event results (0.349624ms)
+✔ local demo keeps stable family creation retries and honestly declines remote-only capabilities (362.552412ms)
+✔ Family screen is service-backed with owner and member controls (0.851002ms)
+✔ hosted invitation email is a separate explicit, idempotent, delivery-honest action (0.736351ms)
+✔ signed-out invitation UI defaults to sign in and reveals accessible account creation only for a ready preview (0.558757ms)
+✔ password recovery is enumeration-safe, same-origin, accessible, and provider-event driven (1.389637ms)
+✔ authenticated family onboarding handles invite decisions and honest zero-family choices (0.685189ms)
+✔ Home Updates card is compact, truthful, and marks opened or all updates read (0.346936ms)
+✔ new light-surface actions use explicit high-contrast plum controls without secondary Button tone (2.661159ms)
+✔ mobile shell and primary flows expose landmarks, headings, useful image names, and form errors (1.248149ms)
+✔ decorative surfaces stay static while images honor reduced-motion preference (0.358056ms)
+✔ labeled mobile navigation does not load a decorative icon font (0.279411ms)
+✔ mobile performance gate retains the approved throttling and acceptance budgets (0.384988ms)
+✔ Family roles come from membership data and decorative glows cannot widen the document (0.877636ms)
+✔ mock service completes create, refetch, same-detail, and RSVP loop (1103.306289ms)
+✔ event form validates required family-plan details and accepts optional notes (1.342065ms)
+✔ event plan permissions, edits, and cancellation are durable and event-scoped (976.434804ms)
+✔ unchanged displayed schedule preserves the exact second DST fallback instant (1.367593ms)
+✔ Event Detail keeps its 320px hierarchy simple and progressively discloses photo fields (0.880398ms)
+✔ Supabase event cancellation fails closed for media and zero-row deletes (0.407741ms)
+✔ hosted RPC grants keep authenticated operations unavailable to anonymous callers (0.342958ms)
+✔ forward media migration persists an active-only, retryable object lifecycle (1.127072ms)
+✔ Supabase media contract validates bytes and uses persisted lifecycle RPCs (0.660689ms)
+✔ Supabase location updates read and rewrite authoritative Plan and Logistics timeline details (0.360112ms)
+✔ failed durable plan updates and cancellations do not publish partial state (486.284742ms)
+✔ created trip and RSVP survive durable reconstruction and feed all family plan views (854.09089ms)
+✔ mock service is group-scoped, chronological, and instance-local (602.236619ms)
+✔ mock service orders mixed-offset events by instant regardless of insertion order (362.291394ms)
+✔ mock thread is event-scoped, rejects blank sends, persists identity, and orders by instant with stable ties (361.797791ms)
+✔ thread Query contract is event-keyed and invalidates after send (0.846274ms)
+✔ Event Detail renders truthful thread states and a recoverable composer without fixture fallback (0.844996ms)
+✔ zero-event selectors stay honest and unknown detail is explicit (0.935561ms)
+✔ Calendar excludes completed events before deriving its upcoming month and agenda (1.221941ms)
+✔ Calendar agenda copy can shrink before its status chip at narrow and zoomed widths (0.260309ms)
+✔ completed-event history is derived chronologically and keeps exact event comments and photos isolated (1.140118ms)
+✔ derived family history has truthful empty behavior and excludes unfinished events (0.386532ms)
+✔ completed-event comments and photos remain truthful after durable reconstruction (864.358659ms)
+✔ history UI uses service truth, exact-event navigation, and has no fake reminder or photo counters (1.708275ms)
+✔ Home selector keeps the next event prominent and orders every later event (1.252357ms)
+✔ Home renders each additional upcoming event with its exact-ID open action (0.521903ms)
+✔ event draft weekday agrees with its August 3 date (0.322447ms)
+✔ Query and screens expose truthful event states without configured fixture fallback (0.997478ms)
+✔ representative capacity timing ignores one scheduler outlier but rejects sustained regressions (1.228615ms)
+✔ representative family capacity preserves exact event identity and stays within local processing budgets (936.898149ms)
+ℹ representative volume: 20 members, 100 events, 100 comments, 50 media; parallel reads median 120.6ms [120.5, 120.6, 121.0]; selectors median 22.0ms [21.5, 22.0, 28.0]; durable reconstruction 500.9ms
+✔ event message subscription is exact-key, reconnecting, and inert after cleanup (0.986851ms)
+✔ message reconciliation replaces a stale initial fetch after Postgres readiness (22.027446ms)
+✔ lifecycle status failure eviction removes populated protected caches only (2.844279ms)
+✔ hosted family harness is exact-project, staging-acknowledged, synthetic, and cleanup-bounded (0.637378ms)
+✔ hosted family evidence redacts credentials and emits only bounded handoff/result fields (0.694414ms)
+✔ real owner starter seed is exact-project, explicitly acknowledged, idempotent, and attribution-preserving (1.110406ms)
+✔ real owner starter seed redacts ephemeral auth and clears provider keys (0.355194ms)
+✖ hosted availability monitor is no-secret, exact-target, and privacy-safe (0.853292ms)
+✔ hosted backup packages protected schemas and private bytes under client encryption (0.530998ms)
+✔ browser evidence URLs retain only origin and pathname (1.14331ms)
+✔ browser console evidence redacts URLs and bare credential-shaped values (1.438205ms)
+✔ OPORD 014 uses persisted Chrome browser zoom rather than page or CSS scaling (1.018831ms)
+✔ OPORD 014 browser-zoom matrix retains roles, core screens, and usability assertions (0.441548ms)
+✔ cross-browser core-loop proof uses native Edge CDP and Firefox BiDi with one semantic matrix (0.417904ms)
+✔ CI exposes stable least-privilege quality checks (2.712832ms)
+✔ lint dependencies and command are exact and substantive (0.437703ms)
+✔ migration checksum inventory exactly matches the SQL files (2.836283ms)
+✔ lifecycle planner denies cross-user scope (2.108116ms)
+✔ lifecycle planner is deterministic, self-scoped, bounded, and never destructive (15.50633ms)
+✔ lifecycle planner reports both row and object orphans without proposing deletion (0.43396ms)
+✔ local backup encryption authenticates round trips and rejects tampering (1034.705688ms)
+✔ invitation proof requires a trusted full source, digest, approval reference, and unchanged artifact (5.104203ms)
+✔ hosted proof verifies source, artifact, runtime, and served payload bytes using read-only requests (9.995252ms)
+✔ stale release refuses further requests before any hosted fixture can be created (2.17012ms)
+✔ matching release labels cannot hide substituted payload bytes (5.406948ms)
+✔ the root document must match the artifact even when index.html is correct (2.217505ms)
+✔ publishable key comparison uses the bounded runtime read without returning the key (5.121313ms)
+✔ oversized hosted payload is rejected while streaming rather than accepted by its manifest (2.379958ms)
+✔ an unavailable hosted payload cannot count as verified (2.450303ms)
+✔ full commit mismatch is rejected even when the abbreviated release label matches (3.355423ms)
+✔ hosted proof rejects another backend and cacheable runtime configuration (3.869859ms)
+✔ builds and verifies a target-neutral static Netlify publish envelope from one immutable artifact (306.683637ms)
+✔ rejects drifted Netlify headers and redirects (576.568154ms)
+✔ rejects tampered artifact bytes without publishing a deployment envelope (94.740247ms)
+✔ rejects an unmanifested symbolic link without publishing a deployment envelope (153.144017ms)
+✔ rejects secret-like runtime configuration without publishing a deployment envelope (113.014292ms)
+✔ rejects a non-string environment identity without publishing a deployment envelope (118.232066ms)
+✔ requires the trusted CI artifact digest and source commit (268.170628ms)
+✔ rejects invalid manifest identity even when its internal digest is self-consistent (122.605024ms)
+✔ rejects duplicate manifest paths even when its internal digest is self-consistent (109.756121ms)
+✔ CI builds the exact event head once and uploads it without deployment credentials or remotes (0.94265ms)
+✔ server origin and sender validation is exact and header-safe (1.735791ms)
+✔ invocation accepts only canonical token and exact bounded fields (1.178279ms)
+✔ streamed JSON reader accepts missing-length chunks and rejects oversized chunks before parsing (3.542368ms)
+✔ prepared RPC values are fail-closed and labels are flattened (0.461855ms)
+✔ Resend request is text-only, static-subject, idempotent, and contains no tracking fields (0.615033ms)
+✔ provider success finalizes through trusted actor parameters (6.447262ms)
+✔ provider failure is finalized without claiming delivery (0.63033ms)
+✔ response-loss replay already accepted skips provider and finalize (0.670099ms)
+✔ finalize failure fails closed after provider acceptance (0.685869ms)
+✔ delivery ledger is private and excludes invitation contents and provider identifiers (1.520658ms)
+✔ prepare and service-only finalize enforce active owner and exact pending invitation checks (0.644609ms)
+✔ Edge Function is pinned, user-authenticated, exact-origin, and server-configured (0.490518ms)
+✔ audited Metro compatibility shim is exact, fail-closed, and idempotent (8.075995ms)
+✔ concept documentation artifacts exist (2.031096ms)
+✔ accepted ADRs use the numeric filename convention and required sections (1.068228ms)
+✔ engineering campaign contains exactly 17 ordered OPORDs with executable task contracts (7.608861ms)
+✔ OPORD dependency graph is resolvable and acyclic (2.882044ms)
+✔ OPORD index resolves dependencies and covers the full engineering scope (1.841736ms)
+✔ OPORD evidence dispositions stay reconciled with the configured staging proof boundary (2.784583ms)
+✔ active campaign is responsive-web and preserves renamed testing and release orders (2.414412ms)
+✔ spec roadmap includes MVP and roadmap phases (0.669244ms)
+✔ wireframe and prototype concept boards include LoopedIn framing (0.524943ms)
+✔ brand package and landing page contain brand and product positioning (0.576225ms)
+✔ architecture workflow doc covers app structure, sample data, and contributor flow (0.429855ms)
+✔ active OPORDs do not require native application testing (2.926142ms)
+✔ telemetry operations accept only aggregate safe fields and enforce alerts (5.056091ms)
+✔ telemetry workflow is hourly, least-privilege, staging-scoped, and secret-safe (0.696554ms)
+✔ hosted telemetry proof is dedicated, synthetic, bounded, and residue-safe (0.463704ms)
+✔ web form fields expose stable identifiers and intentional autocomplete metadata (3.565404ms)
+✔ release build contract pins one runtime-configured artifact and disables dotenv/backend inheritance (1.917638ms)
+✔ web bootstrap validates external configuration before creating application services (0.733135ms)
+✔ release preview swaps aliases while retaining SPA, security, and cache contracts (338.9798ms)
+ℹ tests 169
+ℹ suites 0
+ℹ pass 168
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 29675.40863
+
+✖ failing tests:
+
+test at tests/app-scaffold.test.js:2493:1
+✖ hosted availability monitor is no-secret, exact-target, and privacy-safe (0.853292ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /cron: '17,47 \* \* \* \*'/. Input:
+
+  'name: Hosted availability\n' +
+    '\n' +
+    'on:\n' +
+    '  # Hourly availability runs inside telemetry-operations.yml to share one runner.\n' +
+    '  workflow_dispatch:\n' +
+    '\n' +
+    'permissions:\n' +
+    '  contents: read\n' +
+    '\n' +
+    'concurrency:\n' +
+    '  group: hosted-availability\n' +
+    '  cancel-in-progress: true\n' +
+    '\n' +
+    'jobs:\n' +
+    '  staging:\n' +
+    '    name: Staging HTTPS and backend health\n' +
+    '    runs-on: ubuntu-latest\n' +
+    '    timeout-minutes: 5\n' +
+    '    steps:\n' +
+    '      - name: Check out repository\n' +
+    '        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4\n' +
+    '        with:\n' +
+    '          persist-credentials: false\n' +
+    '      - name: Use Node.js 22\n' +
+    '        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4\n' +
+    '        with:\n' +
+    '          node-version: 22\n' +
+    '      - name: Check privacy-safe public availability\n' +
+    '        run: node scripts/check-hosted-availability.mjs\n'
+
+      at TestContext.<anonymous> (file:///workspace/scratch/a6502c323f34/family-loop-simulation/tests/app-scaffold.test.js:2505:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'name: Hosted availability\n\non:\n  # Hourly availability runs inside telemetry-operations.yml to share one runner.\n  workflow_dispatch:\n\npermissions:\n  contents: read\n\nconcurrency:\n  group: hosted-availability\n  cancel-in-progress: true\n\njobs:\n  staging:\n    name: Staging HTTPS and backend health\n    runs-on: ubuntu-latest\n    timeout-minutes: 5\n    steps:\n      - name: Check out repository\n        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4\n        with:\n          persist-credentials: false\n      - name: Use Node.js 22\n        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4\n        with:\n          node-version: 22\n      - name: Check privacy-safe public availability\n        run: node scripts/check-hosted-availability.mjs\n',
+    expected: /cron: '17,47 \* \* \* \*'/,
+    operator: 'match',
+    diff: 'simple'
+  }

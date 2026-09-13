@@ -1,0 +1,16 @@
+✔ virtual week: three relatives coordinate seven plans and reconstruct the same history (4146.627642ms)
+✔ virtual week: double submits and lost acknowledgements produce one event and one comment (969.72556ms)
+✔ virtual week: concurrent messages retain every actor and event association (2422.164377ms)
+✔ virtual week: failed edits preserve the committed plan and allow a visible retry (605.936224ms)
+✔ virtual week: outsider and wrong-role actions cannot read or alter another family plan (607.711958ms)
+✔ virtual week: a family arriving during an event still finds it on Home until it ends (141.511187ms)
+✔ virtual week: Calendar does not mark this year with a same-month event from next year (247.040411ms)
+✔ virtual week: cancelling a populated event removes its dependent local records (727.932884ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 10913.480406

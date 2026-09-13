@@ -56,7 +56,7 @@ export function selectHomeViewModel(input: HomeViewModelInput = {}) {
   const events = input.events ?? [];
   const now = input.now ?? new Date();
   const upcomingEvents = events
-    .filter((event) => new Date(event.startsAt).getTime() >= now.getTime())
+    .filter((event) => new Date(event.endsAt).getTime() >= now.getTime())
     .sort((left, right) => new Date(left.startsAt).getTime() - new Date(right.startsAt).getTime());
   const nextEvent = upcomingEvents[0];
   const history = input.history ?? [];
@@ -86,6 +86,7 @@ export function selectHomeViewModel(input: HomeViewModelInput = {}) {
   return {
     heroEvent: nextEvent ? {
       id: nextEvent.id,
+      isOngoing: new Date(nextEvent.startsAt).getTime() <= now.getTime(),
       title: nextEvent.title,
       timeLabel: `${nextEvent.statusLabel} · ${formatEventDateRange(nextEvent.startsAt, nextEvent.endsAt)}`,
       location: nextEvent.location,
@@ -118,7 +119,10 @@ export function selectCalendarViewModel(events: Event[] = [], now = new Date()) 
   const month = monthDate.toLocaleDateString('en-US', { month: 'long' });
   const daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
   const eventDays = new Set(sortedEvents
-    .filter((event) => new Date(event.startsAt).getMonth() === monthDate.getMonth())
+    .filter((event) => {
+      const start = new Date(event.startsAt);
+      return start.getMonth() === monthDate.getMonth() && start.getFullYear() === monthDate.getFullYear();
+    })
     .map((event) => new Date(event.startsAt).getDate()));
 
   return {

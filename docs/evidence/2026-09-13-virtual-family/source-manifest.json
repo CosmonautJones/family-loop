@@ -1,0 +1,26 @@
+{
+  "date": "2026-09-13",
+  "base_commit": "984ff71e810bd8a86a6e31a3118967da590caf24",
+  "source_retrieval": {
+    "method": "GitHub connector immutable tree and blob reads",
+    "blobs_verified_against_git_hashes": 303,
+    "mismatches": 0
+  },
+  "environment": {
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "node": "v24.19.0",
+    "npm": "11.9.0",
+    "default_timezone": "MDT",
+    "additional_test_timezone": "Asia/Tokyo"
+  },
+  "tested_file_sha256": {
+    "app/src/app/selectors.ts": "186ac9ade8b6f29fdf9f6cd6179ef9854877d01ea4ba4319713d0fed81145644",
+    "app/src/screens/HomeScreen.tsx": "9668b0ab02ddfa2c421102f6998506531d9bbd79353360a54d11b463972f46b1",
+    "tests/virtual-family-week.test.js": "87154bd0eabf1514432a7c5d4edb25cb73a746074c3c48d0fdca94089c05ce29",
+    "tests/app-scaffold.test.js": "ea5bb423ce516b608fe4430a7f75f97b9b4aabf4c3d47d3d45083b59acaa40a7",
+    "package.json": "6a76c86b1289827dd38ff702d3512ffa88be147f2d8c8320fab6e62f592ad8cf",
+    "app/package-lock.json": "8da54b36ed17c545c174d2c350c5a30dc4acb5f55e0f71ffb5b0aef5fb3e7e7c"
+  },
+  "scope": "Durable-local adapter and selectors; disposable synthetic state; no hosted backend writes; no deployment"
+}

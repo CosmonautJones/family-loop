@@ -7,6 +7,7 @@
     "lint:workflows": "pwsh -NoProfile -File scripts/lint-workflows.ps1",
     "lint": "npm run lint:workflows && npm --prefix app run lint",
     "test": "node --test",
+    "test:simulation": "node --test tests/virtual-family-week.test.js",
     "check:secrets": "node scripts/check-secrets.mjs",
     "check:migrations": "node scripts/check-migrations.mjs",
     "preview:prototype": "python3 -m http.server 8765 -d docs",

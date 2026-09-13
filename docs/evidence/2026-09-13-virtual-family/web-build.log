@@ -1,0 +1,35 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+Using src/app as the root directory for Expo Router.
+Starting Metro Bundler
+| (node:34) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:53) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:33) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:35) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:47) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+| (node:41) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+| (Use `node --trace-warnings ...` to show where the warning was created)
+Web Bundled 1273ms index.ts (428 modules)
+
+› Assets (8):
+node_modules/@expo-google-fonts/instrument-sans/400Regular_Italic/InstrumentSans_400Regular_Italic.d9ffaa8243d8d6923edf5b10bbdfa0e0.ttf (69.9 kB)
+node_modules/@expo-google-fonts/instrument-sans/400Regular/InstrumentSans_400Regular.2b81d5b6a0ff6239ab299c80e4fcceb7.ttf (68 kB)
+node_modules/@expo-google-fonts/instrument-sans/500Medium_Italic/InstrumentSans_500Medium_Italic.48d2d5bdf23c20f7519dffc7e7a503d0.ttf (70.1 kB)
+node_modules/@expo-google-fonts/instrument-sans/500Medium/InstrumentSans_500Medium.e0b177a490e51f6ceac9eedac735288c.ttf (68.3 kB)
+node_modules/@expo-google-fonts/instrument-sans/600SemiBold_Italic/InstrumentSans_600SemiBold_Italic.d4a6990c5e54ab32e33000240447ed41.ttf (70.1 kB)
+node_modules/@expo-google-fonts/instrument-sans/600SemiBold/InstrumentSans_600SemiBold.b0c4d14368e931d548bddc090025985c.ttf (68.2 kB)
+node_modules/@expo-google-fonts/instrument-sans/700Bold_Italic/InstrumentSans_700Bold_Italic.5042a603563969fc032c33dcc7776dd3.ttf (70 kB)
+node_modules/@expo-google-fonts/instrument-sans/700Bold/InstrumentSans_700Bold.7b231148a21889380b11d49e774202ee.ttf (68.1 kB)
+
+› web bundles (1):
+_expo/static/js/web/index-ea4f2fe2a97d0e1dc71bd6bc937da42c.js (1.05 MB)
+
+› Files (2):
+index.html (1.18 kB)
+metadata.json (49 B)
+
+Exported: dist

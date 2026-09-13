@@ -1,5 +1,13 @@
 # Review Log
 
+## 2026-09-13 — documented virtual family week
+
+- Added eight repeatable scenarios exercising the actual durable-local adapter and selectors with three synthetic relatives and one outsider. Added `npm run test:simulation`; root test discovery includes it without an additional Actions workflow or schedule.
+- Reproduced and fixed two app defects: ongoing events disappeared from Home, and same-month next-year events highlighted the current calendar. Updated Home wording/accessibility label for ongoing events.
+- Corrected an outdated availability-schedule assertion found by the baseline suite. Independent review found and rechecked a timezone-sensitive test fixture; no remaining code-review blockers in the reviewed app/test changes.
+- Full methodology, raw results, source hashes, observed hosted entry screenshot, and limitations are in [the evidence record](../docs/evidence/2026-09-13-virtual-family/README.md) and [runbook](../docs/runbooks/virtual-family-simulation.md).
+- Boundary: local simulation and build evidence only. No hosted account/data/email mutation, deployment, authenticated browser run, physical-device check, or production certification. The earlier monitoring/backup schedules are unchanged in this patch.
+
 ## 2026-09-13 — personal-plan Actions trim
 
 - Owner explicitly authorized reducing recurring Actions usage. Standalone availability is now manual-only; the existing hourly telemetry runner also checks public availability, including after telemetry failure unless cancelled. Availability has no step-level secrets. Hourly telemetry preserves the RPC's one-hour alert window.
