@@ -154,3 +154,16 @@ Exact main source `2721a98ce6fc03a1263ebc5284d90ac936d2e571`, release `0.1.0-272
 - Rehearsal: baseline → candidate → baseline passed manifest verification, atomic alias changes, extensionless deep-link fallback, CSP/security headers, revalidated entrypoints, immutable hashed assets, and security-policy consistency after rollback.
 - Promoted-candidate Chrome: 320/390/430/1280 had exact document widths, one main, five tabs, and one selected tab. Reduced motion, sequential focus, 200% page-scale proxy, exact-event route, Back, hard reload, and reduced-height invalid-form focus all passed.
 - Isolation: the build used durable-local mode from a Git archive with dotenv disabled. No hosted endpoint, database, Auth account, Storage object, DNS, TLS, or deployment was accessed or changed. The populated loopback Supabase scenario was preserved.
+
+
+## Authorized local staging release alternative — 2026-09-13
+
+The owner approved this alternative when GitHub runners cannot start. For the frontend-only LoopedIn staging fixes in PR #19, the existing exact-source builder may run locally instead of obtaining a CI artifact. This supersedes CI-origin requirements for that scoped release; it does not weaken source/hash verification or imply production/backend authorization.
+
+1. Resolve and verify the exact remote commit and clean source tree. Run repository tests (including `test:simulation`), app lint/type checks, workflow lint, harness, secret scan, dependency audit at the existing high threshold, and migration checksum validation. Record unavailable platform/backend checks and all findings honestly.
+2. Run the unchanged `scripts/build-web-release.ps1 -SourceRevision <exact-commit> -OutputPath <new-artifact-directory>` with PowerShell 7. It uses a source archive, clean lockfile installation, and external runtime configuration. Record Node/npm/PowerShell versions, the builder's source identity, and its emitted artifact digest as trusted local build output.
+3. Build and verify the existing Netlify deployment envelope against that source/digest and the reviewed public staging overlay. Preserve the verified package unchanged; do not rebuild in the provider. Keep the last known published deploy ID for rollback.
+4. Directly upload the envelope to site `50ae6d6b-28ad-49c0-9654-c3a54899fcb5` only. When direct-upload CLI authentication is available, use `netlify deploy --dir <envelope> --site 50ae6d6b-28ad-49c0-9654-c3a54899fcb5 --no-build` for a preview and, after verification, add `--prod` to update the staging site's published alias. Here `--prod` names Netlify's alias context, not a separate application production environment. Do not use a connector that rebuilds source to represent an unchanged-artifact promotion.
+5. Verify the deployed release manifest/source/digest, all manifest-listed bytes, exact staging runtime backend, security/cache headers, missing-asset 404, and the hosted family flow. Record actual pass/fail/not-run results and deployment identity in the repository. A local PASS is not a hosted PASS.
+
+This exception introduces no recurring Actions schedule and does not authorize disabling checks globally. [The local candidate evidence](../evidence/2026-09-13-local-release/README.md) records the prepared package and outstanding hosted gates.

@@ -1,5 +1,12 @@
 # Review Log
 
+## 2026-09-13 — authorized local staging release package
+
+- Owner approved the local release alternative for the frontend-only simulation fixes. Exact remote source `c6c0de82de926a173102d4cdab13202cac70905c` built with the unchanged archived-source PowerShell builder; the publish envelope verified against the source and builder digest.
+- Fresh 177/177 tests, app lint/types, harness, workflow lint, secret scan, migration checksum validation, and high-severity audit gate passed. Eleven moderate audit findings remain. Docker/Supabase integration and authenticated hosted checks were not run.
+- [Local release evidence](../docs/evidence/2026-09-13-local-release/README.md) records logs, manifest, package hash, target and rollback ID, runtime confirmation, and transport limitations. The release runbook now records the authorized scoped alternative.
+- No merge/deploy occurred: connected Netlify provides source upload/build; direct-upload CLI is not logged in. The verified package is ready for direct promotion without rebuilding.
+
 ## 2026-09-13 — documented virtual family week
 
 - Added eight repeatable scenarios exercising the actual durable-local adapter and selectors with three synthetic relatives and one outsider. Added `npm run test:simulation`; root test discovery includes it without an additional Actions workflow or schedule.
