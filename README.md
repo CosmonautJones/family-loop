@@ -95,7 +95,7 @@ npm --prefix app ci
 npm --prefix app run web
 ```
 
-Open the local address printed by Expo and choose a demo profile. Repository access is required to clone this private project. Local demo data belongs to that browser; cross-device family collaboration uses the configured backend.
+Open the local address printed by Expo and choose a demo profile. Local demo data belongs to that browser; cross-device family collaboration uses the configured backend.
 
 ### Check your changes
 
