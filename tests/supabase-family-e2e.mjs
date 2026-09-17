@@ -93,9 +93,11 @@ try {
   alex = await signup('Alex'); maya = await signup('Maya'); jordan = await signup('Jordan'); outsider = await signup('Outsider');
   const wrongPassword = await request('/auth/v1/token?grant_type=password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: alex.email, password: 'wrong-password' }) });
   assert.equal(wrongPassword.response.ok, false);
-  assert.equal(await ok(rpc('loopedin_can_create_group', alex.token, {}), 'unprovisioned creator status'), false);
-  assert.equal(await ok(rpc('loopedin_can_create_group', outsider.token, {}), 'outsider creator status'), false);
+  assert.equal(await ok(rpc('loopedin_can_create_group', alex.token, {}), 'verified founder status'), true);
+  sql(`update auth.users set email_confirmed_at=null where id='${outsider.id}';`);
+  assert.equal(await ok(rpc('loopedin_can_create_group', outsider.token, {}), 'unverified founder status'), false);
   assert.equal((await rpc('loopedin_create_group', outsider.token, { target_name: 'Unauthorized family', target_description: '', target_kind: 'family', target_creation_key: crypto.randomUUID() })).response.ok, false);
+  sql(`update auth.users set email_confirmed_at=now() where id='${outsider.id}';`);
   assert.equal((await ok(table('loopedin_groups', outsider.token, '?select=id'), 'unprovisioned protected data')).length, 0);
 
   const malformedGroupId = crypto.randomUUID();
@@ -106,8 +108,7 @@ try {
   assert.match(preflight.stderr, /Cannot enforce one-owner invariant/);
   sql(`alter table public.loopedin_groups disable trigger loopedin_groups_one_owner; delete from public.loopedin_groups where id='${malformedGroupId}'; alter table public.loopedin_groups enable trigger loopedin_groups_one_owner;`);
 
-  sql(`insert into loopedin_private.loopedin_group_creation_entitlements(user_id) values ('${alex.id}');`);
-  assert.equal(await ok(rpc('loopedin_can_create_group', alex.token, {}), 'provisioned creator status'), true);
+  assert.equal(await ok(rpc('loopedin_can_create_group', alex.token, {}), 'founder needs no provisioning'), true);
   assert.equal(sql(`select has_table_privilege('authenticated','loopedin_private.loopedin_group_creation_entitlements','select') or has_table_privilege('authenticated','loopedin_private.loopedin_group_creation_entitlements','insert') or has_table_privilege('authenticated','loopedin_private.loopedin_group_creation_entitlements','update');`), 'f');
 
   const key = crypto.randomUUID();
@@ -203,7 +204,6 @@ try {
   assert.equal(genericMemberWrite.response.ok, false);
   const selfPromotion = await table('loopedin_group_members', maya.token, `?group_id=eq.${family.id}&user_id=eq.${maya.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'owner' }) });
   assert.equal(selfPromotion.response.ok, false);
-  sql(`insert into loopedin_private.loopedin_group_creation_entitlements(user_id) values ('${outsider.id}');`);
   privateGroup = await createGroup(outsider, 'Outsider Family');
 
   const eventRows = [];

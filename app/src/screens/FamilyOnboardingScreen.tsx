@@ -18,7 +18,6 @@ export function FamilyOnboardingScreen() {
   const [inviteCode, setInviteCode] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [showCreate, setShowCreate] = useState(false);
   const [message, setMessage] = useState<{ text: string; tone: 'error' | 'info' } | null>(null);
   const firstField = useRef<TextInput>(null);
   const creationKey = useRef(crypto.randomUUID());
@@ -74,16 +73,11 @@ export function FamilyOnboardingScreen() {
   return <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
     <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Start with your family</Text>
     <Text style={styles.copy}>Create a private family space or join one using the invitation code you received.</Text>
-    <SurfaceCard>
-      <Text style={styles.cardTitle}>Join a family</Text><Text style={styles.copy}>Paste the full invitation link or just its code.</Text>
-      <Text style={styles.label}>Invitation link or code</Text><TextInput nativeID="family-invitation-code-input" accessibilityLabel="Invitation link or code" autoCapitalize="none" autoComplete="off" autoCorrect={false} onChangeText={setInviteCode} placeholder="Paste invitation" style={styles.input} value={inviteCode} />
-      <CardAction label="Check invitation" onPress={useInviteCode} />
-    </SurfaceCard>
     {entitlement.isPending ? <SurfaceCard><View accessibilityLiveRegion="polite" style={styles.center}><ActivityIndicator color={palette.plum} /><Text style={styles.copy}>Checking family creation access…</Text></View></SurfaceCard> : null}
     {entitlement.isError ? <SurfaceCard><Text accessibilityRole="alert" style={styles.error}>Family creation access is unavailable right now.</Text><CardAction label="Try again" onPress={() => entitlement.refetch()} /></SurfaceCard> : null}
     {entitlement.data === true ? <SurfaceCard>
       <Text style={styles.cardTitle}>Create a family</Text>
-      {!showCreate ? <CardAction label="Create family" onPress={() => { setShowCreate(true); setTimeout(() => firstField.current?.focus(), 0); }} /> : <>
+      <Text style={styles.copy}>You’ll be the family owner. Only people you invite can join. Each account can create one family.</Text>
         <Text style={styles.label}>Family name</Text><TextInput ref={firstField} nativeID="family-name-input" accessibilityLabel="Family name" autoComplete="off" onChangeText={setName} placeholder="The Jones family" style={styles.input} value={name} />
         <Text style={styles.label}>Description (optional)</Text><TextInput nativeID="family-description-input" accessibilityLabel="Family description" autoComplete="off" multiline onChangeText={setDescription} placeholder="Trips, plans, and memories" style={[styles.input, styles.multiline]} value={description} />
         <CardAction label={create.isPending ? 'Creating family…' : 'Create family'} disabled={create.isPending || !name.trim()} onPress={async () => {
@@ -91,9 +85,13 @@ export function FamilyOnboardingScreen() {
           try { await create.mutateAsync({ creationKey: creationKey.current, name: name.trim(), description: description.trim(), kind: 'family' }); setMessage({ text: 'Family created.', tone: 'info' }); }
           catch { setMessage({ text: 'We couldn’t create that family. Try again.', tone: 'error' }); }
         }} />
-      </>}
     </SurfaceCard> : null}
-    {entitlement.data === false ? <SurfaceCard><Text style={styles.cardTitle}>Creation unavailable</Text><Text style={styles.copy}>This account can join a family by invitation, but it can’t create another family.</Text></SurfaceCard> : null}
+    {entitlement.data === false ? <SurfaceCard><Text style={styles.cardTitle}>Creation unavailable</Text><Text style={styles.copy}>Creating a family requires a confirmed email and is limited to one family per account. You can still join a family by invitation.</Text><CardAction label="Check again after confirming email" onPress={() => entitlement.refetch()} /></SurfaceCard> : null}
+    <SurfaceCard>
+      <Text style={styles.cardTitle}>Have an invitation?</Text><Text style={styles.copy}>Join an existing family with the full invitation link or just its code.</Text>
+      <Text style={styles.label}>Invitation link or code</Text><TextInput nativeID="family-invitation-code-input" accessibilityLabel="Invitation link or code" autoCapitalize="none" autoComplete="off" autoCorrect={false} onChangeText={setInviteCode} placeholder="Paste invitation" style={styles.input} value={inviteCode} />
+      <CardAction label="Check invitation" onPress={useInviteCode} />
+    </SurfaceCard>
     {auth.session ? <DataExportCard session={auth.session} /> : null}
     {auth.configured ? <AccountDeletionCard /> : null}
     {message ? <Text accessibilityLiveRegion={message.tone === 'error' ? 'assertive' : 'polite'} accessibilityRole={message.tone === 'error' ? 'alert' : undefined} style={message.tone === 'error' ? styles.error : styles.copy}>{message.text}</Text> : null}

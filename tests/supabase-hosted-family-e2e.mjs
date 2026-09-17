@@ -490,7 +490,7 @@ async function run() {
     const memberB = users['member-b'];
     const outsider = users.outsider;
     assert.equal(await required(rpc('loopedin_can_create_group', owner.token, {}), 'check owner entitlement'), true, 'owner entitlement missing');
-    assert.equal(await required(rpc('loopedin_can_create_group', outsider.token, {}), 'check outsider entitlement'), false, 'outsider unexpectedly entitled');
+    assert.equal(await required(rpc('loopedin_can_create_group', outsider.token, {}), 'check verified outsider creation eligibility'), true, 'a verified new account can create its own private family');
     group = await required(rpc('loopedin_create_group', owner.token, {
       target_name: `LoopedIn Hosted QA ${runId}`,
       target_description: `loopedin-hosted-qa:${runId}`,

@@ -1,5 +1,14 @@
 # Review Log
 
+## 2026-09-17 — public family onboarding candidate
+
+- User approved public account signup followed by confirmed email and creation of one private family. Joining existing families remains email-bound invitation acceptance. Public signup is an explicit null-token path; provided invitation tokens still undergo preflight validation before account creation. Recovery and local-demo behavior are preserved.
+- Added an immutable forward migration with authoritative email verification, legacy-founder consumption backfill, lazy one-time provisioning under the existing actor lock, and existing atomic ownership/idempotency logic. No client table privileges or membership visibility were expanded. Pending deletion remains denied.
+- Fresh checks: `npm test` PASS 176/176; `npm run lint` PASS (actionlint 1.7.12 and ESLint); `npm --prefix app exec -- tsc --noEmit -p app/tsconfig.json` PASS; migration checks PASS 11 with historical comparison to `origin/main`; secret scan PASS. Native PostgreSQL test applies all migrations in its own loopback cluster and verifies unconfirmed denial, metadata/provisioning bypass denial, founder success, legacy quota, rollback, retries/conflicting retries, concurrent quota/replay, deletion guard, private grants and unrelated-account RLS. Baseline without the new migration fails at missing founder eligibility; candidate passes. Every successfully started test cluster was stopped.
+- Chrome preview: public signup entry, expected copy, empty-submit validation and focus, return to sign-in, and separate recovery entry verified. No real account, password or outbound email was submitted. Independent final reviewer found no actionable defects and independently passed signup tests 7/7.
+- Docker could not start; native PostgreSQL fixtures supply provider schema only, so this is not GoTrue/PostgREST/email integration proof. Hosted rollout is still pending: the live Netlify runtime configuration references `vkogznsfthirhxkqysza`, whose API hostname currently returns NXDOMAIN from this machine; Supabase dashboard requires login. Do not infer the project is deleted or paused from DNS alone. Restore access, confirm email-required Auth/SMTP, apply the migration and prove founder/invitation flows before deploying the new frontend. Existing published artifact remains unchanged.
+- Preserved main's two newer CI commits, including paused scheduled operations. No paid CI, billing changes, workflow changes, shared database mutation or hosting deployment was performed for this candidate.
+
 ## 2026-09-13 — personal-plan Actions trim
 
 - Owner explicitly authorized reducing recurring Actions usage. Standalone availability is now manual-only; the existing hourly telemetry runner also checks public availability, including after telemetry failure unless cancelled. Availability has no step-level secrets. Hourly telemetry preserves the RPC's one-hour alert window.

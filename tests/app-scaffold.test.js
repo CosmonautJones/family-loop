@@ -1120,7 +1120,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   const authScreen = read('src/screens/AuthScreen.tsx');
   const queries = read('src/app/queries.ts');
 
-  assert.match(api, /signUp\(invitationToken: string, displayName: string, email: string, password: string\)/);
+  assert.match(api, /signUp\(invitationToken: string \| null, displayName: string, email: string, password: string\)/);
   assert.match(api, /creationKey: string/);
   for (const rpc of [
     'loopedin_create_group', 'loopedin_can_create_group', 'loopedin_create_group_invite',
@@ -1140,7 +1140,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.match(authListener, /resolveWithFallback\(mapSession\(session\), sessionWithoutProfile\(session\)\)/);
   assert.doesNotMatch(authListener, /catch\([\s\S]*?listener\(null\)/);
   assert.match(adapter, /Email or password not recognized/);
-  assert.match(adapter, /We couldn’t create your account\. Try again or ask for a new invitation/);
+  assert.match(adapter, /We couldn’t create your account\. Try again in a moment/);
   const validateInvitation = adapter.slice(adapter.indexOf('async validateInvitation'), adapter.indexOf('async acceptInvitation'));
   assert.equal((validateInvitation.match(/rpc\('loopedin_validate_group_invite'/g) ?? []).length, 2, 'a failed session-email match must revalidate the invitation before offering an account switch');
   assert.match(api, /confirmationOrSignInRequired/);
@@ -1160,7 +1160,7 @@ test('configured service maps the accepted family lifecycle RPC contract without
   assert.match(provider, /parseInvitationToken\(window\.location\.hash\)/);
   assert.match(provider, /addEventListener\('hashchange', syncInvitationRoute\)/);
   assert.match(provider, /removeEventListener\('hashchange', syncInvitationRoute\)/);
-  assert.match(provider, /signUpWithInvitation/);
+  assert.match(provider, /const signUp = useCallback/);
   assert.match(provider, /loopedInService\.auth\.signUp\(invitationToken,/);
   assert.match(provider, /clearInvitationToken[\s\S]*?withoutInvitationRoute\(window\.location\.hash\)/);
   assert.doesNotMatch(provider, /useEffect\(\(\) => \{[\s\S]*?withoutInvitationRoute\(window\.location\.hash\)[\s\S]*?\}, \[invitationToken\]\)/);

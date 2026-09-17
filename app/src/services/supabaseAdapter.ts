@@ -505,9 +505,13 @@ export function createSupabaseLoopedInService(): LoopedInService {
       async signUp(invitationToken, displayName, email, password): Promise<AuthSignUpResult> {
         const name = displayName.trim();
         if (!name || name.length > 80) throw userServiceError('Enter a display name between 1 and 80 characters.');
-        const token = invitationTokenToHex(invitationToken);
-        const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: token, target_email: email.trim() });
-        if (invitationError || !isReadyInvitationEmailMatch(invitation)) throw userServiceError('This invitation can’t be used. Ask the person who invited you for a new link.');
+        if (!/^\S+@\S+\.\S+$/.test(email.trim())) throw userServiceError('Enter a valid email address.');
+        if (password.length < 8) throw userServiceError('Use at least 8 characters for your password.');
+        if (invitationToken !== null) {
+          const token = invitationTokenToHex(invitationToken);
+          const { data: invitation, error: invitationError } = await supabase.rpc('loopedin_match_group_invite_email', { target_token: token, target_email: email.trim() });
+          if (invitationError || !isReadyInvitationEmailMatch(invitation)) throw userServiceError('This invitation can’t be used. Ask the person who invited you for a new link.');
+        }
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -515,9 +519,14 @@ export function createSupabaseLoopedInService(): LoopedInService {
         });
         const outcome = resolveInvitationSignUpOutcome({ data, error });
         if (outcome.status === 'existingAccount') {
-          throw userServiceError('An account with this email may already exist. If you still need to confirm it, check your inbox and spam folder, then return to this invitation and sign in; otherwise choose “Already have an account? Sign in.”');
+          throw userServiceError(invitationToken !== null
+            ? 'An account with this email may already exist. If you still need to confirm it, check your inbox and spam folder, then return to this invitation and sign in; otherwise choose “Already have an account? Sign in.”'
+            : 'An account with this email may already exist. Check your inbox and spam folder for a confirmation message, or choose “Already have an account? Sign in.”');
         }
-        if (outcome.status === 'failed') throw userServiceError('We couldn’t create your account. Try again or ask for a new invitation.');
+        if (outcome.status === 'failed') {
+          if (error?.status === 429) throw backendServiceError(error);
+          throw userServiceError('We couldn’t create your account. Try again in a moment.');
+        }
         if (outcome.status === 'confirmationOrSignInRequired') return outcome;
         return { status: 'authenticated', session: sessionWithoutProfile(outcome.session, name) };
       },

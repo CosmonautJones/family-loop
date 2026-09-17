@@ -110,33 +110,38 @@ export function AuthScreen() {
       else confirmInput.current?.focus();
       return;
     }
-    await auth.signUpWithInvitation(displayName.trim(), email.trim(), password);
+    if (displayName.trim().length > 80) { setFormError('Use a display name with at most 80 characters.'); nameInput.current?.focus(); return; }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) { setFormError('Enter a valid email address.'); emailInput.current?.focus(); return; }
+    if (password.length < 8) { setFormError('Use at least 8 characters for your password.'); passwordInput.current?.focus(); return; }
+    await auth.signUp(displayName.trim(), email.trim(), password);
   };
 
   return (
     <AppBackground><ScrollView contentContainerStyle={styles.centered} keyboardShouldPersistTaps="handled"><View style={styles.card}>
       <Text style={styles.eyebrow}>LOOPEDIN</Text>
-      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{auth.recoveryStatus === 'ready' ? 'Choose a new password' : mode === 'signUp' ? 'Create your account' : mode === 'forgot' ? 'Reset your password' : 'Welcome back'}</Text>
+      <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>{auth.recoveryStatus === 'ready' ? 'Choose a new password' : mode === 'signUp' ? (auth.invitationToken ? 'Create your account' : 'Create your family') : mode === 'forgot' ? 'Reset your password' : 'Welcome back'}</Text>
       {auth.recoveryStatus === 'ready' ? <Text style={styles.body}>Use a new password with at least 8 characters.</Text> : mode === 'forgot' ? <Text style={styles.body}>Enter your email. We’ll send the same confirmation whether or not an account exists.</Text> : auth.invitationToken ? (
         <View accessibilityLiveRegion="polite" style={styles.inviteCard}>
           {invitation.isPending ? <><ActivityIndicator color={palette.coral} /><Text style={styles.body}>Checking this family invitation…</Text></> : null}
           {invitation.isError || invitation.data?.status === 'unavailable' ? <Text accessibilityRole="alert" style={styles.error}>This invitation isn’t available. Ask the person who invited you for a new link.</Text> : null}
           {invitationData?.status === 'ready' ? <><Text style={styles.inviteTitle}>Join {invitationData.groupName}</Text><Text style={styles.body}>{invitationData.inviterName} invited {invitationData.maskedEmail}. Sign in, or create the invited account.</Text></> : null}
         </View>
-      ) : <Text style={styles.body}>Sign in to see your family’s shared plans.</Text>}
+      ) : <Text style={styles.body}>{mode === 'signUp' ? 'Start with your account. Confirm your email, then name your private family space and invite your people.' : 'Sign in to see your family’s shared plans.'}</Text>}
 
       {mode === 'signUp' && auth.recoveryStatus !== 'ready' ? <LabeledInput nativeID="auth-display-name" label="Display name" inputRef={nameInput} editable={!auth.pending} value={displayName} onChangeText={setDisplayName} autoComplete="name" invalid={Boolean(formError || auth.error)} /> : null}
       {auth.recoveryStatus !== 'ready' ? <LabeledInput nativeID="auth-email" label="Email" inputRef={emailInput} editable={!auth.pending} value={email} onChangeText={setEmail} autoComplete="email" inputMode="email" autoCapitalize="none" invalid={Boolean(formError || auth.error)} /> : null}
       {mode !== 'forgot' ? <LabeledInput nativeID="auth-password" label={auth.recoveryStatus === 'ready' ? 'New password' : 'Password'} inputRef={passwordInput} editable={!auth.pending} value={password} onChangeText={setPassword} autoComplete={mode === 'signUp' || auth.recoveryStatus === 'ready' ? 'new-password' : 'current-password'} autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
       {mode === 'signUp' || auth.recoveryStatus === 'ready' ? <LabeledInput nativeID="auth-confirm-password" label="Confirm password" inputRef={confirmInput} editable={!auth.pending} value={confirmPassword} onChangeText={setConfirmPassword} autoComplete="new-password" autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
       {formError || auth.error ? <Text nativeID="auth-error" accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{formError ?? auth.error}</Text> : null}
-      {auth.confirmationRequired ? <Text accessibilityLiveRegion="polite" style={styles.success}>Check your inbox and spam folder. If a confirmation message arrives, confirm it, then return to this invitation and sign in. If no message arrives, this address may already have an account—choose “Already have an account? Sign in.”</Text> : null}
-      <Pressable accessibilityRole="button" disabled={auth.pending || (mode === 'signUp' && !inviteReady)} onPress={submit} style={[styles.button, (auth.pending || (mode === 'signUp' && !inviteReady)) && styles.buttonDisabled]}>
+      {auth.confirmationRequired && mode === 'signUp' && auth.recoveryStatus === 'idle' ? <Text accessibilityLiveRegion="polite" style={styles.success}>{auth.invitationToken
+        ? 'Check your inbox and spam folder. If a confirmation message arrives, confirm it, then return to this invitation and sign in. If no message arrives, this address may already have an account. Choose “Already have an account? Sign in.”'
+        : 'Check your inbox and spam folder. If a confirmation message arrives, confirm your email, then sign in to name your family. If no message arrives, this address may already have an account. Choose “Already have an account? Sign in.”'}</Text> : null}
+      <Pressable accessibilityRole="button" disabled={auth.pending || (mode === 'signUp' && auth.recoveryStatus !== 'ready' && auth.invitationToken !== null && !inviteReady)} onPress={submit} style={[styles.button, (auth.pending || (mode === 'signUp' && auth.recoveryStatus !== 'ready' && auth.invitationToken !== null && !inviteReady)) && styles.buttonDisabled]}>
         {auth.pending ? <ActivityIndicator color={palette.white} /> : <Text style={styles.buttonText}>{auth.recoveryStatus === 'ready' ? 'Replace password' : mode === 'signUp' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : 'Sign in'}</Text>}
       </Pressable>
       {mode === 'signIn' && auth.recoveryStatus !== 'ready' ? <Pressable accessibilityRole="button" onPress={() => { setMode('forgot'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>Forgot password?</Text></Pressable> : null}
       {mode === 'forgot' ? <Pressable accessibilityRole="button" onPress={() => { setMode('signIn'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>Return to sign in</Text></Pressable> : null}
-      {inviteReady ? <Pressable accessibilityRole="button" onPress={() => { setMode(mode === 'signIn' ? 'signUp' : 'signIn'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>{mode === 'signIn' ? 'Create the invited account' : 'Already have an account? Sign in'}</Text></Pressable> : null}
+      {auth.recoveryStatus === 'idle' && mode !== 'forgot' && (inviteReady || auth.invitationToken === null) ? <Pressable accessibilityRole="button" disabled={auth.pending} onPress={() => { setMode(mode === 'signIn' ? 'signUp' : 'signIn'); setFormError(null); }} style={styles.textButton}><Text style={styles.textButtonLabel}>{mode === 'signIn' ? (auth.invitationToken ? 'Create the invited account' : 'Create your family') : 'Already have an account? Sign in'}</Text></Pressable> : null}
     </View></ScrollView></AppBackground>
   );
 }

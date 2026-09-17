@@ -21,7 +21,7 @@ export type AuthSignUpResult =
 
 export interface AuthApi {
   login(email: string, password: string): Promise<AuthSession>;
-  signUp(invitationToken: string, displayName: string, email: string, password: string): Promise<AuthSignUpResult>;
+  signUp(invitationToken: string | null, displayName: string, email: string, password: string): Promise<AuthSignUpResult>;
   requestPasswordReset(email: string, redirectTo: string): Promise<void>;
   updatePassword(password: string): Promise<void>;
   logout(): Promise<void>;

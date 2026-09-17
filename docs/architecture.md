@@ -6,6 +6,10 @@ LoopedIn is currently a responsive web app built with Expo and React Native Web.
 
 ## Application entry and providers
 
+Configured authentication offers public registration and invited registration through the same Auth service. A null invitation token explicitly selects public signup; a supplied token must pass canonical-token and email-bound invitation checks before Auth creates an account. Neither path sends a private invitation token in Auth metadata or redirects. New founders confirm their email before family creation. `AuthSessionProvider` retains its guarded session transitions and cache eviction.
+
+Migration `20260917120000_self_service_family_creation.sql` replaces admin-only creation provisioning with lazy provisioning inside the existing actor-locked creation transaction. It checks the authoritative Auth user's email confirmation, preserves pending-account-deletion denial, and delegates validation, idempotency, entitlement consumption and owner insertion to the existing private implementation. Historical founders are backfilled as consumed. Entitlements remain inaccessible to client roles, and group/member writes remain RPC-only. RLS and invitation acceptance are unchanged. Hosted Auth must require email confirmation; automatically confirmed accounts would otherwise satisfy the database check. Local PostgreSQL authority tests do not prove email delivery or the hosted Auth configuration.
+
 - `app/index.ts` registers the root component with Expo.
 - `app/App.tsx` composes `AppProviders` around `AppShell`.
 - `app/src/app/AppProviders.tsx` owns the TanStack Query client. Authenticated family membership, invitations, notifications, Home, Calendar, Create Event, Event Detail, and RSVP state use that Query boundary.

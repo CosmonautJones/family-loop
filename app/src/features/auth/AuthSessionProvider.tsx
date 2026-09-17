@@ -22,7 +22,7 @@ type AuthSessionContextValue = {
   groups: { id: string }[] | undefined;
   groupsPending: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signUpWithInvitation: (displayName: string, email: string, password: string) => Promise<void>;
+  signUp: (displayName: string, email: string, password: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
   clearRecovery: () => void;
@@ -162,14 +162,13 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
   }, [applySession]);
 
-  const signUpWithInvitation = useCallback(async (displayName: string, email: string, password: string) => {
+  const signUp = useCallback(async (displayName: string, email: string, password: string) => {
     const operationIsCurrent = operationResolution.current.begin();
     const isCurrent = sessionResolution.current.begin();
     setPending(true);
     setError(null);
     setConfirmationRequired(false);
     try {
-      if (!invitationToken) throw new Error('This invitation can’t be used. Ask the person who invited you for a new link.');
       const result = await loopedInService.auth.signUp(invitationToken, displayName, email, password);
       if (!isCurrent()) return;
       if (result.status === 'authenticated') applySession(result.session);
@@ -286,7 +285,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       localProfiles,
       chooseLocalProfile,
       login,
-      signUpWithInvitation,
+      signUp,
       requestPasswordReset,
       updatePassword,
       clearRecovery,

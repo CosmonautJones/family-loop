@@ -7,6 +7,12 @@ This repository contains the product research and design artifacts plus a workin
 
 The main product surface is the responsive web app in `app/`, optimized for iOS Safari and Android Chrome phone browsers with usable desktop web. Native apps and app-store delivery are future work unless separately authorized.
 
+## Family onboarding
+
+The configured app supports public account registration: **Create your family**, confirm your email, sign in, then name your private family. The founder becomes its owner. Joining somebody else's family still requires an email-bound invitation; there is no public family directory.
+
+Apply migration `20260917120000_self_service_family_creation.sql` before deploying this frontend. Supabase Auth must allow email signup and require email confirmation. The database grants one family per verified account, consumes that allowance atomically, and preserves it after family deletion or ownership transfer. This limits creation per account, not per person. Existing Auth rate limits still apply. See [the onboarding runbook](docs/runbooks/public-family-onboarding.md) for rollout order and acceptance checks.
+
 ## Artifacts
 - `docs/01-executive-summary.md`
 - `docs/02-market-research.md`
