@@ -789,3 +789,11 @@
 - Live exact-artifact preflight PASS: source c82b33411c7d3effa2faef7a55c9bb646e798d4d, artifact c7308f4c52f68d07fe8f3de06c86354e1e5a36a984162595d34544db4215700e, all 11 application payloads, root HTML, full manifest, and bounded runtime configuration match. The published runtime remains loopedin-staging on the existing dedicated Supabase backend.
 - Public availability PASS at 2026-09-10T12:51:20.351Z: shell/runtime/Auth 200, security/cache/release identity, missing asset 404. Browser sign-in and recovery entry render; a canonical synthetic nonexistent invitation is denied across reload. The live app was restored to a clean sign-in page. No app-origin errors/warnings were captured; unrelated Netlify dashboard feature-flag timeouts are excluded.
 - The initial browser-policy failure recovered after resetting control. The upload completed once, in 58 seconds; it was not repeated. The unused CLI fallback installer was stopped. No real recipient, password, billing, permissions, or account data was modified. Marked hosted acceptance fixtures, real invitation receipt/confirmation signup, owner recovery completion, phone checks, and replacement operational coverage remain unverified.
+
+
+## 2026-09-17 — public repository and portfolio listing
+
+- At Travis's explicit request, changed `CosmonautJones/family-loop` from private to public and verified the public visibility in GitHub settings and repository metadata.
+- Replaced Lumen Garden with LoopedIn in the GitHub profile pins and selected-work README, linking the existing hosted beta and preserving its beta status.
+- Removed the outdated private-repository access sentence from this repository's clone instructions. Application behavior, hosting, authentication, and data permissions were not changed.
+- Verification: repository visibility and saved profile content were checked through GitHub. Application tests were not rerun because this change only affects repository visibility and Markdown. Existing release acceptance and operational follow-ups remain documented in `GO-LIVE.md`.
