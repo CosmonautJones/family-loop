@@ -7,6 +7,7 @@
 - Decode FileReader base64 bytes locally into a Response, then retain the existing MIME, size, signature and browser-decoding validation. HTTPS sources keep their existing fetch behavior; Storage policies, quota, schema, deployment headers and dependencies are unchanged.
 - New regression coverage failed against the old reader, then passed for network-free selected-file reading, invalid format/base64/signature and oversized input rejection, and unchanged HTTPS fetching. Full suite: 181/181. App/workflow lint, TypeScript, secret scan and diff checks pass. A valid generated PNG now passes the browser probe under the same release policy.
 - Hosted publication and a real selected-file upload/reload remain pending at this checkpoint. The existing 1 MiB cap and JPEG/PNG/WebP format restriction remain; no automatic resizing is included.
+- Publication follow-up: source `bd1a2c078aaaefc47517f45d239821ff0df83c4c` built successfully and published as Netlify deploy `6aac0d37f82eeb75260144af`, release `0.1.0-bd1a2c078aaa`, artifact SHA-256 `8423ecfe07106e013d61943cc59015f72d5d14df0fa20172ed38a8509aba0ee2`. At `2026-09-17T15:54:47.927Z`, all 14 live application/manifest/runtime/envelope files matched, with security/cache headers and missing-asset 404 passing. Prior deploy `6aac02f76ba6511eb35f20a9` is retained as the rollback target. Live user-photo upload/reload awaits the user's retry; no real family photo, account, password, message or backend configuration was modified during diagnosis.
 
 ## 2026-09-17 — public family onboarding candidate
 
