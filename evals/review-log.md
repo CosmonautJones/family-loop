@@ -732,6 +732,13 @@
 - Fix-wave gates are GREEN: focused contracts/journal 11/11, ten-migration reset, database lint with zero findings, five-seam destructive E2E, app lint/TypeScript and 87/87 tests, harness, 293-file secret scan, syntax, and diff check. Root is 153/154 with only the same unchanged Windows historical-migration line-ending checksum baseline; the new migration checksum is not among the failures. Fresh independent G3 remains required on the exact fix-wave commit.
 # 2026-09-10 finish pass
 
+## 2026-09-17 signup confirmation screen
+
+- Replaced the easy-to-miss inline signup message with a dedicated email next-step screen, submitted-address display, sign-in action and email-correction action. Confirmation state clears without discarding invitation context; password drafts clear when confirmation opens.
+- React-rendered regression tests failed against the previous form and now pass for public and invited signup. All 178 repository tests and TypeScript pass. Browser transition, focus, responsive layout and exact release publication are checked separately before rollout is considered complete.
+
+# 2026-09-10 finish pass (continued)
+
 - Verified canonical repository and all remote branch heads. Resumed `eb58766`, the newest saved candidate, containing current main plus 14 commits. Preserved existing checkouts in an isolated `codex/loopedin-finish-20260910` worktree.
 - Reproduced the original Windows migration checksum failure (158/159 root tests). Added narrowly scoped LF attributes; a checkout with `core.autocrlf=true` now preserves the exact migration digest. Ten migration hashes and comparison against `origin/main` pass without SQL changes.
 - Updated existing transitive xmldom, browserslist, and js-yaml packages within their supported ranges. Audit changed from 3 high/12 moderate to 0 high/0 critical/11 moderate. No direct dependency or Expo/React Native version changed.

@@ -2,6 +2,8 @@
 
 Approved product flow: anyone may register an account, confirm their email, and create one private family as its owner. An invitation remains necessary to join someone else's family. No family listing or discovery endpoint is added.
 
+After a signup response requiring confirmation or sign-in, the form is replaced by a dedicated **Check your email** screen showing the submitted address. Password drafts are cleared, keyboard focus moves to **Back to sign in**, and **Use a different email** returns to registration. Existing-account guidance remains neutral about account creation and email delivery. Invited users keep their original invitation route.
+
 ## Local verification
 
 PowerShell, repository root:

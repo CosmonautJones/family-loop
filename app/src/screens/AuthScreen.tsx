@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useInvitationQuery } from '../app/queries';
 import { AppBackground } from '../components/AppBackground';
@@ -20,8 +20,16 @@ export function AuthScreen() {
   const emailInput = useRef<TextInput>(null);
   const passwordInput = useRef<TextInput>(null);
   const confirmInput = useRef<TextInput>(null);
+  const confirmationButton = useRef<View>(null);
   const invitationData = invitation.data;
   const inviteReady = invitationData?.status === 'ready';
+
+  useEffect(() => {
+    if (!auth.confirmationRequired) return;
+    setPassword('');
+    setConfirmPassword('');
+    confirmationButton.current?.focus();
+  }, [auth.confirmationRequired]);
 
   if (!auth.configured) {
     return (
@@ -74,6 +82,31 @@ export function AuthScreen() {
         <Text accessibilityLiveRegion="polite" style={styles.body}>Your new password is ready. Continue to your family plans.</Text>
         <Pressable accessibilityRole="button" onPress={auth.clearRecovery} style={styles.button}><Text style={styles.buttonText}>Continue to LoopedIn</Text></Pressable>
       </View></View></AppBackground>
+    );
+  }
+
+  if (auth.confirmationRequired && auth.recoveryStatus === 'idle') {
+    const leaveConfirmation = (nextMode: Mode) => {
+      setEmail(auth.confirmationEmail ?? email);
+      setMode(nextMode);
+      setFormError(null);
+      auth.clearSignUpConfirmation();
+    };
+    return (
+      <AppBackground><ScrollView contentContainerStyle={styles.centered}><View style={styles.card}>
+        <Text style={styles.eyebrow}>LOOPEDIN · NEXT STEP</Text>
+        <View accessibilityLiveRegion="polite" style={styles.confirmationCopy}>
+          <Text role="heading" {...{ 'aria-level': 1 }} style={styles.title}>Check your email</Text>
+          <Text style={styles.body}>Look in your inbox and spam folder for a confirmation link.</Text>
+          <Text selectable style={styles.confirmationEmail}>{auth.confirmationEmail}</Text>
+          <Text style={styles.body}>{auth.invitationToken
+            ? 'If a confirmation message arrives, confirm it, then return to this invitation and sign in.'
+            : 'If a confirmation message arrives, confirm your email, then sign in to name your family.'}</Text>
+        </View>
+        <Text style={styles.confirmationHelp}>Already have an account? Sign in with your existing password. You may not receive another confirmation email.</Text>
+        <Pressable ref={confirmationButton} accessibilityRole="button" onPress={() => leaveConfirmation('signIn')} style={styles.button}><Text style={styles.buttonText}>Back to sign in</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={() => leaveConfirmation('signUp')} style={styles.textButton}><Text style={styles.textButtonLabel}>Use a different email</Text></Pressable>
+      </View></ScrollView></AppBackground>
     );
   }
 
@@ -133,9 +166,6 @@ export function AuthScreen() {
       {mode !== 'forgot' ? <LabeledInput nativeID="auth-password" label={auth.recoveryStatus === 'ready' ? 'New password' : 'Password'} inputRef={passwordInput} editable={!auth.pending} value={password} onChangeText={setPassword} autoComplete={mode === 'signUp' || auth.recoveryStatus === 'ready' ? 'new-password' : 'current-password'} autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
       {mode === 'signUp' || auth.recoveryStatus === 'ready' ? <LabeledInput nativeID="auth-confirm-password" label="Confirm password" inputRef={confirmInput} editable={!auth.pending} value={confirmPassword} onChangeText={setConfirmPassword} autoComplete="new-password" autoCapitalize="none" secureTextEntry invalid={Boolean(formError || auth.error)} /> : null}
       {formError || auth.error ? <Text nativeID="auth-error" accessibilityRole="alert" accessibilityLiveRegion="assertive" style={styles.error}>{formError ?? auth.error}</Text> : null}
-      {auth.confirmationRequired && mode === 'signUp' && auth.recoveryStatus === 'idle' ? <Text accessibilityLiveRegion="polite" style={styles.success}>{auth.invitationToken
-        ? 'Check your inbox and spam folder. If a confirmation message arrives, confirm it, then return to this invitation and sign in. If no message arrives, this address may already have an account. Choose “Already have an account? Sign in.”'
-        : 'Check your inbox and spam folder. If a confirmation message arrives, confirm your email, then sign in to name your family. If no message arrives, this address may already have an account. Choose “Already have an account? Sign in.”'}</Text> : null}
       <Pressable accessibilityRole="button" disabled={auth.pending || (mode === 'signUp' && auth.recoveryStatus !== 'ready' && auth.invitationToken !== null && !inviteReady)} onPress={submit} style={[styles.button, (auth.pending || (mode === 'signUp' && auth.recoveryStatus !== 'ready' && auth.invitationToken !== null && !inviteReady)) && styles.buttonDisabled]}>
         {auth.pending ? <ActivityIndicator color={palette.white} /> : <Text style={styles.buttonText}>{auth.recoveryStatus === 'ready' ? 'Replace password' : mode === 'signUp' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : 'Sign in'}</Text>}
       </Pressable>
@@ -165,7 +195,10 @@ const styles = StyleSheet.create({
   inviteTitle: { color: palette.text, fontSize: 18, fontWeight: '900', textAlign: 'center' },
   field: { gap: 6 }, label: { color: palette.text, fontSize: 15, fontWeight: '800' },
   input: { backgroundColor: palette.white, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, color: palette.text, fontSize: 16, minHeight: 52, paddingHorizontal: spacing.md },
-  inputInvalid: { borderColor: palette.coral }, error: { color: palette.berry, fontSize: 14, lineHeight: 20 }, success: { color: palette.plum, fontSize: 14, lineHeight: 20 },
+  inputInvalid: { borderColor: palette.coral }, error: { color: palette.berry, fontSize: 14, lineHeight: 20 },
+  confirmationCopy: { gap: spacing.md },
+  confirmationEmail: { backgroundColor: palette.white, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, color: palette.plum, fontSize: 16, fontWeight: '700', padding: spacing.md, textAlign: 'center' },
+  confirmationHelp: { color: palette.muted, fontSize: 14, lineHeight: 21, textAlign: 'center' },
   button: { alignItems: 'center', backgroundColor: palette.plum, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, justifyContent: 'center', minHeight: 52 }, buttonDisabled: { opacity: 0.5 }, buttonText: { color: palette.white, fontSize: 16, fontWeight: '900' },
   textButton: { alignItems: 'center', justifyContent: 'center', minHeight: 48, paddingHorizontal: spacing.sm }, textButtonLabel: { color: palette.plum, fontSize: 15, fontWeight: '800', textAlign: 'center' },
   profileList: { gap: spacing.sm }, profileButton: { alignItems: 'center', backgroundColor: palette.white, borderColor: palette.plum, borderRadius: radii.card, borderWidth: 1, flexDirection: 'row', gap: spacing.md, minHeight: 60, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },

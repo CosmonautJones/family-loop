@@ -28,6 +28,8 @@ type AuthSessionContextValue = {
   clearRecovery: () => void;
   recoveryStatus: RecoveryStatus;
   confirmationRequired: boolean;
+  confirmationEmail: string | null;
+  clearSignUpConfirmation: () => void;
   invitationToken: string | null;
   setInvitationToken: (token: string) => void;
   clearInvitationToken: () => void;
@@ -51,7 +53,8 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [localProfiles, setLocalProfiles] = useState<GroupMember[]>([]);
-  const [confirmationRequired, setConfirmationRequired] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
+  const confirmationRequired = confirmationEmail !== null;
   const recoveryCallback = useRef(hasPasswordRecoveryCallback);
   const [recoveryStatus, setRecoveryStatus] = useState<RecoveryStatus>(recoveryCallback.current ? 'loading' : 'idle');
   const [invitationToken, setInvitationTokenState] = useState(() => typeof window === 'undefined' ? null : parseInvitationToken(window.location.hash));
@@ -79,6 +82,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
     previousUserId.current = nextSession?.userId ?? null;
     setSession(nextSession);
+    setConfirmationEmail(null);
     setError(null);
     setStatus(nextSession ? 'authenticated' : 'signedOut');
   }, [queryClient, setActiveGroupId]);
@@ -148,7 +152,7 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     const isCurrent = sessionResolution.current.begin();
     setPending(true);
     setError(null);
-    setConfirmationRequired(false);
+    setConfirmationEmail(null);
     try {
       const nextSession = await loopedInService.auth.login(email, password);
       if (isCurrent()) applySession(nextSession);
@@ -167,12 +171,12 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     const isCurrent = sessionResolution.current.begin();
     setPending(true);
     setError(null);
-    setConfirmationRequired(false);
+    setConfirmationEmail(null);
     try {
       const result = await loopedInService.auth.signUp(invitationToken, displayName, email, password);
       if (!isCurrent()) return;
       if (result.status === 'authenticated') applySession(result.session);
-      else if (result.status === 'confirmationOrSignInRequired') setConfirmationRequired(true);
+      else if (result.status === 'confirmationOrSignInRequired') setConfirmationEmail(email.trim());
     } catch (cause: unknown) {
       if (!isCurrent()) return;
       setSession(null);
@@ -182,6 +186,11 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       if (operationIsCurrent()) setPending(false);
     }
   }, [applySession, invitationToken]);
+
+  const clearSignUpConfirmation = useCallback(() => {
+    setConfirmationEmail(null);
+    setError(null);
+  }, []);
 
   const requestPasswordReset = useCallback(async (email: string) => {
     const operationIsCurrent = operationResolution.current.begin();
@@ -275,6 +284,8 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
       deletionStatusError: deletionStatusQuery.error instanceof Error ? deletionStatusQuery.error.message : null,
       deletionStatusPending: configured && status === 'authenticated' && deletionStatusQuery.isPending,
       confirmationRequired,
+      confirmationEmail,
+      clearSignUpConfirmation,
       invitationToken,
       setInvitationToken,
       clearInvitationToken,
