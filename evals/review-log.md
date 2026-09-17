@@ -730,14 +730,14 @@
 - Relational cleanup resolves the subject's normalized Auth email before Auth deletion and removes invitation records associated by inviter, respondent, or invitee email plus every dependent delivery row. Real local E2E fixtures prove both respondent and email associations are absent afterward.
 - Restore gating ignores caller-supplied IDs and opens only from durable authenticated `restore_reconciled` progress. Head recovery refuses missing, current, future, truncated, or corrupt heads and accepts only a strict chain extension of an authenticated stale head.
 - Fix-wave gates are GREEN: focused contracts/journal 11/11, ten-migration reset, database lint with zero findings, five-seam destructive E2E, app lint/TypeScript and 87/87 tests, harness, 293-file secret scan, syntax, and diff check. Root is 153/154 with only the same unchanged Windows historical-migration line-ending checksum baseline; the new migration checksum is not among the failures. Fresh independent G3 remains required on the exact fix-wave commit.
-# 2026-09-10 finish pass
-
 ## 2026-09-17 signup confirmation screen
 
 - Replaced the easy-to-miss inline signup message with a dedicated email next-step screen, submitted-address display, sign-in action and email-correction action. Confirmation state clears without discarding invitation context; password drafts clear when confirmation opens.
-- React-rendered regression tests failed against the previous form and now pass for public and invited signup. All 178 repository tests and TypeScript pass. Browser transition, focus, responsive layout and exact release publication are checked separately before rollout is considered complete.
+- React-rendered regression tests failed against the previous form and now pass for public and invited signup. All 178 repository tests, lint, TypeScript and the 310-file secret scan pass.
+- The exact release was exercised with an isolated loopback Auth response fixture: submit replaces the form, focus reaches the sign-in action, both password drafts clear, email correction and repeated submission work, and returning to sign-in retains the updated address. At 390px the confirmation screen has no horizontal overflow. This fixture creates no accounts and sends no email.
+- Published deploy `6aac02f76ba6511eb35f20a9`, release `0.1.0-6c0c6a337151`, artifact `0b9b30679904be1d0b523029e9f4fcbf955af964111406c7a512ef4a11b289b6`. At `2026-09-17T15:11:04.603Z`, all 14 live payload/manifest/runtime/envelope files match, security/cache headers and missing-asset 404 pass, and existing confirmation-required Auth settings remain intact. Previous deploy `6aabdd1f0c640492f8938709` remains the rollback target. Main contains the change; CI remains deferred by the user's earlier decision.
 
-# 2026-09-10 finish pass (continued)
+# 2026-09-10 finish pass
 
 - Verified canonical repository and all remote branch heads. Resumed `eb58766`, the newest saved candidate, containing current main plus 14 commits. Preserved existing checkouts in an isolated `codex/loopedin-finish-20260910` worktree.
 - Reproduced the original Windows migration checksum failure (158/159 root tests). Added narrowly scoped LF attributes; a checkout with `core.autocrlf=true` now preserves the exact migration digest. Ten migration hashes and comparison against `origin/main` pass without SQL changes.
