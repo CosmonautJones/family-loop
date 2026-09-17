@@ -1,145 +1,78 @@
-# Getting Started
+# Run LoopedIn locally
 
-## The short version
+Start with the browser-local demo to explore the product. Use the Supabase integration environment when you need to exercise real authentication, access policies, Storage, or Realtime.
 
-```text
-Pick a profile
-→ customize the docs
-→ define one tiny mission
-→ run Product Killer
-→ build only that mission
-→ review
-→ polish
-→ repeat
+## 1. Install and run
+
+Prerequisites: repository access, Git, Node.js 22, and npm. Run these commands in PowerShell from a directory where you keep projects:
+
+```powershell
+git clone https://github.com/CosmonautJones/family-loop.git
+cd family-loop
+npm --prefix app ci
+npm --prefix app run web
 ```
 
-## 1. Pick a project profile
+Open the address Expo prints. Choose a synthetic family profile to explore plans, RSVPs, conversations, and memories. No backend credentials are needed for the default mode. Fixed demo event dates may appear in history as time passes; create a new local event to try the upcoming-plan flow.
 
-Open:
+The local adapter saves data in browser storage. It survives reloads but does not synchronize between browsers or devices, and clearing site data removes it. Demo profiles do not provide real authentication.
 
-```text
-project-profiles/README.md
+If this checkout already has `EXPO_PUBLIC_DATA_MODE` or an `app/.env` file configured, inspect it before running: an explicit `supabase` mode connects to that backend instead of the demo.
+
+## 2. Run the checks
+
+From the repository root:
+
+```powershell
+npm test
+npm run lint
+node app/node_modules/typescript/bin/tsc --project app/tsconfig.json --noEmit
+npm run check:secrets
 ```
 
-Choose the closest profile:
+`npm run lint` includes app ESLint and workflow validation. Its workflow launcher requires PowerShell 7 (`pwsh`), downloads a pinned, checksum-verified actionlint archive on first use, then reuses the verified local cache. The launcher supports x64 Windows and Linux. To run only the application linter:
 
-```text
-agentic-dev-tool.md
-local-rag-app.md
-ai-video-tool.md
-game-dev-tool.md
-internal-work-automation.md
-ai-research-dashboard.md
-mobile-web-saas.md
+```powershell
+npm --prefix app run lint
 ```
 
-The profile gives you default thinking for that kind of app.
+Local checks do not consume GitHub Actions minutes. Database integration and browser acceptance are separate checks, not implied by a passing unit suite.
 
-## 2. Fill the core docs
+## 3. Exercise a local Supabase backend
 
-Open and customize:
+Install Docker and the Supabase CLI, start Docker, and follow the [configured browser runbook](docs/runbooks/configured-local-family-browser-e2e.md). From the repository root, its principal commands are:
 
-```text
-docs/vision.md
-docs/core-loop.md
-docs/taste-bar.md
-docs/anti-goals.md
-docs/architecture.md
+```powershell
+supabase start
+./scripts/test-local-supabase-family.ps1
+./scripts/test-local-supabase-media.ps1
+./scripts/provision-local-supabase-browser.ps1 -RunMarker family-browser-v1
+./scripts/verify-local-supabase-browser-scenario.ps1 -RunMarker family-browser-v1
 ```
 
-Do not try to make these perfect. Make them specific.
+These integration runners are intended for a disposable loopback stack. Read their setup and cleanup instructions first; do not point local test or reset tooling at a hosted family database.
 
-## 3. Define the current mission
+For explicit development configuration, create your own ignored `app/.env` with a project you control:
 
-Open:
-
-```text
-tasks/current-mission.md
+```dotenv
+EXPO_PUBLIC_DATA_MODE=supabase
+EXPO_PUBLIC_ENVIRONMENT_ID=development
+EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key_here
 ```
 
-Write the smallest version of the app that can create a real "oh, that's useful" moment.
+Use only a publishable client key. Service-role keys and other secrets must never go in `EXPO_PUBLIC_*` variables or a client bundle. Hosted releases use separately validated runtime configuration; see [web release and rollback](docs/runbooks/web-release-and-rollback.md).
 
-Bad mission:
+Public family creation also requires the forward onboarding migration, email signup enabled, and email confirmation required. Follow the [onboarding runbook](docs/runbooks/public-family-onboarding.md) before deploying that configuration.
 
-```text
-Build the app.
-```
+## Troubleshooting
 
-Good mission:
+| Symptom | Check |
+| --- | --- |
+| `pwsh` is not recognized | Install PowerShell 7, or run the app-only linter while you finish setup. |
+| No upcoming demo events | Demo records have fixed dates. Browse Memories or create a new local event. |
+| The configured backend is unavailable | Confirm the selected data mode and project configuration. Backend failures deliberately do not fall back to demo data. |
+| A photo is rejected | Choose JPEG, PNG, or WebP, at most 1 MiB, and supply the caption and image description. Automatic resizing is not implemented. |
+| Shared changes do not appear on another device | Local mode is browser-local. Cross-device collaboration requires Supabase mode and membership in the same family. |
 
-```text
-Build the first-run flow that turns one rough app idea into a clean agent-ready build mission with acceptance criteria, anti-goals, and a test plan.
-```
-
-## 4. Run the Product Killer
-
-Use:
-
-```text
-prompts/product-killer.md
-```
-
-The goal is to find what is generic, weak, or unfocused before code exists.
-
-## 5. Rewrite the mission
-
-After Product Killer feedback, rewrite:
-
-```text
-tasks/current-mission.md
-```
-
-Make it smaller and sharper.
-
-## 6. Build only the current mission
-
-Use:
-
-```text
-prompts/builder.md
-```
-
-The Builder is not allowed to expand scope.
-
-## 7. Review brutally
-
-Use:
-
-```text
-prompts/ux-taste-reviewer.md
-prompts/qa-regression.md
-prompts/architect-reviewer.md
-prompts/polish-pass.md
-```
-
-Only fix the highest-value issues.
-
-## 8. Archive and repeat
-
-Move completed work to:
-
-```text
-tasks/completed.md
-```
-
-Update:
-
-```text
-docs/agent-review-log.md
-docs/roadmap.md
-tasks/backlog.md
-```
-
-Then choose the next tiny slice.
-
----
-
-# The important mindset
-
-The profile makes the app specific.
-
-The mission makes the work safe.
-
-The rubrics make the output better.
-
-The review loop keeps the app from becoming generic.
+[Back to the project](README.md) · [Documentation guide](docs/README.md)

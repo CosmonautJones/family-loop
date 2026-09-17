@@ -1,6 +1,21 @@
 # GO-LIVE — LoopedIn (family use)
 
-## Current finish checkpoint: 2026-09-10
+## Current finish checkpoint: 2026-09-17
+
+**Working beta; broad production readiness remains open.** This checkpoint supersedes older deployment identities and readiness claims below.
+
+- Live app: [loopedin-family.netlify.app](https://loopedin-family.netlify.app). The environment remains `loopedin-staging`.
+- Latest application release: `0.1.0-bd1a2c078aaa`, source `bd1a2c078aaaefc47517f45d239821ff0df83c4c`, Netlify deploy `6aac0d37f82eeb75260144af`. All 14 served application/configuration/manifest files matched at `2026-09-17T15:54:47.927Z`; security/cache headers and missing-asset 404 passed.
+- Public account signup and verified-email family creation are deployed, with migration `20260917120000_self_service_family_creation` applied. Joining somebody else's family still requires an invitation. The dedicated post-signup email screen is also deployed.
+- Travis reports successful invitations, families, members, event creation and persistence. These are user-reported acceptance observations.
+- The selected-file upload reader was corrected after reproducing a browser-policy failure. The reader passed a local browser check under release headers; retrying the user's original photo and verifying live persistence remain open.
+- Latest application checks: 181/181 tests, app/workflow lint, TypeScript and secret scan passed. Local results do not imply hosted CI or current scheduled backup/monitoring coverage.
+- Remaining acceptance: attended new-account email/confirmation and recovery completion, physical-phone/accessibility checks, ongoing backup/restore and monitoring coverage, and explicit production promotion. GitHub Actions remains deferred.
+- Previous frontend deploy `6aac02f76ba6511eb35f20a9` is the rollback target. No rollback rehearsal was performed for this latest pair.
+
+See the [dated review log](evals/review-log.md) and [onboarding runbook](docs/runbooks/public-family-onboarding.md) for the underlying evidence. Repository presentation changes do not alter the deployed application.
+
+## Historical finish checkpoint: 2026-09-10
 
 This checkpoint supersedes the dated status and unconditional readiness claims below. The target remains a small private family launch using the existing product.
 

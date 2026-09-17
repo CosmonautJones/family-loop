@@ -1,5 +1,12 @@
 # Review Log
 
+## 2026-09-17 — repository presentation refresh
+
+- Reworked the README around the actual family event loop, with a custom generated cover, real mobile-web demo captures, an editable architecture diagram, setup instructions, and a dated beta-status boundary. Asset provenance and the final generation prompt live in `docs/assets/README.md`.
+- Replaced scaffold-oriented Getting Started instructions with the app's actual local-demo and integration paths. Added a concise documentation index, contributor guide, and privacy-conscious bug-report form. Replaced the old project URL in the tracked environment example with a neutral placeholder. Updated the top of `GO-LIVE.md` to the latest verified release while preserving historical checkpoints.
+- Updated GitHub About description, homepage, and eight relevant topics. Readback confirms the repository remains private. No application implementation, provider configuration, workflow activation, billing, or deployed artifact changed.
+- Verification: all 50 relative document/asset references resolve; all README images load in the rendered preview; cover, demo captures, and engineering diagram were visually inspected. The 12 documentation checks pass. Repository secret scan passes. Demo captures use a separate local browser session, fixed fixture clock, and a synthetic plan/RSVP created through the UI.
+
 ## 2026-09-17 — selected-photo upload CSP correction
 
 - Travis reports successful invitations, family membership, event creation and persistence, but image upload failure. These are user-reported acceptance observations.

@@ -1,0 +1,33 @@
+name: Report a problem
+description: Help reproduce something that did not work as expected.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Please use synthetic examples. Do not include passwords, tokens, private invitation/recovery links, or real family content."
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include what you expected and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open the event..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Device and browser
+      placeholder: "iPhone / Safari, or Windows / Chrome"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Useful details
+      description: "Visible error text, whether a reload helps, and file type/size for photo issues. Remove personal information."

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">LoopedIn: one interface, explicit data boundaries</title>
+  <desc id="desc">Netlify serves the responsive web app. Screens use TanStack Query and a typed service contract. The selected adapter connects either to browser-local demo storage or to Supabase Auth, Postgres row-level security and atomic functions, private Storage, and Realtime. Configured backend errors never fall back to demo data.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8" fill="none" stroke="#71345e" stroke-width="1.5"/></marker>
+    <style>text{font-family:Arial,Helvetica,sans-serif;fill:#30232a}.eyebrow{font-size:13px;letter-spacing:2px;fill:#71345e;font-weight:700}.title{font-size:31px;font-weight:700}.name{font-size:20px;font-weight:700}.body{font-size:16px;fill:#66535d}.small{font-size:14px;fill:#66535d}.line{fill:none;stroke:#71345e;stroke-width:2;marker-end:url(#arrow)}.box{fill:#fff;stroke:#e5dcd9;stroke-width:1.5}</style>
+  </defs>
+  <rect width="1200" height="650" rx="24" fill="#fbf7f2"/>
+  <text class="eyebrow" x="48" y="47">LOOPEDIN / ENGINEERING</text>
+  <text class="title" x="48" y="94">One interface. Explicit data boundaries.</text>
+  <text class="body" x="48" y="127">The event connects the product. The service contract separates the environments.</text>
+
+  <text class="eyebrow" x="48" y="186">01 / EXPERIENCE</text>
+  <rect class="box" x="48" y="207" width="306" height="109" rx="16"/>
+  <text class="name" x="72" y="242">Responsive web app</text>
+  <text class="body" x="72" y="270">React · Expo · TypeScript</text>
+  <text class="small" x="72" y="294">Netlify serves the static release</text>
+  <path class="line" d="M201 317 V347"/>
+  <rect class="box" x="48" y="360" width="306" height="125" rx="16"/>
+  <text class="name" x="72" y="397">Queries + family selection</text>
+  <text class="body" x="72" y="426">TanStack Query: domain records</text>
+  <text class="small" x="72" y="452">Zustand: active family</text>
+
+  <text class="eyebrow" x="418" y="186">02 / CONTRACT</text>
+  <rect x="418" y="330" width="280" height="176" rx="16" fill="#71345e"/>
+  <text x="442" y="374" style="fill:#fff;font-size:20px;font-weight:700">Typed service boundary</text>
+  <text x="442" y="408" style="fill:#fff;font-size:16px">Auth · Families · Events</text>
+  <text x="442" y="434" style="fill:#fff;font-size:16px">RSVPs · Threads · Media</text>
+  <text x="442" y="475" style="fill:#f3e6ed;font-size:14px">Choose one configured adapter</text>
+  <path class="line" d="M355 422 H404"/>
+
+  <text class="eyebrow" x="766" y="186">03 / DATA</text>
+  <rect class="box" x="766" y="207" width="386" height="109" rx="16"/>
+  <text class="name" x="790" y="242">Local demo</text>
+  <text class="body" x="790" y="270">Synthetic profiles + browser storage</text>
+  <text class="small" x="790" y="294">Reload-durable, on this browser only</text>
+  <path class="line" d="M699 377 H731 V263 H752"/>
+  <rect class="box" x="766" y="350" width="386" height="182" rx="16"/>
+  <text class="name" x="790" y="386">Configured Supabase backend</text>
+  <text class="body" x="790" y="418">Auth: verified identity</text>
+  <text class="body" x="790" y="445">Postgres: RLS + atomic functions</text>
+  <text class="body" x="790" y="472">Storage: private photos + signed URLs</text>
+  <text class="body" x="790" y="499">Realtime: event-scoped updates</text>
+  <path class="line" d="M699 447 H752"/>
+
+  <path d="M48 568 H1152" stroke="#e5dcd9"/>
+  <circle cx="57" cy="608" r="6" fill="#71345e"/>
+  <text class="body" x="77" y="614">Configured backend errors stay visible. They never silently switch to demo records.</text>
+</svg>
