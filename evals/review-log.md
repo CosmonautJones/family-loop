@@ -1,5 +1,13 @@
 # Review Log
 
+## 2026-09-17 — selected-photo upload CSP correction
+
+- Travis reports successful invitations, family membership, event creation and persistence, but image upload failure. These are user-reported acceptance observations.
+- Reproduced the selected-file failure with the real adapter photo reader and unchanged release security headers in a loopback browser probe: `fetch(data:image/...)` fails before Storage because `connect-src` only allows the app and configured backend. Local/backend tests had not exercised this browser policy boundary.
+- Decode FileReader base64 bytes locally into a Response, then retain the existing MIME, size, signature and browser-decoding validation. HTTPS sources keep their existing fetch behavior; Storage policies, quota, schema, deployment headers and dependencies are unchanged.
+- New regression coverage failed against the old reader, then passed for network-free selected-file reading, invalid format/base64/signature and oversized input rejection, and unchanged HTTPS fetching. Full suite: 181/181. App/workflow lint, TypeScript, secret scan and diff checks pass. A valid generated PNG now passes the browser probe under the same release policy.
+- Hosted publication and a real selected-file upload/reload remain pending at this checkpoint. The existing 1 MiB cap and JPEG/PNG/WebP format restriction remain; no automatic resizing is included.
+
 ## 2026-09-17 — public family onboarding candidate
 
 - User approved public account signup followed by confirmed email and creation of one private family. Joining existing families remains email-bound invitation acceptance. Public signup is an explicit null-token path; provided invitation tokens still undergo preflight validation before account creation. Recovery and local-demo behavior are preserved.

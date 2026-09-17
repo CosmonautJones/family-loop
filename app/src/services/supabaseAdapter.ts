@@ -218,7 +218,24 @@ function invitationPreviewFromRpc(data: unknown): GroupInvitationPreview {
 }
 
 async function fetchValidatedMediaBlob(fileUri: string) {
-  const response = await fetch(fileUri);
+  let response: Response;
+  if (fileUri.startsWith('data:')) {
+    // FileReader already provided local bytes. Fetching this URL would be blocked
+    // by the release connect-src policy before any Storage request is made.
+    const match = /^data:image\/(jpeg|png|webp);base64,(.*)$/is.exec(fileUri);
+    if (!match) throw userServiceError('Choose a JPEG, PNG, or WebP image.');
+    const encoded = match[2].replace(/\s/g, '');
+    const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+    if (Math.floor(encoded.length * 3 / 4) - padding > maxBrowserImageBytes) {
+      throw userServiceError('Choose an image no larger than 1 MB.');
+    }
+    let decoded: string;
+    try { decoded = atob(encoded); } catch { throw userServiceError('The selected file does not contain a valid image.'); }
+    const bytes = Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+    response = new Response(bytes, { headers: { 'Content-Type': `image/${match[1].toLowerCase()}` } });
+  } else {
+    response = await fetch(fileUri);
+  }
   if (!response.ok) throw userServiceError('The photo could not be downloaded. Check the link and try again.');
 
   const declaredLength = Number(response.headers.get('content-length') ?? 0);
