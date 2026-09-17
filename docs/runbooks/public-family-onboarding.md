@@ -39,3 +39,17 @@ The small provider-schema fixture supplies only the prerequisite Auth/Storage ob
 ## Evidence boundary, 2026-09-17
 
 Adapter tests and isolated real PostgreSQL tests pass. Chrome preview verified public signup entry, required-field validation/focus, return to sign-in, and separate recovery entry. Independent review found no actionable defects. Real email confirmation and the hosted family creation flow remain rollout acceptance checks, not claims made from the SQL fixture.
+
+## Hosted rollout, 2026-09-17
+
+The intended project was restored and reported healthy. Preflight found all ten historical migrations, two Auth accounts, one family and one consumed entitlement. The founder backfill would change zero rows. Before migration, the two affected hosted function definitions and their ACLs were captured as a narrow recovery snapshot; this is not a whole-database backup. The dashboard reported no scheduled backups.
+
+Applied `20260917120000_self_service_family_creation` transactionally through the authenticated SQL editor, including the migration-history entry. Source SQL SHA-256 is `23bc28e5c5eec5795704e1e5c3e61d9ef80f7b789bcbaf41a328722178fc7f42`. The Windows editor normalized indentation and line endings; recorded SQL SHA-256 is `c6b57eda35ba4ee85550dc0b023b6dbad5b69fa6808667a9174e49b1cb093d35`. The recorded statement was compared to source ignoring whitespace and matched. No historical migration was changed.
+
+Hosted SQL checks ran as the authenticated role using two transaction-local synthetic users. Verified-email eligibility and creation, unverified denial despite self-authored verification metadata, exactly one owner, same-key retry, consumed quota, second-family denial, unrelated-family/membership RLS isolation and function grants passed. An initial test-query variable ambiguity was corrected before the passing run. Every synthetic change rolled back; final counts remained two users and one family. This verifies actual hosted database enforcement, not GoTrue signup or email receipt.
+
+Auth readback confirms signup enabled and email confirmation required. Site URL and canonical redirect allowlist include `https://loopedin-family.netlify.app`. Visual dashboard inspection after reload confirms the existing Resend sender and port; no credential or Auth configuration change was saved. Protected field values were omitted from the browser text representation and were not actually missing.
+
+Published Netlify deploy `6aabdd1f0c640492f8938709` from the verified envelope for release `0.1.0-cc0bfe5dbeb2`. At `2026-09-17T12:31:25.590Z`, all 14 live application/manifest/runtime/envelope files matched their expected bytes. Release/environment headers, CSP, frame denial, shell/runtime caching, missing-asset 404 and anonymous founder RPC rejection passed. Chrome verified public signup, empty-form alert/focus, return to sign-in and recovery entry. Preserve previous immutable deploy `6aa6b736b29ebed58613109d` for frontend rollback.
+
+Still open: real email receipt and confirmation, attended signup/sign-in and family reload, invited-new-user acceptance, production operations and recovery coverage. No outbound mail, new persistent test account, password change, paid service or CI activation occurred. The live runtime remains `loopedin-staging` until the remaining acceptance and production checks are completed.
