@@ -1,5 +1,15 @@
 # Review Log
 
+## 2026-11-23 — Hosted release rehearsal and operations authorization
+
+- Owner explicitly approved small-family 0.1.0 on the existing free hosting, daily encrypted backups and hourly health checks; no billing change. Restored daily backup cron 07:37 UTC and hourly telemetry/availability at minute 11, preserving manual dispatch, least privilege and 30-day encrypted artifact retention.
+- Dedicated Supabase resumed successfully. Canonical shell/runtime/Auth health and missing-resource checks pass. Manual telemetry/availability run `45312264912` passes. The initial overlapping backup `45312261693` rejected concurrent QA drift as designed; sequential replacement verification is required.
+- All four CI jobs pass for `bdeab0d30d0064838b694b9a0db6d88227c0a7f6` (run `45311871126`). Exact local artifact digest `1ff14081a8e873d0c95fb207c2452cd9fdb241efd32aef23d56cbdb76f035c39` is deployed only to preview `6b04f58abb02373afbbc918d`; every one of its 11 application files plus manifest/runtime checks passes. Signed-out 320px UI has 320px document width, 48–52px controls and zero console errors/warnings.
+- Hosted harness now requires an explicit release ID, accepts only the dedicated alias or immutable deploy, and checks release/runtime before fixture mutation. Three executable preflight tests reject unknown hosts, missing/stale releases and unrelated backends. It follows the redesigned Family/account control and tests the current one-family creation quota.
+- Failed historical assumptions were retained as failures: the old outsider-create assertion conflicted with September public onboarding; its one synthetic group/user residue was removed after exact owner/run/role/name and empty-event checks. Later stale Family-tab failures cleaned themselves up. No real account or family was changed.
+- Final preview run `qa-mwu30khv-afa71986` PASS: 3 members, 3 events, 3 RSVPs, 2 comments, 7 updates, private photo create/view/outsider denial/delete, observed realtime, and 3 browser-encrypted exports with owned-file integrity and empty outsider export. Protected-state fingerprint unchanged; users/profiles/groups/invitations/objects residue all zero.
+- Full repository tests 192/192; focused release/telemetry tests 6/6; workflow lint, secret scan and 11 migration checks pass. Final-source CI and deployment remain next. Physical devices/AT, attended inbox/recovery, and sustained scheduled operation are not inferred from this rehearsal.
+
 ## 2026-11-23 — 0.1.0 release repair, local verification
 
 - Owned release lane `codex/finish-release` starts at current main `110f152`; original `fix/invite-flow-covers` checkout and its dirty review entry are preserved.

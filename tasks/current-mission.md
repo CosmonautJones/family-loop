@@ -13,8 +13,9 @@ retained; it is not fresh release evidence.
 Owned territory: the Home/Calendar selector fixes and their existing pending
 simulation suite, dependency lockfile security fixes, release documentation and
 verification. No paid-plan change, unrelated-site change, user-data deletion,
-or outbound invitation is authorized by this lane. Restoring recurring Actions
-usage is pending the owner's answer because it was explicitly paused earlier.
+or outbound invitation is authorized by this lane. The owner approved the
+small-family 0.1.0 release with daily encrypted backups and hourly health checks
+restored, without billing or paid-plan changes, on 2026-11-23.
 
 Acceptance: reproduce and fix the two event-selection regressions; pass tests,
 lint, types, migration and secret checks and the high/critical audit gate;

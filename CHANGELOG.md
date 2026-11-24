@@ -13,6 +13,9 @@ responsive web app at https://loopedin-family.netlify.app.
 - Refresh compatible transitive dependencies to clear the high/critical audit gate.
 - Add eight repeatable local family simulations covering persistence, concurrent
   updates, response-loss retries, authorization, event dates, and cleanup.
+- Resume daily encrypted backup/restore verification and hourly service checks.
+- Verify hosted family data isolation, private photos, realtime updates and three
+  encrypted browser exports against a pinned release candidate before promotion.
 
 Release verification and operational limitations are recorded in `GO-LIVE.md`.
 Local simulations do not establish hosted email delivery, physical-phone

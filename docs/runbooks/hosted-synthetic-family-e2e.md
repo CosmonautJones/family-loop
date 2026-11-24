@@ -7,20 +7,26 @@ This destructive harness is limited to dedicated LoopedIn staging project `vkogz
 1. Prepare four marked QA identities. The wrapper obtains the publishable and secret keys from the authenticated Supabase CLI with `--reveal`, keeps them in process memory, and never prints them.
 
    ```powershell
-   .\scripts\test-hosted-supabase-family.ps1 -Phase Prepare -AcknowledgeStagingOnly
+   .\scripts\test-hosted-supabase-family.ps1 -Phase Prepare -ExpectedRelease '<0.1.0-commit-prefix>' -AcknowledgeStagingOnly
    ```
 
-2. Retain only the printed run ID and four user UUIDs. Through the project-scoped Supabase MCP, verify the exact project URL again and insert one unconsumed creation entitlement for the printed owner UUID into `loopedin_private.loopedin_group_creation_entitlements`. Do not grant the outsider or either member an entitlement.
+2. Retain only the printed run ID and four user UUIDs. Verified synthetic users can create one private family under the September public-onboarding migration; no manual entitlement insert is required. An outsider's ability to create their own family does not grant access to the tested family.
 
 3. Run with the exact prepare handoff:
 
    ```powershell
-   .\scripts\test-hosted-supabase-family.ps1 -Phase Run -AcknowledgeStagingOnly `
+   .\scripts\test-hosted-supabase-family.ps1 -Phase Run -ExpectedRelease '<0.1.0-commit-prefix>' -AcknowledgeStagingOnly `
      -RunId '<run-id>' -OwnerId '<owner-uuid>' -MemberAId '<member-a-uuid>' `
      -MemberBId '<member-b-uuid>' -OutsiderId '<outsider-uuid>'
    ```
 
-The run rotates all four random passwords in memory, signs in independently, snapshots non-QA public LoopedIn rows plus the bounded private-bucket root listing at the current staging scale, creates an isolated marked QA family through the entitlement RPC, accepts two email-bound invitations, and checks live-invite outsider denial, role denial, three events (including one completed event), RSVPs, comments, a reminder, notifications, bounded Realtime, private PNG upload/view/outsider denial/delete, and outsider database denial. A `finally` block marker-checks and removes known objects, the exact QA family, and all four marked users, then requires zero marked Auth-user/public-profile/group/invitation/known-object residue and an identical bounded protected-state hash.
+The run rotates all four random passwords in memory, signs in independently, snapshots non-QA public LoopedIn rows plus the bounded private-bucket root listing at the current staging scale, creates an isolated marked QA family, accepts two email-bound invitations, and checks one-family quota, live-invite outsider denial, role denial, three events (including one completed event), RSVPs, comments, a reminder, notifications, bounded Realtime, private PNG upload/view/outsider denial/delete, and outsider database denial. A `finally` block marker-checks and removes known objects, the exact QA family, and all four marked users, then requires zero marked Auth-user/public-profile/group/invitation/known-object residue and an identical bounded protected-state hash.
+
+Both phases require the expected release and verify it before fixture mutation.
+Use `-AppOrigin 'https://<24-character-deploy-id>--loopedin-family.netlify.app'`
+to test an immutable preview; arbitrary sites are rejected. Run this harness
+and backup capture sequentially: its temporary mutations invalidate a concurrent
+backup's before/after consistency fingerprint.
 
 ## Evidence and stop rules
 

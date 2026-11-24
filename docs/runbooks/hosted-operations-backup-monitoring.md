@@ -1,5 +1,30 @@
 # Hosted operations: availability, encrypted backup, and restore
 
+## Release cadence approved — 2026-11-23
+
+The owner approved small-family 0.1.0 use on the existing free hosting and the
+return of daily encrypted backups and hourly checks. This supersedes the
+prelaunch scheduling pause below. After the release changes merge to main:
+
+- Encrypted backup runs daily at 07:37 UTC, verifies an isolated restore before
+  upload, and retains the encrypted artifact for 30 days.
+- Telemetry maintenance plus public HTTPS/backend availability run hourly at
+  minute 11. The separate availability workflow remains manual-only.
+- Travis owns failed-run follow-up and should enable GitHub Actions failure
+  notifications for this repository. No separate alert recipient or billing
+  setting is changed by this release.
+- Download an encrypted backup periodically for longer retention; retain the
+  passphrase separately. Scheduled execution is best-effort, and a health check
+  does not guarantee that free hosting will never pause.
+- Never overlap synthetic family mutation tests with backup capture: a changing
+  source is deliberately rejected rather than archived as a consistent backup.
+
+On discovery the dedicated Supabase project was `INACTIVE`; resuming it returned
+HTTP 200 and the canonical availability check subsequently passed. Telemetry
+and availability run `45312264912` passed after recovery. Initial backup run
+`45312261693` correctly discarded its snapshot while synthetic testing changed
+state; a fresh sequential backup/restore result is still required.
+
 ## Scope and current proof
 
 This runbook applies only to Supabase project `vkogznsfthirhxkqysza` and Netlify site `loopedin-family`. The quarantined Supabase project and personal Netlify site are forbidden targets.
