@@ -1,5 +1,14 @@
 # Review Log
 
+## 2026-11-23 — 0.1.0 release repair, local verification
+
+- Owned release lane `codex/finish-release` starts at current main `110f152`; original `fix/invite-flow-covers` checkout and its dirty review entry are preserved.
+- Reused PR #19's eight durable-local family simulations. Before the selector fixes: 6 pass, 2 fail (ongoing Home event and Calendar year). After the narrow selector/Home fixes: 8/8 pass; full root suite 189/189 passes.
+- Updated only compatible transitive lockfile entries for brace-expansion, compression, node-forge, shell-quote, source-map-js and undici. Fresh registry audit: high 5 to 0, critical 1 to 0; 20 moderate findings remain. No major dependency upgrade or new dependency.
+- App ESLint, TypeScript, workflow actionlint, tracked-file secret scan (321 files), all 11 migration checksums, and diff check pass. The environment banner now describes `Hosted account` instead of claiming a connection that has not been tested.
+- Hosted discovery: Netlify still serves `0.1.0-bd1a2c078aaa`, deploy `6aac0d37f82eeb75260144af`. Signed-out page renders, but availability fails because backend DNS is absent. Supabase inventory confirms the dedicated project is `INACTIVE`; exact-project resume returned HTTP 200 and subsequent status is `COMING_UP`. No plan, schema, user data, DNS configuration, or unrelated project was changed.
+- Release remains a candidate. Hosted healthy/core-loop checks, exact artifact deployment, rollback evidence, current backup/restore, version tag and release publication remain pending. Recurring Actions usage is awaiting the owner's answer; existing operations workflows remain manual-only.
+
 ## 2026-09-17 — repository presentation refresh
 
 - Reworked the README around the actual family event loop, with a custom generated cover, real mobile-web demo captures, an editable architecture diagram, setup instructions, and a dated beta-status boundary. Asset provenance and the final generation prompt live in `docs/assets/README.md`.

@@ -1,5 +1,27 @@
 # GO-LIVE — LoopedIn (family use)
 
+## Active release repair: 2026-11-23
+
+**0.1.0 is a candidate, not yet a completed release.** This checkpoint supersedes
+the older readiness claims below. The live frontend still serves September's
+`0.1.0-bd1a2c078aaa`; its rollback identity is deploy
+`6aac0d37f82eeb75260144af` when a replacement is published.
+
+- Live backend was paused (`INACTIVE`) and its hostname did not resolve. The
+  exact LoopedIn project resume request returned HTTP 200; recovery verification
+  is in progress. A configured frontend banner was not proof of connectivity.
+- Candidate fixes keep ongoing plans on Home and prevent cross-year Calendar
+  highlights. Eight family simulations and the full 189-test suite pass.
+- Compatible lockfile updates clear all high/critical registry audit findings;
+  20 moderate findings remain. Lint, types, workflow lint, secret and migration
+  checks pass. No new dependencies or paid-plan changes were introduced.
+- Backup, availability and telemetry workflows are currently **manual-only**.
+  Their old scheduled successes do not establish current protection. Resuming
+  recurring Actions usage is pending the owner's answer.
+- Hosted candidate verification, current backup/restore, matching release tag,
+  attended email recovery and physical-phone checks remain open. No invitations
+  or recovery messages were sent by this release audit.
+
 ## Current finish checkpoint: 2026-09-17
 
 **Working beta; broad production readiness remains open.** This checkpoint supersedes older deployment identities and readiness claims below.

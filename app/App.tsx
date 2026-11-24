@@ -24,8 +24,8 @@ export default function App() {
   return (
     <View style={styles.root}>
       {usesWebRuntimeConfig ? (
-        <View accessibilityLabel={`Environment: ${config.environmentId}. ${config.dataMode === 'supabase' ? 'Connected backend' : 'Local demo'}.`} style={styles.environment}>
-          <Text style={styles.environmentText}>{config.environmentId} · {config.dataMode === 'supabase' ? 'Connected' : 'Local demo'}</Text>
+        <View accessibilityLabel={`Environment: ${config.environmentId}. ${config.dataMode === 'supabase' ? 'Hosted account' : 'Local demo'}.`} style={styles.environment}>
+          <Text style={styles.environmentText}>{config.environmentId} · {config.dataMode === 'supabase' ? 'Hosted account' : 'Local demo'}</Text>
         </View>
       ) : null}
       <AppErrorBoundary>
