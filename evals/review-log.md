@@ -1,5 +1,24 @@
 # Review Log
 
+## 2026-11-23 — Hosted release rehearsal and operations authorization
+
+- Owner explicitly approved small-family 0.1.0 on the existing free hosting, daily encrypted backups and hourly health checks; no billing change. Restored daily backup cron 07:37 UTC and hourly telemetry/availability at minute 11, preserving manual dispatch, least privilege and 30-day encrypted artifact retention.
+- Dedicated Supabase resumed successfully. Canonical shell/runtime/Auth health and missing-resource checks pass. Manual telemetry/availability run `45312264912` passes. The initial overlapping backup `45312261693` rejected concurrent QA drift as designed; sequential replacement verification is required.
+- All four CI jobs pass for `bdeab0d30d0064838b694b9a0db6d88227c0a7f6` (run `45311871126`). Exact local artifact digest `1ff14081a8e873d0c95fb207c2452cd9fdb241efd32aef23d56cbdb76f035c39` is deployed only to preview `6b04f58abb02373afbbc918d`; every one of its 11 application files plus manifest/runtime checks passes. Signed-out 320px UI has 320px document width, 48–52px controls and zero console errors/warnings.
+- Hosted harness now requires an explicit release ID, accepts only the dedicated alias or immutable deploy, and checks release/runtime before fixture mutation. Three executable preflight tests reject unknown hosts, missing/stale releases and unrelated backends. It follows the redesigned Family/account control and tests the current one-family creation quota.
+- Failed historical assumptions were retained as failures: the old outsider-create assertion conflicted with September public onboarding; its one synthetic group/user residue was removed after exact owner/run/role/name and empty-event checks. Later stale Family-tab failures cleaned themselves up. No real account or family was changed.
+- Final preview run `qa-mwu30khv-afa71986` PASS: 3 members, 3 events, 3 RSVPs, 2 comments, 7 updates, private photo create/view/outsider denial/delete, observed realtime, and 3 browser-encrypted exports with owned-file integrity and empty outsider export. Protected-state fingerprint unchanged; users/profiles/groups/invitations/objects residue all zero.
+- Full repository tests 192/192; focused release/telemetry tests 6/6; workflow lint, secret scan and 11 migration checks pass. Final-source CI and deployment remain next. Physical devices/AT, attended inbox/recovery, and sustained scheduled operation are not inferred from this rehearsal.
+
+## 2026-11-23 — 0.1.0 release repair, local verification
+
+- Owned release lane `codex/finish-release` starts at current main `110f152`; original `fix/invite-flow-covers` checkout and its dirty review entry are preserved.
+- Reused PR #19's eight durable-local family simulations. Before the selector fixes: 6 pass, 2 fail (ongoing Home event and Calendar year). After the narrow selector/Home fixes: 8/8 pass; full root suite 189/189 passes.
+- Updated only compatible transitive lockfile entries for brace-expansion, compression, node-forge, shell-quote, source-map-js and undici. Fresh registry audit: high 5 to 0, critical 1 to 0; 20 moderate findings remain. No major dependency upgrade or new dependency.
+- App ESLint, TypeScript, workflow actionlint, tracked-file secret scan (321 files), all 11 migration checksums, and diff check pass. The environment banner now describes `Hosted account` instead of claiming a connection that has not been tested.
+- Hosted discovery: Netlify still serves `0.1.0-bd1a2c078aaa`, deploy `6aac0d37f82eeb75260144af`. Signed-out page renders, but availability fails because backend DNS is absent. Supabase inventory confirms the dedicated project is `INACTIVE`; exact-project resume returned HTTP 200 and subsequent status is `COMING_UP`. No plan, schema, user data, DNS configuration, or unrelated project was changed.
+- Release remains a candidate. Hosted healthy/core-loop checks, exact artifact deployment, rollback evidence, current backup/restore, version tag and release publication remain pending. Recurring Actions usage is awaiting the owner's answer; existing operations workflows remain manual-only.
+
 ## 2026-09-17 — repository presentation refresh
 
 - Reworked the README around the actual family event loop, with a custom generated cover, real mobile-web demo captures, an editable architecture diagram, setup instructions, and a dated beta-status boundary. Asset provenance and the final generation prompt live in `docs/assets/README.md`.

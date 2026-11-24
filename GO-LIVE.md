@@ -1,5 +1,35 @@
 # GO-LIVE — LoopedIn (family use)
 
+## Active release repair: 2026-11-23
+
+**0.1.0 is a candidate, not yet a completed release.** This checkpoint supersedes
+the older readiness claims below. The live frontend still serves September's
+`0.1.0-bd1a2c078aaa`; its rollback identity is deploy
+`6aac0d37f82eeb75260144af` when a replacement is published.
+
+- Live backend was paused (`INACTIVE`) and its hostname did not resolve. The
+  exact LoopedIn project resume request returned HTTP 200; recovery verification
+  is in progress. A configured frontend banner was not proof of connectivity.
+- Candidate fixes keep ongoing plans on Home and prevent cross-year Calendar
+  highlights. Eight family simulations and the full 189-test suite pass.
+- Compatible lockfile updates clear all high/critical registry audit findings;
+  20 moderate findings remain. Lint, types, workflow lint, secret and migration
+  checks pass. No new dependencies or paid-plan changes were introduced.
+- The owner approved restoring daily encrypted backups and hourly combined
+  telemetry/availability. The release branch schedules them at 07:37 UTC daily
+  and minute 11 hourly. They take effect after merge to main; old scheduled
+  successes do not establish current protection.
+- Hosted candidate verification, current backup/restore, matching release tag,
+  attended email recovery and physical-phone checks remain open. No invitations
+  or recovery messages were sent by this release audit.
+
+The backend is now healthy. Preview `6b04f58abb02373afbbc918d` passes exact
+artifact verification and synthetic family/realtime/private-media/export run
+`qa-mwu30khv-afa71986`, with unchanged protected data and zero test residue.
+CI run `45311871126` passes all four jobs; the final operations changes still
+require their own CI result. Full local tests pass 192/192. Fresh backup/restore
+verification is running sequentially after synthetic cleanup.
+
 ## Current finish checkpoint: 2026-09-17
 
 **Working beta; broad production readiness remains open.** This checkpoint supersedes older deployment identities and readiness claims below.

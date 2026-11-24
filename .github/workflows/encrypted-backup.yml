@@ -1,7 +1,8 @@
 name: Encrypted hosted backup
 
 on:
-  # Manual-only during prelaunch development; no recurring Actions usage.
+  schedule:
+    - cron: '37 7 * * *'
   workflow_dispatch:
 
 permissions:

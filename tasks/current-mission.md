@@ -1,5 +1,29 @@
 # Current Mission
 
+## Active release finish — 2026-11-23
+
+The user requested completion to a released project. The current release lane
+starts from `origin/main` at `110f15294119c64b1920c73362b2e9531b50d825`
+in the isolated `codex/finish-release` checkout; the original checkout and its
+uncommitted review-log entry remain untouched. The target is the existing
+small-family web app, following the later `GO-LIVE.md` scope rather than adding
+new infrastructure or product features. Historical campaign evidence below is
+retained; it is not fresh release evidence.
+
+Owned territory: the Home/Calendar selector fixes and their existing pending
+simulation suite, dependency lockfile security fixes, release documentation and
+verification. No paid-plan change, unrelated-site change, user-data deletion,
+or outbound invitation is authorized by this lane. The owner approved the
+small-family 0.1.0 release with daily encrypted backups and hourly health checks
+restored, without billing or paid-plan changes, on 2026-11-23.
+
+Acceptance: reproduce and fix the two event-selection regressions; pass tests,
+lint, types, migration and secret checks and the high/critical audit gate;
+produce and verify an exact-source web artifact; verify the deployed candidate
+and preserve its rollback identity; publish a matching versioned release with
+honest operational and attended-testing limitations. Record actual evidence in
+the review log and a new shared-brain handoff before claiming completion.
+
 Mission ID: `FAMILY-LOOP-FULL-001`
 
 Status: `IN PROGRESS — DEDICATED STAGING OPERATIONALLY GREEN — PRODUCTION NOT READY`

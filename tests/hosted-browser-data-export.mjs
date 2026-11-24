@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 
-const APP_ORIGIN = 'https://loopedin-family.netlify.app';
-const EXPECTED_RELEASE = '0.1.0-a45838479634';
+const APP_ORIGIN = process.env.LOOPEDIN_QA_APP_ORIGIN ?? 'https://loopedin-family.netlify.app';
+const EXPECTED_RELEASE = process.env.LOOPEDIN_QA_RELEASE_ID;
 const EXPECTED_ENVIRONMENT = 'loopedin-staging';
 const EXPECTED_BACKEND = 'https://vkogznsfthirhxkqysza.supabase.co';
 const CHROME_PATH = process.env.CHROME_PATH ?? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
@@ -40,7 +40,9 @@ async function decrypt(bundle, passphrase) {
   return parsed;
 }
 
-async function verifyHostedRelease() {
+export async function verifyHostedRelease() {
+  assert.match(APP_ORIGIN, /^https:\/\/(?:[a-f0-9]{24}--)?loopedin-family\.netlify\.app$/, 'only the dedicated site or an immutable deploy may be tested');
+  assert.match(EXPECTED_RELEASE ?? '', /^0\.1\.0-[a-f0-9]{12}$/, 'an explicit candidate release is required');
   const shell = await fetch(`${APP_ORIGIN}/`, { redirect: 'error' });
   assert.equal(shell.status, 200, 'hosted export shell unavailable');
   assert.equal(shell.headers.get('x-loopedin-release'), EXPECTED_RELEASE, 'hosted export release mismatch');
@@ -68,6 +70,7 @@ async function runAccount(account) {
   const consoleEvents = [];
   const failedRequests = [];
   let stage = 'launch';
+  let readState;
   try {
     const portFile = join(profile, 'DevToolsActivePort');
     for (let attempt = 0; attempt < 100 && !existsSync(portFile); attempt += 1) await delay(50);
@@ -95,6 +98,7 @@ async function runAccount(account) {
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
       return result.result.value;
     };
+    readState = () => evaluate(`({headings:[...document.querySelectorAll('h1,[role=heading]')].map(e=>e.textContent),tabs:[...document.querySelectorAll('[role=tab]')].map(e=>e.textContent),hasExport:document.body.innerText.includes('Download your data')})`);
     const eventually = async (predicate, label, timeout = 45_000) => {
       const started = Date.now();
       while (Date.now() - started < timeout) {
@@ -120,10 +124,13 @@ async function runAccount(account) {
     await eventually(async () => !(await evaluate('document.body?.innerText'))?.includes('Welcome back'), 'hosted authenticated state');
     stage = 'open-export';
     if (account.surface === 'family') {
-      await eventually(async () => (await evaluate('document.body?.innerText'))?.includes('Family'), 'hosted family tab');
-      assert.equal(await clickText('Family'), true, 'hosted family tab unavailable');
+      stage = 'open-family-account';
+      await eventually(() => evaluate(`Boolean(document.querySelector('[aria-label^="Family and account."]'))`), 'hosted family account action');
+      assert.equal(await evaluate(`(() => { const action=document.querySelector('[aria-label^="Family and account."]'); if(!action)return false; action.click(); return true; })()`), true, 'hosted family account action unavailable');
+      stage = 'wait-family-export';
       await eventually(async () => (await evaluate('document.body?.innerText'))?.includes('Download your data'), 'hosted family export card');
     } else {
+      stage = 'wait-outsider-export';
       await eventually(async () => (await evaluate('document.body?.innerText'))?.includes('Start with your family')
         && (await evaluate('document.body?.innerText'))?.includes('Download your data'), 'hosted outsider export card');
     }
@@ -185,6 +192,7 @@ async function runAccount(account) {
     assert.deepEqual(failedRequests, []);
     return plaintext.data;
   } catch {
+    if (readState) console.error(JSON.stringify({ stage, state: await readState().catch(() => null) }));
     throw new Error(`hosted export browser proof failed during ${stage}`);
   } finally {
     socket?.close();

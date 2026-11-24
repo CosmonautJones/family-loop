@@ -2,6 +2,11 @@ param(
   [Parameter(Mandatory = $true)]
   [ValidateSet('Prepare', 'Run')]
   [string]$Phase,
+  [Parameter(Mandatory = $true)]
+  [ValidatePattern('^0\.1\.0-[a-f0-9]{12}$')]
+  [string]$ExpectedRelease,
+  [ValidatePattern('^https://(?:[a-f0-9]{24}--)?loopedin-family\.netlify\.app$')]
+  [string]$AppOrigin = 'https://loopedin-family.netlify.app',
   [switch]$AcknowledgeStagingOnly,
   [string]$RunId,
   [string]$OwnerId,
@@ -50,6 +55,10 @@ foreach ($name in @('LOOPEDIN_HOSTED_PROJECT_REF', 'LOOPEDIN_HOSTED_STAGING_ACK'
 }
 try {
   $env:LOOPEDIN_HOSTED_PROJECT_REF = $projectRef
+  $previous['LOOPEDIN_QA_APP_ORIGIN'] = $env:LOOPEDIN_QA_APP_ORIGIN
+  $previous['LOOPEDIN_QA_RELEASE_ID'] = $env:LOOPEDIN_QA_RELEASE_ID
+  $env:LOOPEDIN_QA_APP_ORIGIN = $AppOrigin
+  $env:LOOPEDIN_QA_RELEASE_ID = $ExpectedRelease
   $env:LOOPEDIN_HOSTED_STAGING_ACK = 'I_ACKNOWLEDGE_LOOPEDIN_STAGING_ONLY'
   $env:SUPABASE_URL = "https://$projectRef.supabase.co"
   $env:SUPABASE_PUBLISHABLE_KEY = $publishableValue

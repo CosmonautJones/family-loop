@@ -2535,7 +2535,7 @@ test('hosted backup packages protected schemas and private bytes under client en
   assert.match(restore, /Restored member RLS scope mismatch/);
   assert.match(restore, /mediaWithoutObject/);
   assert.match(restore, /outsiderEvents/);
-  assert.doesNotMatch(workflow, /schedule:/);
+  assert.match(workflow, /cron: '37 7 \* \* \*'/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /retention-days: 30/);
   assert.match(workflow, /environment: loopedin-staging-backup/);

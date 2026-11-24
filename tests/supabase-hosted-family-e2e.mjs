@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
-import { proveHostedEncryptedExports } from './hosted-browser-data-export.mjs';
+import { proveHostedEncryptedExports, verifyHostedRelease } from './hosted-browser-data-export.mjs';
 
 const require = createRequire(new URL('../app/package.json', import.meta.url));
 const { createClient } = require('@supabase/supabase-js');
@@ -508,10 +508,10 @@ async function run() {
       target_group_id: group.id, target_email: outsider.email, target_token: randomToken(),
     });
     assert.equal(memberInvite.response.ok, false, 'member invitation restriction failed');
-    const outsiderCreate = await rpc('loopedin_create_group', outsider.token, {
-      target_name: 'Unauthorized QA family', target_description: '', target_kind: 'family', target_creation_key: crypto.randomUUID(),
+    const duplicateFamily = await rpc('loopedin_create_group', owner.token, {
+      target_name: `LoopedIn Hosted QA ${runId}`, target_description: `loopedin-hosted-qa:${runId}`, target_kind: 'family', target_creation_key: crypto.randomUUID(),
     });
-    assert.equal(outsiderCreate.response.ok, false, 'outsider family creation restriction failed');
+    assert.equal(duplicateFamily.response.ok, false, 'one-family creation quota failed');
 
     const events = [
       await createEvent(owner, group.id, 'Hosted QA upcoming trip one', 3),
@@ -614,7 +614,7 @@ async function run() {
       const residue = await cleanup(runId, users, group?.id, paths);
       const protectedAfter = await protectedFingerprint(qaUserIds);
       if (protectedBefore && protectedAfter !== protectedBefore) throw new Error('protected non-QA state changed');
-      if (summary) console.log(JSON.stringify({ ...summary, protectedStateUnchanged: true, residue }));
+      console.log(JSON.stringify({ runId, outcome: primaryError ? 'FAIL' : 'PASS', ...summary, protectedStateUnchanged: true, residue }));
     } catch (cleanupError) {
       primaryError = new Error(primaryError ? `${redact(primaryError)}; cleanup failed` : `cleanup failed: ${redact(cleanupError)}`);
     }
@@ -623,6 +623,7 @@ async function run() {
 }
 
 try {
+  await verifyHostedRelease();
   if (phase === 'prepare') await prepare();
   else await run();
 } catch (error) {
