@@ -1,6 +1,18 @@
 # Current Mission
 
-## Active release finish — 2026-11-23
+## Release disposition — 2026-11-23
+
+**COMPLETE for the owner-approved small-family 0.1.0 release.** Published tag
+`v0.1.0` identifies source `6bf8cb26329fc0f222c6cdb69f6ea2c4846349c5`.
+The exact CI artifact is live as Netlify deploy `6b04f9be945b8d6e98ea1be3`.
+CI, 192 tests, hosted family/realtime/private-media/encrypted-export checks,
+zero synthetic residue, current backup/isolated restore and live artifact/health
+verification pass. Daily backup and hourly health/telemetry schedules are merged.
+See `GO-LIVE.md` for evidence, rollback identity, ownership and honest limits.
+The historical broad production campaign below is superseded for this launch;
+physical-device/AT and attended-email checks remain explicitly unverified follow-ups.
+
+## Release implementation lane — 2026-11-23
 
 The user requested completion to a released project. The current release lane
 starts from `origin/main` at `110f15294119c64b1920c73362b2e9531b50d825`

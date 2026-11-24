@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 — Release candidate
+## 0.1.0 — 2026-11-23
 
 LoopedIn's first versioned release targets small families using the existing
 responsive web app at https://loopedin-family.netlify.app.

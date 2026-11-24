@@ -1,6 +1,45 @@
 # GO-LIVE — LoopedIn (family use)
 
-## Active release repair: 2026-11-23
+## Released for small-family use — 2026-11-23
+
+**[LoopedIn 0.1.0](https://github.com/CosmonautJones/family-loop/releases/tag/v0.1.0)
+is released at [loopedin-family.netlify.app](https://loopedin-family.netlify.app).**
+The owner approved using the existing free hosting with daily encrypted backups
+and hourly checks. This disposition supersedes the broader historical production
+campaign below; it does not claim physical-device or attended-email certification.
+
+| Release evidence | Verified result |
+| --- | --- |
+| Source/tag | `v0.1.0` → `6bf8cb26329fc0f222c6cdb69f6ea2c4846349c5`, merged through PR #21 |
+| CI | Run `45313633483`: all four jobs pass; 192 tests, lint/types, security and migration gates |
+| Artifact | `fe19332a9f9d74fbe3b87f6e5dca87d445d650a1cd36a94e26e6794bc194aef8`; downloaded from CI, not rebuilt for deployment |
+| Live deploy | `6b04f9be945b8d6e98ea1be3`, release `0.1.0-6bf8cb26329f`; all 11 application files and manifest/runtime checks match |
+| Hosted family | `qa-mwu39o50-345a3cad`: events, RSVPs, comments, realtime, private media and 3 encrypted exports pass; protected data unchanged; zero test residue |
+| Availability | Live HTTPS/runtime/Auth 200, exact backend and security/cache headers, missing asset 404 at `2026-11-24T02:43:24.754Z` |
+| Backup/restore | Run `45313613412`: 11 migrations, 3 private objects, restored integrity and outsider denial pass; isolated restore 6.307 seconds |
+| Rollback | Previous deploy `6aac0d37f82eeb75260144af` remains accessible with `0.1.0-bd1a2c078aaa`; no live rollback executed |
+
+Daily backup (07:37 UTC) and hourly telemetry/availability (minute 11) are now
+configured on main. Manual telemetry/health run `45312264912` passes. A completed
+manual drill proves recovery behavior, not sustained scheduled execution or a
+guarantee against free-tier pausing. Travis owns failed-run follow-up and backup
+retention; no billing setting or alert recipient was changed.
+
+The encrypted backup was also retained at
+`C:\Users\Travis\Documents\LoopedIn Backups\2026-11-23-release\loopedin-staging.flbackup`.
+Its SHA-256 matches the successful job:
+`fe8b747f3391cf906a4d202857558b665c819bd55a8be51b12b2162ca47b2d9b`.
+GitHub's copy expires December 24; the local copy is encrypted and needs the
+separately retained backup passphrase. Neither copy replaces ongoing monitoring.
+
+Remaining follow-ups: 20 moderate dependency advisories (zero high/critical),
+physical iPhone/Android and assistive-technology checks, attended inbox/password
+recovery, and observation of the first scheduled runs. Photos remain limited to
+JPEG/PNG/WebP at 1 MiB; reminders are in-app preferences, not push/email delivery.
+The established environment identifier stays `loopedin-staging`; no new backend,
+schema migration, paid plan, real-user mail or permanent purge was introduced.
+
+## Historical release repair: 2026-11-23
 
 **0.1.0 is a candidate, not yet a completed release.** This checkpoint supersedes
 the older readiness claims below. The live frontend still serves September's
@@ -30,7 +69,7 @@ CI run `45311871126` passes all four jobs; the final operations changes still
 require their own CI result. Full local tests pass 192/192. Fresh backup/restore
 verification is running sequentially after synthetic cleanup.
 
-## Current finish checkpoint: 2026-09-17
+## Historical finish checkpoint: 2026-09-17
 
 **Working beta; broad production readiness remains open.** This checkpoint supersedes older deployment identities and readiness claims below.
 

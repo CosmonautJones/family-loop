@@ -47,15 +47,16 @@ A weekend away starts with a date, turns into a conversation, and ends with phot
 
 ## Project status
 
-**Working beta · September 17, 2026.** The hosted app is available, with its runtime still labeled `loopedin-staging` while release acceptance continues.
+**[Released 0.1.0](https://github.com/CosmonautJones/family-loop/releases/tag/v0.1.0) · November 23, 2026.** Available for small-family use on the existing hosting. The technical environment identifier remains `loopedin-staging`.
 
 | Evidence | Current position |
 | --- | --- |
 | Real family use | The owner reports working invitations, family membership, event creation, and persistence. |
-| Latest application checks | 181 automated tests passed, plus app/workflow lint, TypeScript, and the repository secret scan. These are dated local results, not a continuously green CI claim. |
-| Deployed build | Release `0.1.0-bd1a2c078aaa` was checked against all 14 served application/configuration/manifest files. |
-| Photo upload correction | The selected-file browser policy failure was reproduced and fixed. The corrected reader passed browser checks; the user's original photo still needs a live retry. |
-| Before a broader launch | Complete attended email/recovery and physical-phone acceptance, and restore ongoing backup, restore-test, and monitoring coverage. |
+| Latest application checks | 192 automated tests; lint, TypeScript, secrets, migration and high/critical dependency gates pass in release CI `45313633483`. |
+| Deployed build | `0.1.0-6bf8cb26329f`: every served application file matches the exact CI artifact. |
+| Hosted family checks | Three-member events, RSVPs, comments, realtime, private photo isolation and encrypted exports pass with zero test residue. |
+| Operations | Daily encrypted backups and hourly checks enabled; fresh isolated restore verified all 11 migrations and 3 private photo objects. |
+| Follow-ups | Attended email/recovery, physical-phone/assistive-technology checks, first scheduled-run observation and 20 moderate dependency advisories. |
 
 **Current limits:** photo files must be JPEG, PNG, or WebP and no larger than 1 MiB; automatic resizing is not implemented. Event reminders save an in-app preference; push and reminder-email delivery are not active. This is a responsive web app, with no native app-store release.
 

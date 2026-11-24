@@ -1,5 +1,14 @@
 # Review Log
 
+## 2026-11-23 — Published small-family 0.1.0
+
+- PR #21 merged as `cafb4a7`. Tag/release `v0.1.0` pins exact source `6bf8cb26329fc0f222c6cdb69f6ea2c4846349c5`; all four CI jobs in `45313633483` pass. The source is an ancestor of main; subsequent evidence-only documentation does not change the artifact source.
+- Downloaded CI artifact, trusted job digest `fe19332a9f9d74fbe3b87f6e5dca87d445d650a1cd36a94e26e6794bc194aef8`, assembled and independently verified its envelope, and tested final preview `6b04f9592972a36d0a100a6e`. Hosted run `qa-mwu39o50-345a3cad` passed the complete synthetic family/media/realtime/export suite with unchanged protected fingerprint and zero residue.
+- Published unchanged bytes as deploy `6b04f9be945b8d6e98ea1be3` at the canonical URL. Every application file, manifest/runtime identity and public availability/security/cache check passes; Auth, shell and runtime return 200 and missing assets return 404. Previous deploy `6aac0d37f82eeb75260144af` remains accessible; no live rollback or database reversal was performed.
+- Sequential backup/restore run `45313613412` passed 11 migrations, 3 private photo objects, integrity and outsider RLS denial. Observed isolated restore 6.307 seconds; ciphertext digest `fe8b747f3391cf906a4d202857558b665c819bd55a8be51b12b2162ca47b2d9b` matches the downloaded local encrypted copy. Telemetry/health `45312264912` passes. Approved daily/hourly schedules are on main; first scheduled runs and sustained cadence remain unobserved.
+- Release assets retain the CI web artifact and manifest beyond the seven-day CI artifact expiry. Release ZIP SHA-256 `7d27004491b8cb609ed079d614cca41b222a828203c0a1d2004ed583bb469e58`.
+- Verdict: released for the explicitly approved small-family scope. Remaining limits: 20 moderate dependency advisories, physical devices/AT and attended inbox/recovery verification, free-tier pause risk and schedule/retention monitoring. No paid-plan change, real-user message, unrelated-site mutation or permanent purge occurred. The original checkout and its pre-existing dirty review-log entry remain intact.
+
 ## 2026-11-23 — Hosted release rehearsal and operations authorization
 
 - Owner explicitly approved small-family 0.1.0 on the existing free hosting, daily encrypted backups and hourly health checks; no billing change. Restored daily backup cron 07:37 UTC and hourly telemetry/availability at minute 11, preserving manual dispatch, least privilege and 30-day encrypted artifact retention.
